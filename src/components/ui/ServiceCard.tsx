@@ -65,7 +65,8 @@ const ServiceCard = (props: ServiceCardProps) => {
     if (h3Ref.current && cardRef.current && card2Ref.current) {
       const h3Height = h3Ref.current.offsetHeight;
       const cardHeight = cardRef.current.offsetHeight;
-      card2Ref.current.style.paddingTop = `${h3Height + 60}px`;
+      // Slightly increase padding so desktop content fits comfortably
+      card2Ref.current.style.paddingTop = `${h3Height + 80}px`;
       if (props.active) {
         h3Ref.current.style.transform = `scale(1.3)`;
       } else {
@@ -79,11 +80,11 @@ const ServiceCard = (props: ServiceCardProps) => {
   return (
     <div ref={cardRootRef} className="service-card w-full max-w-[390px] sm:max-w-[420px] lg:max-w-none lg:w-auto">
       <div
-        className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-white/20 ring-inset shadow-none overflow-hidden rounded-3xl w-full max-w-[390px] sm:max-w-[420px] h-auto min-h-[460px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
+        className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-white/20 ring-inset shadow-none overflow-hidden rounded-3xl w-full max-w-[390px] sm:max-w-[420px] h-auto min-h-[460px] lg:w-[340px] lg:h-[460px] xl:w-[380px] xl:h-[500px] 2xl:w-[460px] 2xl:h-[560px] ${bgcolor} duration-300 scale-100 ${
           props.active ? "lg:scale-100" : "lg:scale-90"
         }`}
       >
-        <div className={`p-5 sm:p-6 2xl:p-10 h-full relative z-10`}>
+        <div className={`p-5 sm:p-6 lg:p-7 xl:p-8 2xl:p-10 h-full relative z-10`}>
           <div
             className={`w-full h-full duration-200 ${bgcolor} absolute inset-0 rounded-3xl`}
           ></div>
@@ -133,7 +134,7 @@ const ServiceCard = (props: ServiceCardProps) => {
                         {props.toolIcons.map((IconNode, index) => (
                           <span
                             key={index}
-                            className="text-3xl sm:text-4xl opacity-90"
+                            className="text-3xl sm:text-4xl lg:text-3xl xl:text-4xl opacity-90"
                             aria-hidden
                           >
                             {IconNode}
