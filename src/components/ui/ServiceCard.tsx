@@ -79,7 +79,7 @@ const ServiceCard = (props: ServiceCardProps) => {
   return (
     <div ref={cardRootRef} className="service-card w-full max-w-[100vw] lg:max-w-none lg:w-auto">
       <div
-        className={`p-[1px] grow shrink-0 relative border border-zinc-600 ring-1 ring-zinc-700/60 ring-inset overflow-hidden rounded-3xl w-full max-w-[100vw] h-auto min-h-[460px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
+        className={`p-[1px] grow shrink-0 relative border border-zinc-600 ring-1 ring-zinc-700/60 ring-inset shadow-none overflow-hidden rounded-3xl w-full max-w-[100vw] h-auto min-h-[460px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
           props.active ? "lg:scale-100" : "lg:scale-90"
         }`}
       >
@@ -103,7 +103,7 @@ const ServiceCard = (props: ServiceCardProps) => {
             >
               <div className="flex flex-col h-auto lg:h-full relative mb-4 sm:mb-6">
                 <div className="flex justify-between">
-                  <h4 className="text-3xl sm:text-4xl font-semibold">{props.number}</h4>
+                  <h4 className="hidden sm:block text-3xl sm:text-4xl font-semibold">{props.number}</h4>
                 </div>
               </div>
               <div
@@ -127,11 +127,11 @@ const ServiceCard = (props: ServiceCardProps) => {
                   <div>
                     <h3 className="text-foreground/60 text-lg">Tools</h3>
                     {props.toolIcons && props.toolIcons.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-x-3 gap-y-3 pt-1">
+                      <div className="flex flex-wrap gap-2 sm:gap-3 pt-1 justify-start">
                         {props.toolIcons.map((IconNode, index) => (
                           <span
                             key={index}
-                            className="flex items-center justify-center text-2xl sm:text-3xl opacity-90"
+                            className="text-2xl sm:text-3xl opacity-90"
                             aria-hidden
                           >
                             {IconNode}
@@ -139,9 +139,9 @@ const ServiceCard = (props: ServiceCardProps) => {
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-x-3 gap-y-3 pt-1 text-sm">
+                      <div className="flex flex-wrap gap-2 sm:gap-3 pt-1 text-sm justify-start">
                         {props.tools?.map((tool, index) => (
-                          <span key={index} className="text-center">
+                          <span key={index} className="">
                             {tool}
                           </span>
                         ))}
