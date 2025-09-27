@@ -43,18 +43,53 @@ const HamMenu = ({ navData }: Props) => {
   useEffect(() => {
     if (!active) setServiceNav(false);
   }, [active]);
+  // Lock page scroll when the mobile menu is open (mobile-only)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    if (!isMobile) return;
+    const html = document.documentElement;
+    const body = document.body;
+    let scrollY = 0;
+    if (active) {
+      scrollY = window.scrollY || window.pageYOffset;
+      body.dataset.prevScrollY = String(scrollY);
+      html.style.overflow = "hidden";
+      body.style.overflow = "hidden";
+      body.style.position = "fixed";
+      body.style.width = "100%";
+      body.style.top = `-${scrollY}px`;
+    } else {
+      const prev = Number(body.dataset.prevScrollY || 0);
+      html.style.overflow = "";
+      body.style.overflow = "";
+      body.style.position = "";
+      body.style.width = "";
+      body.style.top = "";
+      window.scrollTo(0, prev);
+    }
+    return () => {
+      const prev = Number(body.dataset.prevScrollY || 0);
+      html.style.overflow = "";
+      body.style.overflow = "";
+      body.style.position = "";
+      body.style.width = "";
+      body.style.top = "";
+      if (active) window.scrollTo(0, prev);
+    };
+  }, [active]);
   return (
     <>
       <HamButton active={active} onClick={() => setActive(!active)} />
       <AnimatePresence>
         {active && (
-          <div className="fixed z-50 right-0 top-0 h-screen w-screen md:hidden flex justify-end">
+          <div className="fixed z-50 inset-0 h-dvh w-screen md:hidden flex justify-end overflow-hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-black/70 absolute top-0 left-0 size-full"
+              className="bg-black/70 absolute inset-0"
               onClick={() => setActive(!active)}
             />
             <motion.div
@@ -62,7 +97,7 @@ const HamMenu = ({ navData }: Props) => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="h-screen max-w-[320px] w-full bg-zinc-950 p-5 sm:px-8 relative z-10"
+              className="h-full max-w-[320px] w-full bg-zinc-950 p-5 sm:px-8 relative z-10 overflow-hidden"
             >
               <div className="relative flex items-center h-full">
                 <div className="absolute top-0 right-0">
