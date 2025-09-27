@@ -191,7 +191,7 @@ const HamMenu = ({ navData }: Props) => {
                     </motion.nav>
                   </div>
                   <div className="top-full absolute left-0 mt-20 w-full">
-                    <NavButton />
+                    <NavButton onClick={() => setActive(false)} />
                   </div>
                 </div>
               </div>
