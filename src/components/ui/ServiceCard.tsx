@@ -77,9 +77,9 @@ const ServiceCard = (props: ServiceCardProps) => {
   }, [props.active]);
 
   return (
-    <div ref={cardRootRef} className="service-card w-full max-w-[100vw] lg:max-w-none lg:w-auto">
+    <div ref={cardRootRef} className="service-card w-full max-w-[680px] sm:max-w-[720px] lg:max-w-none lg:w-auto">
       <div
-        className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-zinc-700/60 ring-inset shadow-none overflow-hidden rounded-3xl w-full max-w-[100vw] h-auto min-h-[460px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
+        className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-zinc-700/60 ring-inset shadow-none overflow-hidden rounded-3xl w-full max-w-[680px] sm:max-w-[720px] h-auto min-h-[460px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
           props.active ? "lg:scale-100" : "lg:scale-90"
         }`}
       >
@@ -96,7 +96,7 @@ const ServiceCard = (props: ServiceCardProps) => {
               >
                 {props.title}
               </h3>
-              <GoArrowUpRight className="size-7 sm:size-8 lg:size-10 relative lg:absolute lg:right-0 lg:top-0" />
+              <GoArrowUpRight className="size-8 sm:size-9 lg:size-10 relative lg:absolute lg:right-0 lg:top-0" />
             </div>
             <div
               className={`h-full ${
@@ -129,11 +129,11 @@ const ServiceCard = (props: ServiceCardProps) => {
                   <div>
                     <h3 className="text-foreground/60 text-lg">Tools</h3>
                     {props.toolIcons && props.toolIcons.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-x-2 gap-y-2 sm:gap-3 lg:gap-x-4 lg:gap-y-3 pt-1">
+                      <div className="grid grid-cols-3 gap-x-3 gap-y-3 sm:gap-x-4 sm:gap-y-4 pt-1">
                         {props.toolIcons.map((IconNode, index) => (
                           <span
                             key={index}
-                            className="text-2xl sm:text-3xl opacity-90"
+                            className="text-3xl sm:text-4xl opacity-90"
                             aria-hidden
                           >
                             {IconNode}
@@ -141,7 +141,7 @@ const ServiceCard = (props: ServiceCardProps) => {
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-x-2 gap-y-2 sm:gap-3 lg:gap-x-4 lg:gap-y-3 pt-1 text-sm">
+                      <div className="grid grid-cols-3 gap-x-3 gap-y-3 sm:gap-x-4 sm:gap-y-4 pt-1 text-sm">
                         {props.tools?.map((tool, index) => (
                           <span key={index} className="">
                             {tool}
