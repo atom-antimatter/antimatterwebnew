@@ -79,7 +79,7 @@ const ServiceCard = (props: ServiceCardProps) => {
   return (
     <div ref={cardRootRef} className="service-card w-full max-w-[100vw] lg:max-w-none lg:w-auto">
       <div
-        className={`p-[1px] grow shrink-0 relative border border-zinc-700 overflow-hidden rounded-3xl w-full max-w-[100vw] h-auto min-h-[380px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
+        className={`p-[1px] grow shrink-0 relative border border-zinc-600 ring-1 ring-zinc-700/60 ring-inset overflow-hidden rounded-3xl w-full max-w-[100vw] h-auto min-h-[460px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
           props.active ? "lg:scale-100" : "lg:scale-90"
         }`}
       >
@@ -95,25 +95,25 @@ const ServiceCard = (props: ServiceCardProps) => {
             >
               {props.title}
             </h3>
-            <GoArrowUpRight className="size-8 sm:size-9 lg:size-10 lg:absolute right-0 top-0" />
+            <GoArrowUpRight className="size-7 sm:size-8 lg:size-10 absolute right-4 top-4 lg:right-0 lg:top-0" />
             <div
               className={`h-full ${
                 props.active ? "lg:-translate-y-full" : "lg:pt-0"
               } duration-800 ease-in-out`}
             >
-              <div className="flex flex-col justify-between h-full relative">
+              <div className="flex flex-col h-auto lg:h-full relative mb-4 sm:mb-6">
                 <div className="flex justify-between">
                   <h4 className="text-3xl sm:text-4xl font-semibold">{props.number}</h4>
                 </div>
               </div>
               <div
-                className="flex flex-col justify-between h-full"
+                className="flex flex-col gap-6 lg:gap-8 lg:justify-between h-full"
                 ref={card2Ref}
               >
                 <div className="flex justify-between">
                   <p className="text-sm 2xl:text-base">{props.description}</p>
                 </div>
-                <div className="flex gap-5 justify-between flex-col sm:flex-row">
+                <div className="flex gap-6 justify-between flex-col sm:flex-row sm:gap-8">
                   <div>
                     <h3 className="text-foreground/60 text-lg">Services</h3>
                     <div className="flex flex-col text-sm gap-1">
@@ -127,11 +127,11 @@ const ServiceCard = (props: ServiceCardProps) => {
                   <div>
                     <h3 className="text-foreground/60 text-lg">Tools</h3>
                     {props.toolIcons && props.toolIcons.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-x-4 gap-y-3 pt-1">
+                      <div className="grid grid-cols-3 gap-x-3 gap-y-3 pt-1">
                         {props.toolIcons.map((IconNode, index) => (
                           <span
                             key={index}
-                            className="flex items-center justify-center text-3xl opacity-90"
+                            className="flex items-center justify-center text-2xl sm:text-3xl opacity-90"
                             aria-hidden
                           >
                             {IconNode}
@@ -139,7 +139,7 @@ const ServiceCard = (props: ServiceCardProps) => {
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-x-4 gap-y-3 pt-1 text-sm">
+                      <div className="grid grid-cols-3 gap-x-3 gap-y-3 pt-1 text-sm">
                         {props.tools?.map((tool, index) => (
                           <span key={index} className="text-center">
                             {tool}
