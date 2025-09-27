@@ -56,6 +56,10 @@ const HamMenu = ({ navData }: Props) => {
       body.dataset.prevScrollY = String(scrollY);
       html.style.overflow = "hidden";
       body.style.overflow = "hidden";
+      html.style.height = "100%";
+      body.style.height = "100%";
+      (html.style as any).overscrollBehavior = "none";
+      (body.style as any).overscrollBehavior = "none";
       body.style.position = "fixed";
       body.style.width = "100%";
       body.style.top = `-${scrollY}px`;
@@ -63,6 +67,10 @@ const HamMenu = ({ navData }: Props) => {
       const prev = Number(body.dataset.prevScrollY || 0);
       html.style.overflow = "";
       body.style.overflow = "";
+      html.style.height = "";
+      body.style.height = "";
+      (html.style as any).overscrollBehavior = "";
+      (body.style as any).overscrollBehavior = "";
       body.style.position = "";
       body.style.width = "";
       body.style.top = "";
@@ -72,6 +80,10 @@ const HamMenu = ({ navData }: Props) => {
       const prev = Number(body.dataset.prevScrollY || 0);
       html.style.overflow = "";
       body.style.overflow = "";
+      html.style.height = "";
+      body.style.height = "";
+      (html.style as any).overscrollBehavior = "";
+      (body.style as any).overscrollBehavior = "";
       body.style.position = "";
       body.style.width = "";
       body.style.top = "";
@@ -83,7 +95,7 @@ const HamMenu = ({ navData }: Props) => {
       <HamButton active={active} onClick={() => setActive(!active)} />
       <AnimatePresence>
         {active && (
-          <div className="fixed z-50 inset-0 h-dvh w-screen md:hidden flex justify-end overflow-hidden">
+          <div className="fixed z-50 inset-0 h-dvh w-screen md:hidden flex justify-end overflow-hidden touch-none">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -97,7 +109,7 @@ const HamMenu = ({ navData }: Props) => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="h-full max-w-[320px] w-full bg-zinc-950 p-5 sm:px-8 relative z-10 overflow-hidden"
+              className="h-full max-w-[320px] w-full bg-zinc-950 p-5 sm:px-8 relative z-10 overflow-hidden touch-none"
             >
               <div className="relative flex items-center h-full">
                 <div className="absolute top-0 right-0">
