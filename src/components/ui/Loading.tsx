@@ -152,6 +152,13 @@ const Loading = () => {
     return `max(${100 - counter}%, ${box2Width + padding * 2}px)`;
   }, [isMobile, counter, box2Width, box2Height]);
 
+  // Mobile-only: grow loader height up to 90vh at 100%
+  const mobileHeightVh = useMemo(() => {
+    if (!isMobile) return undefined as unknown as string;
+    const pct = Math.min(90, Math.max(0, counter * 0.9));
+    return `${pct}vh`;
+  }, [isMobile, counter]);
+
   return (
     <AnimatePresence>
       {!finished && (
@@ -170,8 +177,8 @@ const Loading = () => {
           <div className="relative h-full flex-1">
             <motion.div
               className={`${isMobile ? "absolute rounded-3xl bottom-0 left-0" : "absolute rounded-3xl top-0 right-0"} bg-zinc-900 w-full h-full p-2 ${isMobile ? "will-change-[max-height]" : "will-change-[max-width]"}`}
-              initial={isMobile ? { maxHeight: "100%" } : { maxWidth: "100%" }}
-              animate={isMobile ? { maxHeight: maxCrossSize } : { maxWidth: maxCrossSize }}
+              initial={isMobile ? { maxHeight: "0vh" } : { maxWidth: "100%" }}
+              animate={isMobile ? { maxHeight: mobileHeightVh } : { maxWidth: maxCrossSize }}
               exit={isMobile ? { y: 500 } : { x: 500 }}
               transition={{
                 type: "spring",
