@@ -165,7 +165,7 @@ const HamMenu = ({ navData }: Props) => {
                         animate={{ opacity: serviceNav ? 1 : 0 }}
                         className="absolute top-1/2 -translate-y-1/2 left-full"
                       >
-                        <ul className="text-3xl flex flex-col gap-1">
+                        <ul className="text-2xl sm:text-3xl leading-tight flex flex-col gap-1">
                           <div
                             className="py-3 pr-3"
                             onClick={() => setServiceNav(false)}
@@ -173,12 +173,13 @@ const HamMenu = ({ navData }: Props) => {
                             <FaArrowLeft className="size-6 " />
                           </div>
                           {ServicesData.map((service, index) => (
-                            <li key={service.title} className="relative pl-10">
+                            <li key={service.title} className="relative pl-10 whitespace-nowrap">
                               <Link
                                 href={service.link}
+                                className="block pr-4"
                                 onClick={() => setActive(false)}
                               >
-                                <span className="opacity-30 absolute left-0 bottom-0 text-2xl">
+                                <span className="opacity-30 absolute left-0 bottom-0 text-xl sm:text-2xl">
                                   0{index + 1}
                                 </span>
                                 {service.title}
