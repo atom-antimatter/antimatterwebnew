@@ -79,7 +79,7 @@ const ServiceCard = (props: ServiceCardProps) => {
   return (
     <div ref={cardRootRef} className="service-card w-full max-w-[680px] sm:max-w-[720px] lg:max-w-none lg:w-auto">
       <div
-        className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-zinc-700/60 ring-inset shadow-none overflow-hidden rounded-3xl w-full max-w-[680px] sm:max-w-[720px] h-auto min-h-[460px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
+        className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-white/20 ring-inset shadow-none overflow-hidden rounded-3xl w-full max-w-[680px] sm:max-w-[720px] h-auto min-h-[460px] lg:w-[340px] lg:h-[380px] xl:w-[380px] xl:h-[420px] 2xl:w-[460px] 2xl:h-[520px] ${bgcolor} duration-300 scale-100 ${
           props.active ? "lg:scale-100" : "lg:scale-90"
         }`}
       >
@@ -99,9 +99,9 @@ const ServiceCard = (props: ServiceCardProps) => {
               <GoArrowUpRight className="size-8 sm:size-9 lg:size-10 relative lg:absolute lg:right-0 lg:top-0" />
             </div>
             <div
-              className={`h-full ${
+              className={`${
                 props.active ? "lg:-translate-y-full" : "lg:pt-0"
-              } duration-800 ease-in-out`}
+              } duration-800 ease-in-out lg:h-full`}
             >
               <div className="flex flex-col h-auto lg:h-full relative mb-4 sm:mb-6">
                 <div className="flex justify-between">
@@ -109,7 +109,7 @@ const ServiceCard = (props: ServiceCardProps) => {
                 </div>
               </div>
               <div
-                className="flex flex-col gap-6 lg:gap-8 lg:justify-between h-full"
+                className="flex flex-col gap-6 lg:gap-8 lg:justify-between h-auto lg:h-full"
                 ref={card2Ref}
               >
                 <div className="flex justify-between">
@@ -129,7 +129,7 @@ const ServiceCard = (props: ServiceCardProps) => {
                   <div>
                     <h3 className="text-foreground/60 text-lg">Tools</h3>
                     {props.toolIcons && props.toolIcons.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-x-3 gap-y-3 sm:gap-x-4 sm:gap-y-4 pt-1">
+                      <div className="grid grid-cols-3 gap-x-2 gap-y-3 sm:gap-x-3 sm:gap-y-4 pt-1">
                         {props.toolIcons.map((IconNode, index) => (
                           <span
                             key={index}
@@ -141,7 +141,7 @@ const ServiceCard = (props: ServiceCardProps) => {
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-x-3 gap-y-3 sm:gap-x-4 sm:gap-y-4 pt-1 text-sm">
+                      <div className="grid grid-cols-3 gap-x-2 gap-y-3 sm:gap-x-3 sm:gap-y-4 pt-1 text-sm">
                         {props.tools?.map((tool, index) => (
                           <span key={index} className="">
                             {tool}
