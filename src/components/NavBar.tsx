@@ -56,7 +56,10 @@ const NavBar = () => {
             </ul>
           </nav>
 
-          <NavButton className="hidden md:block" onClick={() => setOpen(true)} />
+          <NavButton
+            className="hidden md:block"
+            onClick={() => setOpen(true)}
+          />
           <HamMenu navData={NavData} />
         </div>
       </div>
@@ -146,7 +149,7 @@ const ServiceCard = ({ icon: Icon, title, items, link }: ServiceProps) => (
 const ServicesDropdown = ({ open }: { open: boolean }) => (
   <div
     className={`
-      absolute top-full left-1/2 -translate-x-1/2 pt-2 mt-2
+      absolute top-full left-1/2 -translate-x-1/2 pt-4
       opacity-0
       transition-[opacity,max-width,max-height,transform] duration-200
       ${open ? "opacity-100 pointer-events-auto" : "pointer-events-none"}
