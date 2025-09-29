@@ -9,10 +9,10 @@ const CTASection = () => {
     <div className="p-5 sm:p-20 md:p-30 pt-28 sm:pt-44 border border-foreground/15 rounded-2xl relative overflow-hidden">
       <div className="relative z-10 pb-10 sm:pb-0">
         <h2 className="text-2xl sm:text-4xl mb-10">
-          We turn bold ideas into {" "}
+          We turn bold ideas into <br />
           <SplitTextWavy
             text="powerful digital realities."
-            amplitude={8}
+            amplitude={10}
             duration={2.4}
             stagger={0.06}
             className="font-semibold"
@@ -21,7 +21,8 @@ const CTASection = () => {
         </h2>
         <Button>
           <span className="sm:text-xl flex items-center gap-5">
-            Let&apos;s work together <GoArrowRight className="size-6 sm:size-8" />
+            Let&apos;s work together{" "}
+            <GoArrowRight className="size-6 sm:size-8" />
           </span>
         </Button>
       </div>

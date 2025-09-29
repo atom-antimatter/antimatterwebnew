@@ -20,21 +20,28 @@ const WorkData = [
     image: "/images/CaseStudies/synergies4.jpg",
     tags: ["Web Design", "App Design"],
     id: 2,
-    link: "/case-study/clinixAI",
+    link: "/case-study/synergies4",
   },
   {
     title: "Curehire",
     image: "/images/CaseStudies/curehire.jpg",
     tags: ["Web Design", "App Design"],
     id: 3,
-    link: "/case-study/clinixAI",
+    link: "/case-study/curehire",
   },
   {
     title: "OWASP",
     image: "/images/CaseStudies/owasp.jpg",
     tags: ["Web Design", "App Design"],
     id: 4,
-    link: "/case-study/clinixAI",
+    link: "/case-study/owasp",
+  },
+  {
+    title: "Feature",
+    image: "/images/CaseStudies/feature.jpg",
+    tags: ["Web Design", "App Design"],
+    id: 5,
+    link: "/case-study/feature",
   },
 ];
 

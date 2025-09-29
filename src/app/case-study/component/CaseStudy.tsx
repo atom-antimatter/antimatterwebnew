@@ -45,19 +45,20 @@ const CaseStudy = ({
             transition={{ duration: 1, delay: 0.2 }}
             className="flex flex-col gap-20 lg:gap-30"
           >
-            <div className="text-center">
+            <div className="">
               <motion.div
                 initial={{ x: 400 }}
                 animate={{ x: 0 }}
                 transition={{ duration: 1.2 }}
               >
-                <TitleH1Anim className="text-6xl lg:text-7xl xl:text-8xl font-semibold">
-                  {title}
+                <TitleH1Anim
+                  className="text-6xl lg:text-8xl xl:text-9xl font-semibold"
+                  linesClass="overflow-hidden py-5"
+                >
+                  {title}.
                 </TitleH1Anim>
               </motion.div>
-              <p className="text-xl lg:text-2xl xl:text-3xl tracking-wide mt-3">
-                {subtitle}
-              </p>
+              <p className="text-xl  tracking-wide mt-3">{subtitle}</p>
             </div>
             <motion.div
               initial={{ y: 200 }}
@@ -74,7 +75,7 @@ const CaseStudy = ({
             </motion.div>
             {/* Summary & Tech */}
             <div className="flex flex-col md:flex-row justify-between gap-10 xl:gap-0 font-light">
-              <Reveal className="md:max-w-[380px] lg:max-w-[500px]">
+              <Reveal className="md:max-w-[380px] lg:max-w-[600px]">
                 <h3 className="text-foreground/50">Summary</h3>
                 <p className="text-base xl:text-lg">{summary}</p>
               </Reveal>
