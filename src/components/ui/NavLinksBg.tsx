@@ -42,7 +42,7 @@ const NavLinksBg = () => {
   }, []);
   return (
     <div
-      className="duration-300 bg-foreground/10 border border-foreground/5 absolute top-0 
+      className="duration-300 bg-foreground/10 border border-foreground/5 absolute top-0 backdrop-blur-md 
       left-0 opacity-0 rounded-md"
       ref={bgRef}
     ></div>

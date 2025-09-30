@@ -23,16 +23,59 @@ const NavBar = () => {
   const finished = useLoading((s) => s.finished);
   const path = usePathname();
   const { setOpen } = useStartProjectModal();
+
+  const [visible, setVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const [hovering, setHovering] = useState(false);
+
+  // Handle scroll direction + gradient toggle
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+
+      // hide on scroll down, show on scroll up
+      if (!hovering) {
+        // hide on scroll down, show on scroll up
+        if (currentScroll > lastScrollY && currentScroll > 100) {
+          setVisible(false);
+        } else {
+          setVisible(true);
+        }
+      } else {
+        // while hovering, force it visible
+        setVisible(true);
+      }
+
+      setScrolled(currentScroll > 100);
+      setLastScrollY(currentScroll);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   if (path === "/" && !finished) return null;
 
   return (
     <motion.header
       initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 1.8, ease: "anticipate" }}
-      className="fixed top-0 z-50 py-5 left-0 w-full"
+      animate={{
+        y: visible ? 0 : -100,
+        opacity: visible ? 1 : 0,
+      }}
+      transition={{ duration: 1, ease: "easeInOut" }}
+      className={`fixed top-0 z-50 left-0 w-full py-5`}
       id="header"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
     >
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: scrolled ? 1 : 0 }}
+        transition={{ duration: 1 }}
+        className="absolute top-0 left-0 size-full bg-gradient-to-b from-background to-transparent from-20% to-90%"
+      />
       <div className="w-main mx-auto relative z-20">
         <div className="flex justify-between items-center">
           <Link href="/">
