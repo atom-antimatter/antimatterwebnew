@@ -8,10 +8,7 @@ const ServiceSection = () => {
         <div className="w-full lg:w-3/5 flex flex-col gap-20 ">
           <div className="flex flex-col sm:flex-row gap-10 sm:gap-30 xl:gap-43 justify-between">
             <div className="whitespace-nowrap">
-              <Title
-                className="text-title/tight lg:text-3xl xl:text-title/tight"
-                revealStart="9.6ch"
-              >
+              <Title className="text-title/tight lg:text-3xl xl:text-title/tight">
                 Our Services
               </Title>
             </div>

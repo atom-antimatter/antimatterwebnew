@@ -59,10 +59,13 @@ const Interactions = () => {
       ScrollTrigger.create({
         trigger: "#work-section",
         start: "top bottom",
-        end: "top 85%",
+        end: "top 70%",
         scrub: true,
         onUpdate: (self) => {
-          gsap.to("#particles3d", { opacity: 1 - self.progress, overwrite: "auto" });
+          gsap.to("#particles3d", {
+            opacity: 1 - self.progress,
+            overwrite: "auto",
+          });
         },
       });
 

@@ -8,9 +8,8 @@ export type IndexRef = { current: number };
 export type ProgressRef = { current: number };
 
 export function setupInteractions(
-  modelPositionsArray: THREE.Vector3[][],
   container: HTMLDivElement,
-  setActiveIndex: (index: number) => void
+  morphToShape: (index: number) => void
 ) {
   const mouse = new THREE.Vector2(-10, -10);
   const currentIndexRef: IndexRef = { current: 0 };
@@ -31,28 +30,6 @@ export function setupInteractions(
 
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("touchmove", onTouchMove, { passive: true });
-
-  let animating = false;
-  const morphToShape = (index: number) => {
-    const clamped = Math.max(
-      0,
-      Math.min(index, modelPositionsArray.length - 1)
-    );
-    if (animating || clamped === currentIndexRef.current) return;
-    animating = true;
-    nextIndexRef.current = clamped;
-
-    const timeline = gsap.timeline({
-      defaults: { duration: 1, ease: "power2.inOut" },
-      onComplete: () => {
-        currentIndexRef.current = clamped;
-        morphProgressRef.current = 0;
-        animating = false;
-      },
-    });
-
-    timeline.to(morphProgressRef, { current: 1 }, 0);
-  };
 
   // ---- GSAP timelines with ScrollTriggers
 
@@ -81,8 +58,7 @@ export function setupInteractions(
           scrollTrigger: {
             trigger: "body",
             start: "top top",
-            endTrigger: "#services",
-            end: "center center",
+            end: "+=90%",
             scrub: true,
             invalidateOnRefresh: true,
             onUpdate: (self) => {
@@ -99,58 +75,6 @@ export function setupInteractions(
         );
       }
     );
-
-    const cardElements = gsap.utils.toArray(".service-card") as HTMLElement[];
-    const isTabletUpForScroll = window.matchMedia("(min-width: 1024px)").matches;
-    const scrollTriggerCards: ScrollTrigger.Vars | undefined = isTabletUpForScroll
-      ? {
-          trigger: "#services",
-          start: "center center",
-          end: "+=3000",
-          pinSpacing: true,
-          pin: true,
-          scrub: true,
-        }
-      : undefined;
-    const timeline2 = gsap.timeline({ scrollTrigger: scrollTriggerCards });
-
-    const pauseDuration = 0.5;
-
-    const isTabletUpForCards = window.matchMedia("(min-width: 1024px)").matches;
-    if (isTabletUpForCards) {
-      cardElements.forEach((el, index) => {
-        if (index === cardElements.length - 1) return;
-        const cardWidth = el.offsetWidth;
-
-        timeline2.to(
-          "#service-cards",
-          {
-            x: -(cardWidth * (1 + index)),
-            duration: 1,
-            onComplete: () => {
-              setActiveIndex(index + 1);
-              morphToShape(index + 2);
-            },
-            onReverseComplete: () => {
-              setActiveIndex(index);
-              morphToShape(index + 1);
-            },
-          },
-          `+=${pauseDuration}`
-        );
-        timeline2.to(
-          cardElements[index],
-          {
-            opacity: 0,
-            scale: 0.5,
-            delay: 1,
-            duration: 0.5,
-            ease: "power1.inOut",
-          },
-          "<-0.7"
-        );
-      });
-    }
 
     const isTabletUpForExit = window.matchMedia("(min-width: 1024px)").matches;
     const scrollTriggerExit: ScrollTrigger.Vars | undefined = isTabletUpForExit

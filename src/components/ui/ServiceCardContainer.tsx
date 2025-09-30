@@ -1,22 +1,103 @@
 "use client";
 import ServiceCard, { ServiceCardProps } from "./ServiceCard";
 import { useActiveIndex } from "@/store";
-import { SiFigma, SiSketch, SiAdobexd, SiBlender, SiThreedotjs, SiAbstract, SiReact, SiFlutter, SiNextdotjs, SiNodedotjs, SiDocker, SiTypescript, SiHubspot, SiSalesforce, SiGoogleanalytics, SiMixpanel, SiIntercom, SiZapier, SiAmazonwebservices, SiGooglecloud, SiOkta, SiAuth0, SiTwilio, SiStripe, SiTensorflow, SiPytorch, SiScikitlearn, SiKeras, SiHuggingface, SiLangchain, SiMqtt, SiArduino, SiRaspberrypi, SiNodered, SiZigbee, SiNordicsemiconductor } from "react-icons/si";
+import "swiper/css";
+import {
+  SiFigma,
+  SiSketch,
+  SiAdobexd,
+  SiBlender,
+  SiThreedotjs,
+  SiAbstract,
+  SiReact,
+  SiFlutter,
+  SiNextdotjs,
+  SiNodedotjs,
+  SiDocker,
+  SiTypescript,
+  SiHubspot,
+  SiSalesforce,
+  SiGoogleanalytics,
+  SiMixpanel,
+  SiIntercom,
+  SiZapier,
+  SiAmazonwebservices,
+  SiGooglecloud,
+  SiOkta,
+  SiAuth0,
+  SiTwilio,
+  SiStripe,
+  SiTensorflow,
+  SiPytorch,
+  SiScikitlearn,
+  SiKeras,
+  SiHuggingface,
+  SiLangchain,
+  SiMqtt,
+  SiArduino,
+  SiRaspberrypi,
+  SiNodered,
+  SiZigbee,
+  SiNordicsemiconductor,
+} from "react-icons/si";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { useState } from "react";
 
 const ServiceCardContainer = () => {
   const activeIndex = useActiveIndex((state) => state.activeIndex);
+  const setActiveIndex = useActiveIndex((state) => state.setActiveIndex);
+  const [breakpoint, setBreakpoint] = useState("");
   return (
     <div
-      className="flex flex-col items-center gap-8 sm:gap-10 lg:flex-row lg:items-stretch lg:gap-6 xl:gap-8 w-full max-w-[100vw] lg:max-w-none px-4 lg:px-0 overflow-x-visible overflow-y-visible touch-pan-y"
+      className="flex flex-col items-center gap-8 sm:gap-10 lg:flex-row lg:items-stretch lg:gap-6 xl:gap-8 w-full max-w-[100vw] lg:max-w-none overflow-x-visible overflow-y-visible touch-pan-y"
       id="service-cards"
     >
-      {serviceCardData.map((card, index) => (
-        <ServiceCard
-          key={card.title}
-          active={activeIndex === index}
-          {...card}
-        />
-      ))}
+      <Swiper
+        className="overflow-visible w-full"
+        slidesPerView={1}
+        slidesOffsetAfter={30}
+        spaceBetween={5}
+        onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+        onBreakpoint={(point) => setBreakpoint(point.currentBreakpoint)}
+        style={{ overflow: "visible" }}
+        breakpoints={{
+          768: {
+            slidesPerView: 2,
+            slidesOffsetAfter: 0,
+            spaceBetween: 5,
+          },
+          1024: {
+            slidesPerView: 1,
+            slidesOffsetAfter: 200,
+          },
+          1300: {
+            slidesPerView: 2,
+            slidesOffsetAfter: 30,
+          },
+        }}
+        centerInsufficientSlides={true}
+      >
+        {serviceCardData.map((card, index) => (
+          <SwiperSlide key={card.title}>
+            <div
+              className={`
+                transition-all duration-500 ease-in-out
+                ${index < activeIndex && "scale-0 opacity-0"}
+                ${index === activeIndex && "scale-100 z-10"}
+                ${index > activeIndex && "scale-100 opacity-100"}
+              `}
+              style={{
+                transformOrigin: "center",
+              }}
+            >
+              <ServiceCard active={activeIndex === index} {...card} />
+            </div>
+          </SwiperSlide>
+        ))}
+        {(breakpoint === "768" || breakpoint === "1300") && (
+          <SwiperSlide></SwiperSlide>
+        )}
+      </Swiper>
     </div>
   );
 };
@@ -77,7 +158,14 @@ const serviceCardData: ServiceCardProps[] = [
       "Pricing & Packaging",
       "Demand Gen & Content Engine",
     ],
-    tools: ["HubSpot", "Salesforce", "Google Analytics", "Mixpanel", "Intercom", "Zapier"],
+    tools: [
+      "HubSpot",
+      "Salesforce",
+      "Google Analytics",
+      "Mixpanel",
+      "Intercom",
+      "Zapier",
+    ],
     toolIcons: [
       <SiHubspot key="hubspot" />,
       <SiSalesforce key="salesforce" />,
