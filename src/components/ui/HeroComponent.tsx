@@ -92,10 +92,13 @@ const HeroComponent = () => {
             >
               <div className="flex max-w-xs lg:max-w-lg flex-col gap-10 md:items-start items-center text-center md:text-left">
                 <p>
-                  We empower organizations with AI that turns complex challenges into real-world outcomes.
+                  We empower organizations with AI that turns complex challenges
+                  into real-world outcomes.
                 </p>
                 <div className="flex text-lg">
-                  <Button onClick={() => setOpen(true)}>Start Your Project</Button>
+                  <Button onClick={() => setOpen(true)}>
+                    Start Your Project
+                  </Button>
                 </div>
               </div>
               <div className="flex text-sm mobile:gap-10 lg:gap-16 sm:justify-center md:justify-end justify-between w-full">

@@ -1,11 +1,13 @@
 "use client";
 import { animate, AnimatePresence, motion } from "motion/react";
 import Button from "./Button";
+import { useStartProjectModal } from "@/store";
 import { useLoading } from "@/store";
 import Counter from "./bits/Counter";
 import { useEffect, useState } from "react";
 
 const HeroComponent = () => {
+  const { setOpen } = useStartProjectModal();
   const finished = useLoading((s) => s.finished);
   const [projects, setProjects] = useState(0);
   const [satisfaction, setSatisfaction] = useState(0);
@@ -54,8 +56,8 @@ const HeroComponent = () => {
         >
           <div className="grow flex justify-center items-center ">
             <h1
-              className="text-3xl/[1.7rem] sm:text-4xl md:text-5xl xl:text-6xl 2xl:text-7xl font-light sm-text-left text-center 
-              sm:w-[500px] md:w-[660px] xl:w-[830px] 2xl:w-[1000px]
+              className="text-3xl/[1.7rem] sm:text-4xl md:text-5xl xl:text-6xl 2xl:text-7xl font-light sm-text-left text-left 
+              sm:w-[500px] md:w-[660px] xl:w-[830px] 2xl:w-[800px] text-shadow-lg text-shadow-background/20
               "
               id="hero-title"
             >
@@ -64,9 +66,9 @@ const HeroComponent = () => {
                 initial={{ x: 150 }}
                 animate={{ x: 0 }}
                 transition={{ duration: 2, ease: "anticipate" }}
-                className="flex justify-center sm:justify-start"
               >
-                Building <span className="italic font-bold pr-2">Digital</span>
+                <span>Building</span> <br />
+                <span className="-mt-3 block ">Digital Solutions</span>
               </motion.div>
               <motion.div
                 className="text-right mt-0 flex justify-center sm:justify-end"
@@ -75,7 +77,9 @@ const HeroComponent = () => {
                 animate={{ x: 0 }}
                 transition={{ duration: 2, ease: "anticipate" }}
               >
-                <span className="italic font-bold">Solutions</span> That Matter
+                <span className={`italic font-bold text-8xl px-3 `}>
+                  That Matter
+                </span>
               </motion.div>
             </h1>
           </div>
@@ -90,10 +94,13 @@ const HeroComponent = () => {
             >
               <div className="flex max-w-xs lg:max-w-lg flex-col gap-10 md:items-start items-center text-center md:text-left">
                 <p>
-                  We empower organizations with AI that turns complex challenges into real outcomes.
+                  We empower organizations with AI that turns complex challenges
+                  into real-world outcomes.
                 </p>
                 <div className="flex text-lg">
-                  <Button>Start Your Project</Button>
+                  <Button onClick={() => setOpen(true)}>
+                    Start Your Project
+                  </Button>
                 </div>
               </div>
               <div className="flex text-sm mobile:gap-10 lg:gap-16 sm:justify-center md:justify-end justify-between w-full">

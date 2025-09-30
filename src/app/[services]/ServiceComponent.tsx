@@ -65,7 +65,7 @@ const ServiceComponent = () => {
                   },
                 }}
               >
-                <motion.h3 className="text-2xl lg:text-4xl xl:text-6xl uppercase font-bold flex gap-3 max-w-xl">
+                <motion.h3 className="text-2xl lg:text-4xl xl:text-6xl uppercase font-bold flex gap-3 ">
                   <span className="text-base lg:text-xl align-top font-light lg:pt-1">
                     0{index + 1}
                   </span>
