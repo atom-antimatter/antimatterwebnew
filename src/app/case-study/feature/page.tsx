@@ -59,10 +59,6 @@ const TechStack = [
   "Agora streaming SDK",
 ];
 
-const PitchDeck = [
-  "/images/CaseStudies/feature/pitchdeck/1.jpg",
-  "/images/CaseStudies/feature/pitchdeck/2.jpg",
-  "/images/CaseStudies/feature/pitchdeck/3.jpg",
-  "/images/CaseStudies/feature/pitchdeck/4.jpg",
-  "/images/CaseStudies/feature/pitchdeck/5.jpg",
-];
+const PitchDeck = Array.from({ length: 21 }).map(
+  (_, index) => `/images/CaseStudies/feature/pitchdeck/${index + 1}.jpg`
+);

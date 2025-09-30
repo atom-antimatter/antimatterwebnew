@@ -137,22 +137,9 @@ const KeyStatsGrid = () => {
   );
 };
 
-const PitchDeck = [
-  "/images/CaseStudies/clinix/pitchdeck/1.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/2.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/3.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/4.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/5.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/6.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/7.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/8.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/9.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/10.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/11.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/12.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/13.jpg",
-  "/images/CaseStudies/clinix/pitchdeck/14.jpg",
-];
+const PitchDeck = Array.from({ length: 13 }).map(
+  (_, index) => `/images/CaseStudies/clinix/pitchdeck/${index + 1}.jpg`
+);
 
 const TechStack = [
   "Next.js",
