@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./css/Button.module.css";
 import { useStartProjectModal } from "@/store";
 
@@ -39,9 +39,9 @@ export default function StartProjectModal() {
     }
   }, [open]);
 
-  function close() {
+  const close = useCallback(() => {
     setOpen(false);
-  }
+  }, [setOpen]);
 
   async function onExportPdf() {
     if (!result?.html) return;
@@ -50,7 +50,10 @@ export default function StartProjectModal() {
       const resp = await fetch("/api/audit-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html: result.html, title: `Website Audit for ${websiteUrl}` }),
+        body: JSON.stringify({
+          html: result.html,
+          title: `Website Audit for ${websiteUrl}`,
+        }),
       });
       if (!resp.ok) throw new Error("Export failed");
       const blob = await resp.blob();
@@ -62,7 +65,7 @@ export default function StartProjectModal() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-    } catch (e) {
+    } catch {
       setError("Failed to export PDF. Please try again.");
     } finally {
       setSubmitting(false);
@@ -75,7 +78,7 @@ export default function StartProjectModal() {
     }
     if (open) document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, close]);
 
   async function onAnalyze(e: React.FormEvent) {
     e.preventDefault();
@@ -90,7 +93,10 @@ export default function StartProjectModal() {
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({} as any));
-        setError((data?.error ? `${data.error}` : "Failed to analyze site.") + (data?.details ? ` – ${data.details}` : ""));
+        setError(
+          (data?.error ? `${data.error}` : "Failed to analyze site.") +
+            (data?.details ? ` – ${data.details}` : "")
+        );
       } else if (response.body) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -116,6 +122,7 @@ export default function StartProjectModal() {
       }
     } catch (err: any) {
       setError("Unexpected error. Please try again.");
+      console.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -123,9 +130,12 @@ export default function StartProjectModal() {
 
   function onDownload() {
     if (!result?.html) return;
-    const blob = new Blob([
-      `<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Antimatter AI Website Audit</title><meta name="viewport" content="width=device-width, initial-scale=1"/><style>body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:#0B0B12;color:#EAEAF0;padding:32px;line-height:1.7}h2{margin-top:28px;margin-bottom:12px}h3{margin-top:16px;margin-bottom:8px}p{margin:8px 0}ul{margin:10px 0 10px 20px}li{margin:6px 0}</style></head><body><article>${result.html}</article></body></html>`
-    ], { type: "text/html" });
+    const blob = new Blob(
+      [
+        `<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Antimatter AI Website Audit</title><meta name="viewport" content="width=device-width, initial-scale=1"/><style>body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:#0B0B12;color:#EAEAF0;padding:32px;line-height:1.7}h2{margin-top:28px;margin-bottom:12px}h3{margin-top:16px;margin-bottom:8px}p{margin:8px 0}ul{margin:10px 0 10px 20px}li{margin:6px 0}</style></head><body><article>${result.html}</article></body></html>`,
+      ],
+      { type: "text/html" }
+    );
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -144,7 +154,11 @@ export default function StartProjectModal() {
       const resp = await fetch("/api/email-audit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: email, html: result.html, subject: "Your Antimatter AI Website Audit" }),
+        body: JSON.stringify({
+          to: email,
+          html: result.html,
+          subject: "Your Antimatter AI Website Audit",
+        }),
       });
       const data = await resp.json();
       if (!resp.ok) {
@@ -152,6 +166,7 @@ export default function StartProjectModal() {
       }
     } catch (e) {
       setError("Email failed. Please try again.");
+      console.error(e);
     } finally {
       setSubmitting(false);
     }
@@ -170,23 +185,41 @@ export default function StartProjectModal() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close} />
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={close}
+      />
       <div
         ref={dialogRef}
         className="relative z-[101] w-[92vw] max-w-[880px] max-h-[90vh] rounded-3xl border border-foreground/20 bg-gradient-to-b from-[#0F0F19] to-[#0A0A12] shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
       >
         <div className="p-5 sm:p-7 border-b border-foreground/10 flex items-center justify-between">
-          <h3 className="text-lg sm:text-xl font-semibold">Start your project</h3>
-          <button className="text-foreground/70 hover:text-foreground" onClick={close} aria-label="Close">
+          <h3 className="text-lg sm:text-xl font-semibold">
+            Start your project
+          </h3>
+          <button
+            className="text-foreground/70 hover:text-foreground"
+            onClick={close}
+            aria-label="Close"
+          >
             ×
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-6 p-4 sm:p-6">
-          <form className="lg:col-span-2 flex flex-col gap-3 sm:gap-4" onSubmit={onAnalyze}>
+          <form
+            className="lg:col-span-2 flex flex-col gap-3 sm:gap-4"
+            onSubmit={onAnalyze}
+          >
             <div className="flex flex-col gap-2">
-              <label className="text-xs uppercase tracking-wide opacity-70">Current website URL</label>
+              <label className="text-xs uppercase tracking-wide opacity-70">
+                Current website URL
+              </label>
               <input
                 className={fieldBase}
                 placeholder="https://example.com"
@@ -197,7 +230,9 @@ export default function StartProjectModal() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-xs uppercase tracking-wide opacity-70">Industry</label>
+              <label className="text-xs uppercase tracking-wide opacity-70">
+                Industry
+              </label>
               <input
                 className={fieldBase}
                 placeholder="Healthcare, eCommerce, SaaS, etc."
@@ -206,7 +241,9 @@ export default function StartProjectModal() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-xs uppercase tracking-wide opacity-70">Your name</label>
+              <label className="text-xs uppercase tracking-wide opacity-70">
+                Your name
+              </label>
               <input
                 className={fieldBase}
                 placeholder="Jane Doe"
@@ -215,7 +252,9 @@ export default function StartProjectModal() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-xs uppercase tracking-wide opacity-70">Title</label>
+              <label className="text-xs uppercase tracking-wide opacity-70">
+                Title
+              </label>
               <input
                 className={fieldBase}
                 placeholder="Head of Product"
@@ -225,7 +264,9 @@ export default function StartProjectModal() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-xs uppercase tracking-wide opacity-70">Email for report (optional)</label>
+              <label className="text-xs uppercase tracking-wide opacity-70">
+                Email for report (optional)
+              </label>
               <input
                 className={fieldBase}
                 placeholder="you@company.com"
@@ -244,7 +285,9 @@ export default function StartProjectModal() {
             </button>
 
             {error && (
-              <div className="text-red-400 text-sm pt-2 whitespace-pre-wrap break-words">{error}</div>
+              <div className="text-red-400 text-sm pt-2 whitespace-pre-wrap break-words">
+                {error}
+              </div>
             )}
           </form>
 
@@ -256,7 +299,9 @@ export default function StartProjectModal() {
             >
               {!result && !submitting && (
                 <div className="opacity-70 text-sm">
-                  Enter your site URL to get an AI-driven audit with prioritized recommendations across UI/UX, SEO, performance, and platform fit.
+                  Enter your site URL to get an AI-driven audit with prioritized
+                  recommendations across UI/UX, SEO, performance, and platform
+                  fit.
                 </div>
               )}
               {submitting && (
@@ -271,13 +316,23 @@ export default function StartProjectModal() {
             </div>
             <div className="sticky bottom-0 bg-gradient-to-t from-[#0A0A12] via-[#0A0A12]/90 to-transparent pt-3 mt-2">
               <div className="flex flex-wrap gap-3">
-                <button onClick={onDownload} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15">
+                <button
+                  onClick={onDownload}
+                  className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15"
+                >
                   Download HTML
                 </button>
-                <button onClick={onExportPdf} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15">
+                <button
+                  onClick={onExportPdf}
+                  className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15"
+                >
                   Download PDF
                 </button>
-                <button onClick={onEmailSend} disabled={!email || submitting} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60">
+                <button
+                  onClick={onEmailSend}
+                  disabled={!email || submitting}
+                  className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60"
+                >
                   Email Report
                 </button>
               </div>
@@ -288,5 +343,3 @@ export default function StartProjectModal() {
     </div>
   );
 }
-
-

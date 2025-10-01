@@ -13,8 +13,8 @@ const Title = ({ children, ...props }: Props) => {
         <span className="relative inline-block">{children}</span>
         <motion.div
           className="absolute top-0 left-0 h-full w-full pointer-events-none bg-gradient-to-l from-background from-20% to-transparent"
-          initial={{ x: "-100%" }}
-          whileInView={{ x: 50 }}
+          initial={{ x: "-98%" }}
+          whileInView={{ x: 60 }}
           transition={{ duration: 1.5, ease: "easeInOut" }}
           viewport={{ once: true }}
           style={{ zIndex: 1 }}

@@ -53,7 +53,7 @@ const NavBar = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, [hovering, lastScrollY]);
 
   if (path === "/" && !finished) return null;
 

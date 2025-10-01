@@ -1,12 +1,11 @@
 "use client";
+import { ServicesData } from "@/data/services";
+import { AnimatePresence, motion, Variants } from "motion/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import HamButton from "./HamButton";
 import NavButton from "./NavButton";
-import { AnimatePresence, motion, Variants } from "motion/react";
-import { useEffect, useState } from "react";
-import { FaAngleRight, FaArrowLeft, FaArrowRight } from "react-icons/fa6";
-import { ServicesData } from "@/data/services";
-import { li } from "motion/react-client";
 
 interface NavData {
   href?: string;

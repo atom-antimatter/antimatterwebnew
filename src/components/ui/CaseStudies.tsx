@@ -2,12 +2,13 @@
 import { useState } from "react";
 import WorkBox, { WorkListProps } from "./WorkBox";
 import Image from "next/image";
+import Reveal from "./Reveal";
 
 const CaseStudies = () => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
-      <div className="flex col-span-1 lg:col-span-7 flex-col">
+      <Reveal className="flex col-span-1 lg:col-span-7 flex-col">
         {WorkList.map((work, index) => (
           <WorkBox
             key={work.number}
@@ -16,8 +17,11 @@ const CaseStudies = () => {
             onMouseOver={() => setActiveIndex(index)}
           />
         ))}
-      </div>
-      <div className="col-span-5 h-full items-center hidden lg:flex justify-center relative">
+      </Reveal>
+      <Reveal
+        delay={0.2}
+        className="col-span-5 h-full items-center hidden lg:flex justify-center relative"
+      >
         <div className="absolute right-0 top-1/2 -translate-y-1/2">
           {WorkList[activeIndex]?.media?.type === "video" ? (
             <video
@@ -38,7 +42,7 @@ const CaseStudies = () => {
             />
           )}
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 };

@@ -1,53 +1,53 @@
 "use client";
-import ServiceCard, { ServiceCardProps } from "./ServiceCard";
 import { useActiveIndex } from "@/store";
-import "swiper/css";
-import {
-  SiFigma,
-  SiSketch,
-  SiAdobexd,
-  SiBlender,
-  SiThreedotjs,
-  SiAbstract,
-  SiReact,
-  SiFlutter,
-  SiNextdotjs,
-  SiNodedotjs,
-  SiDocker,
-  SiTypescript,
-  SiHubspot,
-  SiSalesforce,
-  SiGoogleanalytics,
-  SiMixpanel,
-  SiIntercom,
-  SiZapier,
-  SiAmazonwebservices,
-  SiGooglecloud,
-  SiOkta,
-  SiAuth0,
-  SiTwilio,
-  SiStripe,
-  SiTensorflow,
-  SiPytorch,
-  SiScikitlearn,
-  SiKeras,
-  SiHuggingface,
-  SiLangchain,
-  SiMqtt,
-  SiArduino,
-  SiRaspberrypi,
-  SiNodered,
-  SiZigbee,
-  SiNordicsemiconductor,
-} from "react-icons/si";
-import { Swiper, SwiperSlide, useSwiper } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
 import { memo, useCallback, useState } from "react";
-import type { Swiper as SwiperTypes } from "swiper/types";
 import {
   HiOutlineArrowLongLeft,
   HiOutlineArrowLongRight,
 } from "react-icons/hi2";
+import {
+  SiAbstract,
+  SiAdobexd,
+  SiAmazonwebservices,
+  SiArduino,
+  SiAuth0,
+  SiBlender,
+  SiDocker,
+  SiFigma,
+  SiFlutter,
+  SiGoogleanalytics,
+  SiGooglecloud,
+  SiHubspot,
+  SiHuggingface,
+  SiIntercom,
+  SiKeras,
+  SiLangchain,
+  SiMixpanel,
+  SiMqtt,
+  SiNextdotjs,
+  SiNodedotjs,
+  SiNodered,
+  SiNordicsemiconductor,
+  SiOkta,
+  SiPytorch,
+  SiRaspberrypi,
+  SiReact,
+  SiSalesforce,
+  SiScikitlearn,
+  SiSketch,
+  SiStripe,
+  SiTensorflow,
+  SiThreedotjs,
+  SiTwilio,
+  SiTypescript,
+  SiZapier,
+  SiZigbee,
+} from "react-icons/si";
+import "swiper/css";
+import { Navigation, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperTypes } from "swiper/types";
+import ServiceCard, { ServiceCardProps } from "./ServiceCard";
 
 const MemoizedServiceCard = memo(function ServiceCardWrapper(
   props: ServiceCardProps
@@ -75,16 +75,19 @@ const ServiceCardContainer = () => {
     },
     [activeIndex]
   );
-  const updateBullets = (swiper: SwiperTypes) => {
-    const bullets = document.querySelectorAll(".custom-bullet");
-    bullets.forEach((b, i) => {
-      b.classList.remove("active", "neighbor");
-      if (i === swiper.activeIndex) b.classList.add("active");
-      if (i === swiper.activeIndex - 1 || i === swiper.activeIndex + 1)
-        b.classList.add("neighbor");
-    });
-    setActiveIndex(swiper.activeIndex);
-  };
+  const updateBullets = useCallback(
+    (swiper: SwiperTypes) => {
+      const bullets = document.querySelectorAll(".custom-bullet");
+      bullets.forEach((b, i) => {
+        b.classList.remove("active", "neighbor");
+        if (i === swiper.activeIndex) b.classList.add("active");
+        if (i === swiper.activeIndex - 1 || i === swiper.activeIndex + 1)
+          b.classList.add("neighbor");
+      });
+      setActiveIndex(swiper.activeIndex);
+    },
+    [setActiveIndex]
+  );
 
   const handleSlideChange = useCallback(
     (swiper: SwiperTypes) => {
@@ -93,7 +96,7 @@ const ServiceCardContainer = () => {
       setIsEnd(swiper.isEnd);
       updateBullets(swiper);
     },
-    [setActiveIndex]
+    [updateBullets, setActiveIndex]
   );
 
   return (

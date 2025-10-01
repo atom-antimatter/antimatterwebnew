@@ -12,7 +12,10 @@ export async function POST(request: Request) {
     };
 
     if (!to || !html) {
-      return NextResponse.json({ error: "Missing 'to' or 'html'" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing 'to' or 'html'" },
+        { status: 400 }
+      );
     }
 
     const apiKey = process.env.RESEND_API_KEY;
@@ -40,14 +43,19 @@ export async function POST(request: Request) {
 
     if (!resp.ok) {
       const err = await resp.text();
-      return NextResponse.json({ error: "Email send failed", details: err }, { status: 502 });
+      return NextResponse.json(
+        { error: "Email send failed", details: err },
+        { status: 502 }
+      );
     }
 
     const data = await resp.json();
     return NextResponse.json({ ok: true, id: data?.id || null });
   } catch (e) {
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    console.error(e);
+    return NextResponse.json(
+      { error: "Unexpected server error" },
+      { status: 500 }
+    );
   }
 }
-
-
