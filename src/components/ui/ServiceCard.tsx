@@ -22,7 +22,7 @@ const ServiceCard = (props: ServiceCardProps) => {
           props.active ? "scale-100" : "scale-90"
         }`}
       >
-        <div className={`p-5 sm:p-10 h-full relative z-10`}>
+        <div className={`px-5 py-8 sm:py-10  sm:px-10 h-full relative z-10`}>
           <div
             className={`w-full h-full duration-200 ${bgcolor} absolute inset-0 rounded-3xl`}
           ></div>
@@ -68,11 +68,11 @@ const ServiceCard = (props: ServiceCardProps) => {
                   <div>
                     <h3 className="text-foreground/60 text-lg">Tools</h3>
                     {props.toolIcons && props.toolIcons.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-x-1 gap-y-3 sm:gap-x-2 sm:gap-y-4 lg:gap-x-4 lg:gap-y-4 pt-1">
+                      <div className="grid grid-cols-3 gap-x-1 gap-y-3 sm:gap-x-2 sm:gap-y-4 lg:gap-x-4 lg:gap-y-4 pt-1 w-[100px] text-center">
                         {props.toolIcons.map((IconNode, index) => (
                           <span
                             key={index}
-                            className="text-3xl sm:text-4xl lg:text-3xl xl:text-3xl opacity-90"
+                            className="text-2xl sm:text-2xl lg:text-2xl xl:text-3xl opacity-90"
                             aria-hidden
                           >
                             {IconNode}
@@ -94,7 +94,7 @@ const ServiceCard = (props: ServiceCardProps) => {
             </div>
           </div>
         </div>
-        <div className="hidden lg:block absolute inset-0 -translate-1/2 size-[500px] bg-radial from-[#B4B5ED] via-[696AAC] to-transparent"></div>
+        <div className="block absolute inset-0 -translate-1/2 size-[500px] bg-radial from-[#B4B5ED] via-[696AAC] to-transparent"></div>
       </div>
     </div>
   );

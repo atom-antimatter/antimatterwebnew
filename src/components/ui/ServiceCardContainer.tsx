@@ -40,24 +40,113 @@ import {
   SiZigbee,
   SiNordicsemiconductor,
 } from "react-icons/si";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { useState } from "react";
+import { Swiper, SwiperSlide, useSwiper } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import { memo, useCallback, useState } from "react";
+import type { Swiper as SwiperTypes } from "swiper/types";
+import {
+  HiOutlineArrowLongLeft,
+  HiOutlineArrowLongRight,
+} from "react-icons/hi2";
+
+const MemoizedServiceCard = memo(function ServiceCardWrapper(
+  props: ServiceCardProps
+) {
+  return <ServiceCard {...props} />;
+});
 
 const ServiceCardContainer = () => {
   const activeIndex = useActiveIndex((state) => state.activeIndex);
   const setActiveIndex = useActiveIndex((state) => state.setActiveIndex);
+
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
   const [breakpoint, setBreakpoint] = useState("");
+
+  //  Bullet rendering moved fully into React
+  const renderBullet = useCallback(
+    (index: number, className: string) => {
+      let extraClass = "";
+      if (index === activeIndex) extraClass = "active";
+      else if (index === activeIndex - 1 || index === activeIndex + 1)
+        extraClass = "neighbor";
+
+      return `<span class="${className} custom-bullet block w-1 h-7 bg-foreground/70 hover:bg-foreground mx-[3px] transition-transform duration-300 ${extraClass}"></span>`;
+    },
+    [activeIndex]
+  );
+  const updateBullets = (swiper: SwiperTypes) => {
+    const bullets = document.querySelectorAll(".custom-bullet");
+    bullets.forEach((b, i) => {
+      b.classList.remove("active", "neighbor");
+      if (i === swiper.activeIndex) b.classList.add("active");
+      if (i === swiper.activeIndex - 1 || i === swiper.activeIndex + 1)
+        b.classList.add("neighbor");
+    });
+    setActiveIndex(swiper.activeIndex);
+  };
+
+  const handleSlideChange = useCallback(
+    (swiper: SwiperTypes) => {
+      setActiveIndex(swiper.activeIndex);
+      setIsBeginning(swiper.isBeginning);
+      setIsEnd(swiper.isEnd);
+      updateBullets(swiper);
+    },
+    [setActiveIndex]
+  );
+
   return (
-    <div
-      className="flex flex-col items-center gap-8 sm:gap-10 lg:flex-row lg:items-stretch lg:gap-6 xl:gap-8 w-full max-w-[100vw] lg:max-w-none overflow-x-visible overflow-y-visible touch-pan-y"
-      id="service-cards"
-    >
+    <div id="service-cards">
+      {/* Navigation & Pagination */}
+      <div className="flex mb-8 justify-between items-center">
+        <div
+          className={`px-5 border border-foreground/30 rounded-full transition-colors slider-prev
+          ${
+            isBeginning
+              ? "opacity-30 pointer-events-none"
+              : "hover:bg-foreground/10 cursor-pointer"
+          }`}
+        >
+          <HiOutlineArrowLongLeft className="size-7 sm:size-10" />
+        </div>
+
+        <div className="slider-pagination flex cursor-pointer"></div>
+
+        <div
+          className={`px-5 border border-foreground/30 rounded-full transition-colors slider-next
+          ${
+            isEnd
+              ? "opacity-30 pointer-events-none"
+              : "hover:bg-foreground/10 cursor-pointer"
+          }`}
+        >
+          <HiOutlineArrowLongRight className="size-7 sm:size-10" />
+        </div>
+      </div>
+
+      {/* Swiper */}
       <Swiper
         className="overflow-visible w-full"
         slidesPerView={1}
         slidesOffsetAfter={30}
+        modules={[Navigation, Pagination]}
         spaceBetween={5}
-        onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+        navigation={{
+          nextEl: ".slider-next",
+          prevEl: ".slider-prev",
+        }}
+        pagination={{
+          el: ".slider-pagination",
+          clickable: true,
+          renderBullet,
+        }}
+        onSwiper={(swiper) => {
+          setIsBeginning(swiper.isBeginning);
+          setIsEnd(swiper.isEnd);
+          updateBullets(swiper);
+        }}
+        onSlideChange={handleSlideChange}
         onBreakpoint={(point) => setBreakpoint(point.currentBreakpoint)}
         style={{ overflow: "visible" }}
         breakpoints={{
@@ -86,18 +175,36 @@ const ServiceCardContainer = () => {
                 ${index === activeIndex && "scale-100 z-10"}
                 ${index > activeIndex && "scale-100 opacity-100"}
               `}
-              style={{
-                transformOrigin: "center",
-              }}
+              style={{ transformOrigin: "center" }}
             >
-              <ServiceCard active={activeIndex === index} {...card} />
+              <MemoizedServiceCard active={activeIndex === index} {...card} />
             </div>
           </SwiperSlide>
         ))}
+
+        {/* Avoid unnecessary empty slide */}
         {(breakpoint === "768" || breakpoint === "1300") && (
           <SwiperSlide></SwiperSlide>
         )}
       </Swiper>
+
+      {/* Bullet styles */}
+      <style jsx global>{`
+        .custom-bullet {
+          transform-origin: center;
+          transform: scaleY(0.6);
+        }
+        .custom-bullet:hover {
+          transform: scaleY(1);
+        }
+        .custom-bullet.active {
+          transform: scale(1.1);
+          background: white;
+        }
+        .custom-bullet.neighbor {
+          transform: scaleY(0.8);
+        }
+      `}</style>
     </div>
   );
 };
@@ -134,7 +241,7 @@ const serviceCardData: ServiceCardProps[] = [
     services: [
       "Frontend Platforms (React / Next)",
       "Backend APIs & Microservices (Node)",
-      "Mobile & Cross‑platform (Flutter)",
+      "Mobile & Cross-platform (Flutter)",
       "CI/CD & Cloud Ops (Docker)",
     ],
     tools: ["React", "Flutter", "Next.js", "Node.js", "Docker", "TypeScript"],
@@ -151,7 +258,7 @@ const serviceCardData: ServiceCardProps[] = [
     number: "03",
     title: "GTM Strategy",
     description:
-      "Data-driven go-to-market for SaaS and AI—clear positioning, smart pricing, and repeatable growth loops from ICP to post‑launch analytics.",
+      "Data-driven go-to-market for SaaS and AI—clear positioning, smart pricing, and repeatable growth loops from ICP to post-launch analytics.",
     services: [
       "ICP & Segmentation",
       "Positioning, Narrative & Messaging",
