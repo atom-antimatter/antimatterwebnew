@@ -7,13 +7,13 @@ import { createParticleSystem, ParticleSystem } from "./lib/particlesSetup";
 import { loadModelPointsCancellable } from "./lib/modelLoader";
 import { setupInteractions } from "./lib/interactions";
 import { startAnimationLoop } from "./lib/animations";
-import { useLoading } from "@/store";
-import gsap from "gsap";
+import { useActiveIndex, useLoading } from "@/store";
 
 export default function Particles3D() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const animationCancelRef = useRef<() => void>(() => {});
   const setisLoading = useLoading((s) => s.setisLoading);
+  const setActiveIndex = useActiveIndex((s) => s.setActiveIndex);
   const mountedRef = useRef(false);
 
   useEffect(() => {
@@ -62,28 +62,6 @@ export default function Particles3D() {
         if (mountedRef.current) setTimeout(() => setisLoading(false), 0);
       });
 
-    let animating = false;
-    const morphToShape = (index: number) => {
-      const clamped = Math.max(
-        0,
-        Math.min(index, modelPositionsArray.length - 1)
-      );
-      if (animating || clamped === currentIndexRef.current) return;
-      animating = true;
-      nextIndexRef.current = clamped;
-
-      const timeline = gsap.timeline({
-        defaults: { duration: 1, ease: "power2.inOut" },
-        onComplete: () => {
-          currentIndexRef.current = clamped;
-          morphProgressRef.current = 0;
-          animating = false;
-        },
-      });
-
-      timeline.to(morphProgressRef, { current: 1 }, 0);
-    };
-
     const {
       mouse,
       morphProgressRef,
@@ -91,7 +69,11 @@ export default function Particles3D() {
       nextIndexRef,
       onResize,
       dispose: disposeInteractions,
-    } = setupInteractions(containerRef.current, morphToShape);
+    } = setupInteractions(
+      modelPositionsArray,
+      containerRef.current,
+      setActiveIndex
+    );
 
     const resizeHandler = () => {
       resizeToContainer();
@@ -153,7 +135,7 @@ export default function Particles3D() {
       // abort any inflight model loads
       loaders.forEach((l) => l.abort());
     };
-  }, [setisLoading]);
+  }, [setActiveIndex, setisLoading]);
 
   return (
     <div

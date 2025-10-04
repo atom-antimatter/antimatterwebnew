@@ -12,11 +12,11 @@ export interface ServiceCardProps {
 
 const ServiceCard = (props: ServiceCardProps) => {
   const bgcolor = props.active
-    ? "lg:bg-primary bg-[url('/images/service-card-bg.png')] bg-cover bg-bottom-right bg-no-repeat"
+    ? "lg:bg-primary lg:bg-none bg-[url('/images/service-card-bg.png')] bg-cover bg-bottom-right bg-no-repeat"
     : "bg-[url('/images/service-card-bg.png')] bg-cover bg-bottom-right bg-no-repeat";
 
   return (
-    <div className="service-card w-full">
+    <div className="w-full">
       <div
         className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-white/20 ring-inset shadow-none overflow-hidden rounded-3xl w-full h-[560px] ${bgcolor} duration-500 ${
           props.active ? "scale-100" : "scale-90"

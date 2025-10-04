@@ -8,8 +8,9 @@ export type IndexRef = { current: number };
 export type ProgressRef = { current: number };
 
 export function setupInteractions(
+  modelPositionsArray: THREE.Vector3[][],
   container: HTMLDivElement,
-  morphToShape: (index: number) => void
+  setActiveIndex: (index: number) => void
 ) {
   const mouse = new THREE.Vector2(-10, -10);
   const currentIndexRef: IndexRef = { current: 0 };
@@ -33,6 +34,28 @@ export function setupInteractions(
 
   // ---- GSAP timelines with ScrollTriggers
 
+  let animating = false;
+  const morphToShape = (index: number) => {
+    const clamped = Math.max(
+      0,
+      Math.min(index, modelPositionsArray.length - 1)
+    );
+    if (animating || clamped === currentIndexRef.current) return;
+    animating = true;
+    nextIndexRef.current = clamped;
+
+    const timeline = gsap.timeline({
+      defaults: { duration: 1, ease: "power2.inOut" },
+      onComplete: () => {
+        currentIndexRef.current = clamped;
+        morphProgressRef.current = 0;
+        animating = false;
+      },
+    });
+
+    timeline.to(morphProgressRef, { current: 1 }, 0);
+  };
+
   const ctx = gsap.context(() => {
     const media = gsap.matchMedia();
     media.add(
@@ -50,6 +73,75 @@ export function setupInteractions(
           // Ensure sphere stays centered and static on mobile
           gsap.set("#particles3d", { clearProps: "x,y", x: 0, y: 0 });
           return;
+        }
+
+        if (isTabletUp) {
+          const cardElements = gsap.utils.toArray(
+            ".service-card"
+          ) as HTMLElement[];
+          const scrollTriggerCards: ScrollTrigger.Vars | undefined = {
+            trigger: "#services",
+            start: "center center",
+            end: "+=3000",
+            pinSpacing: true,
+            pin: true,
+            scrub: true,
+          };
+
+          const timeline2 = gsap.timeline({
+            scrollTrigger: scrollTriggerCards,
+          });
+
+          const pauseDuration = 0.5;
+
+          cardElements.forEach((el, index) => {
+            if (index === cardElements.length - 1) return;
+            const cardWidth = el.offsetWidth;
+
+            timeline2.to(
+              "#service-cards",
+              {
+                x: -(cardWidth * (1 + index)),
+                duration: 1,
+                onComplete: () => {
+                  setActiveIndex(index + 1);
+                  morphToShape(index + 2);
+                },
+                onReverseComplete: () => {
+                  setActiveIndex(index);
+                  morphToShape(index + 1);
+                },
+              },
+              `+=${pauseDuration}`
+            );
+            timeline2.to(
+              cardElements[index],
+              {
+                opacity: 0,
+                scale: 0.5,
+                delay: 1,
+                duration: 0.5,
+                ease: "power1.inOut",
+              },
+              "<-0.7"
+            );
+          });
+
+          const scrollTriggerExit: ScrollTrigger.Vars = {
+            trigger: "#service-section",
+            start: "bottom bottom",
+            scrub: true,
+            invalidateOnRefresh: true,
+          };
+
+          const timeline3 = gsap.timeline({ scrollTrigger: scrollTriggerExit });
+
+          timeline3.to("#particles3d", {
+            duration: 1,
+            delay: 0.2,
+            ease: "none",
+            y: "-100%",
+          });
         }
 
         const xValue = isDesktop ? "-55%" : isScreen1 ? "-60%" : "-50%";
@@ -75,26 +167,6 @@ export function setupInteractions(
         );
       }
     );
-
-    const isTabletUpForExit = window.matchMedia("(min-width: 1024px)").matches;
-    const scrollTriggerExit: ScrollTrigger.Vars | undefined = isTabletUpForExit
-      ? {
-          trigger: "#service-section",
-          start: "bottom bottom",
-          scrub: true,
-          invalidateOnRefresh: true,
-        }
-      : undefined;
-    const timeline3 = gsap.timeline({ scrollTrigger: scrollTriggerExit });
-
-    if (window.matchMedia("(min-width: 1024px)").matches) {
-      timeline3.to("#particles3d", {
-        duration: 1,
-        delay: 0.2,
-        ease: "none",
-        y: "-100%",
-      });
-    }
   });
 
   function onResize(
