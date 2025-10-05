@@ -1,221 +1,160 @@
 "use client";
-import { useActiveIndex } from "@/store";
-import { memo, useEffect, useState } from "react";
-import {
-  SiAbstract,
-  SiAdobexd,
-  SiAmazonwebservices,
-  SiArduino,
-  SiAuth0,
-  SiBlender,
-  SiDocker,
-  SiFigma,
-  SiFlutter,
-  SiGoogleanalytics,
-  SiGooglecloud,
-  SiHubspot,
-  SiHuggingface,
-  SiIntercom,
-  SiKeras,
-  SiLangchain,
-  SiMixpanel,
-  SiMqtt,
-  SiNextdotjs,
-  SiNodedotjs,
-  SiNodered,
-  SiNordicsemiconductor,
-  SiOkta,
-  SiPytorch,
-  SiRaspberrypi,
-  SiReact,
-  SiSalesforce,
-  SiScikitlearn,
-  SiSketch,
-  SiStripe,
-  SiTensorflow,
-  SiThreedotjs,
-  SiTwilio,
-  SiTypescript,
-  SiZapier,
-  SiZigbee,
-} from "react-icons/si";
-import ServiceCard, { ServiceCardProps } from "./ServiceCard";
-import SwiperService from "./SwiperService";
-import ScrollService from "./ScrollService";
 
-const MemoizedServiceCard = memo(function ServiceCardWrapper(
-  props: ServiceCardProps
-) {
-  return <ServiceCard {...props} />;
-});
+import { serviceCardData } from "@/data/servicesHome";
+import { useActiveIndex } from "@/store";
+import { useCallback, useState } from "react";
+import {
+  HiOutlineArrowLongLeft,
+  HiOutlineArrowLongRight,
+} from "react-icons/hi2";
+import "swiper/css";
+import { Navigation, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperTypes } from "swiper/types";
+import ServiceCard from "./ServiceCard";
 
 const ServiceCardContainer = () => {
   const activeIndex = useActiveIndex((state) => state.activeIndex);
-  const [isDesktop, setIsDesktop] = useState<boolean>(true);
+  const setActiveIndex = useActiveIndex((state) => state.setActiveIndex);
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 1024px)");
-    setIsDesktop(mediaQuery.matches);
-    const handleChange = (event: MediaQueryListEvent) => {
-      setIsDesktop(event.matches);
-    };
-    mediaQuery.addEventListener("change", handleChange);
-    return () => {
-      mediaQuery.removeEventListener("change", handleChange);
-    };
-  }, []);
+  const renderBullet = useCallback(
+    (index: number, className: string) => {
+      const isActive = index === activeIndex;
+      const isNeighbor = index === activeIndex - 1 || index === activeIndex + 1;
+
+      const extraClass = isActive ? "active" : isNeighbor ? "neighbor" : "";
+
+      return `<span class="${className} custom-bullet block w-1 h-7 bg-foreground/70 hover:bg-foreground mx-[3px] transition-transform duration-300 ${extraClass}"></span>`;
+    },
+    [activeIndex]
+  );
+
+  const updateBullets = useCallback(
+    (swiper: SwiperTypes) => {
+      const bullets = document.querySelectorAll(".custom-bullet");
+      bullets.forEach((b, i) => {
+        b.classList.remove("active", "neighbor");
+        if (i === swiper.activeIndex) b.classList.add("active");
+        if (i === swiper.activeIndex - 1 || i === swiper.activeIndex + 1)
+          b.classList.add("neighbor");
+      });
+      setActiveIndex(swiper.activeIndex);
+    },
+    [setActiveIndex]
+  );
+
+  const handleSlideChange = useCallback(
+    (swiper: SwiperTypes) => {
+      setActiveIndex(swiper.activeIndex);
+      setIsBeginning(swiper.isBeginning);
+      setIsEnd(swiper.isEnd);
+      updateBullets(swiper);
+    },
+    [setActiveIndex, updateBullets]
+  );
 
   return (
     <div id="service-cards">
-      {isDesktop ? (
-        <ScrollService
-          activeIndex={activeIndex}
-          MemoizedServiceCard={MemoizedServiceCard}
-          serviceCardData={serviceCardData}
-        />
-      ) : (
-        <SwiperService
-          activeIndex={activeIndex}
-          MemoizedServiceCard={MemoizedServiceCard}
-          serviceCardData={serviceCardData}
-        />
-      )}
+      {/* Navigation */}
+      <div className="flex mb-8 justify-between items-center lg:hidden">
+        <button
+          aria-label="Previous slide"
+          className={`px-5 border border-foreground/30 rounded-full transition-colors slider-prev ${
+            isBeginning
+              ? "opacity-30 pointer-events-none"
+              : "hover:bg-foreground/10 cursor-pointer"
+          }`}
+        >
+          <HiOutlineArrowLongLeft className="size-7 sm:size-10" />
+        </button>
+
+        <div className="slider-pagination flex cursor-pointer" />
+
+        <button
+          aria-label="Next slide"
+          className={`px-5 border border-foreground/30 rounded-full transition-colors slider-next ${
+            isEnd
+              ? "opacity-30 pointer-events-none"
+              : "hover:bg-foreground/10 cursor-pointer"
+          }`}
+        >
+          <HiOutlineArrowLongRight className="size-7 sm:size-10" />
+        </button>
+      </div>
+
+      {/* Swiper */}
+      <Swiper
+        className="overflow-visible w-full"
+        slidesPerView={1}
+        slidesOffsetAfter={30}
+        spaceBetween={5}
+        modules={[Navigation, Pagination]}
+        navigation={{
+          nextEl: ".slider-next",
+          prevEl: ".slider-prev",
+        }}
+        pagination={{
+          el: ".slider-pagination",
+          clickable: true,
+          renderBullet,
+        }}
+        onSwiper={handleSlideChange}
+        style={{ overflow: "visible" }}
+        onSlideChange={handleSlideChange}
+        breakpoints={{
+          768: {
+            slidesPerView: 2,
+            spaceBetween: 5,
+            slidesOffsetAfter: 0,
+          },
+          1024: {
+            slidesPerView: "auto",
+            allowTouchMove: false,
+            simulateTouch: false,
+            pagination: false,
+            navigation: false,
+            slidesOffsetAfter: 0,
+            spaceBetween: 0,
+          },
+        }}
+      >
+        {serviceCardData.map((card, index) => (
+          <SwiperSlide
+            key={card.title}
+            className="lg:!w-auto transition-all duration-500 ease-in-out"
+          >
+            <div
+              className={`
+                transition-all duration-500 ease-in-out
+                service-card w-full lg:w-[340px] xl:w-[380px] 2xl:w-[460px] shrink-0
+              `}
+            >
+              <ServiceCard active={activeIndex === index} {...card} />
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      <style jsx global>{`
+        .custom-bullet {
+          transform-origin: center;
+          transform: scaleY(0.6);
+        }
+        .custom-bullet:hover {
+          transform: scaleY(1);
+        }
+        .custom-bullet.active {
+          transform: scale(1.1);
+          background: white;
+        }
+        .custom-bullet.neighbor {
+          transform: scaleY(0.8);
+        }
+      `}</style>
     </div>
   );
 };
 
 export default ServiceCardContainer;
-
-const serviceCardData: ServiceCardProps[] = [
-  {
-    number: "01",
-    title: "Product Design",
-    description:
-      "End-to-end product design—from research and UX flows to polished UI systems and developer-ready handoff.",
-    services: [
-      "User Research & Strategy",
-      "UX Flows & Wireframes",
-      "UI Systems & Prototypes",
-      "Design Ops & Dev Handoff",
-    ],
-    tools: ["Figma", "Sketch", "Adobe XD", "Blender", "Three.js", "Abstract"],
-    toolIcons: [
-      <SiFigma key="figma" />,
-      <SiSketch key="sketch" />,
-      <SiAdobexd key="xd" />,
-      <SiBlender key="blender" />,
-      <SiThreedotjs key="three" />,
-      <SiAbstract key="abstract" />,
-    ],
-  },
-  {
-    number: "02",
-    title: "Development",
-    description:
-      "Robust, scalable products across web and mobile—from elegant UIs to reliable APIs and automated DevOps.",
-    services: [
-      "Frontend Platforms (React / Next)",
-      "Backend APIs & Microservices (Node)",
-      "Mobile & Cross-platform (Flutter)",
-      "CI/CD & Cloud Ops (Docker)",
-    ],
-    tools: ["React", "Flutter", "Next.js", "Node.js", "Docker", "TypeScript"],
-    toolIcons: [
-      <SiReact key="react" />,
-      <SiFlutter key="flutter" />,
-      <SiNextdotjs key="next" />,
-      <SiNodedotjs key="node" />,
-      <SiDocker key="docker" />,
-      <SiTypescript key="ts" />,
-    ],
-  },
-  {
-    number: "03",
-    title: "GTM Strategy",
-    description:
-      "Data-driven go-to-market for SaaS and AI—clear positioning, smart pricing, and repeatable growth loops from ICP to post-launch analytics.",
-    services: [
-      "ICP & Segmentation",
-      "Positioning, Narrative & Messaging",
-      "Pricing & Packaging",
-      "Demand Gen & Content Engine",
-    ],
-    tools: [
-      "HubSpot",
-      "Salesforce",
-      "Google Analytics",
-      "Mixpanel",
-      "Intercom",
-      "Zapier",
-    ],
-    toolIcons: [
-      <SiHubspot key="hubspot" />,
-      <SiSalesforce key="salesforce" />,
-      <SiGoogleanalytics key="ga" />,
-      <SiMixpanel key="mixpanel" />,
-      <SiIntercom key="intercom" />,
-      <SiZapier key="zapier" />,
-    ],
-  },
-  {
-    number: "04",
-    title: "Healthcare Apps",
-    description:
-      "Secure, compliant healthcare software—from telehealth to EHR integrations—built for HIPAA and auditability.",
-    services: [
-      "HIPAA & PHI Compliance",
-      "Telehealth & Patient Portals",
-      "EHR Integrations (FHIR / HL7)",
-      "Audit Logging & Access Controls",
-    ],
-    toolIcons: [
-      <SiAmazonwebservices key="aws" />,
-      <SiGooglecloud key="gcp" />,
-      <SiOkta key="okta" />,
-      <SiAuth0 key="auth0" />,
-      <SiTwilio key="twilio" />,
-      <SiStripe key="stripe" />,
-    ],
-  },
-  {
-    number: "05",
-    title: "AI Development",
-    description:
-      "Build production‑ready AI—rapid prototyping to deployed models with solid evals, observability, and safety.",
-    services: [
-      "LLM Apps & Agents (RAG / Tools)",
-      "Fine‑tuning & Prompt Optimization",
-      "Model Evals, Guardrails & Monitoring",
-      "Vision, NLP & Speech Pipelines",
-    ],
-    toolIcons: [
-      // Frameworks & tools
-      <SiTensorflow key="tensorflow" />,
-      <SiPytorch key="pytorch" />,
-      <SiScikitlearn key="sklearn" />,
-      <SiKeras key="keras" />,
-      <SiHuggingface key="hf" />,
-      <SiLangchain key="langchain" />,
-    ],
-  },
-  {
-    number: "06",
-    title: "IoT Development",
-    description:
-      "From device firmware to cloud ingestion—secure, reliable IoT systems with OTA updates and real‑time telemetry.",
-    services: [
-      "Embedded Firmware & Drivers",
-      "BLE / Zigbee / LoRa Connectivity",
-      "MQTT Ingestion & Stream Processing",
-      "Edge AI & OTA Update Pipelines",
-    ],
-    toolIcons: [
-      <SiArduino key="arduino" />,
-      <SiRaspberrypi key="raspberrypi" />,
-      <SiMqtt key="mqtt" />,
-      <SiNodered key="nodered" />,
-      <SiZigbee key="zigbee" />,
-      <SiNordicsemiconductor key="nordic" />,
-    ],
-  },
-];
