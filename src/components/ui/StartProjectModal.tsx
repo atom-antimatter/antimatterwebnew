@@ -20,6 +20,8 @@ export default function StartProjectModal() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const scrollYRef = useRef<number>(0);
@@ -54,18 +56,24 @@ export default function StartProjectModal() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setUrlError(null);
+    setSuccess(null);
     setResult(null);
     try {
+      let normalized = websiteUrl.trim();
+      if (normalized && !/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
       const response = await fetch("/api/site-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ websiteUrl, industry, name, title }),
+        body: JSON.stringify({ websiteUrl: normalized, industry, name, title }),
       });
       const data = await response.json();
       if (!response.ok) {
-        setError(data?.error || "Failed to analyze site.");
+        const msg = String(data?.error || "Failed to analyze site.");
+        if (/url|invalid/i.test(msg)) setUrlError(msg); else setError(msg);
       } else {
-        setResult({ html: data?.result || "" });
+        const raw = data?.result || "";
+        setResult({ html: sanitizeAuditHtml(raw) });
       }
     } catch (err: any) {
       setError("Unexpected error. Please try again.");
@@ -74,19 +82,33 @@ export default function StartProjectModal() {
     }
   }
 
-  function onDownload() {
+  async function onDownloadPdf() {
     if (!result?.html) return;
-    const blob = new Blob([
-      `<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Antimatter AI Website Audit</title><meta name="viewport" content="width=device-width, initial-scale=1"/><style>body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:#0B0B12;color:#EAEAF0;padding:32px;line-height:1.7}h2{margin-top:28px;margin-bottom:12px}h3{margin-top:16px;margin-bottom:8px}p{margin:8px 0}ul{margin:10px 0 10px 20px}li{margin:6px 0}</style></head><body><article>${result.html}</article></body></html>`
-    ], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "antimatter-ai-website-audit.html";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const resp = await fetch("/api/quote", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html: result.html }),
+      });
+      if (!resp.ok) throw new Error("Failed to generate PDF");
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Antimatter-AI-Website-Audit.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setSuccess("PDF downloaded.");
+    } catch (e) {
+      setError("Could not generate PDF. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function onEmailSend() {
@@ -115,6 +137,8 @@ export default function StartProjectModal() {
       if (!resp.ok) {
         const details = typeof data?.details === "string" ? `: ${data.details}` : "";
         setError((data?.error || "Failed to send email") + details);
+      } else {
+        setSuccess("Email sent.");
       }
     } catch (e) {
       setError("Email failed. Please try again.");
@@ -175,6 +199,7 @@ export default function StartProjectModal() {
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 required
               />
+              {urlError && <div className="text-red-400 text-xs pt-1">{urlError}</div>}
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-xs uppercase tracking-wide opacity-70">Industry</label>
@@ -227,15 +252,18 @@ export default function StartProjectModal() {
             {error && (
               <div className="text-red-400 text-sm pt-2">{error}</div>
             )}
+            {success && (
+              <div className="text-emerald-400 text-sm pt-2">{success}</div>
+            )}
 
             <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={onDownload}
+                onClick={onDownloadPdf}
                 disabled={!result?.html || submitting}
                 className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Download HTML
+                Download PDF
               </button>
               <button
                 type="button"
@@ -309,6 +337,16 @@ function RotatingTasks() {
     return () => clearInterval(id);
   }, []);
   return <span className="opacity-80">{tasks[idx]}…</span>;
+}
+
+function sanitizeAuditHtml(html: string): string {
+  // Strip leftover markdown markers (#, *, etc.) and enforce spacing between sections
+  const cleaned = html
+    .replace(/[\r\n]+/g, "\n")
+    .replace(/^\s*#+\s*/gm, "")
+    .replace(/\*\s*(?=\w)/g, "")
+    .replace(/\n{2,}/g, "\n\n");
+  return cleaned;
 }
 
 
