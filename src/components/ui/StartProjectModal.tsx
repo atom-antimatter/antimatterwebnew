@@ -158,7 +158,8 @@ export default function StartProjectModal() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-6 p-4 sm:p-6 overflow-y-auto">
+        <div className="flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-6 p-4 sm:p-6 h-full">
           <form className="lg:col-span-2 flex flex-col gap-3 sm:gap-4" onSubmit={onAnalyze}>
             <div className="flex flex-col gap-2">
               <label className="text-xs uppercase tracking-wide opacity-70">Current website URL</label>
@@ -242,8 +243,8 @@ export default function StartProjectModal() {
             </div>
           </form>
 
-          <div className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-white/10 mt-4 lg:mt-0 pt-4 lg:pt-0 lg:pl-6 min-h-[220px]">
-            <div className="h-[58vh] overflow-y-auto pr-2">
+          <div className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-white/10 mt-4 lg:mt-0 pt-4 lg:pt-0 lg:pl-6 min-h-[220px] h-full flex flex-col">
+            <div className="flex-1 overflow-y-auto pr-2">
               {!result && !submitting && (
                 <div className="opacity-70 text-sm">
                   Enter your site URL to get an AI-driven audit with prioritized recommendations across UI/UX, SEO, performance, and platform fit.
@@ -270,6 +271,7 @@ export default function StartProjectModal() {
               .auditContent strong { font-weight: 600; }
               .auditContent a { color: #9AE6B4; text-decoration: underline; }
             `}</style>
+          </div>
           </div>
         </div>
       </div>
