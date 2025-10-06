@@ -88,7 +88,7 @@ export default function StartProjectModal() {
     setError(null);
     setSuccess(null);
     try {
-      const resp = await fetch("/api/quote", {
+      const resp = await fetch("/api/pdf", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ html: result.html }),
@@ -117,7 +117,7 @@ export default function StartProjectModal() {
     setError(null);
     try {
       // Request a true PDF from the server (re-using the HTML)
-      const pdfResp = await fetch("/api/quote", {
+      const pdfResp = await fetch("/api/pdf", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ html: result.html }),
