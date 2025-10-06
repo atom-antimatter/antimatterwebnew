@@ -159,7 +159,7 @@ export default function StartProjectModal() {
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 sm:gap-6 p-4 sm:p-6 h-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 sm:gap-6 p-4 sm:p-6 min-h-[360px] h-[70vh]">
           <form className="sm:col-span-1 flex flex-col gap-3 sm:gap-4" onSubmit={onAnalyze}>
             <div className="flex flex-col gap-2">
               <label className="text-xs uppercase tracking-wide opacity-70">Current website URL</label>
@@ -244,7 +244,12 @@ export default function StartProjectModal() {
           </form>
 
           <div className="sm:col-span-1 border-t sm:border-t-0 sm:border-l border-white/10 mt-4 sm:mt-0 pt-4 sm:pt-0 sm:pl-6 min-h-[220px] h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto overscroll-contain pr-2">
+            <div className="h-full rounded-xl border border-white/10 bg-white/5">
+              <div
+                className="h-full overflow-y-auto overscroll-contain p-4 pr-5"
+                onWheelCapture={(e) => e.stopPropagation()}
+                onTouchMoveCapture={(e) => e.stopPropagation()}
+              >
               {!result && !submitting && (
                 <div className="opacity-70 text-sm">
                   Enter your site URL to get an AI-driven audit with prioritized recommendations across UI/UX, SEO, performance, and platform fit.
@@ -260,6 +265,7 @@ export default function StartProjectModal() {
                   </div>
                 </>
               )}
+              </div>
             </div>
             <style jsx>{`
               .auditContent h1 { font-size: 1.125rem; font-weight: 700; margin: 1rem 0 0.5rem; }
