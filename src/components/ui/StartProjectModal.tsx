@@ -200,30 +200,55 @@ export default function StartProjectModal() {
             {error && (
               <div className="text-red-400 text-sm pt-2">{error}</div>
             )}
+
+            <div className="mt-3 sm:mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={onDownload}
+                disabled={!result?.html || submitting}
+                className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Download HTML
+              </button>
+              <button
+                type="button"
+                onClick={onEmailSend}
+                disabled={!email || !result?.html || submitting}
+                className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Email Report
+              </button>
+            </div>
           </form>
 
           <div className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-white/10 mt-4 lg:mt-0 pt-4 lg:pt-0 lg:pl-6 min-h-[220px]">
-            {!result && !submitting && (
-              <div className="opacity-70 text-sm">
-                Enter your site URL to get an AI-driven audit with prioritized recommendations across UI/UX, SEO, performance, and platform fit.
-              </div>
-            )}
-            {submitting && (
-              <div className="opacity-80 text-sm">Running analysis…</div>
-            )}
-            {result?.html && (
-              <>
-                <article className="prose prose-invert max-w-none [&_*]:text-foreground/90" dangerouslySetInnerHTML={{ __html: result.html }} />
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <button onClick={onDownload} disabled={submitting} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed">
-                    Download HTML
-                  </button>
-                  <button onClick={onEmailSend} disabled={!email || submitting} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed">
-                    Email Report
-                  </button>
+            <div className="max-h-[58vh] overflow-y-auto pr-2">
+              {!result && !submitting && (
+                <div className="opacity-70 text-sm">
+                  Enter your site URL to get an AI-driven audit with prioritized recommendations across UI/UX, SEO, performance, and platform fit.
                 </div>
-              </>
-            )}
+              )}
+              {submitting && (
+                <div className="opacity-80 text-sm">Running analysis…</div>
+              )}
+              {result?.html && (
+                <>
+                  <div className="auditContent text-sm leading-7">
+                    <article dangerouslySetInnerHTML={{ __html: result.html }} />
+                  </div>
+                </>
+              )}
+            </div>
+            <style jsx>{`
+              .auditContent h1 { font-size: 1.125rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+              .auditContent h2 { font-size: 1rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+              .auditContent h3 { font-size: 0.95rem; font-weight: 600; margin: 0.75rem 0 0.4rem; }
+              .auditContent p { margin: 0.5rem 0; opacity: 0.95; }
+              .auditContent ul { margin: 0.5rem 0 0.75rem 1.1rem; list-style: disc; }
+              .auditContent li { margin: 0.25rem 0; }
+              .auditContent strong { font-weight: 600; }
+              .auditContent a { color: #9AE6B4; text-decoration: underline; }
+            `}</style>
           </div>
         </div>
       </div>
