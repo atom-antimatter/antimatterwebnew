@@ -149,7 +149,7 @@ export default function StartProjectModal() {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close} />
       <div
         ref={dialogRef}
-        className="relative z-[101] w-[92vw] max-w-[880px] max-h-[90vh] rounded-3xl border border-foreground/20 bg-gradient-to-b from-[#0F0F19] to-[#0A0A12] shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
+        className="relative z-[101] w-[92vw] max-w-[1040px] max-h-[90vh] rounded-3xl border border-foreground/20 bg-gradient-to-b from-[#0F0F19] to-[#0A0A12] shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
       >
         <div className="p-5 sm:p-7 border-b border-foreground/10 flex items-center justify-between">
           <h3 className="text-lg sm:text-xl font-semibold">Start your project</h3>
@@ -159,8 +159,8 @@ export default function StartProjectModal() {
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-6 p-4 sm:p-6 h-full">
-          <form className="lg:col-span-2 flex flex-col gap-3 sm:gap-4" onSubmit={onAnalyze}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 sm:gap-6 p-4 sm:p-6 h-full">
+          <form className="sm:col-span-1 flex flex-col gap-3 sm:gap-4" onSubmit={onAnalyze}>
             <div className="flex flex-col gap-2">
               <label className="text-xs uppercase tracking-wide opacity-70">Current website URL</label>
               <input
@@ -243,7 +243,7 @@ export default function StartProjectModal() {
             </div>
           </form>
 
-          <div className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-white/10 mt-4 lg:mt-0 pt-4 lg:pt-0 lg:pl-6 min-h-[220px] h-full flex flex-col">
+          <div className="sm:col-span-1 border-t sm:border-t-0 sm:border-l border-white/10 mt-4 sm:mt-0 pt-4 sm:pt-0 sm:pl-6 min-h-[220px] h-full flex flex-col">
             <div className="flex-1 overflow-y-auto overscroll-contain pr-2">
               {!result && !submitting && (
                 <div className="opacity-70 text-sm">
