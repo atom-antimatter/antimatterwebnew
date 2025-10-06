@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         from: `Antimatter AI <${fromEmail}>`,
         to: recipients,
         subject: subject || "Your Antimatter AI Website Audit",
-        html,
+        html: wrapEmailHtml(html),
         attachments: pdfBase64
           ? [
               {
@@ -68,6 +68,13 @@ export async function POST(request: Request) {
   } catch (e) {
     return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
   }
+}
+
+function wrapEmailHtml(inner: string): string {
+  const styles = `body{font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif; color:#0B0B12; line-height:1.7;}
+  h2{margin:20px 0 8px; font-size:18px;} h3{margin:14px 0 6px; font-size:16px;}
+  p{margin:8px 0;} ul{margin:8px 0 8px 18px;} li{margin:4px 0;}`;
+  return `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><style>${styles}</style></head><body><article>${inner}</article></body></html>`;
 }
 
 

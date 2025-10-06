@@ -161,13 +161,17 @@ export default function StartProjectModal() {
   }
 
   const canSubmit = useMemo(() => {
-    const hasUrl = websiteUrl.trim().length > 0;
+    const input = websiteUrl.trim();
+    if (!input) return false;
+    const normalized = /^https?:\/\//i.test(input) ? input : `https://${input}`;
     try {
-      if (hasUrl) new URL(websiteUrl.trim());
+      // Validate normalized URL; allow scheme-less user input
+      // eslint-disable-next-line no-new
+      new URL(normalized);
+      return true;
     } catch {
       return false;
     }
-    return hasUrl;
   }, [websiteUrl]);
 
   if (!open) return null;
@@ -296,7 +300,7 @@ export default function StartProjectModal() {
               )}
               {result?.html && (
                 <>
-                  <div className="auditContent text-sm leading-7">
+                  <div className="auditContent text-[15px] leading-7">
                     <article dangerouslySetInnerHTML={{ __html: result.html }} />
                   </div>
                 </>

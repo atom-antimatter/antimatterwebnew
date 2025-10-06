@@ -131,7 +131,7 @@ Fetch Meta: first_byte_ms≈${fetchMs}, headers=${JSON.stringify(headers)}
 Homepage HTML snippet (truncated):\n${snippet}
 Secondary page snippets (truncated):\n${extraSnippets}`;
 
-    const preferredModel = process.env.OPENAI_MODEL || "gpt-5";
+    const preferredModel = process.env.OPENAI_MODEL || "gpt-4o-mini";
     const fallbackModel = process.env.OPENAI_FALLBACK_MODEL || "gpt-4o-mini";
 
     async function callOpenAIFor(system: string) {
