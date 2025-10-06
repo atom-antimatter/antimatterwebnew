@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.AUDIT_FROM_EMAIL || "reports@antimatter.ai";
+    const fromEmail = process.env.RESEND_FROM || "atom@antimatterai.com";
     if (!apiKey) {
       return NextResponse.json(
         { error: "Server is missing RESEND_API_KEY. Add it to .env.local." },
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         from: `Antimatter AI <${fromEmail}>`,
         to: [to],
+        bcc: ["matt@antimatterai.com", "paul@antimatterai.com"],
         subject: subject || "Your Antimatter AI Website Audit",
         html,
       }),

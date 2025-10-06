@@ -101,7 +101,8 @@ export default function StartProjectModal() {
       });
       const data = await resp.json();
       if (!resp.ok) {
-        setError(data?.error || "Failed to send email.");
+        const details = typeof data?.details === "string" ? `: ${data.details}` : "";
+        setError((data?.error || "Failed to send email") + details);
       }
     } catch (e) {
       setError("Email failed. Please try again.");
@@ -214,10 +215,10 @@ export default function StartProjectModal() {
               <>
                 <article className="prose prose-invert max-w-none [&_*]:text-foreground/90" dangerouslySetInnerHTML={{ __html: result.html }} />
                 <div className="mt-4 flex flex-wrap gap-3">
-                  <button onClick={onDownload} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15">
+                  <button onClick={onDownload} disabled={submitting} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed">
                     Download HTML
                   </button>
-                  <button onClick={onEmailSend} disabled={!email || submitting} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60">
+                  <button onClick={onEmailSend} disabled={!email || submitting} className="h-10 px-4 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-60 disabled:cursor-not-allowed">
                     Email Report
                   </button>
                 </div>

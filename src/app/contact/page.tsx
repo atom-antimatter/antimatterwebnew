@@ -38,7 +38,7 @@ const ContactPage = () => {
                 clients@antimatterai.com
               </a>
             </p>
-            <form action="" className="w-full mt-10 flex flex-col gap-6">
+            <form action="/api/contact" method="post" className="w-full mt-10 flex flex-col gap-6">
               <div className="flex w-full gap-6 flex-wrap sm:flex-nowrap">
                 <div className="w-full flex flex-col">
                   <label htmlFor="name" className="font-light text-lg">
@@ -48,6 +48,7 @@ const ContactPage = () => {
                     type="text"
                     placeholder="John Doe"
                     id="name"
+                    name="name"
                     className="outline-none border-b border-foreground/20 focus:border-tertiary transition-all duration-300 bg-transparent py-2"
                   />
                 </div>
@@ -59,6 +60,7 @@ const ContactPage = () => {
                     type="email"
                     placeholder="John@company.com"
                     id="email"
+                    name="email"
                     className="outline-none border-b border-foreground/20 focus:border-tertiary transition-all duration-300 bg-transparent py-2"
                   />
                 </div>
@@ -72,6 +74,7 @@ const ContactPage = () => {
                     type="text"
                     placeholder="+1 (555) 123-4567"
                     id="phone"
+                    name="phone"
                     className="outline-none border-b border-foreground/20 focus:border-tertiary transition-all duration-300 bg-transparent py-2"
                   />
                 </div>
@@ -82,6 +85,7 @@ const ContactPage = () => {
                   </label>
                   <select
                     id="service"
+                    name="service"
                     className="outline-none border-b border-foreground/20 focus:border-tertiary transition-all duration-300 bg-transparent py-2"
                   >
                     <option value="" className="text-black">
@@ -114,6 +118,7 @@ const ContactPage = () => {
                 </label>
                 <textarea
                   id="message"
+                  name="message"
                   rows={5}
                   placeholder="Tell us more about your project..."
                   className="w-full outline-none border-b border-foreground/20 focus:border-tertiary transition-all duration-300 bg-transparent py-2"
