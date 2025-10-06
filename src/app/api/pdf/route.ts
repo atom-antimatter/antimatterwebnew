@@ -61,8 +61,13 @@ async function renderPdf(request: Request) {
       await page.close();
       await browser.close();
 
-      const blob = new Blob([pdfBuffer], { type: "application/pdf" });
-      return new Response(blob, {
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(pdfBuffer);
+          controller.close();
+        },
+      });
+      return new Response(stream, {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
