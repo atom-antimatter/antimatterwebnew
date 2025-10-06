@@ -61,11 +61,8 @@ async function renderPdf(request: Request) {
       await page.close();
       await browser.close();
 
-      const arrayBuffer = pdfBuffer.buffer.slice(
-        pdfBuffer.byteOffset,
-        pdfBuffer.byteOffset + pdfBuffer.byteLength
-      );
-      return new Response(arrayBuffer, {
+      const blob = new Blob([pdfBuffer], { type: "application/pdf" });
+      return new Response(blob, {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
