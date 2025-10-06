@@ -152,7 +152,7 @@ export default function StartProjectModal() {
         className="relative z-[101] w-[92vw] max-w-[1040px] max-h-[90vh] rounded-3xl border border-foreground/20 bg-gradient-to-b from-[#0F0F19] to-[#0A0A12] shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
       >
         <div className="p-5 sm:p-7 border-b border-foreground/10 flex items-center justify-between">
-          <h3 className="text-lg sm:text-xl font-semibold">Start your project</h3>
+          <h3 className="text-lg sm:text-xl font-semibold">Get your Free Website Audit</h3>
           <button className="text-foreground/70 hover:text-foreground" onClick={close} aria-label="Close">
             ×
           </button>
@@ -256,7 +256,10 @@ export default function StartProjectModal() {
                 </div>
               )}
               {submitting && (
-                <div className="opacity-80 text-sm">Running analysis…</div>
+                <div className="opacity-80 text-sm flex items-center gap-3">
+                  <span className="inline-block size-3 rounded-full bg-white/60 animate-pulse"></span>
+                  <RotatingTasks />
+                </div>
               )}
               {result?.html && (
                 <>
@@ -283,6 +286,24 @@ export default function StartProjectModal() {
       </div>
     </div>
   );
+}
+
+function RotatingTasks() {
+  const tasks = [
+    "Fetching homepage",
+    "Checking search competition",
+    "Analyzing metadata",
+    "Inspecting headings",
+    "Auditing accessibility",
+    "Reviewing performance",
+    "Inferring tech stack",
+  ];
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setIdx((i) => (i + 1) % tasks.length), 1200);
+    return () => clearInterval(id);
+  }, []);
+  return <span className="opacity-80">{tasks[idx]}…</span>;
 }
 
 

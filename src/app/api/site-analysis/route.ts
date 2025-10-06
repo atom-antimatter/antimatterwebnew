@@ -56,56 +56,113 @@ export async function POST(request: Request) {
 
     const { snippet, headers, fetchMs } = await fetchHtmlSnippet(normalized);
 
-    const messages = [
+    // Lightweight intra-site browsing: fetch up to 2 internal links for broader context
+    async function fetchFewInternalLinks(rootUrl: string, html: string): Promise<string> {
+      try {
+        const origin = new URL(rootUrl).origin;
+        const hrefs = Array.from(html.matchAll(/href\s*=\s*"([^"]+)"/gi))
+          .map((m) => m[1])
+          .filter((h) => !!h)
+          .map((h) => (h.startsWith("http") ? h : h.startsWith("/") ? origin + h : origin + "/" + h))
+          .filter((h) => {
+            try { return new URL(h).origin === origin; } catch { return false; }
+          });
+        const unique = Array.from(new Set(hrefs)).slice(0, 2);
+        const results = await Promise.race([
+          Promise.all(unique.map((u) => fetchHtmlSnippet(u))),
+          new Promise((resolve) => setTimeout(() => resolve([]), 3500)),
+        ]) as { snippet: string }[];
+        const combined = results
+          .map((r, i) => `\n\n<!-- page:${i + 1} -->\n${(r?.snippet || "").replace(/\s+/g, " ").slice(0, 5000)}`)
+          .join("\n");
+        return combined;
+      } catch {
+        return "";
+      }
+    }
+
+    const extraSnippets = await fetchFewInternalLinks(normalized, snippet);
+
+    // Multi‑agent analysis with specialized prompts
+    const agents: { key: string; heading: string; system: string }[] = [
       {
-        role: "system",
-        content:
-          "You are a principal web architect at Antimatter AI. Analyze a public website and produce a personalized, prioritized audit for a business stakeholder. Return strictly semantic HTML (no markdown, no code fences). Use <h2>, <h3>, <p>, <ul>, <li>, and <strong> tags with generous spacing and readable structure. The report must include these sections, in order:\n\n<h2>Overview</h2> (business/UX intent and who the site serves)\n<h2>UI/UX Improvements</h2> (layout, hierarchy, visual design, readability, mobile, motion)\n<h2>Navigation & IA</h2> (menu clarity, information architecture, findability, internal linking)\n<h2>Conversion Optimization</h2> (value propositions, social proof, CTAs, forms, friction removals, experiment ideas)\n<h2>Technical Performance</h2> (Core Web Vitals hypotheses, render path, images/fonts, caching/CDN)\n<h2>Accessibility</h2> (color contrast, focus states, semantics, keyboard, ARIA)\n<h2>Platform & Tech Stack</h2> (inferred stack, risks, recommended upgrades)\n<h2>High‑Impact Recommendations</h2> (ordered list of 5–8 specific actions with expected impact)\n\nBe concrete with examples drawn from the snippet. Use short paragraphs and bulleted lists.",
+        key: "overview",
+        heading: "Overview",
+        system:
+          "You are a principal strategist. Summarize the business intent and audience. Return only HTML under an <h2>Overview</h2> with short <p> paragraphs.",
       },
       {
-        role: "user",
-        content: `Audience Industry: ${industry || "(unspecified)"}
+        key: "ux",
+        heading: "UI/UX Improvements",
+        system:
+          "You are a senior product designer. Provide concrete UI/UX improvements covering layout, hierarchy, visual design, readability, mobile, and motion. Return an <h2>UI/UX Improvements</h2> section with <ul><li> bullets.",
+      },
+      {
+        key: "seo",
+        heading: "Technical Performance",
+        system:
+          "You are a performance/SEO engineer. Analyze Core Web Vitals risks, render path, images/fonts, caching/CDN. Return an <h2>Technical Performance</h2> section with prioritized bullets and quick wins.",
+      },
+      {
+        key: "accessibility",
+        heading: "Accessibility",
+        system:
+          "You are an accessibility specialist. Provide an <h2>Accessibility</h2> section with actionable fixes: color contrast, semantics, keyboard, focus, ARIA.",
+      },
+      {
+        key: "tech",
+        heading: "Platform & Tech Stack",
+        system:
+          "You are a solutions architect. Infer likely stack from headers/HTML and propose upgrades. Return <h2>Platform & Tech Stack</h2> with short paragraphs.",
+      },
+      {
+        key: "highImpact",
+        heading: "High‑Impact Recommendations",
+        system:
+          "You are a growth lead. Return <h2>High‑Impact Recommendations</h2> with an ordered list (5–8) of the most leveraged actions and expected impact.",
+      },
+    ];
+
+    const baseUser = `Audience Industry: ${industry || "(unspecified)"}
 Requester: ${name || "(unspecified)"}${title ? ", " + title : ""}
 Target URL: ${normalized}
 
 Fetch Meta: first_byte_ms≈${fetchMs}, headers=${JSON.stringify(headers)}
-Website HTML snippet (truncated):\n${snippet}`,
-      },
-    ];
+Homepage HTML snippet (truncated):\n${snippet}
+Secondary page snippets (truncated):\n${extraSnippets}`;
 
-    // Prefer configured model; attempt GPT‑5 if available, with graceful fallback.
-    const preferredModel = process.env.OPENAI_MODEL || "gpt-5"; // if unavailable, we fallback below
+    const preferredModel = process.env.OPENAI_MODEL || "gpt-5";
     const fallbackModel = process.env.OPENAI_FALLBACK_MODEL || "gpt-4o-mini";
 
-    async function callOpenAI(model: string) {
-      return fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.3,
-      }),
-      });
+    async function callOpenAIFor(system: string) {
+      async function run(model: string) {
+        return fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: baseUser },
+            ],
+            temperature: 0.3,
+          }),
+        });
+      }
+      let r = await run(preferredModel);
+      if (!r.ok) r = await run(fallbackModel);
+      if (!r.ok) return "";
+      const j = await r.json();
+      return j?.choices?.[0]?.message?.content || "";
     }
 
-    let resp = await callOpenAI(preferredModel);
-    if (!resp.ok) {
-      // Retry once with fallback model
-      resp = await callOpenAI(fallbackModel);
-    }
-
-    if (!resp.ok) {
-      const err = await resp.text();
-      return NextResponse.json({ error: "OpenAI error", details: err }, { status: 502 });
-    }
-
-    const data = await resp.json();
-    const text = data?.choices?.[0]?.message?.content || "No response.";
-    return NextResponse.json({ result: text });
+    // Run agents in parallel
+    const parts = await Promise.all(agents.map((a) => callOpenAIFor(a.system)));
+    const merged = parts.join("\n\n");
+    return NextResponse.json({ result: merged });
   } catch (e) {
     return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
   }
