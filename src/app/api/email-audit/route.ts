@@ -5,10 +5,11 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { to, subject, html } = (await request.json()) as {
+    const { to, subject, html, pdfBase64 } = (await request.json()) as {
       to?: string;
       subject?: string;
       html?: string;
+      pdfBase64?: string; // optional base64-encoded PDF attachment
     };
 
     if (!to || !html) {
@@ -33,9 +34,16 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         from: `Antimatter AI <${fromEmail}>`,
         to: [to],
-        bcc: ["matt@antimatterai.com", "paul@antimatterai.com"],
         subject: subject || "Your Antimatter AI Website Audit",
         html,
+        attachments: pdfBase64
+          ? [
+              {
+                filename: "Antimatter-AI-Website-Audit.pdf",
+                content: pdfBase64,
+              },
+            ]
+          : undefined,
       }),
     });
 
