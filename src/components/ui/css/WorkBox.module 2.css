@@ -1,6 +1,0 @@
-.box:hover .work {
-  transform: translateX(-40px);
-}
-.box:hover .icon {
-  opacity: 1;
-}
