@@ -206,6 +206,7 @@ export default function StartProjectModal() {
                 className={fieldBase}
                 placeholder="you@company.com"
                 inputMode="email"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

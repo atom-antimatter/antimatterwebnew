@@ -25,6 +25,16 @@ export async function POST(request: Request) {
       );
     }
 
+    // sanitize and validate recipients
+    const raw = String(to || "").trim();
+    const pieces = raw.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+    const emails = (pieces.length > 0 ? pieces : [raw]).map((s) => s.trim());
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const recipients = emails.filter((e) => emailRegex.test(e));
+    if (recipients.length === 0) {
+      return NextResponse.json({ error: "Invalid recipient email address" }, { status: 422 });
+    }
+
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -33,7 +43,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         from: `Antimatter AI <${fromEmail}>`,
-        to: [to],
+        to: recipients,
         subject: subject || "Your Antimatter AI Website Audit",
         html,
         attachments: pdfBase64
@@ -41,6 +51,7 @@ export async function POST(request: Request) {
               {
                 filename: "Antimatter-AI-Website-Audit.pdf",
                 content: pdfBase64,
+                type: "text/html",
               },
             ]
           : undefined,
