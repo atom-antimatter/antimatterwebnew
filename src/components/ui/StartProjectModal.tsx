@@ -160,7 +160,7 @@ export default function StartProjectModal() {
 
         <div className="flex-1 overflow-hidden">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 sm:gap-6 p-4 sm:p-6 min-h-[360px] h-[70vh]">
-          <form className="sm:col-span-1 flex flex-col gap-3 sm:gap-4" onSubmit={onAnalyze}>
+          <form className="sm:col-span-1 flex flex-col gap-3 sm:gap-4 relative z-[2]" onSubmit={onAnalyze}>
             <div className="flex flex-col gap-2">
               <label className="text-xs uppercase tracking-wide opacity-70">Current website URL</label>
               <input
@@ -223,7 +223,7 @@ export default function StartProjectModal() {
               <div className="text-red-400 text-sm pt-2">{error}</div>
             )}
 
-            <div className="mt-3 sm:mt-5 flex flex-wrap gap-3">
+            <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={onDownload}
@@ -243,10 +243,10 @@ export default function StartProjectModal() {
             </div>
           </form>
 
-          <div className="sm:col-span-1 border-t sm:border-t-0 sm:border-l border-white/10 mt-4 sm:mt-0 pt-4 sm:pt-0 sm:pl-6 min-h-[220px] h-full flex flex-col">
-            <div className="h-full rounded-xl border border-white/10 bg-white/5">
+          <div className="sm:col-span-1 border-t sm:border-t-0 sm:border-l border-white/10 mt-4 sm:mt-0 pt-4 sm:pt-0 sm:pl-6 min-h-[220px] h-full flex flex-col z-[1]">
+            <div className="h-[60vh] rounded-xl border border-white/10 bg-white/5">
               <div
-                className="h-full overflow-y-auto overscroll-contain p-4 pr-5"
+                className="h-[60vh] overflow-y-auto overscroll-contain p-4 pr-5"
                 onWheelCapture={(e) => e.stopPropagation()}
                 onTouchMoveCapture={(e) => e.stopPropagation()}
               >
