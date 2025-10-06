@@ -51,7 +51,7 @@ export async function POST(request: Request) {
               {
                 filename: "Antimatter-AI-Website-Audit.pdf",
                 content: pdfBase64,
-                type: "text/html",
+                type: "application/pdf",
               },
             ]
           : undefined,

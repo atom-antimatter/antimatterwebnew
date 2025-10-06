@@ -94,13 +94,17 @@ export default function StartProjectModal() {
     setSubmitting(true);
     setError(null);
     try {
-      // Create a PDF client-side using the same HTML wrapper used for download
-      const htmlDoc = `<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Antimatter AI Website Audit</title><meta name="viewport" content="width=device-width, initial-scale=1"/><style>body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;background:#0B0B12;color:#EAEAF0;padding:32px;line-height:1.7}h2{margin-top:28px;margin-bottom:12px}h3{margin-top:16px;margin-bottom:8px}p{margin:8px 0}ul{margin:10px 0 10px 20px}li{margin:6px 0}</style></head><body><article>${result.html}</article></body></html>`;
-
-      // Use browser's PDF via Blob + canvas as fallback: render HTML to a Blob
-      const blob = new Blob([htmlDoc], { type: "text/html" });
-      // Convert to base64 for attachment (not an actual PDF but acceptable as HTML attachment if PDF conversion is unavailable)
-      const pdfBase64 = await blobToBase64(blob);
+      // Request a true PDF from the server (re-using the HTML)
+      const pdfResp = await fetch("/api/quote", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html: result.html }),
+      });
+      let pdfBase64: string | null = null;
+      if (pdfResp.ok) {
+        const blob = await pdfResp.blob();
+        pdfBase64 = await blobToBase64(blob);
+      }
 
       const resp = await fetch("/api/email-audit", {
         method: "POST",
