@@ -6,6 +6,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  return renderPdf(request);
+}
+
+export async function PUT(request: Request) { // backwards compatibility
+  return renderPdf(request);
+}
+
+async function renderPdf(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const { html } = body as { html?: string };
@@ -17,7 +25,6 @@ export async function POST(request: Request) {
       args: chromium.args,
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
-      defaultViewport: chromium.defaultViewport,
     });
 
     try {
@@ -54,7 +61,11 @@ export async function POST(request: Request) {
       await page.close();
       await browser.close();
 
-      return new Response(pdfBuffer, {
+      const arrayBuffer = pdfBuffer.buffer.slice(
+        pdfBuffer.byteOffset,
+        pdfBuffer.byteOffset + pdfBuffer.byteLength
+      );
+      return new Response(arrayBuffer, {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
