@@ -244,7 +244,7 @@ export default function StartProjectModal() {
           </form>
 
           <div className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-white/10 mt-4 lg:mt-0 pt-4 lg:pt-0 lg:pl-6 min-h-[220px] h-full flex flex-col">
-            <div className="max-h-[60vh] overflow-y-auto pr-2">
+            <div className="flex-1 overflow-y-auto overscroll-contain pr-2">
               {!result && !submitting && (
                 <div className="opacity-70 text-sm">
                   Enter your site URL to get an AI-driven audit with prioritized recommendations across UI/UX, SEO, performance, and platform fit.
