@@ -21,12 +21,15 @@ const ServiceCardContainer = () => {
 
   const renderBullet = useCallback(
     (index: number, className: string) => {
+      const safeClass = className?.trim() || "swiper-pagination-bullet";
       const isActive = index === activeIndex;
       const isNeighbor = index === activeIndex - 1 || index === activeIndex + 1;
 
       const extraClass = isActive ? "active" : isNeighbor ? "neighbor" : "";
 
-      return `<span class="${className} custom-bullet block w-1 h-7 bg-foreground/70 hover:bg-foreground mx-[3px] transition-transform duration-300 ${extraClass}"></span>`;
+      return `
+        <span class="${safeClass} custom-bullet block w-1 h-7 bg-foreground/70 hover:bg-foreground mx-[3px] transition-transform duration-300 ${extraClass}"></span>
+      `;
     },
     [activeIndex]
   );

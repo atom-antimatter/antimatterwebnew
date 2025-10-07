@@ -1,37 +1,33 @@
 "use client";
 
-import { motion, AnimatePresence, Variants } from "motion/react";
-import { usePathname } from "next/navigation";
-import { translate, translate2 } from "./anim";
+import { usePageTransition } from "@/store";
+import { motion } from "motion/react";
 
-const anim = (variants: Variants) => {
-  return {
-    variants,
-    initial: "initial",
-    animate: "enter",
-    exit: "exit",
-  };
-};
-
-const PageTransition = ({ children }: { children: React.ReactNode }) => {
-  // The `key` is tied to the url using the `usePathname` hook.
-  const key = usePathname();
-
+const PageTransition = () => {
+  const isTransition = usePageTransition((s) => s.isTransition);
   return (
-    <AnimatePresence mode="wait">
-      <motion.div key={key}>
-        {children}
+    <motion.div>
+      <motion.div
+        initial={{ y: "0" }}
+        animate={{
+          y: isTransition ? "0" : "-100%",
+          transition: { duration: 0.75, ease: [0.76, 0, 0.24, 1] },
+          transitionEnd: {
+            y: isTransition ? "0" : "100%",
+          },
+        }}
+        className="fixed w-screen h-screen bg-accent z-50 inset-0 overflow-hidden"
+      >
         <motion.div
-          {...anim(translate)}
-          className="fixed w-screen h-screen bg-accent z-50 inset-0 overflow-hidden"
-        >
-          <motion.div
-            {...anim(translate2)}
-            className="w-full h-full bg-background "
-          />
-        </motion.div>
+          initial={{ y: "0" }}
+          animate={{
+            y: isTransition ? "0" : "500px",
+            transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
+          }}
+          className="w-full h-full bg-background"
+        />
       </motion.div>
-    </AnimatePresence>
+    </motion.div>
   );
 };
 

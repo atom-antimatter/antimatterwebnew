@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GoArrowUpRight } from "react-icons/go";
 import AtlantaClock from "./ui/AtlantaClock";
+import TransitionLink from "./ui/TransitionLink";
 
 const Footer = () => {
   return (
@@ -32,12 +33,24 @@ const Footer = () => {
             <div>
               <h2 className="text-foreground/50 mb-2">Services</h2>
               <div className="flex flex-col gap-2">
-                <Link href={"/design-agency"}>Product Design</Link>
-                <Link href={"/development-agency"}>Development</Link>
-                <Link href={"/gtm-strategy"}>GTM Strategy</Link>
-                <Link href={"/healthcare-apps"}>Healthcare Apps</Link>
-                <Link href={"/ai-development"}>AI Development</Link>
-                <Link href={"/iot-development"}>IoT Development</Link>
+                <TransitionLink href={"/design-agency"}>
+                  Product Design
+                </TransitionLink>
+                <TransitionLink href={"/development-agency"}>
+                  Development
+                </TransitionLink>
+                <TransitionLink href={"/gtm-strategy"}>
+                  GTM Strategy
+                </TransitionLink>
+                <TransitionLink href={"/healthcare-apps"}>
+                  Healthcare Apps
+                </TransitionLink>
+                <TransitionLink href={"/ai-development"}>
+                  AI Development
+                </TransitionLink>
+                <TransitionLink href={"/iot-development"}>
+                  IoT Development
+                </TransitionLink>
               </div>
             </div>
             <div>

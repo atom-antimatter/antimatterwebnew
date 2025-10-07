@@ -1,10 +1,9 @@
 "use client";
+import { useLoading, usePageTransition, useStartProjectModal } from "@/store";
 import { animate, AnimatePresence, motion } from "motion/react";
-import Button from "./Button";
-import { useStartProjectModal } from "@/store";
-import { useLoading } from "@/store";
-import Counter from "./bits/Counter";
 import { useEffect, useState } from "react";
+import Counter from "./bits/Counter";
+import Button from "./Button";
 
 const HeroComponent = () => {
   const { setOpen } = useStartProjectModal();
@@ -17,6 +16,10 @@ const HeroComponent = () => {
     if (window.innerWidth >= 1024) return 30;
     return 22;
   });
+  const setIsTransition = usePageTransition((s) => s.setIsTransition);
+  useEffect(() => {
+    setIsTransition(false);
+  }, [setIsTransition]);
 
   useEffect(() => {
     const handleResize = () => {

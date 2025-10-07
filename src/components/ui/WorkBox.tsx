@@ -1,6 +1,6 @@
-import Link from "next/link";
-import styles from "./css/WorkBox.module.css";
 import { GoArrowUpRight } from "react-icons/go";
+import styles from "./css/WorkBox.module.css";
+import TransitionLink from "./TransitionLink";
 
 export interface WorkListProps {
   number?: string;
@@ -21,7 +21,7 @@ const WorkBox = ({
   ...props
 }: WorkBoxProps) => {
   return (
-    <Link
+    <TransitionLink
       href={link}
       className={`py-7 px-3 border-b border-foreground/20 duration-200 ${
         active && "bg-foreground/5"
@@ -42,7 +42,7 @@ const WorkBox = ({
           className={`size-7 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 duration-200 ${styles.icon}`}
         />
       </div>
-    </Link>
+    </TransitionLink>
   );
 };
 

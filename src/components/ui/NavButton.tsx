@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { GoArrowUpRight } from "react-icons/go";
 import styles from "./css/NavButton.module.css";
+import TransitionLink from "./TransitionLink";
 
 const NavButton = ({ ...props }: React.ComponentProps<"a">) => {
   return (
-    <Link href="/contact" scroll onClick={props.onClick} {...props}>
+    <TransitionLink href="/contact" scroll onClick={props.onClick} {...props}>
       <div
         className={`border border-foreground/40 font-medium bg-background/20 backdrop-blur-xl cursor-pointer p-0.5 lg:p-1 h-10 lg:h-12 rounded-full ${styles.button} hover:scale-105 duration-300 text-sm font-extralight`}
       >
@@ -18,7 +18,7 @@ const NavButton = ({ ...props }: React.ComponentProps<"a">) => {
           </div>
         </div>
       </div>
-    </Link>
+    </TransitionLink>
   );
 };
 

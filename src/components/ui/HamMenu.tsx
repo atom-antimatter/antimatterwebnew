@@ -1,11 +1,12 @@
 "use client";
 import { ServicesData } from "@/data/services";
 import { AnimatePresence, motion, Variants } from "motion/react";
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import HamButton from "./HamButton";
 import NavButton from "./NavButton";
+import TransitionLink from "./TransitionLink";
 
 interface NavData {
   href?: string;
@@ -39,9 +40,13 @@ const itemVariants: Variants = {
 const HamMenu = ({ navData }: Props) => {
   const [active, setActive] = useState(false);
   const [serviceNav, setServiceNav] = useState(false);
+  const pathname = usePathname();
   useEffect(() => {
     if (!active) setServiceNav(false);
   }, [active]);
+  useEffect(() => {
+    setActive(false);
+  }, [pathname]);
   // Lock page scroll when the mobile menu is open (mobile-only)
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -137,7 +142,7 @@ const HamMenu = ({ navData }: Props) => {
                             variants={itemVariants}
                           >
                             {nav.href ? (
-                              <Link
+                              <TransitionLink
                                 href={nav.href}
                                 onClick={() => setActive(false)}
                               >
@@ -145,7 +150,7 @@ const HamMenu = ({ navData }: Props) => {
                                   0{index + 1}
                                 </span>
                                 {nav.text}
-                              </Link>
+                              </TransitionLink>
                             ) : (
                               <div
                                 className="flex w-full justify-between items-center pr-10"
@@ -176,7 +181,7 @@ const HamMenu = ({ navData }: Props) => {
                               key={service.title}
                               className="relative pl-10 whitespace-nowrap"
                             >
-                              <Link
+                              <TransitionLink
                                 href={service.link}
                                 className="block pr-4"
                                 onClick={() => setActive(false)}
@@ -185,7 +190,7 @@ const HamMenu = ({ navData }: Props) => {
                                   0{index + 1}
                                 </span>
                                 {service.title}
-                              </Link>
+                              </TransitionLink>
                             </li>
                           ))}
                         </ul>

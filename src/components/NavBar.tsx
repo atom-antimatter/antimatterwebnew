@@ -1,15 +1,14 @@
 "use client";
-import Image from "next/image";
-import Link from "next/link";
-import NavButton from "./ui/NavButton";
-import { useStartProjectModal } from "@/store";
-import NavLinksBg from "./ui/NavLinksBg";
-import { useLoading } from "@/store";
-import { motion } from "motion/react";
-import { usePathname } from "next/navigation";
-import HamMenu from "./ui/HamMenu";
 import { ServiceProps, ServicesData } from "@/data/services";
-import { useState, useRef, useEffect } from "react";
+import { useLoading, useStartProjectModal } from "@/store";
+import { motion } from "motion/react";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import HamMenu from "./ui/HamMenu";
+import NavButton from "./ui/NavButton";
+import NavLinksBg from "./ui/NavLinksBg";
+import TransitionLink from "./ui/TransitionLink";
 
 type NavItem = { href?: string; text: string };
 const NavData: NavItem[] = [
@@ -78,7 +77,7 @@ const NavBar = () => {
       />
       <div className="w-main mx-auto relative z-20">
         <div className="flex justify-between items-center">
-          <Link href="/">
+          <TransitionLink href="/">
             <Image
               src="/images/antimatter-ai-logo.svg"
               width={152}
@@ -88,7 +87,7 @@ const NavBar = () => {
               loading="eager"
               className="w-36 lg:w-40 h-auto"
             />
-          </Link>
+          </TransitionLink>
 
           {/* Desktop nav */}
           <nav className="hidden md:block">
@@ -154,9 +153,9 @@ const NavItemWithDropdown = ({
   return (
     <li className="relative group">
       {href ? (
-        <Link href={href} className="px-4 lg:px-7 py-1.5 flex">
+        <TransitionLink href={href} className="px-4 lg:px-7 py-1.5 flex">
           {text}
-        </Link>
+        </TransitionLink>
       ) : (
         <span className="px-4 lg:px-7 py-1.5 flex cursor-pointer">{text}</span>
       )}
@@ -168,7 +167,7 @@ const NavItemWithDropdown = ({
    Service Card
 -------------------------------- */
 const ServiceCard = ({ icon: Icon, title, items, link }: ServiceProps) => (
-  <Link
+  <TransitionLink
     href={link}
     className="p-5 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/5 transition pl-14 relative block h-full min-h-[230px] max-h-[280px] overflow-hidden"
   >
@@ -183,7 +182,7 @@ const ServiceCard = ({ icon: Icon, title, items, link }: ServiceProps) => (
         </div>
       ))}
     </div>
-  </Link>
+  </TransitionLink>
 );
 
 /* -----------------------------
@@ -214,7 +213,7 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
         `}
       >
         <div className="flex-col gap-2 col-span-3 py-4 px-3 hidden lg:flex">
-          <Link
+          <TransitionLink
             href={"/case-study/clinixAI"}
             className="hover:scale-105 duration-150"
           >
@@ -226,7 +225,7 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
               className="rounded-lg w-full"
             />
             <p className="mt-2 text-lg font-semibold opacity-50">ClinixAI</p>
-          </Link>
+          </TransitionLink>
           <h3 className="text-2xl">
             OUR LATEST <br /> WORK
           </h3>

@@ -29,3 +29,11 @@ export const useStartProjectModal = create<{
   open: false,
   setOpen: (open: boolean) => set({ open }),
 }));
+
+export const usePageTransition = create<{
+  isTransition: boolean;
+  setIsTransition: (state: boolean) => void;
+}>((set) => ({
+  isTransition: false,
+  setIsTransition: (state: boolean) => set({ isTransition: state }),
+}));

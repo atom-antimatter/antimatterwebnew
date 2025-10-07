@@ -2,9 +2,9 @@
 import Reveal from "@/components/ui/Reveal";
 import TitleH1Anim from "@/components/ui/TitleH1Anim";
 import TransitionContainer from "@/components/ui/TransitionContainer";
+import TransitionLink from "@/components/ui/TransitionLink";
 import { motion } from "motion/react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -91,7 +91,7 @@ const WorkComponent = ({ WorkData }: { WorkData: WorkCardProps[] }) => {
               } relative group`}
               key={id}
             >
-              <Link href={link}>
+              <TransitionLink href={link}>
                 <p>{id >= 10 ? id : `0${id}`}</p>
                 <Image
                   src={image}
@@ -117,7 +117,7 @@ const WorkComponent = ({ WorkData }: { WorkData: WorkCardProps[] }) => {
                     ))}
                   </div>
                 </div>
-              </Link>
+              </TransitionLink>
             </Reveal>
           ))}
         </div>
