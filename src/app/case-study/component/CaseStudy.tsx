@@ -37,7 +37,7 @@ const CaseStudy = ({
   pitchDeck,
 }: CaseStudyProps) => {
   return (
-    <TransitionContainer initial={100}>
+    <TransitionContainer initial={100} exit={-400}>
       <AnimatePresence>
         <div>
           <MainLayout className="pt-40">

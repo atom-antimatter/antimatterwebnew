@@ -199,15 +199,15 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
   >
     <div
       className={`
-        w-[820px] lg:w-[1120px] bg-zinc-950 border border-foreground/20 rounded-xl
+        w-[820px] lg:w-[1024px] xl:w-[1250px] bg-zinc-950 border border-foreground/20 rounded-xl
         max-w-0 overflow-hidden
         transition-all ease-in-out duration-300
-        ${open ? "max-w-[1120px]" : "max-w-0"}
+        ${open ? "max-w-[1250px]" : "max-w-0"}
       `}
     >
       <div
         className={`
-          grid grid-cols-6 lg:grid-cols-9 gap-2 p-3 lg:p-5 w-[820px] lg:w-[1120px] max-h-0 overflow-hidden
+          grid grid-cols-6 lg:grid-cols-9 gap-2 p-3 lg:p-5 w-[820px] lg:w-[1024px] xl:w-[1250px] max-h-0 overflow-hidden
           transition-all ease-in-out duration-300
           ${open ? "max-h-[1000px]" : "max-h-0"}
         `}
@@ -235,7 +235,7 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
           {ServicesData.map((s) => (
             <div
               key={s.title}
-              className="flex flex-col gap-3 col-span-1 text-xs font-light"
+              className="flex flex-col gap-3 col-span-1 text-xs font-light  "
             >
               <ServiceCard {...s} />
             </div>

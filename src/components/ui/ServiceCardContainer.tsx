@@ -17,36 +17,34 @@ const ServiceCardContainer = () => {
   const activeIndex = useActiveIndex((state) => state.activeIndex);
   const setActiveIndex = useActiveIndex((state) => state.setActiveIndex);
   const [isBeginning, setIsBeginning] = useState(true);
+  const [breakpoint, setBreakpoint] = useState("");
   const [isEnd, setIsEnd] = useState(false);
 
-  const renderBullet = useCallback(
-    (index: number, className: string) => {
-      const safeClass = className?.trim() || "swiper-pagination-bullet";
-      const isActive = index === activeIndex;
-      const isNeighbor = index === activeIndex - 1 || index === activeIndex + 1;
+  const renderBullet = useCallback((index: number, className?: string) => {
+    const safeClass =
+      typeof className === "string" && className.trim().length > 0
+        ? className
+        : "swiper-pagination-bullet";
 
-      const extraClass = isActive ? "active" : isNeighbor ? "neighbor" : "";
+    const isActive = index === 0;
+    const isNeighbor = index === 1;
+    const extraClass = isActive ? "active" : isNeighbor ? "neighbor" : "";
 
-      return `
-        <span class="${safeClass} custom-bullet block w-1 h-7 bg-foreground/70 hover:bg-foreground mx-[3px] transition-transform duration-300 ${extraClass}"></span>
+    return `
+        <span class="${safeClass} custom-bullet block w-1 h-7 bg-foreground/70 hover:bg-foreground mx-[3px]
+          transition-transform duration-300 ${extraClass}"></span>
       `;
-    },
-    [activeIndex]
-  );
+  }, []);
 
-  const updateBullets = useCallback(
-    (swiper: SwiperTypes) => {
-      const bullets = document.querySelectorAll(".custom-bullet");
-      bullets.forEach((b, i) => {
-        b.classList.remove("active", "neighbor");
-        if (i === swiper.activeIndex) b.classList.add("active");
-        if (i === swiper.activeIndex - 1 || i === swiper.activeIndex + 1)
-          b.classList.add("neighbor");
-      });
-      setActiveIndex(swiper.activeIndex);
-    },
-    [setActiveIndex]
-  );
+  const updateBullets = useCallback((swiper: SwiperTypes) => {
+    const bullets = document.querySelectorAll(".custom-bullet");
+    bullets.forEach((b, i) => {
+      b.classList.remove("active", "neighbor");
+      if (i === swiper.activeIndex) b.classList.add("active");
+      if (i === swiper.activeIndex - 1 || i === swiper.activeIndex + 1)
+        b.classList.add("neighbor");
+    });
+  }, []);
 
   const handleSlideChange = useCallback(
     (swiper: SwiperTypes) => {
@@ -101,10 +99,14 @@ const ServiceCardContainer = () => {
         pagination={{
           el: ".slider-pagination",
           clickable: true,
-          renderBullet,
+          renderBullet:
+            renderBullet ??
+            ((_, className = "swiper-pagination-bullet") =>
+              `<span class="${className}"></span>`),
         }}
         onSwiper={handleSlideChange}
         style={{ overflow: "visible" }}
+        onBreakpoint={(point) => setBreakpoint(point.currentBreakpoint)}
         onSlideChange={handleSlideChange}
         breakpoints={{
           768: {
@@ -138,6 +140,10 @@ const ServiceCardContainer = () => {
             </div>
           </SwiperSlide>
         ))}
+        {/* Avoid unnecessary empty slide */}
+        {(breakpoint === "768" || breakpoint === "1300") && (
+          <SwiperSlide></SwiperSlide>
+        )}
       </Swiper>
 
       <style jsx global>{`

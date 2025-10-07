@@ -6,6 +6,7 @@ import Testimonial from "@/components/Testimonial";
 import LightRays from "@/components/ui/LightRays";
 import Loading from "@/components/ui/Loading";
 import MainLayout from "@/components/ui/MainLayout";
+import TransitionContainer from "@/components/ui/TransitionContainer";
 import WorkSection from "@/components/WorkSection";
 import Interactions from "@/utils/interactions";
 import type { Metadata } from "next";
@@ -19,17 +20,19 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      <HeroSection />
       <LightRays />
-      <MainLayout className="mt-40 sm:mt-60 overflow-x-hidden">
-        <ServiceSection />
-        <WorkSection />
-        <Testimonial />
-        <ClientsSection />
-        <CTASection />
-      </MainLayout>
+      <TransitionContainer initial={100} exit={-600}>
+        <HeroSection />
+        <MainLayout className="mt-40 sm:mt-60 overflow-x-hidden">
+          <ServiceSection />
+          <WorkSection />
+          <Testimonial />
+          <ClientsSection />
+          <CTASection />
+        </MainLayout>
+        <Interactions />
+      </TransitionContainer>
       <Loading />
-      <Interactions />
     </>
   );
 }

@@ -6,10 +6,12 @@ import { useEffect } from "react";
 
 const TransitionContainer = ({
   children,
-  initial,
+  initial = 400,
+  exit = -150,
 }: {
   children: React.ReactNode;
   initial?: string | number;
+  exit?: string | number;
 }) => {
   const isTransition = usePageTransition((s) => s.isTransition);
   const setIsTransition = usePageTransition((s) => s.setIsTransition);
@@ -19,9 +21,9 @@ const TransitionContainer = ({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ y: initial || 400 }}
+        initial={{ y: initial }}
         animate={{
-          y: isTransition ? -150 : 0,
+          y: isTransition ? exit : 0,
           opacity: isTransition ? 0 : 1,
           scale: isTransition ? 0.9 : 1,
         }}

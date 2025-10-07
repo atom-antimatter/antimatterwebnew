@@ -22,7 +22,7 @@ const PageTransition = () => {
           initial={{ y: "0" }}
           animate={{
             y: isTransition ? "0" : "500px",
-            transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] },
+            transition: { duration: 0.77, ease: [0.76, 0, 0.24, 1] },
           }}
           className="w-full h-full bg-background"
         />
