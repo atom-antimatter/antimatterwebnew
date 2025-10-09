@@ -68,7 +68,7 @@ const CaseStudies = () => {
         </motion.div>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
-        <div className="flex col-span-1 lg:col-span-7 flex-col">
+        <div className="flex col-span-1 lg:col-span-7 flex-col outline-none">
           {WorkList.map((work, index) => (
             <div
               key={work.number}
@@ -76,6 +76,7 @@ const CaseStudies = () => {
               onMouseEnter={(e) => handleMouseEnter(work.link, e)}
               onMouseLeave={handleMouseLeave}
               onClick={handleClick}
+              className="outline-none"
               style={{ cursor: cursor.visible ? 'none' : 'pointer' }}
             >
               <WorkBox

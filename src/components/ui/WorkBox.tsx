@@ -23,7 +23,7 @@ const WorkBox = ({
   return (
     <TransitionLink
       href={link}
-      className={`py-7 px-3 border-b border-foreground/20 duration-200 ${
+      className={`py-7 px-3 border-b border-foreground/20 duration-200 outline-none ${
         active && "bg-foreground/5"
       } ${styles.box}`}
       {...props}
