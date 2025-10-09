@@ -13,7 +13,6 @@ const VoiceAgentDemo = () => {
     useState<ConnectionState>("idle");
   const [isMuted, setIsMuted] = useState(false);
   const [duration, setDuration] = useState(0);
-  const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timer effect
@@ -226,14 +225,6 @@ const VoiceAgentDemo = () => {
                       ))}
                       {/* Center circle */}
                       <motion.div
-                        animate={{
-                          scale: isAgentSpeaking ? [1, 1.05, 1] : 1,
-                        }}
-                        transition={{
-                          duration: 0.6,
-                          repeat: isAgentSpeaking ? Infinity : 0,
-                          ease: "easeInOut",
-                        }}
                         className="relative w-40 h-40 rounded-full bg-gradient-to-br from-secondary/40 to-primary/40 flex items-center justify-center border-2 border-secondary shadow-lg shadow-secondary/30"
                       >
                         {isMuted ? (
@@ -317,8 +308,8 @@ const VoiceAgentDemo = () => {
               Try Our AI-Powered Voice Agent
             </h3>
             <p className="text-foreground/70 mb-6">
-              This demo showcases a conversational AI trained on Antimatter AI's
-              services, case studies, and expertise. Experience natural,
+              This demo showcases a conversational AI trained on Antimatter
+              AI&apos;s services, case studies, and expertise. Experience natural,
               real-time voice interactions powered by advanced AI technology.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
