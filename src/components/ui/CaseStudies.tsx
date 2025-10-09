@@ -45,7 +45,11 @@ const CaseStudies = () => {
       {/* Floating Circular Cursor */}
       {cursor.visible && (
         <motion.div
-          className="fixed z-20 flex mix-blend-difference items-center justify-center w-[90px] h-[90px] rounded-full bg-white text-black text-xs pointer-events-none"
+          className="fixed z-50 flex mix-blend-difference items-center justify-center w-[90px] h-[90px] rounded-full bg-white text-black text-xs font-medium pointer-events-none"
+          style={{
+            left: 0,
+            top: 0,
+          }}
           initial={{
             scale: 0,
             opacity: 0,
@@ -72,6 +76,7 @@ const CaseStudies = () => {
               onMouseEnter={(e) => handleMouseEnter(work.link, e)}
               onMouseLeave={handleMouseLeave}
               onClick={handleClick}
+              style={{ cursor: cursor.visible ? 'none' : 'pointer' }}
             >
               <WorkBox
                 {...(work as WorkListProps)}
