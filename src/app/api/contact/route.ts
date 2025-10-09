@@ -21,9 +21,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
+    const apiKey = process.env.resend_key_new || process.env.RESEND_API_KEY;
     const toEmail = "matt@antimatterai.com";
-    const fromEmail = process.env.CONTACT_FROM_EMAIL || "contact@antimatter.ai";
+    const fromEmail = process.env.RESEND_FROM || "atom@antimatterai.com";
     if (!apiKey) {
       return NextResponse.json(
         {
