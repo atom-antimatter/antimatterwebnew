@@ -154,6 +154,32 @@ const VoiceAgentDemo = () => {
         };
         dc.send(JSON.stringify(sessionUpdate));
         console.log("Session configured with Atom personality");
+
+        // Wait a moment for session to be ready, then trigger greeting
+        setTimeout(() => {
+          // Add a conversation item to trigger Atom's introduction
+          const greetingItem = {
+            type: "conversation.item.create",
+            item: {
+              type: "message",
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: "Hello! Please introduce yourself.",
+                },
+              ],
+            },
+          };
+          dc.send(JSON.stringify(greetingItem));
+
+          // Trigger a response from the assistant
+          const responseCreate = {
+            type: "response.create",
+          };
+          dc.send(JSON.stringify(responseCreate));
+          console.log("Triggered Atom's introduction");
+        }, 500);
       });
 
       // Handle incoming messages
