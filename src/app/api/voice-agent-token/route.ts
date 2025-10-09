@@ -1,3 +1,4 @@
+import { Hume, HumeClient } from "hume";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -23,55 +24,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Create access token for Hume EVI
-    // Hume uses basic auth with API key and secret key
-    console.log("Attempting to fetch access token from Hume...");
-    const credentials = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
+    // Use Hume SDK to get access token
+    console.log("Attempting to get access token using Hume SDK...");
     
-    const response = await fetch(
-      "https://api.hume.ai/oauth2-cc/token",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Basic ${credentials}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          grant_type: "client_credentials",
-        }),
-      }
-    );
+    const client = new HumeClient({
+      apiKey: apiKey,
+      secretKey: secretKey,
+    });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error("Hume API error response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: error,
-      });
-      return NextResponse.json(
-        { 
-          error: "Failed to create access token from Hume API",
-          details: error,
-          status: response.status 
-        },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    console.log("Successfully got access token");
+    // Generate access token using the SDK
+    const accessToken = await client.empathicVoice.chat.getAccessToken();
+    
+    console.log("Successfully got access token via Hume SDK");
 
     return NextResponse.json({
-      accessToken: data.access_token,
-      expiresIn: data.expires_in,
+      accessToken: accessToken,
     });
   } catch (error) {
     console.error("Error generating voice agent token:", error);
     return NextResponse.json(
       { 
         error: "Internal server error",
-        message: error instanceof Error ? error.message : String(error)
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     );
