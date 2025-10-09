@@ -38,14 +38,6 @@ body {
   overflow-x: hidden;
 }
 
-a:focus,
-a:focus-visible,
-div:focus,
-div:focus-visible {
-  outline: none !important;
-  border: none !important;
-}
-
 .bg-gradient-1 {
   background: linear-gradient(
     to bottom,

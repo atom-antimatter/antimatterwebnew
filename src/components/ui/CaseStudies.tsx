@@ -3,117 +3,47 @@ import { useState } from "react";
 import WorkBox, { WorkListProps } from "./WorkBox";
 import Image from "next/image";
 import Reveal from "./Reveal";
-import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
 
 const CaseStudies = () => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
-  const router = useRouter();
-  const [cursor, setCursor] = useState({
-    x: 0,
-    y: 0,
-    visible: false,
-    link: "",
-  });
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    setCursor((prev) => ({ ...prev, x: e.clientX, y: e.clientY }));
-  };
-
-  const handleMouseEnter = (link: string, e: React.MouseEvent) => {
-    setCursor((prev) => ({
-      ...prev,
-      visible: true,
-      link,
-      x: e.clientX,
-      y: e.clientY,
-    }));
-  };
-
-  const handleMouseLeave = () => {
-    setCursor((prev) => ({ ...prev, visible: false, link: "" }));
-  };
-
-  const handleClick = () => {
-    if (cursor.link) {
-      router.push(cursor.link);
-    }
-  };
-
   return (
-    <>
-      {/* Floating Circular Cursor */}
-      {cursor.visible && (
-        <motion.div
-          className="fixed z-50 flex mix-blend-difference items-center justify-center w-[90px] h-[90px] rounded-full bg-white text-black text-xs font-medium pointer-events-none"
-          style={{
-            left: 0,
-            top: 0,
-          }}
-          initial={{
-            scale: 0,
-            opacity: 0,
-            x: cursor.x - 45,
-            y: cursor.y - 45,
-          }}
-          animate={{
-            x: cursor.x - 45,
-            y: cursor.y - 45,
-            scale: 1,
-            opacity: 1,
-          }}
-          transition={{ type: "spring", stiffness: 300, damping: 50 }}
-        >
-          View Work
-        </motion.div>
-      )}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 outline-none">
-        <div className="flex col-span-1 lg:col-span-7 flex-col outline-none border-none">
-          {WorkList.map((work, index) => (
-            <div
-              key={work.number}
-              onMouseMove={handleMouseMove}
-              onMouseEnter={(e) => handleMouseEnter(work.link, e)}
-              onMouseLeave={handleMouseLeave}
-              onClick={handleClick}
-              className="outline-none border-none"
-              style={{ cursor: cursor.visible ? 'none' : 'pointer', outline: 'none', border: 'none' }}
-            >
-              <WorkBox
-                {...(work as WorkListProps)}
-                active={activeIndex === index}
-                onMouseOver={() => setActiveIndex(index)}
-              />
-            </div>
-          ))}
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
+      <Reveal className="flex col-span-1 lg:col-span-7 flex-col">
+        {WorkList.map((work, index) => (
+          <WorkBox
+            key={work.number}
+            {...(work as WorkListProps)}
+            active={activeIndex === index}
+            onMouseOver={() => setActiveIndex(index)}
+          />
+        ))}
+      </Reveal>
+      <Reveal
+        delay={0.2}
+        className="col-span-5 h-full items-center hidden lg:flex justify-center relative"
+      >
+        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+          {WorkList[activeIndex]?.media?.type === "video" ? (
+            <video
+              src={WorkList[activeIndex]?.media?.url}
+              autoPlay
+              loop
+              muted
+              className="w-full  object-contain"
+            />
+          ) : (
+            <Image
+              src={`/images/CaseStudies/${WorkList[activeIndex]?.media?.url}`}
+              alt={WorkList[activeIndex]?.title}
+              className="w-full object-contain object-right"
+              width={1000}
+              height={650}
+              loading="lazy"
+            />
+          )}
         </div>
-        <Reveal
-          delay={0.2}
-          className="col-span-5 h-full items-center hidden lg:flex justify-center relative"
-        >
-          <div className="absolute right-0 top-1/2 -translate-y-1/2">
-            {WorkList[activeIndex]?.media?.type === "video" ? (
-              <video
-                src={WorkList[activeIndex]?.media?.url}
-                autoPlay
-                loop
-                muted
-                className="w-full  object-contain"
-              />
-            ) : (
-              <Image
-                src={`/images/CaseStudies/${WorkList[activeIndex]?.media?.url}`}
-                alt={WorkList[activeIndex]?.title}
-                className="w-full object-contain object-right"
-                width={1000}
-                height={650}
-                loading="lazy"
-              />
-            )}
-          </div>
-        </Reveal>
-      </div>
-    </>
+      </Reveal>
+    </div>
   );
 };
 
