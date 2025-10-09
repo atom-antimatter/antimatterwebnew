@@ -1,49 +1,88 @@
 "use client";
 import { useState } from "react";
 import WorkBox, { WorkListProps } from "./WorkBox";
-import Image from "next/image";
 import Reveal from "./Reveal";
+import { motion } from "motion/react";
+import { useRouter } from "next/navigation";
 
 const CaseStudies = () => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
+  const router = useRouter();
+  const [cursor, setCursor] = useState({
+    x: 0,
+    y: 0,
+    visible: false,
+    link: "",
+  });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    setCursor((prev) => ({ ...prev, x: e.clientX, y: e.clientY }));
+  };
+
+  const handleMouseEnter = (link: string, e: React.MouseEvent) => {
+    setCursor((prev) => ({
+      ...prev,
+      visible: true,
+      link,
+      x: e.clientX,
+      y: e.clientY,
+    }));
+  };
+
+  const handleMouseLeave = () => {
+    setCursor((prev) => ({ ...prev, visible: false, link: "" }));
+  };
+
+  const handleClick = () => {
+    if (cursor.link) {
+      router.push(cursor.link);
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
-      <Reveal className="flex col-span-1 lg:col-span-7 flex-col">
-        {WorkList.map((work, index) => (
-          <WorkBox
-            key={work.number}
-            {...(work as WorkListProps)}
-            active={activeIndex === index}
-            onMouseOver={() => setActiveIndex(index)}
-          />
-        ))}
-      </Reveal>
-      <Reveal
-        delay={0.2}
-        className="col-span-5 h-full items-center hidden lg:flex justify-center relative"
-      >
-        <div className="absolute right-0 top-1/2 -translate-y-1/2">
-          {WorkList[activeIndex]?.media?.type === "video" ? (
-            <video
-              src={WorkList[activeIndex]?.media?.url}
-              autoPlay
-              loop
-              muted
-              className="w-full  object-contain"
-            />
-          ) : (
-            <Image
-              src={`/images/CaseStudies/${WorkList[activeIndex]?.media?.url}`}
-              alt={WorkList[activeIndex]?.title}
-              className="w-full object-contain object-right"
-              width={1000}
-              height={650}
-              loading="lazy"
-            />
-          )}
-        </div>
-      </Reveal>
-    </div>
+    <>
+      {/* Floating Circular Cursor */}
+      {cursor.visible && (
+        <motion.div
+          className="inset-0 fixed z-20 flex mix-blend-difference items-center justify-center w-32 h-32 rounded-full bg-white text-black text-sm pointer-events-none"
+          initial={{
+            scale: 0,
+            opacity: 0,
+            x: cursor.x - 64,
+            y: cursor.y - 64,
+          }}
+          animate={{
+            x: cursor.x - 64,
+            y: cursor.y - 64,
+            scale: 1,
+            opacity: 1,
+          }}
+          transition={{ type: "spring", stiffness: 300, damping: 50 }}
+          onClick={handleClick}
+        >
+          View Work
+        </motion.div>
+      )}
+      <div className="flex flex-col w-full">
+        <Reveal className="flex flex-col w-full">
+          {WorkList.map((work, index) => (
+            <div
+              key={work.number}
+              onMouseMove={handleMouseMove}
+              onMouseEnter={(e) => handleMouseEnter(work.link, e)}
+              onMouseLeave={handleMouseLeave}
+              onClick={handleClick}
+            >
+              <WorkBox
+                {...(work as WorkListProps)}
+                active={activeIndex === index}
+                onMouseOver={() => setActiveIndex(index)}
+              />
+            </div>
+          ))}
+        </Reveal>
+      </div>
+    </>
   );
 };
 
