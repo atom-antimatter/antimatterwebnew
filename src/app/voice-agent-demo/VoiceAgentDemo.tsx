@@ -117,9 +117,15 @@ const VoiceAgentDemo = () => {
       // Initialize audio context for playback
       audioContextRef.current = new AudioContext({ sampleRate: 48000 });
 
-      // Connect to Hume EVI WebSocket
+      // Get Hume Config ID
+      const configId = process.env.NEXT_PUBLIC_HUME_CONFIG_ID;
+      if (!configId) {
+        throw new Error("Hume Config ID not configured");
+      }
+
+      // Connect to Hume EVI WebSocket with config ID
       const ws = new WebSocket(
-        `wss://api.hume.ai/v0/evi/chat?access_token=${accessToken}`
+        `wss://api.hume.ai/v0/evi/chat?access_token=${accessToken}&config_id=${configId}`
       );
       websocketRef.current = ws;
 
