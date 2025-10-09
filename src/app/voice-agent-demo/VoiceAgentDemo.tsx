@@ -11,6 +11,13 @@ import { BsFillMicMuteFill } from "react-icons/bs";
 
 type ConnectionState = "idle" | "connecting" | "connected" | "disconnected";
 
+interface TranscriptItem {
+  id: string;
+  speaker: "user" | "assistant";
+  text: string;
+  isComplete: boolean;
+}
+
 const VoiceAgentDemo = () => {
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("idle");
@@ -18,6 +25,7 @@ const VoiceAgentDemo = () => {
   const [duration, setDuration] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -157,29 +165,17 @@ const VoiceAgentDemo = () => {
 
         // Wait a moment for session to be ready, then trigger greeting
         setTimeout(() => {
-          // Add a conversation item to trigger Atom's introduction
-          const greetingItem = {
-            type: "conversation.item.create",
-            item: {
-              type: "message",
-              role: "user",
-              content: [
-                {
-                  type: "input_text",
-                  text: "Hello! Please introduce yourself.",
-                },
-              ],
-            },
-          };
-          dc.send(JSON.stringify(greetingItem));
-
-          // Trigger a response from the assistant
+          // Trigger a response from the assistant (will use system prompt to introduce)
           const responseCreate = {
             type: "response.create",
+            response: {
+              modalities: ["audio", "text"],
+              instructions: "Please introduce yourself warmly and ask how you can help.",
+            },
           };
           dc.send(JSON.stringify(responseCreate));
           console.log("Triggered Atom's introduction");
-        }, 500);
+        }, 1000);
       });
 
       // Handle incoming messages
@@ -191,12 +187,92 @@ const VoiceAgentDemo = () => {
           setError(msg.error?.message || "An error occurred");
         }
         
-        // Log interesting events for debugging
-        if (
-          msg.type === "conversation.item.created" ||
-          msg.type === "response.done"
-        ) {
-          console.log("Event:", msg.type, msg);
+        // Handle conversation item created (user or assistant messages)
+        if (msg.type === "conversation.item.created") {
+          const item = msg.item;
+          if (item.type === "message") {
+            const role = item.role as "user" | "assistant";
+            const text = item.content?.[0]?.transcript || item.content?.[0]?.text || "";
+            
+            if (text) {
+              setTranscript((prev) => [
+                ...prev,
+                {
+                  id: item.id,
+                  speaker: role,
+                  text: text,
+                  isComplete: true,
+                },
+              ]);
+            }
+          }
+        }
+        
+        // Handle response audio transcript delta (streaming)
+        if (msg.type === "response.audio_transcript.delta") {
+          const delta = msg.delta;
+          const itemId = msg.item_id;
+          
+          setTranscript((prev) => {
+            const existing = prev.find((t) => t.id === itemId);
+            if (existing) {
+              return prev.map((t) =>
+                t.id === itemId
+                  ? { ...t, text: t.text + delta, isComplete: false }
+                  : t
+              );
+            } else {
+              return [
+                ...prev,
+                {
+                  id: itemId,
+                  speaker: "assistant",
+                  text: delta,
+                  isComplete: false,
+                },
+              ];
+            }
+          });
+        }
+        
+        // Handle response audio transcript done
+        if (msg.type === "response.audio_transcript.done") {
+          const itemId = msg.item_id;
+          setTranscript((prev) =>
+            prev.map((t) =>
+              t.id === itemId ? { ...t, isComplete: true } : t
+            )
+          );
+        }
+        
+        // Handle input audio transcription completed
+        if (msg.type === "conversation.item.input_audio_transcription.completed") {
+          const itemId = msg.item_id;
+          const transcriptText = msg.transcript;
+          
+          setTranscript((prev) => {
+            const existing = prev.find((t) => t.id === itemId);
+            if (existing) {
+              return prev.map((t) =>
+                t.id === itemId ? { ...t, text: transcriptText, isComplete: true } : t
+              );
+            } else {
+              return [
+                ...prev,
+                {
+                  id: itemId,
+                  speaker: "user",
+                  text: transcriptText,
+                  isComplete: true,
+                },
+              ];
+            }
+          });
+        }
+        
+        // Log other events for debugging
+        if (msg.type === "response.done") {
+          console.log("Response completed:", msg);
         }
       });
 
@@ -255,6 +331,7 @@ const VoiceAgentDemo = () => {
     setTimeout(() => {
       setConnectionState("idle");
       setIsMuted(false);
+      setTranscript([]);
     }, 500);
   }, [stopAudioAnalyzer]);
 
@@ -434,6 +511,51 @@ const VoiceAgentDemo = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Transcript Section */}
+          {transcript.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mt-12 w-full max-w-2xl"
+            >
+              <h3 className="text-xl font-semibold mb-4 text-center">Transcript</h3>
+              <div className="bg-gradient-to-br from-zinc-900/50 to-zinc-950/50 border border-foreground/10 rounded-2xl p-6 max-h-80 overflow-y-auto">
+                <div className="space-y-4">
+                  {transcript.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: item.speaker === "user" ? 20 : -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className={`flex ${
+                        item.speaker === "user" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          item.speaker === "user"
+                            ? "bg-secondary/20 border border-secondary/30"
+                            : "bg-primary/20 border border-primary/30"
+                        }`}
+                      >
+                        <div className="text-xs font-semibold mb-1 uppercase tracking-wide opacity-70">
+                          {item.speaker === "user" ? "You" : "Atom"}
+                        </div>
+                        <div className="text-sm leading-relaxed">
+                          {item.text}
+                          {!item.isComplete && (
+                            <span className="inline-block w-1 h-4 bg-current ml-1 animate-pulse" />
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Info Section */}
           <motion.div
