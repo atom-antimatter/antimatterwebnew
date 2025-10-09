@@ -1,7 +1,6 @@
-import { Hume, HumeClient } from "hume";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const apiKey = process.env.HUME_API_KEY;
     const secretKey = process.env.HUME_SECRET_KEY;
@@ -24,21 +23,47 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use Hume SDK to get access token
-    console.log("Attempting to get access token using Hume SDK...");
+    // Create access token for Hume EVI using OAuth2 client credentials
+    console.log("Attempting to get access token from Hume...");
+    const credentials = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
     
-    const client = new HumeClient({
-      apiKey: apiKey,
-      secretKey: secretKey,
-    });
+    const response = await fetch(
+      "https://api.hume.ai/oauth2-cc/token",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Basic ${credentials}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+        }).toString(),
+      }
+    );
 
-    // Generate access token using the SDK
-    const accessToken = await client.empathicVoice.chat.getAccessToken();
-    
-    console.log("Successfully got access token via Hume SDK");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Hume API error response:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+      });
+      return NextResponse.json(
+        { 
+          error: "Failed to create access token from Hume API",
+          details: errorText,
+          status: response.status 
+        },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    console.log("Successfully got access token");
 
     return NextResponse.json({
-      accessToken: accessToken,
+      accessToken: data.access_token,
+      expiresIn: data.expires_in,
     });
   } catch (error) {
     console.error("Error generating voice agent token:", error);

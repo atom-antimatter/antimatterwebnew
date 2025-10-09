@@ -83,7 +83,6 @@ export default function VoiceAgent3DSphere({
 
     const dummy = new THREE.Object3D();
     const baseColor = new THREE.Color(0xd7d7d7);
-    const activeColor = new THREE.Color(0x8587e3);
 
     // Initialize particles
     for (let i = 0; i < particleCount; i++) {
