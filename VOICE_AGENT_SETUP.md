@@ -1,10 +1,10 @@
 # Voice Agent Setup Guide
 
-This guide will help you set up the Antimatter AI Voice Agent powered by OpenAI's Realtime API.
+This guide will help you set up the Antimatter AI Voice Agent powered by Hume's Empathic Voice Interface (EVI).
 
 ## Prerequisites
 
-- OpenAI API account with access to the Realtime API
+- Hume AI API account
 - Node.js 20+
 - Next.js 15+
 
@@ -13,37 +13,35 @@ This guide will help you set up the Antimatter AI Voice Agent powered by OpenAI'
 Create a `.env.local` file in the root of your project with the following variables:
 
 ```bash
-# OpenAI API Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Optional: Set the organization ID if you have one
-# OPENAI_ORG_ID=your_org_id_here
+# Hume AI API Configuration
+HUME_API_KEY=your_hume_api_key_here
+HUME_SECRET_KEY=your_hume_secret_key_here
 ```
 
-### Getting Your OpenAI API Key
+### Getting Your Hume API Credentials
 
-1. Go to [OpenAI Platform](https://platform.openai.com/)
+1. Go to [Hume AI Platform](https://platform.hume.ai/)
 2. Sign in to your account
 3. Navigate to API Keys section
-4. Create a new API key
-5. Copy the key and add it to your `.env.local` file
+4. Create a new API key and secret key
+5. Copy both keys and add them to your `.env.local` file
 
-**Important:** The Realtime API requires a paid OpenAI account. Make sure your account has access to `gpt-4o-realtime-preview-2024-12-17` model.
+**Important:** Keep your secret key secure and never commit it to version control.
 
 ## How It Works
 
 ### Architecture
 
 1. **Client-Side (VoiceAgentDemo.tsx)**
-   - Uses WebRTC for real-time audio communication
-   - Manages peer connection with OpenAI's Realtime API
-   - Handles microphone input and audio output
+   - Uses WebSocket for real-time audio communication
+   - Manages connection with Hume's EVI API
+   - Handles microphone input and audio output playback
    - Displays 3D sphere visualization that reacts to speech
 
 2. **API Route (/api/voice-agent-token)**
-   - Generates ephemeral tokens for secure client-side connections
-   - Communicates with OpenAI to create session credentials
-   - Returns client secret for WebRTC connection
+   - Generates OAuth2 access tokens for secure client-side connections
+   - Communicates with Hume's authentication API
+   - Returns access token for WebSocket connection
 
 3. **3D Sphere (VoiceAgent3DSphere.tsx)**
    - Three.js-powered particle system
@@ -53,7 +51,8 @@ OPENAI_API_KEY=your_openai_api_key_here
 4. **System Prompt (voiceAgentPrompt.ts)**
    - Comprehensive knowledge base about Antimatter AI
    - Includes services, case studies, team info
-   - Personality: "Atom" - Antimatter's friendly AI assistant
+   - Personality: "Atom" - Antimatter's empathetic AI assistant
+   - Trained on Antimatter website content and team LinkedIn profiles
 
 ### System Prompt Details
 
@@ -82,23 +81,25 @@ Atom knows about:
 ## Features
 
 - **Real-time voice conversations** with low latency
-- **Natural language understanding** via GPT-4o
+- **Empathic AI** via Hume's emotion-aware language models
 - **3D visualization** that reacts to speech
 - **Mute/unmute** functionality
 - **Call duration tracking**
+- **Real-time transcript** with speaker identification
 - **Error handling** with user-friendly messages
 
 ## Troubleshooting
 
-### "Failed to get session token"
-- Check that your `OPENAI_API_KEY` is set correctly in `.env.local`
-- Verify your OpenAI account has access to the Realtime API
-- Restart your development server after adding the API key
+### "Failed to get access token"
+- Check that both `HUME_API_KEY` and `HUME_SECRET_KEY` are set correctly in `.env.local`
+- Verify your Hume account is active and has API access
+- Restart your development server after adding the API keys
 
 ### "Failed to connect to voice agent"
-- Ensure your browser supports WebRTC (Chrome, Firefox, Safari)
+- Ensure your browser supports WebSocket (Chrome, Firefox, Safari)
 - Check that microphone permissions are granted
 - Verify you have a stable internet connection
+- Check browser console for detailed error messages
 
 ### No audio output
 - Check your browser's audio settings
@@ -122,8 +123,7 @@ Edit `/src/lib/voiceAgentPrompt.ts` to change:
 
 ### Change Voice
 
-In `/src/app/api/voice-agent-token/route.ts`, modify the `voice` parameter:
-- Options: "alloy", "echo", "fable", "onyx", "nova", "shimmer", "verse"
+Hume EVI uses emotionally expressive voices. Voice selection is configured during session setup in the WebSocket connection.
 
 ### Adjust 3D Sphere
 
@@ -135,23 +135,22 @@ In `/src/components/VoiceAgent3DSphere.tsx`:
 
 ## API Costs
 
-The OpenAI Realtime API charges per audio minute:
-- Input audio: $0.06 / minute
-- Output audio: $0.24 / minute
+Hume EVI charges based on usage. Check the [Hume Pricing Page](https://hume.ai/pricing) for current rates.
 
-Monitor your usage in the [OpenAI Dashboard](https://platform.openai.com/usage).
+Monitor your usage in the [Hume Dashboard](https://platform.hume.ai/).
 
 ## Security Notes
 
 - Never commit `.env.local` to version control
-- API keys are kept server-side
-- Ephemeral tokens expire after the session
-- WebRTC connections are encrypted end-to-end
+- API credentials are kept server-side
+- Access tokens are short-lived and expire automatically
+- WebSocket connections use secure WSS protocol
+- Audio data is encrypted in transit
 
 ## Support
 
 For issues or questions about the voice agent implementation:
 - Check the browser console for error messages
-- Review the OpenAI Realtime API docs: https://platform.openai.com/docs/models/gpt-realtime
+- Review the Hume EVI docs: https://docs.hume.ai/
 - Contact the Antimatter AI team at clients@antimatterai.com
 

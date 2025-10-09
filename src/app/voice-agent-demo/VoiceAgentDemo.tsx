@@ -28,11 +28,11 @@ const VoiceAgentDemo = () => {
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const dataChannelRef = useRef<RTCDataChannel | null>(null);
+  const websocketRef = useRef<WebSocket | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+  const audioQueueRef = useRef<AudioBuffer[]>([]);
+  const isPlayingRef = useRef(false);
 
   // Timer effect
   useEffect(() => {
@@ -55,50 +55,6 @@ const VoiceAgentDemo = () => {
     };
   }, [connectionState]);
 
-  // Audio analyzer for detecting when AI is speaking
-  const startAudioAnalyzer = useCallback((stream: MediaStream) => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext();
-    }
-
-    const analyser = audioContextRef.current.createAnalyser();
-    analyser.fftSize = 256;
-    analyserRef.current = analyser;
-
-    const source = audioContextRef.current.createMediaStreamSource(stream);
-    source.connect(analyser);
-
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-    const checkAudio = () => {
-      if (!analyserRef.current) return;
-
-      analyser.getByteFrequencyData(dataArray);
-      const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-
-      // Threshold for detecting speech
-      setIsSpeaking(average > 10);
-
-      animationFrameRef.current = requestAnimationFrame(checkAudio);
-    };
-
-    checkAudio();
-  }, []);
-
-  // Stop audio analyzer
-  const stopAudioAnalyzer = useCallback(() => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    analyserRef.current = null;
-    setIsSpeaking(false);
-  }, []);
-
   // Format duration as MM:SS
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -106,204 +62,197 @@ const VoiceAgentDemo = () => {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
+  // Play audio buffer
+  const playAudioBuffer = useCallback(async (buffer: AudioBuffer) => {
+    if (!audioContextRef.current) return;
+
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContextRef.current.destination);
+    
+    setIsSpeaking(true);
+    source.onended = () => {
+      setIsSpeaking(false);
+      isPlayingRef.current = false;
+      // Play next in queue
+      const next = audioQueueRef.current.shift();
+      if (next) {
+        playAudioBuffer(next);
+      }
+    };
+    
+    source.start(0);
+  }, []);
+
+  // Process audio queue
+  const processAudioQueue = useCallback(() => {
+    if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
+    
+    isPlayingRef.current = true;
+    const buffer = audioQueueRef.current.shift();
+    if (buffer) {
+      playAudioBuffer(buffer);
+    }
+  }, [playAudioBuffer]);
+
   const handleConnect = async () => {
     try {
       setConnectionState("connecting");
       setError(null);
 
-      // Get ephemeral token from our API
+      // Get access token from our API
       const tokenResponse = await fetch("/api/voice-agent-token");
       if (!tokenResponse.ok) {
-        throw new Error("Failed to get session token");
+        throw new Error("Failed to get access token");
       }
 
-      const { clientSecret } = await tokenResponse.json();
-      const EPHEMERAL_KEY = clientSecret.value;
+      const { accessToken } = await tokenResponse.json();
 
-      // Create peer connection
-      const pc = new RTCPeerConnection();
-      peerConnectionRef.current = pc;
-
-      // Set up audio for receiving
-      const audioEl = document.createElement("audio");
-      audioEl.autoplay = true;
-      pc.ontrack = (e) => {
-        audioEl.srcObject = e.streams[0];
-        startAudioAnalyzer(e.streams[0]);
-      };
-
-      // Add local audio track for microphone input
-      const ms = await navigator.mediaDevices.getUserMedia({
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
-      pc.addTrack(ms.getTracks()[0]);
+      mediaStreamRef.current = stream;
 
-      // Set up data channel for sending/receiving events
-      const dc = pc.createDataChannel("oai-events");
-      dataChannelRef.current = dc;
+      // Initialize audio context for playback
+      audioContextRef.current = new AudioContext({ sampleRate: 48000 });
 
-      // Send session update with instructions
-      dc.addEventListener("open", () => {
-        const sessionUpdate = {
-          type: "session.update",
-          session: {
-            instructions: VOICE_AGENT_SYSTEM_PROMPT,
-            voice: "verse",
-            input_audio_transcription: {
-              model: "whisper-1",
-            },
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 500,
-            },
-          },
+      // Connect to Hume EVI WebSocket
+      const ws = new WebSocket(
+        `wss://api.hume.ai/v0/evi/chat?access_token=${accessToken}`
+      );
+      websocketRef.current = ws;
+
+      ws.onopen = () => {
+        console.log("Connected to Hume EVI");
+        
+        // Send session configuration
+        ws.send(JSON.stringify({
+          type: "session_settings",
+          system_prompt: VOICE_AGENT_SYSTEM_PROMPT,
+          language: "en",
+        }));
+
+        // Start sending audio
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: "audio/webm",
+        });
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+            // Convert blob to base64 and send
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64Audio = (reader.result as string).split(",")[1];
+              ws.send(JSON.stringify({
+                type: "audio_input",
+                data: base64Audio,
+              }));
+            };
+            reader.readAsDataURL(event.data);
+          }
         };
-        dc.send(JSON.stringify(sessionUpdate));
-        console.log("Session configured with Atom personality");
 
-        // Wait a moment for session to be ready, then trigger greeting
+        mediaRecorder.start(100); // Send chunks every 100ms
+
+        setConnectionState("connected");
+        
+        // Auto-introduction - send initial message
         setTimeout(() => {
-          // Trigger a response from the assistant (will use system prompt to introduce)
-          const responseCreate = {
-            type: "response.create",
-            response: {
-              modalities: ["audio", "text"],
-              instructions: "Please introduce yourself warmly and ask how you can help.",
-            },
-          };
-          dc.send(JSON.stringify(responseCreate));
-          console.log("Triggered Atom's introduction");
+          ws.send(JSON.stringify({
+            type: "user_message",
+            text: "Hello! Please introduce yourself.",
+          }));
         }, 1000);
-      });
+      };
 
-      // Handle incoming messages
-      dc.addEventListener("message", (e) => {
-        const msg = JSON.parse(e.data);
+      ws.onmessage = async (event) => {
+        const message = JSON.parse(event.data);
         
-        if (msg.type === "error") {
-          console.error("Realtime API error:", msg);
-          setError(msg.error?.message || "An error occurred");
-        }
-        
-        // Handle conversation item created (user or assistant messages)
-        if (msg.type === "conversation.item.created") {
-          const item = msg.item;
-          if (item.type === "message") {
-            const role = item.role as "user" | "assistant";
-            const text = item.content?.[0]?.transcript || item.content?.[0]?.text || "";
-            
-            if (text) {
+        console.log("Hume message:", message.type);
+
+        switch (message.type) {
+          case "user_message":
+            // User speech was transcribed
+            if (message.message?.content) {
               setTranscript((prev) => [
                 ...prev,
                 {
-                  id: item.id,
-                  speaker: role,
-                  text: text,
+                  id: message.message.id || `user-${Date.now()}`,
+                  speaker: "user",
+                  text: message.message.content,
                   isComplete: true,
                 },
               ]);
             }
-          }
-        }
-        
-        // Handle response audio transcript delta (streaming)
-        if (msg.type === "response.audio_transcript.delta") {
-          const delta = msg.delta;
-          const itemId = msg.item_id;
-          
-          setTranscript((prev) => {
-            const existing = prev.find((t) => t.id === itemId);
-            if (existing) {
-              return prev.map((t) =>
-                t.id === itemId
-                  ? { ...t, text: t.text + delta, isComplete: false }
-                  : t
-              );
-            } else {
-              return [
-                ...prev,
-                {
-                  id: itemId,
-                  speaker: "assistant",
-                  text: delta,
-                  isComplete: false,
-                },
-              ];
+            break;
+
+          case "assistant_message":
+            // Assistant response text
+            if (message.message?.content) {
+              setTranscript((prev) => {
+                const existing = prev.find(
+                  (t) => t.id === message.message.id && t.speaker === "assistant"
+                );
+                if (existing) {
+                  return prev.map((t) =>
+                    t.id === message.message.id
+                      ? { ...t, text: message.message.content, isComplete: true }
+                      : t
+                  );
+                }
+                return [
+                  ...prev,
+                  {
+                    id: message.message.id || `assistant-${Date.now()}`,
+                    speaker: "assistant",
+                    text: message.message.content,
+                    isComplete: false,
+                  },
+                ];
+              });
             }
-          });
-        }
-        
-        // Handle response audio transcript done
-        if (msg.type === "response.audio_transcript.done") {
-          const itemId = msg.item_id;
-          setTranscript((prev) =>
-            prev.map((t) =>
-              t.id === itemId ? { ...t, isComplete: true } : t
-            )
-          );
-        }
-        
-        // Handle input audio transcription completed
-        if (msg.type === "conversation.item.input_audio_transcription.completed") {
-          const itemId = msg.item_id;
-          const transcriptText = msg.transcript;
-          
-          setTranscript((prev) => {
-            const existing = prev.find((t) => t.id === itemId);
-            if (existing) {
-              return prev.map((t) =>
-                t.id === itemId ? { ...t, text: transcriptText, isComplete: true } : t
-              );
-            } else {
-              return [
-                ...prev,
-                {
-                  id: itemId,
-                  speaker: "user",
-                  text: transcriptText,
-                  isComplete: true,
-                },
-              ];
+            break;
+
+          case "audio_output":
+            // Received audio from assistant
+            if (message.data && audioContextRef.current) {
+              try {
+                // Decode base64 audio
+                const audioData = Uint8Array.from(atob(message.data), c => c.charCodeAt(0));
+                const audioBuffer = await audioContextRef.current.decodeAudioData(
+                  audioData.buffer
+                );
+                
+                audioQueueRef.current.push(audioBuffer);
+                processAudioQueue();
+              } catch (err) {
+                console.error("Error decoding audio:", err);
+              }
             }
-          });
+            break;
+
+          case "error":
+            console.error("Hume error:", message);
+            setError(message.message || "An error occurred");
+            break;
+
+          default:
+            // Handle other message types
+            break;
         }
-        
-        // Log other events for debugging
-        if (msg.type === "response.done") {
-          console.log("Response completed:", msg);
-        }
-      });
-
-      // Create and set local description
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      // Send offer to OpenAI Realtime API
-      const sdpResponse = await fetch(
-        "https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
-        {
-          method: "POST",
-          body: offer.sdp,
-          headers: {
-            Authorization: `Bearer ${EPHEMERAL_KEY}`,
-            "Content-Type": "application/sdp",
-          },
-        }
-      );
-
-      if (!sdpResponse.ok) {
-        throw new Error(`Failed to connect: ${sdpResponse.statusText}`);
-      }
-
-      const answer = {
-        type: "answer" as RTCSdpType,
-        sdp: await sdpResponse.text(),
       };
-      await pc.setRemoteDescription(answer);
 
-      setConnectionState("connected");
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setError("Connection error occurred");
+      };
+
+      ws.onclose = () => {
+        console.log("WebSocket closed");
+        handleDisconnect();
+      };
+
     } catch (err) {
       console.error("Connection error:", err);
       setError(
@@ -315,17 +264,28 @@ const VoiceAgentDemo = () => {
   };
 
   const handleDisconnect = useCallback(() => {
-    stopAudioAnalyzer();
-
-    if (dataChannelRef.current) {
-      dataChannelRef.current.close();
-      dataChannelRef.current = null;
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
     }
 
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
+    // Close WebSocket
+    if (websocketRef.current) {
+      websocketRef.current.close();
+      websocketRef.current = null;
     }
+
+    // Close audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+
+    // Clear audio queue
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+    setIsSpeaking(false);
 
     setConnectionState("disconnected");
     setTimeout(() => {
@@ -333,14 +293,11 @@ const VoiceAgentDemo = () => {
       setIsMuted(false);
       setTranscript([]);
     }, 500);
-  }, [stopAudioAnalyzer]);
+  }, []);
 
   const toggleMute = () => {
-    if (peerConnectionRef.current) {
-      const audioTrack = peerConnectionRef.current
-        .getSenders()
-        .find((sender) => sender.track?.kind === "audio")?.track;
-
+    if (mediaStreamRef.current) {
+      const audioTrack = mediaStreamRef.current.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsMuted(!audioTrack.enabled);
@@ -569,13 +526,13 @@ const VoiceAgentDemo = () => {
             </h3>
             <p className="text-foreground/70 mb-6">
               Atom is trained on Antimatter AI&apos;s services, case studies, and team expertise.
-              Experience natural, real-time voice interactions powered by OpenAI&apos;s Realtime API.
+              Experience natural, real-time voice interactions powered by Hume&apos;s empathic AI.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="p-4 bg-zinc-900/30 rounded-lg border border-foreground/10">
-                <div className="font-semibold mb-1">Natural Conversations</div>
+                <div className="font-semibold mb-1">Empathic AI</div>
                 <div className="text-foreground/60">
-                  Powered by GPT-4o Realtime
+                  Powered by Hume EVI
                 </div>
               </div>
               <div className="p-4 bg-zinc-900/30 rounded-lg border border-foreground/10">

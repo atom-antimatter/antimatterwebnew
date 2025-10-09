@@ -2,36 +2,37 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.HUME_API_KEY;
+    const secretKey = process.env.HUME_SECRET_KEY;
 
-    if (!apiKey) {
+    if (!apiKey || !secretKey) {
       return NextResponse.json(
-        { error: "OpenAI API key not configured" },
+        { error: "Hume API credentials not configured" },
         { status: 500 }
       );
     }
 
-    // Create an ephemeral token for the Realtime API
+    // Create access token for Hume EVI
     const response = await fetch(
-      "https://api.openai.com/v1/realtime/sessions",
+      "https://api.hume.ai/oauth2-cc/token",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: JSON.stringify({
-          model: "gpt-4o-realtime-preview-2024-12-17",
-          voice: "verse",
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+          client_id: apiKey,
+          client_secret: secretKey,
         }),
       }
     );
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("OpenAI API error:", error);
+      console.error("Hume API error:", error);
       return NextResponse.json(
-        { error: "Failed to create session token" },
+        { error: "Failed to create access token" },
         { status: response.status }
       );
     }
@@ -39,7 +40,8 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
 
     return NextResponse.json({
-      clientSecret: data.client_secret,
+      accessToken: data.access_token,
+      expiresIn: data.expires_in,
     });
   } catch (error) {
     console.error("Error generating voice agent token:", error);
