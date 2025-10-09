@@ -339,34 +339,16 @@ const VoiceAgentDemo = () => {
 
               {/* 3D Sphere Visualization */}
               <div className="flex items-center justify-center mb-10 h-64">
-                {connectionState === "idle" || connectionState === "disconnected" ? (
-                  <motion.div
-                    key="idle-state"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="w-full h-full flex items-center justify-center"
-                  >
-                    <div className="relative w-40 h-40">
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center border border-secondary/30">
-                        <HiMicrophone className="w-16 h-16 text-secondary/50" />
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="active-state"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="w-full h-full"
-                  >
-                    <VoiceAgent3DSphere
-                      isActive={connectionState === "connected"}
-                      isSpeaking={isSpeaking}
-                    />
-                  </motion.div>
-                )}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full h-full"
+                >
+                  <VoiceAgent3DSphere
+                    isActive={connectionState === "connected"}
+                    isSpeaking={isSpeaking}
+                  />
+                </motion.div>
               </div>
 
               {/* Error Display */}

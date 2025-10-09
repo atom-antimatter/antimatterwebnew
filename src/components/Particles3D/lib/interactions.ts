@@ -56,6 +56,22 @@ export function setupInteractions(
     timeline.to(morphProgressRef, { current: 1 }, 0);
   };
 
+  // Check if we're on a page with service cards and particles3d
+  const particles3d = document.querySelector("#particles3d");
+  const serviceSection = document.querySelector("#service-section");
+  
+  if (!particles3d || !serviceSection) {
+    // Not on homepage, return minimal cleanup
+    return {
+      mouse,
+      morphProgressRef,
+      currentIndexRef,
+      nextIndexRef,
+      onResize: () => {},
+      dispose: () => {},
+    };
+  }
+
   const ctx = gsap.context(() => {
     const media = gsap.matchMedia();
     media.add(

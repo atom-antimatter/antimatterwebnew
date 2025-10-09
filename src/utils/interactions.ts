@@ -12,6 +12,11 @@ const Interactions = () => {
   useEffect(() => {
     // Add any global interactions or animations here if needed
     if (!finished) return;
+    
+    // Check if particles3d exists (only on homepage)
+    const particles3d = document.querySelector("#particles3d");
+    if (!particles3d) return;
+    
     const ctx = gsap.context(() => {
       const timeline = gsap.timeline({
         scrollTrigger: {
