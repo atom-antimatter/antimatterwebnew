@@ -1,4 +1,4 @@
-import ContactForm from "@/components/ui/ContactForm";
+import CalendlyEmbed from "@/components/ui/CalendlyEmbed";
 import MainLayout from "@/components/ui/MainLayout";
 import TitleH1Anim from "@/components/ui/TitleH1Anim";
 import TransitionContainer from "@/components/ui/TransitionContainer";
@@ -26,8 +26,8 @@ const ContactPage = () => {
           </div>
           <div className="w-full">
             <p className="text-foreground/90 max-w-lg">
-              Let&apos;s talk about your next big idea. Use the form to tell us
-              more, or simply drop us an email at{" "}
+              Let&apos;s talk about your next big idea. Schedule a call with us
+              below, or simply drop us an email at{" "}
               <a
                 href="mailto:clients@antimatterai.com"
                 className="text-tertiary underline"
@@ -35,7 +35,7 @@ const ContactPage = () => {
                 clients@antimatterai.com
               </a>
             </p>
-            <ContactForm />
+            <CalendlyEmbed />
           </div>
         </div>
       </TransitionContainer>
