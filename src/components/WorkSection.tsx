@@ -19,10 +19,6 @@ const WorkSection = () => {
         </div>
         <CaseStudies />
       </div>
-      <div
-        className="size-[600px] bg-primary rounded-full 
-      absolute right-full top-1/2 -translate-y-1/2 blur-[150px] scale-x-75"
-      ></div>
     </div>
   );
 };
