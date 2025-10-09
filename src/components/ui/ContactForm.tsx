@@ -79,7 +79,7 @@ const ContactForm = () => {
       <div className="flex w-full gap-6 flex-wrap sm:flex-nowrap">
         <div className="w-full flex flex-col">
           <label htmlFor="phone" className="font-light text-lg">
-            Phone Number <span className="text-tertiary">*</span>
+            Phone Number
           </label>
           <input
             name="phone"
@@ -91,7 +91,7 @@ const ContactForm = () => {
         </div>
         <div className="w-full flex flex-col">
           <label htmlFor="service" className="font-light text-lg">
-            What are you looking for? <span className="text-tertiary">*</span>
+            What are you looking for?
           </label>
           <select
             name="service"

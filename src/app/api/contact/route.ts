@@ -66,8 +66,9 @@ export async function POST(request: Request) {
 
     if (!resp.ok) {
       const errText = await resp.text();
+      console.error("Resend API error:", errText);
       return NextResponse.json(
-        { error: "Email send failed", details: errText },
+        { error: "Email send failed. Please check Resend API configuration.", details: errText },
         { status: 502 }
       );
     }
@@ -128,9 +129,9 @@ export async function POST(request: Request) {
       confirmationId,
     });
   } catch (e) {
-	console.error(e);
+	console.error("Contact API error:", e);
     return NextResponse.json(
-      { error: "Unexpected server error ," },
+      { error: "Unexpected server error" },
       { status: 500 }
     );
   }
