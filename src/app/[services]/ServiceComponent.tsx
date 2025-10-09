@@ -23,18 +23,18 @@ const ServiceComponent = () => {
           >
             {service?.pageTitle}
           </TitleH1Anim>
-          <div className="pt-10 flex gap-4 flex-wrap">
+          <div className="pt-10 flex gap-6 flex-wrap items-center">
             {service.customCTA ? (
               <>
                 <Link href={service.customCTA.href}>
-                  <Button>
-                    <span className="px-5 lg:px-10">{service.customCTA.text}</span>
+                  <Button variant="primary">
+                    <span className="px-8 lg:px-12">{service.customCTA.text}</span>
                   </Button>
                 </Link>
                 {service.customCTA.secondary && (
                   <Link href={service.customCTA.secondary.href}>
-                    <Button>
-                      <span className="px-5 lg:px-10">{service.customCTA.secondary.text}</span>
+                    <Button variant="inverted">
+                      <span className="px-8 lg:px-12">{service.customCTA.secondary.text}</span>
                     </Button>
                   </Link>
                 )}

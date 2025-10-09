@@ -2,7 +2,11 @@
 import { MouseEvent, PropsWithChildren } from "react";
 import styles from "./css/Button.module.css";
 
-const Button = ({ children, ...props }: PropsWithChildren & React.ComponentProps<"button">) => {
+interface ButtonProps extends PropsWithChildren, React.ComponentProps<"button"> {
+  variant?: "primary" | "inverted";
+}
+
+const Button = ({ children, variant = "primary", ...props }: ButtonProps) => {
   function handleMouseMove(e: MouseEvent<HTMLButtonElement>) {
     const el = e.currentTarget;
     const rect = el.getBoundingClientRect();
@@ -12,7 +16,7 @@ const Button = ({ children, ...props }: PropsWithChildren & React.ComponentProps
   return (
     <button
       type="button"
-      className={styles.button}
+      className={`${styles.button} ${variant === "inverted" ? styles.inverted : ""}`}
       onMouseMove={handleMouseMove}
       {...props}
     >
