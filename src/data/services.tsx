@@ -178,20 +178,20 @@ export const ServicesData: ServiceProps[] = [
     tagline: ["Natural conversations,", "powered by AI."],
     items: [
       { 
-        title: "OpenAI Realtime API Integration",
-        desc: "Seamless integration with OpenAI's cutting-edge Realtime API for ultra-low latency voice interactions. Build natural, flowing conversations that feel human."
+        title: "AI Call Centers & Receptionists",
+        desc: "Intelligent phone systems powered by OpenAI, Hume, and ElevenLabs. Handle customer calls, schedule appointments, answer FAQs, and route inquiries 24/7 with human-like empathy."
+      },
+      { 
+        title: "Multi-Provider Integration",
+        desc: "Flexible implementation across OpenAI Realtime API, Hume EVI, Vapi, Bland AI, and more. We select the best provider for your use case—whether it's emotional intelligence, latency, or cost."
       },
       { 
         title: "Custom Training & Knowledge Base",
-        desc: "Train your voice agent on your company's content, documentation, and knowledge. From website scraping to document ingestion, we ensure your agent knows your business inside out."
+        desc: "Train your voice agent on your company's content, documentation, and workflows. From website scraping to CRM integration, your agent becomes an expert on your business."
       },
       { 
-        title: "Natural Language Understanding",
-        desc: "Advanced NLU powered by GPT-4 that understands context, intent, and nuance. Your customers get accurate, helpful responses every time."
-      },
-      { 
-        title: "Voice‑to‑Text & Real‑time Response",
-        desc: "Lightning-fast speech recognition and synthesis using Whisper and TTS. Natural-sounding conversations with minimal latency for the best user experience."
+        title: "Appointment Scheduling & Automation",
+        desc: "Seamless calendar integration with Google Calendar, Calendly, and booking systems. Your AI agent can schedule, reschedule, and send reminders—no human intervention needed."
       },
     ],
     customCTA: {
