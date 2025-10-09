@@ -67,8 +67,8 @@ const CaseStudies = () => {
           View Work
         </motion.div>
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
-        <div className="flex col-span-1 lg:col-span-7 flex-col outline-none">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 outline-none">
+        <div className="flex col-span-1 lg:col-span-7 flex-col outline-none border-none">
           {WorkList.map((work, index) => (
             <div
               key={work.number}
@@ -76,8 +76,8 @@ const CaseStudies = () => {
               onMouseEnter={(e) => handleMouseEnter(work.link, e)}
               onMouseLeave={handleMouseLeave}
               onClick={handleClick}
-              className="outline-none"
-              style={{ cursor: cursor.visible ? 'none' : 'pointer' }}
+              className="outline-none border-none"
+              style={{ cursor: cursor.visible ? 'none' : 'pointer', outline: 'none', border: 'none' }}
             >
               <WorkBox
                 {...(work as WorkListProps)}
