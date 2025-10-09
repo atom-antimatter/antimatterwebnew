@@ -24,18 +24,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Create access token for Hume EVI
+    // Hume uses basic auth with API key and secret key
     console.log("Attempting to fetch access token from Hume...");
+    const credentials = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
+    
     const response = await fetch(
       "https://api.hume.ai/oauth2-cc/token",
       {
         method: "POST",
         headers: {
+          "Authorization": `Basic ${credentials}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
           grant_type: "client_credentials",
-          client_id: apiKey,
-          client_secret: secretKey,
         }),
       }
     );
