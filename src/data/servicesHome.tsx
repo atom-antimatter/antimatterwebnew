@@ -37,6 +37,8 @@ import {
   SiZapier,
   SiZigbee,
 } from "react-icons/si";
+import { HiSpeakerWave } from "react-icons/hi2";
+import { SiOpenai } from "react-icons/si";
 
 export const serviceCardData: ServiceCardProps[] = [
   {
@@ -168,6 +170,27 @@ export const serviceCardData: ServiceCardProps[] = [
       <SiNodered key="nodered" />,
       <SiZigbee key="zigbee" />,
       <SiNordicsemiconductor key="nordic" />,
+    ],
+  },
+  {
+    number: "07",
+    title: "Voice Agents",
+    description:
+      "Conversational AI powered by OpenAI's Realtime API—trained on your content, natural interactions, and seamless customer engagement 24/7.",
+    services: [
+      "OpenAI Realtime API Integration",
+      "Custom Training & Knowledge Base",
+      "Natural Language Understanding",
+      "Voice‑to‑Text & Real‑time Response",
+    ],
+    tools: ["OpenAI", "Realtime API", "Whisper", "GPT-4", "TTS", "WebRTC"],
+    toolIcons: [
+      <SiOpenai key="openai" />,
+      <HiSpeakerWave key="speaker" />,
+      <SiNodedotjs key="node" />,
+      <SiReact key="react" />,
+      <SiTypescript key="ts" />,
+      <SiDocker key="docker" />,
     ],
   },
 ];

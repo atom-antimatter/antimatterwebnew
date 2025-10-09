@@ -23,12 +23,29 @@ const ServiceComponent = () => {
           >
             {service?.pageTitle}
           </TitleH1Anim>
-          <div className="pt-10">
-            <Link href={"#all-services"}>
-              <Button>
-                <span className="px-5 lg:px-10">Read more</span>
-              </Button>
-            </Link>
+          <div className="pt-10 flex gap-4 flex-wrap">
+            {service.customCTA ? (
+              <>
+                <Link href={service.customCTA.href}>
+                  <Button>
+                    <span className="px-5 lg:px-10">{service.customCTA.text}</span>
+                  </Button>
+                </Link>
+                {service.customCTA.secondary && (
+                  <Link href={service.customCTA.secondary.href}>
+                    <Button>
+                      <span className="px-5 lg:px-10">{service.customCTA.secondary.text}</span>
+                    </Button>
+                  </Link>
+                )}
+              </>
+            ) : (
+              <Link href={"#all-services"}>
+                <Button>
+                  <span className="px-5 lg:px-10">Read more</span>
+                </Button>
+              </Link>
+            )}
           </div>
           <div className="flex justify-end">
             <p className="mt-20 lg:text-xl xl:text-2xl w-xl xl:w-2xl tracking-wide">

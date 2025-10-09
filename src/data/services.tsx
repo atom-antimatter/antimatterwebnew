@@ -4,6 +4,7 @@ import { FaCode } from "react-icons/fa6";
 import { BsGraphUpArrow } from "react-icons/bs";
 import { LuBrain, LuCpu } from "react-icons/lu";
 import { RiStethoscopeLine } from "react-icons/ri";
+import { HiSpeakerWave } from "react-icons/hi2";
 
 interface ServiceItemProps {
   title: string;
@@ -19,6 +20,14 @@ export type ServiceProps = {
   description?: string;
   tagline?: string[];
   items: ServiceItemProps[];
+  customCTA?: {
+    text: string;
+    href: string;
+    secondary?: {
+      text: string;
+      href: string;
+    };
+  };
 };
 
 export const ServicesData: ServiceProps[] = [
@@ -153,5 +162,45 @@ export const ServicesData: ServiceProps[] = [
       { title: "MQTT Ingestion & Stream Processing" },
       { title: "Edge AI & OTA Update Pipelines" },
     ],
+  },
+  {
+    icon: HiSpeakerWave,
+    link: "/voice-agents",
+    title: "Voice Agents",
+    pageTitle: (
+      <>
+        Voice Agents that <br />
+        <span className="text-secondary font-bold italic mr-3">just work</span>
+      </>
+    ),
+    description:
+      "From concept to conversational AI, we build voice agents powered by OpenAI's Realtime API. Trained on your content, seamlessly integrated, and ready to engage your customers 24/7. Here, every conversation matters.",
+    tagline: ["Natural conversations,", "powered by AI."],
+    items: [
+      { 
+        title: "OpenAI Realtime API Integration",
+        desc: "Seamless integration with OpenAI's cutting-edge Realtime API for ultra-low latency voice interactions. Build natural, flowing conversations that feel human."
+      },
+      { 
+        title: "Custom Training & Knowledge Base",
+        desc: "Train your voice agent on your company's content, documentation, and knowledge. From website scraping to document ingestion, we ensure your agent knows your business inside out."
+      },
+      { 
+        title: "Natural Language Understanding",
+        desc: "Advanced NLU powered by GPT-4 that understands context, intent, and nuance. Your customers get accurate, helpful responses every time."
+      },
+      { 
+        title: "Voice‑to‑Text & Real‑time Response",
+        desc: "Lightning-fast speech recognition and synthesis using Whisper and TTS. Natural-sounding conversations with minimal latency for the best user experience."
+      },
+    ],
+    customCTA: {
+      text: "Try Antimatter Voice Agent",
+      href: "/voice-agent-demo",
+      secondary: {
+        text: "Build Your Own",
+        href: "/contact",
+      },
+    },
   },
 ];
