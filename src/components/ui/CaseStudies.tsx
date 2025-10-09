@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import WorkBox, { WorkListProps } from "./WorkBox";
+import Image from "next/image";
 import Reveal from "./Reveal";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
@@ -63,8 +64,8 @@ const CaseStudies = () => {
           View Work
         </motion.div>
       )}
-      <div className="flex flex-col w-full">
-        <Reveal className="flex flex-col w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
+        <Reveal className="flex col-span-1 lg:col-span-7 flex-col">
           {WorkList.map((work, index) => (
             <div
               key={work.number}
@@ -80,6 +81,31 @@ const CaseStudies = () => {
               />
             </div>
           ))}
+        </Reveal>
+        <Reveal
+          delay={0.2}
+          className="col-span-5 h-full items-center hidden lg:flex justify-center relative"
+        >
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            {WorkList[activeIndex]?.media?.type === "video" ? (
+              <video
+                src={WorkList[activeIndex]?.media?.url}
+                autoPlay
+                loop
+                muted
+                className="w-full  object-contain"
+              />
+            ) : (
+              <Image
+                src={`/images/CaseStudies/${WorkList[activeIndex]?.media?.url}`}
+                alt={WorkList[activeIndex]?.title}
+                className="w-full object-contain object-right"
+                width={1000}
+                height={650}
+                loading="lazy"
+              />
+            )}
+          </div>
         </Reveal>
       </div>
     </>
