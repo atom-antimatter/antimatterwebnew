@@ -45,21 +45,20 @@ const CaseStudies = () => {
       {/* Floating Circular Cursor */}
       {cursor.visible && (
         <motion.div
-          className="inset-0 fixed z-20 flex mix-blend-difference items-center justify-center w-32 h-32 rounded-full bg-white text-black text-sm pointer-events-none"
+          className="fixed z-20 flex mix-blend-difference items-center justify-center w-[90px] h-[90px] rounded-full bg-white text-black text-xs pointer-events-none"
           initial={{
             scale: 0,
             opacity: 0,
-            x: cursor.x - 64,
-            y: cursor.y - 64,
+            x: cursor.x - 45,
+            y: cursor.y - 45,
           }}
           animate={{
-            x: cursor.x - 64,
-            y: cursor.y - 64,
+            x: cursor.x - 45,
+            y: cursor.y - 45,
             scale: 1,
             opacity: 1,
           }}
           transition={{ type: "spring", stiffness: 300, damping: 50 }}
-          onClick={handleClick}
         >
           View Work
         </motion.div>
