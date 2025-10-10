@@ -3,41 +3,32 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const apiKey = process.env.HUME_API_KEY;
-    const secretKey = process.env.HUME_SECRET_KEY;
 
     console.log("Environment check:", {
       hasApiKey: !!apiKey,
-      hasSecretKey: !!secretKey,
       apiKeyLength: apiKey?.length,
-      secretKeyLength: secretKey?.length,
     });
 
-    if (!apiKey || !secretKey) {
-      console.error("Missing credentials:", {
-        apiKey: apiKey ? "present" : "missing",
-        secretKey: secretKey ? "present" : "missing",
-      });
+    if (!apiKey) {
+      console.error("Missing API key");
       return NextResponse.json(
-        { error: "Hume API credentials not configured. Please check environment variables." },
+        { error: "Hume API key not configured. Please check environment variables." },
         { status: 500 }
       );
     }
 
-    // Create access token for Hume EVI using OAuth2 client credentials
+    // Hume uses the API key directly as a Bearer token
     console.log("Attempting to get access token from Hume...");
-    const credentials = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
     
     const response = await fetch(
-      "https://api.hume.ai/oauth2-cc/token",
+      "https://api.hume.ai/v0/evi/chat/access_token",
       {
         method: "POST",
         headers: {
-          "Authorization": `Basic ${credentials}`,
-          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Hume-Api-Key": apiKey,
+          "Content-Type": "application/json",
         },
-        body: new URLSearchParams({
-          grant_type: "client_credentials",
-        }).toString(),
+        body: JSON.stringify({}),
       }
     );
 
