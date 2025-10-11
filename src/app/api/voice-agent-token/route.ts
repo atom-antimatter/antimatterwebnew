@@ -15,31 +15,42 @@ async function fetchHumeToken(ttlSeconds: number = 60) {
 
   const basic = Buffer.from(`${apiKey}:${secret}`).toString("base64");
 
-  const resp = await fetch("https://api.hume.ai/v0/stream/token", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${basic}`,
-      "Content-Type": "application/json",
+  const candidates = [
+    "https://api.hume.ai/v0/stream/token",
+    "https://api.hume.ai/v0/streaming/token",
+    "https://api.hume.ai/v0/evi/stream/token",
+    "https://api.hume.ai/v0/evi/streaming/token",
+  ];
+
+  let lastErrText = "";
+  for (const url of candidates) {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${basic}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ttl: ttlSeconds }),
+    });
+    if (resp.ok) {
+      const data = (await resp.json()) as { token?: string };
+      if (data?.token) return NextResponse.json({ token: data.token });
+      lastErrText = (await resp.text().catch(() => "")) || lastErrText;
+      break;
+    } else {
+      lastErrText = (await resp.text().catch(() => "")) || lastErrText;
+      // Try next candidate
+    }
+  }
+
+  return NextResponse.json(
+    {
+      error: "Failed to create access token from Hume API",
+      details: lastErrText,
+      status: 404,
     },
-    body: JSON.stringify({ ttl: ttlSeconds }),
-  });
-
-  if (!resp.ok) {
-    const err = await resp.text().catch(() => "");
-    return NextResponse.json(
-      { error: "Hume token request failed", details: err },
-      { status: 502 }
-    );
-  }
-
-  const data = (await resp.json()) as { token?: string };
-  if (!data?.token) {
-    return NextResponse.json(
-      { error: "Hume response missing token" },
-      { status: 502 }
-    );
-  }
-  return NextResponse.json({ token: data.token });
+    { status: 502 }
+  );
 }
 
 export async function GET() {
