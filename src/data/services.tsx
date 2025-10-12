@@ -4,7 +4,6 @@ import { FaCode } from "react-icons/fa6";
 import { BsGraphUpArrow } from "react-icons/bs";
 import { LuBrain, LuCpu } from "react-icons/lu";
 import { RiStethoscopeLine } from "react-icons/ri";
-import { HiSpeakerWave } from "react-icons/hi2";
 
 interface ServiceItemProps {
   title: string;
@@ -162,45 +161,5 @@ export const ServicesData: ServiceProps[] = [
       { title: "MQTT Ingestion & Stream Processing" },
       { title: "Edge AI & OTA Update Pipelines" },
     ],
-  },
-  {
-    icon: HiSpeakerWave,
-    link: "/voice-agents",
-    title: "Voice Agents",
-    pageTitle: (
-      <>
-        Voice Agents that <br />
-        <span className="text-secondary font-bold italic mr-3">just work</span>
-      </>
-    ),
-    description:
-      "From concept to conversational AI, we build voice agents powered by OpenAI's Realtime API. Trained on your content, seamlessly integrated, and ready to engage your customers 24/7. Here, every conversation matters.",
-    tagline: ["Natural conversations,", "powered by AI."],
-    items: [
-      { 
-        title: "AI Call Centers & Receptionists",
-        desc: "Intelligent phone systems powered by OpenAI, Hume, and ElevenLabs. Handle customer calls, schedule appointments, answer FAQs, and route inquiries 24/7 with human-like empathy."
-      },
-      { 
-        title: "Multi-Provider Integration",
-        desc: "Flexible implementation across OpenAI Realtime API, Hume EVI, Vapi, Bland AI, and more. We select the best provider for your use case—whether it's emotional intelligence, latency, or cost."
-      },
-      { 
-        title: "Custom Training & Knowledge Base",
-        desc: "Train your voice agent on your company's content, documentation, and workflows. From website scraping to CRM integration, your agent becomes an expert on your business."
-      },
-      { 
-        title: "Appointment Scheduling & Automation",
-        desc: "Seamless calendar integration with Google Calendar, Calendly, and booking systems. Your AI agent can schedule, reschedule, and send reminders—no human intervention needed."
-      },
-    ],
-    customCTA: {
-      text: "Try Antimatter Voice Agent",
-      href: "/voice-agent-demo",
-      secondary: {
-        text: "Build Your Own",
-        href: "/contact",
-      },
-    },
   },
 ];
