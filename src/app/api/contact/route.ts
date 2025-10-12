@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 // POST /api/contact
-// Sends contact form submissions via Resend to matt@antimatterai.com
+// Saves contact form submissions to Supabase and sends email via Resend
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
@@ -21,17 +22,58 @@ export async function POST(request: Request) {
       );
     }
 
+    // Initialize Supabase client
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing Supabase credentials");
+    }
+
+    const supabase = supabaseUrl && supabaseServiceKey 
+      ? createClient(supabaseUrl, supabaseServiceKey)
+      : null;
+
+    // Save to Supabase first (so we never lose a lead)
+    let submissionId: string | null = null;
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from("contact_submissions")
+          .insert({
+            name,
+            email,
+            phone,
+            service,
+            message,
+            source: "contact_form",
+            email_sent: false,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Supabase insert error:", error);
+        } else {
+          submissionId = data?.id || null;
+          console.log("Saved submission to Supabase:", submissionId);
+        }
+      } catch (err) {
+        console.error("Failed to save to Supabase:", err);
+      }
+    }
+
     const apiKey = process.env.resend_key_new || process.env.RESEND_API_KEY;
     const toEmail = "matt@antimatterai.com";
     const fromEmail = process.env.RESEND_FROM || "atom@antimatterai.com";
+    
     if (!apiKey) {
-      return NextResponse.json(
-        {
-          error:
-            "Server is missing RESEND_API_KEY. Add it to .env / Vercel env.",
-        },
-        { status: 500 }
-      );
+      // Even without Resend, we saved to Supabase
+      return NextResponse.json({
+        ok: true,
+        id: submissionId,
+        warning: "Email notification not sent (Resend not configured)",
+      });
     }
 
     const subject = `New contact form submission from ${name}`;
@@ -67,13 +109,33 @@ export async function POST(request: Request) {
     if (!resp.ok) {
       const errText = await resp.text();
       console.error("Resend API error:", errText);
-      return NextResponse.json(
-        { error: "Email send failed. Please check Resend API configuration.", details: errText },
-        { status: 502 }
-      );
+      
+      // Update Supabase with error
+      if (supabase && submissionId) {
+        await supabase
+          .from("contact_submissions")
+          .update({ email_error: errText })
+          .eq("id", submissionId);
+      }
+      
+      // Still return success since we saved to Supabase
+      return NextResponse.json({
+        ok: true,
+        id: submissionId,
+        warning: "Form submitted successfully, but email notification failed",
+        emailError: errText,
+      });
     }
 
     const data = await resp.json();
+    
+    // Update Supabase to mark email as sent
+    if (supabase && submissionId) {
+      await supabase
+        .from("contact_submissions")
+        .update({ email_sent: true })
+        .eq("id", submissionId);
+    }
 
     // Send confirmation email to the submitter (non-fatal if it fails)
     let confirmationId: string | null = null;
@@ -125,7 +187,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      id: data?.id || null,
+      id: submissionId,
+      emailId: data?.id || null,
       confirmationId,
     });
   } catch (e) {

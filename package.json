@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.75.0",
     "@types/three": "^0.179.0",
     "gsap": "^3.13.0",
     "hume": "^0.14.1",
