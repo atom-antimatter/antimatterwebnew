@@ -15,7 +15,9 @@ async function fetchHumeToken(ttlSeconds: number = 60) {
 
   const basic = Buffer.from(`${apiKey}:${secret}`).toString("base64");
 
+  const configured = (process.env.HUME_TOKEN_URL || "").trim();
   const candidates = [
+    ...(configured ? [configured] : []),
     "https://api.hume.ai/v0/stream/token",
     "https://api.hume.ai/v0/streaming/token",
     "https://api.hume.ai/v0/evi/stream/token",
@@ -47,6 +49,7 @@ async function fetchHumeToken(ttlSeconds: number = 60) {
     {
       error: "Failed to create access token from Hume API",
       details: lastErrText,
+      tried: candidates,
       status: 404,
     },
     { status: 502 }
