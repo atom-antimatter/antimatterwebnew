@@ -33,6 +33,7 @@ const VoiceAgentDemo = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<AudioBuffer[]>([]);
   const isPlayingRef = useRef(false);
+  const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -72,10 +73,12 @@ const VoiceAgentDemo = () => {
     const source = audioContextRef.current.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContextRef.current.destination);
+    currentSourceRef.current = source;
     
     source.onended = () => {
       setIsSpeaking(false);
       isPlayingRef.current = false;
+      currentSourceRef.current = null;
       
       // Play next in queue
       const next = audioQueueRef.current.shift();
@@ -110,9 +113,13 @@ const VoiceAgentDemo = () => {
 
       const { accessToken } = await tokenResponse.json();
 
-      // Request microphone access
+      // Request microphone access with echo cancellation
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
       mediaStreamRef.current = stream;
 
@@ -241,6 +248,28 @@ const VoiceAgentDemo = () => {
             }
             break;
 
+          case "user_interruption":
+            // User interrupted - clear audio queue and stop playback
+            console.log("User interrupted");
+            audioQueueRef.current = [];
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            // Stop the currently playing audio source
+            if (currentSourceRef.current) {
+              try {
+                currentSourceRef.current.stop();
+                currentSourceRef.current = null;
+              } catch (err) {
+                // Source might have already stopped
+              }
+            }
+            break;
+
+          case "assistant_end":
+            // Assistant finished speaking
+            console.log("Assistant finished turn");
+            break;
+
           case "error":
             console.error("Hume error:", message);
             setError(message.message || "An error occurred");
@@ -273,6 +302,16 @@ const VoiceAgentDemo = () => {
   };
 
   const handleDisconnect = useCallback(() => {
+    // Stop currently playing audio
+    if (currentSourceRef.current) {
+      try {
+        currentSourceRef.current.stop();
+      } catch (err) {
+        // Already stopped
+      }
+      currentSourceRef.current = null;
+    }
+
     // Stop media stream
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
