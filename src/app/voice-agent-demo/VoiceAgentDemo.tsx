@@ -64,16 +64,19 @@ const VoiceAgentDemo = () => {
 
   // Play audio buffer
   const playAudioBuffer = useCallback(async (buffer: AudioBuffer) => {
-    if (!audioContextRef.current) return;
+    if (!audioContextRef.current || isPlayingRef.current) return;
+
+    isPlayingRef.current = true;
+    setIsSpeaking(true);
 
     const source = audioContextRef.current.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContextRef.current.destination);
     
-    setIsSpeaking(true);
     source.onended = () => {
       setIsSpeaking(false);
       isPlayingRef.current = false;
+      
       // Play next in queue
       const next = audioQueueRef.current.shift();
       if (next) {
@@ -88,7 +91,6 @@ const VoiceAgentDemo = () => {
   const processAudioQueue = useCallback(() => {
     if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
     
-    isPlayingRef.current = true;
     const buffer = audioQueueRef.current.shift();
     if (buffer) {
       playAudioBuffer(buffer);
@@ -166,7 +168,7 @@ const VoiceAgentDemo = () => {
         // Auto-introduction - send initial message
         setTimeout(() => {
           ws.send(JSON.stringify({
-            type: "user_message",
+            type: "user_input",
             text: "Hello! Please introduce yourself.",
           }));
         }, 1000);
@@ -179,6 +181,7 @@ const VoiceAgentDemo = () => {
 
         switch (message.type) {
           case "user_message":
+          case "user_input":
             // User speech was transcribed
             if (message.message?.content) {
               setTranscript((prev) => [
