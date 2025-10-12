@@ -119,9 +119,6 @@ export default function VoiceAgent3DSphere({
       const { instancedMesh, particleCount, basePositions, baseSizes, dummy } =
         sceneRef.current;
 
-      // Rotate the entire sphere
-      instancedMesh.rotation.y += 0.001;
-
       // Oscillate particles when speaking
       for (let i = 0; i < particleCount; i++) {
         const basePos = basePositions[i];
