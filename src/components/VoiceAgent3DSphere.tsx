@@ -119,6 +119,11 @@ export default function VoiceAgent3DSphere({
       const { instancedMesh, particleCount, basePositions, baseSizes, dummy } =
         sceneRef.current;
 
+      // Rotate only when not in active conversation
+      if (!isActive) {
+        instancedMesh.rotation.y += 0.002;
+      }
+
       // Oscillate particles when speaking
       for (let i = 0; i < particleCount; i++) {
         const basePos = basePositions[i];
@@ -185,7 +190,7 @@ export default function VoiceAgent3DSphere({
         }
       }
     };
-  }, [isSpeaking]);
+  }, [isSpeaking, isActive]);
 
   // Update colors when active state changes
   useEffect(() => {
