@@ -3,22 +3,25 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const apiKey = process.env.HUME_API_KEY;
+    const secretKey = process.env.HUME_SECRET_KEY;
 
     console.log("Environment check:", {
       hasApiKey: !!apiKey,
+      hasSecretKey: !!secretKey,
       apiKeyLength: apiKey?.length,
+      secretKeyLength: secretKey?.length,
     });
 
-    if (!apiKey) {
-      console.error("Missing API key");
+    if (!apiKey || !secretKey) {
+      console.error("Missing API credentials");
       return NextResponse.json(
-        { error: "Hume API key not configured. Please check environment variables." },
+        { error: "Hume API credentials not configured. Please check HUME_API_KEY and HUME_SECRET_KEY environment variables." },
         { status: 500 }
       );
     }
 
-    // Hume uses the API key directly as a Bearer token
-    console.log("Attempting to get access token from Hume...");
+    // Generate access token using Hume's REST API
+    console.log("Attempting to get access token from Hume API...");
     
     const response = await fetch(
       "https://api.hume.ai/v0/evi/chat/access_token",
@@ -26,6 +29,7 @@ export async function GET() {
         method: "POST",
         headers: {
           "X-Hume-Api-Key": apiKey,
+          "X-Hume-Secret-Key": secretKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
