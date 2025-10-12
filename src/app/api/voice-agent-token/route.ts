@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { HumeClient } from "hume";
 
 export async function GET() {
   try {
@@ -20,19 +21,22 @@ export async function GET() {
       );
     }
 
-    // Generate access token using Hume's REST API
-    console.log("Attempting to get access token from Hume API...");
+    // Use OAuth2 client credentials flow (same as Hume SDK)
+    console.log("Attempting to get access token using OAuth2...");
+    
+    const authString = Buffer.from(`${apiKey}:${secretKey}`).toString('base64');
     
     const response = await fetch(
-      "https://api.hume.ai/v0/evi/chat/access_token",
+      "https://api.hume.ai/oauth2-cc/token",
       {
         method: "POST",
         headers: {
-          "X-Hume-Api-Key": apiKey,
-          "X-Hume-Secret-Key": secretKey,
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Authorization": `Basic ${authString}`,
         },
-        body: JSON.stringify({}),
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+        }).toString(),
       }
     );
 
