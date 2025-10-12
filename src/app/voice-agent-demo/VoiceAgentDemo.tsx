@@ -165,13 +165,13 @@ const VoiceAgentDemo = () => {
 
         setConnectionState("connected");
         
-        // Auto-introduction - send initial message
+        // Auto-introduction - send initial message immediately
         setTimeout(() => {
           ws.send(JSON.stringify({
             type: "user_input",
             text: "Hello! Please introduce yourself.",
           }));
-        }, 1000);
+        }, 200);
       };
 
       ws.onmessage = async (event) => {
@@ -477,51 +477,6 @@ const VoiceAgentDemo = () => {
               </div>
             </div>
           </motion.div>
-
-          {/* Transcript Section */}
-          {transcript.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="mt-12 w-full max-w-2xl"
-            >
-              <h3 className="text-xl font-semibold mb-4 text-center">Transcript</h3>
-              <div className="bg-gradient-to-br from-zinc-900/50 to-zinc-950/50 border border-foreground/10 rounded-2xl p-6 max-h-80 overflow-y-auto">
-                <div className="space-y-4">
-                  {transcript.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, x: item.speaker === "user" ? 20 : -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className={`flex ${
-                        item.speaker === "user" ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          item.speaker === "user"
-                            ? "bg-secondary/20 border border-secondary/30"
-                            : "bg-primary/20 border border-primary/30"
-                        }`}
-                      >
-                        <div className="text-xs font-semibold mb-1 uppercase tracking-wide opacity-70">
-                          {item.speaker === "user" ? "You" : "Atom"}
-                        </div>
-                        <div className="text-sm leading-relaxed">
-                          {item.text}
-                          {!item.isComplete && (
-                            <span className="inline-block w-1 h-4 bg-current ml-1 animate-pulse" />
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* Info Section */}
           <motion.div
