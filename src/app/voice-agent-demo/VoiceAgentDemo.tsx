@@ -172,13 +172,11 @@ const VoiceAgentDemo = () => {
 
         setConnectionState("connected");
         
-        // Auto-introduction - send initial message immediately
-        setTimeout(() => {
-          ws.send(JSON.stringify({
-            type: "user_input",
-            text: "Hello! Please introduce yourself.",
-          }));
-        }, 200);
+        // Auto-introduction - send initial message instantly
+        ws.send(JSON.stringify({
+          type: "user_input",
+          text: "Hello! Please introduce yourself briefly.",
+        }));
       };
 
       ws.onmessage = async (event) => {
