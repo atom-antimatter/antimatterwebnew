@@ -56,8 +56,8 @@ const Footer = () => {
             <div>
               <h2 className="text-foreground/50 mb-2">Solutions</h2>
               <div className="flex flex-col gap-2">
-                <TransitionLink href={"/voice-agents"}>
-                  Voice Agents
+                <TransitionLink href={"/voice-agent-demo"}>
+                  Voice Agent Demo
                 </TransitionLink>
               </div>
             </div>
