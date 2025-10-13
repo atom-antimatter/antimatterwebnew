@@ -67,7 +67,7 @@ const CustomSelect = ({
         id={id}
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full outline-none border-b-2 border-foreground/20 focus:border-secondary transition-all duration-300 bg-transparent py-3 px-1 cursor-pointer text-left flex items-center justify-between ${
-          isOpen ? "border-secondary shadow-[0_4px_12px_rgba(168,171,243,0.4)]" : ""
+          isOpen ? "border-secondary" : ""
         }`}
       >
         <span className={selectedValue ? "text-foreground" : "text-foreground/50"}>
@@ -95,7 +95,7 @@ const CustomSelect = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-50 w-full mt-2 bg-zinc-900/95 backdrop-blur-xl border-2 border-secondary/30 rounded-xl shadow-[0_8px_30px_rgba(168,171,243,0.3)] overflow-hidden"
+            className="absolute z-50 w-full mt-2 bg-zinc-900/95 backdrop-blur-xl border border-secondary/20 rounded-2xl shadow-[0_8px_30px_rgba(168,171,243,0.2)] overflow-hidden"
           >
             <div className="max-h-64 overflow-y-auto py-2">
               {options.map((option, index) => (
@@ -103,9 +103,9 @@ const CustomSelect = ({
                   key={option.value}
                   type="button"
                   onClick={() => handleSelect(option.value)}
-                  className={`w-full text-left px-4 py-3 transition-all duration-200 hover:bg-secondary/20 hover:text-secondary ${
+                  className={`w-full text-left px-4 py-3 transition-all duration-200 hover:bg-secondary/10 hover:pl-5 ${
                     selectedValue === option.value
-                      ? "bg-secondary/10 text-secondary"
+                      ? "bg-secondary/10 text-secondary font-medium"
                       : "text-foreground"
                   } ${index !== options.length - 1 ? "border-b border-foreground/5" : ""}`}
                 >

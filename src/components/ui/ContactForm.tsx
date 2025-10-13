@@ -21,8 +21,7 @@ const BUDGETS = [
   "$25K - $50K",
   "$50K - $100K",
   "$100K - $250K",
-  "$250K - $500K",
-  "$500K+",
+  "$250K+",
 ];
 
 const COUNTRY_CODES = [
