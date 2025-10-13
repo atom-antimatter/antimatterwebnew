@@ -167,11 +167,15 @@ const VoiceAgentDemo = () => {
 
         setConnectionState("connected");
         
-        // Auto-introduction - send initial message instantly
-        ws.send(JSON.stringify({
-          type: "user_input",
-          text: "Hello! Please introduce yourself briefly.",
-        }));
+        // Wait for connection to fully establish before first message
+        setTimeout(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: "user_input",
+              text: "Hello! Please introduce yourself briefly.",
+            }));
+          }
+        }, 300);
       };
 
       ws.onmessage = async (event) => {
