@@ -8,12 +8,14 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       name?: string;
       email?: string;
+      companyEmail?: string;
       phone?: string;
       service?: string;
+      budget?: string;
       message?: string;
     };
 
-    const { name, email, phone, service, message } = body || {};
+    const { name, email, companyEmail, phone, service, budget, message } = body || {};
 
     if (!name || !email || !message) {
       return NextResponse.json(
@@ -48,6 +50,10 @@ export async function POST(request: Request) {
             message,
             source: "contact_form",
             email_sent: false,
+            metadata: {
+              companyEmail,
+              budget,
+            },
           })
           .select()
           .single();
@@ -78,11 +84,13 @@ export async function POST(request: Request) {
     const subject = `New contact form submission from ${name}`;
     const html = `
 		  <div style="font-family:Inter,system-ui,Arial,sans-serif;line-height:1.6;color:#0b0b0b">
-		    <h2 style="margin:0 0 12px">New Contact Submission</h2>
+		    <h2 style="margin:0 0 12px;color:#6366f1">New Contact Submission</h2>
 		    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
-		    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+		    <p><strong>Personal Email:</strong> ${escapeHtml(email)}</p>
+		    ${companyEmail ? `<p><strong>Company Email:</strong> ${escapeHtml(companyEmail)}</p>` : ""}
 		    ${phone ? `<p><strong>Phone:</strong> ${escapeHtml(phone)}</p>` : ""}
 		    ${service ? `<p><strong>Service:</strong> ${escapeHtml(service)}</p>` : ""}
+		    ${budget ? `<p><strong>Budget:</strong> ${escapeHtml(budget)}</p>` : ""}
 		    <p><strong>Message:</strong></p>
 		    <div style="white-space:pre-wrap;border:1px solid #eee;padding:12px;border-radius:8px;background:#fafafa">${escapeHtml(
           message
@@ -142,20 +150,18 @@ export async function POST(request: Request) {
       const confirmSubject = "We've received your message at Antimatter AI";
       const confirmHtml = `
 			  <div style="font-family:Inter,system-ui,Arial,sans-serif;line-height:1.6;color:#0b0b0b">
-			    <h2 style="margin:0 0 12px">Thanks for reaching out, ${escapeHtml(
+			    <h2 style="margin:0 0 12px;color:#6366f1">Thanks for reaching out, ${escapeHtml(
             name
           )}!</h2>
 			    <p>We received your message and will get back to you shortly.</p>
-			    <p><strong>Summary</strong></p>
+			    <p><strong>Summary of your submission:</strong></p>
 			    <ul style="padding-left:18px">
 			      <li><strong>Name:</strong> ${escapeHtml(name)}</li>
 			      <li><strong>Email:</strong> ${escapeHtml(email)}</li>
+			      ${companyEmail ? `<li><strong>Company Email:</strong> ${escapeHtml(companyEmail)}</li>` : ""}
 			      ${phone ? `<li><strong>Phone:</strong> ${escapeHtml(phone)}</li>` : ""}
-			      ${
-              service
-                ? `<li><strong>Service:</strong> ${escapeHtml(service)}</li>`
-                : ""
-            }
+			      ${service ? `<li><strong>Service:</strong> ${escapeHtml(service)}</li>` : ""}
+			      ${budget ? `<li><strong>Budget:</strong> ${escapeHtml(budget)}</li>` : ""}
 			    </ul>
 			    <p><strong>Your message:</strong></p>
 			    <div style="white-space:pre-wrap;border:1px solid #eee;padding:12px;border-radius:8px;background:#fafafa">${escapeHtml(
