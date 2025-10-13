@@ -95,20 +95,19 @@ const CustomSelect = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="fixed md:absolute left-4 right-4 md:left-auto md:right-auto z-[9999] w-auto md:w-full mt-2 bg-zinc-900/95 backdrop-blur-xl border border-secondary/20 rounded-2xl shadow-[0_8px_30px_rgba(168,171,243,0.2)] overflow-hidden"
-            style={{
-              top: containerRef.current?.getBoundingClientRect().bottom
-                ? `${containerRef.current.getBoundingClientRect().bottom + 8}px`
-                : 'auto'
-            }}
+            className="absolute z-[9999] w-full mt-2 bg-zinc-900/95 backdrop-blur-xl border border-secondary/20 rounded-2xl shadow-[0_8px_30px_rgba(168,171,243,0.2)] overflow-hidden"
           >
             <div className="max-h-64 overflow-y-auto py-2">
               {options.map((option, index) => (
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => handleSelect(option.value)}
-                  className={`w-full text-left px-4 py-3 transition-all duration-200 active:bg-secondary/20 md:hover:bg-secondary/10 md:hover:pl-5 ${
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSelect(option.value);
+                  }}
+                  className={`w-full text-left px-4 py-3 transition-all duration-200 hover:bg-secondary/10 hover:pl-5 active:bg-secondary/20 ${
                     selectedValue === option.value
                       ? "bg-secondary/10 text-secondary font-medium"
                       : "text-foreground"
