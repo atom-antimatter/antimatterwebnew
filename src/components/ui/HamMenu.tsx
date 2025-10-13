@@ -176,7 +176,7 @@ const HamMenu = ({ navData }: Props) => {
                           >
                             <FaArrowLeft className="size-6 " />
                           </div>
-                          {ServicesData.map((service, index) => (
+                          {ServicesData.filter(s => s.link !== "/voice-agents").map((service, index) => (
                             <li
                               key={service.title}
                               className="relative pl-10 whitespace-nowrap"
