@@ -2,6 +2,7 @@
 import { useCallback, useState } from "react";
 import { motion } from "motion/react";
 import Button from "./Button";
+import CustomSelect from "./CustomSelect";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -41,6 +42,8 @@ const ContactForm = () => {
   const [error, setError] = useState<string>("");
   const [countryCode, setCountryCode] = useState("+1");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [selectedService, setSelectedService] = useState("");
+  const [selectedBudget, setSelectedBudget] = useState("");
 
   const formatPhoneNumber = (value: string) => {
     const cleaned = value.replace(/\D/g, "");
@@ -73,8 +76,8 @@ const ContactForm = () => {
     const name = `${firstName} ${lastName}`.trim();
     const email = String(formData.get("email") || "").trim();
     const fullPhone = phoneNumber ? `${countryCode} ${phoneNumber}` : "";
-    const service = String(formData.get("service") || "").trim();
-    const budget = String(formData.get("budget") || "").trim();
+    const service = selectedService;
+    const budget = selectedBudget;
     const message = String(formData.get("message") || "").trim();
 
     if (!firstName || !lastName || !email || !message) {
@@ -107,11 +110,13 @@ const ContactForm = () => {
       setStatus("success");
       form.reset();
       setPhoneNumber("");
+      setSelectedService("");
+      setSelectedBudget("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setStatus("error");
     }
-  }, [countryCode, phoneNumber]);
+  }, [countryCode, phoneNumber, selectedService, selectedBudget]);
 
   return (
     <form onSubmit={handleSubmit} className="w-full mt-10 flex flex-col gap-6">
@@ -169,17 +174,19 @@ const ContactForm = () => {
             Phone Number
           </label>
           <div className="flex gap-2">
-            <select
+            <CustomSelect
+              name="countryCode"
+              id="countryCode"
+              placeholder="+1"
+              options={COUNTRY_CODES.map(c => ({ 
+                value: c.code, 
+                label: c.code, 
+                icon: c.flag 
+              }))}
               value={countryCode}
-              onChange={(e) => setCountryCode(e.target.value)}
-              className="outline-none border-b-2 border-foreground/20 focus:border-secondary focus:shadow-[0_4px_12px_rgba(168,171,243,0.4)] transition-all duration-300 bg-zinc-900/50 backdrop-blur-sm py-3 pl-3 pr-10 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjYThhYmYzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:10px_6px] bg-[right_0.5rem_center] bg-no-repeat rounded-lg"
-            >
-              {COUNTRY_CODES.map((c) => (
-                <option key={c.code} value={c.code} className="bg-zinc-900 text-foreground py-2">
-                  {c.flag} {c.code}
-                </option>
-              ))}
-            </select>
+              onChange={setCountryCode}
+              className="w-32"
+            />
             <input
               type="tel"
               placeholder="(555) 123-4567"
@@ -199,39 +206,27 @@ const ContactForm = () => {
           <label htmlFor="service" className="font-light text-lg mb-1">
             Service Interested In
           </label>
-          <select
+          <CustomSelect
             name="service"
             id="service"
-            className="outline-none border-b-2 border-foreground/20 focus:border-secondary focus:shadow-[0_4px_12px_rgba(168,171,243,0.4)] transition-all duration-300 bg-zinc-900/50 backdrop-blur-sm py-3 px-1 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjYThhYmYzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:12px_8px] bg-[right_0.5rem_center] bg-no-repeat pr-8 rounded-lg"
-          >
-            <option value="" className="bg-zinc-900 text-foreground py-3">
-              Select Service...
-            </option>
-            {SERVICES.map((service) => (
-              <option key={service} value={service} className="bg-zinc-900 text-foreground py-3 hover:bg-secondary/20">
-                {service}
-              </option>
-            ))}
-          </select>
+            placeholder="Select Service..."
+            options={SERVICES.map(s => ({ value: s, label: s }))}
+            value={selectedService}
+            onChange={setSelectedService}
+          />
         </div>
         <div className="w-full flex flex-col">
           <label htmlFor="budget" className="font-light text-lg mb-1">
             Project Budget
           </label>
-          <select
+          <CustomSelect
             name="budget"
             id="budget"
-            className="outline-none border-b-2 border-foreground/20 focus:border-secondary focus:shadow-[0_4px_12px_rgba(168,171,243,0.4)] transition-all duration-300 bg-zinc-900/50 backdrop-blur-sm py-3 px-1 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjYThhYmYzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:12px_8px] bg-[right_0.5rem_center] bg-no-repeat pr-8 rounded-lg"
-          >
-            <option value="" className="bg-zinc-900 text-foreground py-3">
-              Select Budget...
-            </option>
-            {BUDGETS.map((budget) => (
-              <option key={budget} value={budget} className="bg-zinc-900 text-foreground py-3 hover:bg-secondary/20">
-                {budget}
-              </option>
-            ))}
-          </select>
+            placeholder="Select Budget..."
+            options={BUDGETS.map(b => ({ value: b, label: b }))}
+            value={selectedBudget}
+            onChange={setSelectedBudget}
+          />
         </div>
       </div>
 
