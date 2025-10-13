@@ -30,10 +30,8 @@ export function LenisIntegration() {
     // Listen to Lenis scroll events
     lenis.on("scroll", updateScrollTrigger);
 
-    // Refresh ScrollTrigger when Lenis is ready
-    lenis.on("ready", () => {
-      ScrollTrigger.refresh();
-    });
+    // Initial refresh after mount
+    ScrollTrigger.refresh();
 
     // Handle resize events
     const handleResize = () => {
@@ -45,7 +43,6 @@ export function LenisIntegration() {
     // Cleanup
     return () => {
       lenis.off("scroll", updateScrollTrigger);
-      lenis.off("ready", updateScrollTrigger);
       window.removeEventListener("resize", handleResize);
     };
   }, [lenis]);
