@@ -169,15 +169,10 @@ const NavItemWithDropdown = ({
 const ServiceCard = ({ icon: Icon, title, items, link }: ServiceProps) => (
   <TransitionLink
     href={link}
-    className="p-5 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/5 transition pl-14 relative block h-full min-h-[230px] max-h-[280px] overflow-hidden"
+    className="p-5 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/5 transition pl-14 relative block h-full min-h-[230px] max-h-[280px] overflow-hidden group"
   >
-    <div className="absolute top-5 left-3 bg-gradient-to-br from-secondary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-      <Icon className="size-7" style={{ 
-        background: 'linear-gradient(135deg, #8587e3 0%, #a78bfa 50%, #ec4899 100%)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
-      }} />
+    <div className="absolute top-5 left-3 p-2 rounded-lg bg-gradient-to-br from-secondary/20 via-purple-500/20 to-pink-500/20 group-hover:from-secondary/30 group-hover:via-purple-500/30 group-hover:to-pink-500/30 transition-all duration-300">
+      <Icon className="size-7 text-secondary group-hover:text-purple-400 transition-colors duration-300" />
     </div>
     <h3 className="text-xl font-semibold mb-2 whitespace-nowrap">{title}</h3>
     <div className="flex flex-col gap-1.5 opacity-70 text-pretty">
