@@ -200,7 +200,7 @@ export default function StartProjectModal() {
       >
         <div className="p-5 sm:p-7 border-b border-foreground/10 flex items-center justify-between">
           <h3 className="text-lg sm:text-xl font-semibold">
-            Start your project
+            Start Your Project
           </h3>
           <button
             className="text-foreground/70 hover:text-foreground"

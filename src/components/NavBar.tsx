@@ -171,8 +171,13 @@ const ServiceCard = ({ icon: Icon, title, items, link }: ServiceProps) => (
     href={link}
     className="p-5 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/5 transition pl-14 relative block h-full min-h-[230px] max-h-[280px] overflow-hidden"
   >
-    <div className="absolute top-5 left-3 text-accent">
-      <Icon className="size-7" />
+    <div className="absolute top-5 left-3 bg-gradient-to-br from-secondary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+      <Icon className="size-7" style={{ 
+        background: 'linear-gradient(135deg, #8587e3 0%, #a78bfa 50%, #ec4899 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+      }} />
     </div>
     <h3 className="text-xl font-semibold mb-2 whitespace-nowrap">{title}</h3>
     <div className="flex flex-col gap-1.5 opacity-70 text-pretty">
@@ -224,7 +229,7 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
               height={100}
               className="rounded-lg w-full"
             />
-            <p className="mt-2 text-lg font-semibold opacity-50">ClinixAI</p>
+            <p className="mt-2 text-lg font-semibold opacity-50">Clinix AI</p>
           </TransitionLink>
           <h3 className="text-2xl">
             OUR LATEST <br /> WORK
