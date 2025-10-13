@@ -4,11 +4,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Configure ScrollTrigger to work with Lenis
-ScrollTrigger.defaults({
-  scroller: "[data-lenis-scroll]",
-});
-
 export type IndexRef = { current: number };
 export type ProgressRef = { current: number };
 
