@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useState } from "react";
 import { motion } from "motion/react";
-import { HiPaperAirplane } from "react-icons/hi2";
+import Button from "./Button";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -16,21 +16,24 @@ const SERVICES = [
 ];
 
 const BUDGETS = [
-  "Under $10K",
   "$10K - $25K",
   "$25K - $50K",
   "$50K - $100K",
   "$100K - $250K",
-  "$250K+",
+  "$250K - $500K",
+  "$500K+",
 ];
 
 const COUNTRY_CODES = [
-  { code: "+1", country: "US/CA" },
-  { code: "+44", country: "UK" },
-  { code: "+91", country: "IN" },
-  { code: "+61", country: "AU" },
-  { code: "+971", country: "AE" },
-  { code: "+49", country: "DE" },
+  { code: "+1", country: "US/CA", flag: "🇺🇸" },
+  { code: "+44", country: "UK", flag: "🇬🇧" },
+  { code: "+91", country: "IN", flag: "🇮🇳" },
+  { code: "+61", country: "AU", flag: "🇦🇺" },
+  { code: "+971", country: "AE", flag: "🇦🇪" },
+  { code: "+49", country: "DE", flag: "🇩🇪" },
+  { code: "+86", country: "CN", flag: "🇨🇳" },
+  { code: "+81", country: "JP", flag: "🇯🇵" },
+  { code: "+33", country: "FR", flag: "🇫🇷" },
 ];
 
 const ContactForm = () => {
@@ -67,7 +70,6 @@ const ContactForm = () => {
 
     const name = String(formData.get("name") || "").trim();
     const email = String(formData.get("email") || "").trim();
-    const companyEmail = String(formData.get("companyEmail") || "").trim();
     const fullPhone = phoneNumber ? `${countryCode} ${phoneNumber}` : "";
     const service = String(formData.get("service") || "").trim();
     const budget = String(formData.get("budget") || "").trim();
@@ -85,8 +87,7 @@ const ContactForm = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name, 
-          email, 
-          companyEmail,
+          email,
           phone: fullPhone, 
           service, 
           budget,
@@ -135,12 +136,12 @@ const ContactForm = () => {
           transition={{ duration: 0.2 }}
         >
           <label htmlFor="email" className="font-light text-lg mb-1">
-            Personal Email <span className="text-secondary">*</span>
+            Email <span className="text-secondary">*</span>
           </label>
           <input
             name="email"
             type="email"
-            placeholder="john@gmail.com"
+            placeholder="john@company.com"
             id="email"
             className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-transparent py-3 px-1"
             required
@@ -148,24 +149,8 @@ const ContactForm = () => {
         </motion.div>
       </div>
 
-      {/* Company Email and Phone */}
+      {/* Phone Number */}
       <div className="flex w-full gap-6 flex-wrap sm:flex-nowrap">
-        <motion.div 
-          className="w-full flex flex-col group"
-          whileHover={{ scale: 1.005 }}
-          transition={{ duration: 0.2 }}
-        >
-          <label htmlFor="companyEmail" className="font-light text-lg mb-1">
-            Company Email
-          </label>
-          <input
-            name="companyEmail"
-            type="email"
-            placeholder="john@company.com"
-            id="companyEmail"
-            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-transparent py-3 px-1"
-          />
-        </motion.div>
         <motion.div 
           className="w-full flex flex-col group"
           whileHover={{ scale: 1.005 }}
@@ -175,17 +160,19 @@ const ContactForm = () => {
             Phone Number
           </label>
           <div className="flex gap-2">
-            <select
-              value={countryCode}
-              onChange={(e) => setCountryCode(e.target.value)}
-              className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-background py-3 px-2 cursor-pointer"
-            >
-              {COUNTRY_CODES.map((c) => (
-                <option key={c.code} value={c.code} className="bg-background text-foreground">
-                  {c.code} {c.country}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-background py-3 pl-3 pr-10 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:10px_6px] bg-[right_0.5rem_center] bg-no-repeat"
+              >
+                {COUNTRY_CODES.map((c) => (
+                  <option key={c.code} value={c.code} className="bg-background text-foreground">
+                    {c.flag} {c.code}
+                  </option>
+                ))}
+              </select>
+            </div>
             <input
               type="tel"
               placeholder="(555) 123-4567"
@@ -290,37 +277,9 @@ const ContactForm = () => {
 
       {/* Submit Button */}
       <div className="flex">
-        <motion.button
-          type="submit"
-          disabled={status === "submitting"}
-          className="group relative px-8 py-4 bg-secondary text-white font-semibold rounded-full overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-          whileHover={{ scale: status === "submitting" ? 1 : 1.05 }}
-          whileTap={{ scale: status === "submitting" ? 1 : 0.95 }}
-        >
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-secondary via-purple-600 to-secondary"
-            initial={{ x: "-100%" }}
-            whileHover={{ x: "100%" }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-          />
-          <span className="relative z-10 flex items-center gap-2">
-            {status === "submitting" ? (
-              <>
-                <motion.div
-                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                />
-                Sending...
-              </>
-            ) : (
-              <>
-                Send Message
-                <HiPaperAirplane className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
-              </>
-            )}
-          </span>
-        </motion.button>
+        <Button type="submit" disabled={status === "submitting"}>
+          <span className="px-5">{status === "submitting" ? "Sending..." : "Send Message"}</span>
+        </Button>
       </div>
     </form>
   );

@@ -8,14 +8,13 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       name?: string;
       email?: string;
-      companyEmail?: string;
       phone?: string;
       service?: string;
       budget?: string;
       message?: string;
     };
 
-    const { name, email, companyEmail, phone, service, budget, message } = body || {};
+    const { name, email, phone, service, budget, message } = body || {};
 
     if (!name || !email || !message) {
       return NextResponse.json(
@@ -51,7 +50,6 @@ export async function POST(request: Request) {
             source: "contact_form",
             email_sent: false,
             metadata: {
-              companyEmail,
               budget,
             },
           })
@@ -86,8 +84,7 @@ export async function POST(request: Request) {
 		  <div style="font-family:Inter,system-ui,Arial,sans-serif;line-height:1.6;color:#0b0b0b">
 		    <h2 style="margin:0 0 12px;color:#6366f1">New Contact Submission</h2>
 		    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
-		    <p><strong>Personal Email:</strong> ${escapeHtml(email)}</p>
-		    ${companyEmail ? `<p><strong>Company Email:</strong> ${escapeHtml(companyEmail)}</p>` : ""}
+		    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
 		    ${phone ? `<p><strong>Phone:</strong> ${escapeHtml(phone)}</p>` : ""}
 		    ${service ? `<p><strong>Service:</strong> ${escapeHtml(service)}</p>` : ""}
 		    ${budget ? `<p><strong>Budget:</strong> ${escapeHtml(budget)}</p>` : ""}
@@ -158,7 +155,6 @@ export async function POST(request: Request) {
 			    <ul style="padding-left:18px">
 			      <li><strong>Name:</strong> ${escapeHtml(name)}</li>
 			      <li><strong>Email:</strong> ${escapeHtml(email)}</li>
-			      ${companyEmail ? `<li><strong>Company Email:</strong> ${escapeHtml(companyEmail)}</li>` : ""}
 			      ${phone ? `<li><strong>Phone:</strong> ${escapeHtml(phone)}</li>` : ""}
 			      ${service ? `<li><strong>Service:</strong> ${escapeHtml(service)}</li>` : ""}
 			      ${budget ? `<li><strong>Budget:</strong> ${escapeHtml(budget)}</li>` : ""}
