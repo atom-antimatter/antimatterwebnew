@@ -4,9 +4,9 @@ import BreakTitle from "./ui/BreakTitle";
 
 const ServiceSection = () => {
   return (
-    <div id="service-section" className="will-change-transform">
-      <div className="flex w-full justify-end will-change-transform" id="services">
-        <div className="w-full lg:w-3/5 flex flex-col gap-10">
+    <div id="service-section">
+      <div className="flex w-full justify-end" id="services">
+        <div className="w-full lg:w-3/5 flex flex-col gap-10 ">
           <div className="flex flex-col sm:flex-row gap-10 sm:gap-30 xl:gap-43 justify-between">
             <div className="whitespace-nowrap">
               <BreakTitle text="Our Services" className="text-3xl xl:text-title/tight" />
