@@ -7,6 +7,8 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       name?: string;
+      firstName?: string;
+      lastName?: string;
       email?: string;
       phone?: string;
       service?: string;
@@ -14,7 +16,7 @@ export async function POST(request: Request) {
       message?: string;
     };
 
-    const { name, email, phone, service, budget, message } = body || {};
+    const { name, firstName, lastName, email, phone, service, budget, message } = body || {};
 
     if (!name || !email || !message) {
       return NextResponse.json(
@@ -50,6 +52,8 @@ export async function POST(request: Request) {
             source: "contact_form",
             email_sent: false,
             metadata: {
+              firstName,
+              lastName,
               budget,
             },
           })

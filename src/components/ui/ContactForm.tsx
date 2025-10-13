@@ -68,15 +68,17 @@ const ContactForm = () => {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    const name = String(formData.get("name") || "").trim();
+    const firstName = String(formData.get("firstName") || "").trim();
+    const lastName = String(formData.get("lastName") || "").trim();
+    const name = `${firstName} ${lastName}`.trim();
     const email = String(formData.get("email") || "").trim();
     const fullPhone = phoneNumber ? `${countryCode} ${phoneNumber}` : "";
     const service = String(formData.get("service") || "").trim();
     const budget = String(formData.get("budget") || "").trim();
     const message = String(formData.get("message") || "").trim();
 
-    if (!name || !email || !message) {
-      setError("Please fill in name, email, and message.");
+    if (!firstName || !lastName || !email || !message) {
+      setError("Please fill in first name, last name, email, and message.");
       setStatus("error");
       return;
     }
@@ -86,7 +88,9 @@ const ContactForm = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          name, 
+          name,
+          firstName,
+          lastName,
           email,
           phone: fullPhone, 
           service, 
@@ -111,25 +115,46 @@ const ContactForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="w-full mt-10 flex flex-col gap-6">
-      {/* Name and Email */}
+      {/* First Name and Last Name */}
       <div className="flex w-full gap-6 flex-wrap sm:flex-nowrap">
         <motion.div 
           className="w-full flex flex-col group"
           whileHover={{ scale: 1.005 }}
           transition={{ duration: 0.2 }}
         >
-          <label htmlFor="name" className="font-light text-lg mb-1">
-            Name <span className="text-secondary">*</span>
+          <label htmlFor="firstName" className="font-light text-lg mb-1">
+            First Name <span className="text-secondary">*</span>
           </label>
           <input
-            name="name"
+            name="firstName"
             type="text"
-            placeholder="John Doe"
-            id="name"
-            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-transparent py-3 px-1"
+            placeholder="John"
+            id="firstName"
+            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-secondary/50 transition-all duration-300 bg-transparent py-3 px-1"
             required
           />
         </motion.div>
+        <motion.div 
+          className="w-full flex flex-col group"
+          whileHover={{ scale: 1.005 }}
+          transition={{ duration: 0.2 }}
+        >
+          <label htmlFor="lastName" className="font-light text-lg mb-1">
+            Last Name <span className="text-secondary">*</span>
+          </label>
+          <input
+            name="lastName"
+            type="text"
+            placeholder="Doe"
+            id="lastName"
+            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-secondary/50 transition-all duration-300 bg-transparent py-3 px-1"
+            required
+          />
+        </motion.div>
+      </div>
+
+      {/* Email */}
+      <div className="flex w-full gap-6">
         <motion.div 
           className="w-full flex flex-col group"
           whileHover={{ scale: 1.005 }}
@@ -143,7 +168,7 @@ const ContactForm = () => {
             type="email"
             placeholder="john@company.com"
             id="email"
-            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-transparent py-3 px-1"
+            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-secondary/50 transition-all duration-300 bg-transparent py-3 px-1"
             required
           />
         </motion.div>
@@ -160,19 +185,17 @@ const ContactForm = () => {
             Phone Number
           </label>
           <div className="flex gap-2">
-            <div className="relative">
-              <select
-                value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-                className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-background py-3 pl-3 pr-10 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:10px_6px] bg-[right_0.5rem_center] bg-no-repeat"
-              >
-                {COUNTRY_CODES.map((c) => (
-                  <option key={c.code} value={c.code} className="bg-background text-foreground">
-                    {c.flag} {c.code}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-secondary/50 transition-all duration-300 bg-background py-3 pl-3 pr-10 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjYThhYmYzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:10px_6px] bg-[right_0.5rem_center] bg-no-repeat hover:shadow-[0_0_15px_rgba(168,171,243,0.3)]"
+            >
+              {COUNTRY_CODES.map((c) => (
+                <option key={c.code} value={c.code} className="bg-zinc-900 text-foreground">
+                  {c.flag} {c.code}
+                </option>
+              ))}
+            </select>
             <input
               type="tel"
               placeholder="(555) 123-4567"
@@ -180,7 +203,7 @@ const ContactForm = () => {
               value={phoneNumber}
               onChange={handlePhoneChange}
               maxLength={14}
-              className="flex-1 outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-transparent py-3 px-1"
+              className="flex-1 outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-secondary/50 transition-all duration-300 bg-transparent py-3 px-1"
             />
           </div>
         </motion.div>
@@ -199,13 +222,13 @@ const ContactForm = () => {
           <select
             name="service"
             id="service"
-            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-background py-3 px-1 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:12px_8px] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-secondary/50 transition-all duration-300 bg-background py-3 px-1 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjYThhYmYzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:12px_8px] bg-[right_0.5rem_center] bg-no-repeat pr-8 hover:shadow-[0_0_15px_rgba(168,171,243,0.3)]"
           >
-            <option value="" className="bg-background text-foreground">
+            <option value="" className="bg-zinc-900 text-foreground">
               Select Service...
             </option>
             {SERVICES.map((service) => (
-              <option key={service} value={service} className="bg-background text-foreground">
+              <option key={service} value={service} className="bg-zinc-900 text-foreground">
                 {service}
               </option>
             ))}
@@ -222,13 +245,13 @@ const ContactForm = () => {
           <select
             name="budget"
             id="budget"
-            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-background py-3 px-1 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:12px_8px] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+            className="outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-secondary/50 transition-all duration-300 bg-background py-3 px-1 cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjYThhYmYzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:12px_8px] bg-[right_0.5rem_center] bg-no-repeat pr-8 hover:shadow-[0_0_15px_rgba(168,171,243,0.3)]"
           >
-            <option value="" className="bg-background text-foreground">
+            <option value="" className="bg-zinc-900 text-foreground">
               Select Budget...
             </option>
             {BUDGETS.map((budget) => (
-              <option key={budget} value={budget} className="bg-background text-foreground">
+              <option key={budget} value={budget} className="bg-zinc-900 text-foreground">
                 {budget}
               </option>
             ))}
@@ -250,7 +273,7 @@ const ContactForm = () => {
           id="message"
           rows={5}
           placeholder="Tell us more about your project..."
-          className="w-full outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-foreground/40 transition-all duration-300 bg-transparent py-3 px-1 resize-none"
+          className="w-full outline-none border-b-2 border-foreground/20 focus:border-secondary hover:border-secondary/50 transition-all duration-300 bg-transparent py-3 px-1 resize-none"
           required
         ></textarea>
       </motion.div>
