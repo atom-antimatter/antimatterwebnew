@@ -4,6 +4,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Configure ScrollTrigger to work with Lenis
+ScrollTrigger.defaults({
+  scroller: "[data-lenis-scroll]",
+});
+
 export type IndexRef = { current: number };
 export type ProgressRef = { current: number };
 
@@ -97,12 +102,11 @@ export function setupInteractions(
           ) as HTMLElement[];
           const scrollTriggerCards: ScrollTrigger.Vars | undefined = {
             trigger: "#services",
-            start: "top top",
+            start: "center center",
             end: "+=4000",
             pinSpacing: true,
             pin: true,
-            scrub: 1,
-            invalidateOnRefresh: true,
+            scrub: true,
           };
 
           const timeline2 = gsap.timeline({

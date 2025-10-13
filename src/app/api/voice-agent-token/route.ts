@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { HumeClient } from "hume";
 
 export async function GET() {
   try {
