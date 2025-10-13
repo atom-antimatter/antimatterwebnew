@@ -3,7 +3,6 @@ import MainLayout from "@/components/ui/MainLayout";
 import TransitionContainer from "@/components/ui/TransitionContainer";
 import VoiceAgent3DSphere from "@/components/VoiceAgent3DSphere";
 import Button from "@/components/ui/Button";
-import { VOICE_AGENT_SYSTEM_PROMPT } from "@/lib/voiceAgentPrompt";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { HiMicrophone, HiPhone } from "react-icons/hi2";
@@ -141,13 +140,9 @@ const VoiceAgentDemo = () => {
       ws.onopen = () => {
         console.log("Connected to Hume EVI");
         
-        // Send session configuration
-        ws.send(JSON.stringify({
-          type: "session_settings",
-          system_prompt: VOICE_AGENT_SYSTEM_PROMPT,
-          language: "en",
-        }));
-
+        // Note: System prompt and settings come from the Hume Config ID
+        // No need to send session_settings - the config handles it all
+        
         // Start sending audio
         const mediaRecorder = new MediaRecorder(stream, {
           mimeType: "audio/webm",
