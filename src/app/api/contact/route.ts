@@ -64,8 +64,7 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.resend_key_new || process.env.RESEND_API_KEY;
-    const toEmail = "matt@antimatterai.com";
-    const fromEmail = process.env.RESEND_FROM || "atom@antimatterai.com";
+    const fromEmail = process.env.RESEND_FROM || "onboarding@resend.dev";
     
     if (!apiKey) {
       // Even without Resend, we saved to Supabase
@@ -99,7 +98,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         from: `Antimatter AI <${fromEmail}>`,
-        to: [toEmail],
+        to: ["matt@antimatterai.com"], // Hardcoded - always send to Matt
         reply_to: email,
         subject,
         html,
