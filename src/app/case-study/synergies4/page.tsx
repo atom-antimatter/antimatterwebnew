@@ -12,7 +12,7 @@ const CaseStudyPage = () => {
     <CaseStudy
       title="Synergies4"
       subtitle="Build skills that set you apart."
-      heroImage="/images/CaseStudies/synergies4.jpg"
+      heroImage="/images/CaseStudies/synergies4-1.jpg"
       summary="Synergies4 came to us to build a scalable course platform plus AI-powered career accelerators. We developed a Next.js app with integrated learning modules, resume tailoring AI, and job-readiness tools. Our approach fused edtech usability with AI augmentation, positioning Synergies4 as more than a course platform—an end-to-end professional growth suite."
       techStack={TechStack}
       projectLength="Under 4 months to initial launch."

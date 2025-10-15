@@ -12,7 +12,7 @@ const CaseStudyPage = () => {
     <CaseStudy
       title="Curehire"
       subtitle="Using AI with a human touch."
-      heroImage="/images/CaseStudies/curehire.jpg"
+      heroImage="/images/CaseStudies/curehire-1.jpg"
       summary="Curehire needed their Framer site rebuilt in Wix to prioritize performance, SEO, and responsiveness. We delivered a fast, mobile-optimized site with additional SEO landing pages and a structured blog system, positioning them for long-term organic growth while retaining their brand aesthetic."
       techStack={TechStack}
       projectLength="10 business days."

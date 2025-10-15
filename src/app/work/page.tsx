@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const WorkData = [
   {
     title: "Clinix AI",
-    image: "/images/CaseStudies/clinix/clinixai-1.jpg",
+    image: "/images/CaseStudies/clinix/clinixai.jpg",
     tags: ["Web Design", "App Design"],
     id: 1,
     link: "/case-study/clinixAI",

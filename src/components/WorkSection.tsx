@@ -6,7 +6,7 @@ import Reveal from "./ui/Reveal";
 const WorkSection = () => {
   return (
     <div className="relative" id="work-section">
-      <div className="flex flex-col gap-24 ">
+      <div className="flex flex-col gap-32 ">
         <div className="flex flex-col md:flex-row justify-between gap-5">
           <BreakTitle text="Case Studies" />
 

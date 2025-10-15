@@ -12,7 +12,7 @@ const CaseStudyPage = () => {
     <CaseStudy
       title="OWASP"
       subtitle="Explore the world of cyber security."
-      heroImage="/images/CaseStudies/owasp.jpg"
+      heroImage="/images/CaseStudies/owasp-1.jpg"
       summary="We partnered with OWASP to execute a full redesign of their global web presence. Beyond technical upgrades, we focused on community engagement: improved UX, consistent responsive design across devices, simplified navigation, and high-visibility CTAs for membership and donations. Our approach combined modern frontend performance with nonprofit-centric conversion design, ensuring OWASP's digital hub supports both its mission and sustainability."
       techStack={TechStack}
       projectLength="Multi-phase (2024-2025)."
