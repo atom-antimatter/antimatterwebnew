@@ -10,9 +10,6 @@
   --lightaccent: #e3e3f8;
   --w-main: 1500px;
 }
-html {
-  scroll-behavior: smooth !important;
-}
 
 @theme inline {
   --color-background: var(--background);

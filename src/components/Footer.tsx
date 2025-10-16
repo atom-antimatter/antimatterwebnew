@@ -29,7 +29,7 @@ const Footer = () => {
               </h3>
             </div>
           </div>
-          <div className="flex flex-col xs:flex-row justify-between sm:justify-normal gap-10 xs:gap-5 sm:gap-50 md:gap-20 lg:gap-30">
+          <div className="flex flex-col xs:flex-row flex-wrap justify-between sm:justify-normal gap-10 sm:gap-50 md:gap-20 lg:gap-30">
             <div>
               <h2 className="text-foreground/50 mb-2">Services</h2>
               <div className="flex flex-col gap-2">

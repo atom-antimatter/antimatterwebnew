@@ -59,7 +59,7 @@ export function setupInteractions(
   // Check if we're on a page with service cards and particles3d
   const particles3d = document.querySelector("#particles3d");
   const serviceSection = document.querySelector("#service-section");
-  
+
   if (!particles3d || !serviceSection) {
     // Not on homepage, return minimal cleanup
     return {
@@ -97,11 +97,15 @@ export function setupInteractions(
           ) as HTMLElement[];
           const scrollTriggerCards: ScrollTrigger.Vars | undefined = {
             trigger: "#services",
-            start: "center center-=50",
+            start: "center-=100 center",
             end: "+=4000",
             pinSpacing: true,
             pin: true,
-            scrub: 0.5, // Smoother scrub value
+            // markers: true,
+            anticipatePin: 1,
+            scrub: true,
+            invalidateOnRefresh: true,
+            pinType: "transform",
             fastScrollEnd: false, // Prevent snap-back on fast scrolling
             preventOverlaps: true, // Prevent conflicts with other ScrollTriggers
           };
@@ -130,7 +134,7 @@ export function setupInteractions(
                   morphToShape(index + 1);
                 },
               },
-              `+=${pauseDuration}`
+              `+=${index === 0 ? 0.4 : pauseDuration}`
             );
             timeline2.to(
               cardElements[index],
@@ -162,7 +166,7 @@ export function setupInteractions(
           });
         }
 
-        const xValue = isDesktop ? "-55%" : isScreen1 ? "-60%" : "-50%";
+        const xValue = isDesktop ? "-60%" : isScreen1 ? "-60%" : "-50%";
 
         const timeline = gsap.timeline({
           scrollTrigger: {

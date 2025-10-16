@@ -23,7 +23,7 @@ export default function Home() {
       <LightRays />
       <TransitionContainer initial={100} exit={-600}>
         <HeroSection />
-        <MainLayout className="mt-40 sm:mt-60 overflow-x-hidden">
+        <MainLayout className="pt-40 sm:pt-60 overflow-x-hidden">
           <ServiceSection />
           <WorkSection />
           <Testimonial />
