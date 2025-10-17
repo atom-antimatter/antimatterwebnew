@@ -152,10 +152,10 @@ const Loading = () => {
     return `max(${100 - counter}%, ${box2Width + padding * 2}px)`;
   }, [isMobile, counter, box2Width, box2Height]);
 
-  // Mobile-only: grow loader height up to 90vh at 100%
+  // Mobile-only: grow loader height up to 100vh at 100%
   const mobileHeightVh = useMemo(() => {
     if (!isMobile) return undefined as unknown as string;
-    const pct = Math.min(90, Math.max(0, counter * 0.9));
+    const pct = Math.min(100, Math.max(0, counter));
     return `${pct}vh`;
   }, [isMobile, counter]);
 
