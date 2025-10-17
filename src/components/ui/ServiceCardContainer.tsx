@@ -113,6 +113,8 @@ const ServiceCardContainer = () => {
             slidesPerView: 2,
             spaceBetween: 5,
             slidesOffsetAfter: 0,
+            allowTouchMove: true,
+            simulateTouch: true,
           },
           1024: {
             slidesPerView: "auto",

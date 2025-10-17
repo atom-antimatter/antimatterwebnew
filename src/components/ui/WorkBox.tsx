@@ -1,7 +1,8 @@
 import { GoArrowUpRight } from "react-icons/go";
 import { MdOutlineDesignServices } from "react-icons/md";
 import { FaCode, FaMobileAlt } from "react-icons/fa";
-import { BsGraphUpArrow, FaBrain } from "react-icons/fa6";
+import { FaBrain } from "react-icons/fa6";
+import { BsGraphUpArrow } from "react-icons/bs";
 import styles from "./css/WorkBox.module.css";
 import TransitionLink from "./TransitionLink";
 

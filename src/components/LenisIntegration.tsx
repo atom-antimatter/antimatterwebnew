@@ -16,15 +16,19 @@ export function LenisIntegration() {
     
     const isMobile = window.innerWidth < 1024;
     
-    // Configure ScrollTrigger to work with Lenis
+    // Completely disable Lenis on mobile for native scroll
+    if (isMobile) {
+      lenis.stop();
+      lenis.destroy();
+    }
+    
+    // Configure ScrollTrigger to work with Lenis on desktop, native on mobile
     ScrollTrigger.config({
-      // Use Lenis's scroll position instead of native scroll
       ignoreMobileResize: true,
-      // Disable native scroll refresh
       autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
     });
 
-    // Sync Lenis scroll with ScrollTrigger
+    // Sync scroll with ScrollTrigger
     const updateScrollTrigger = () => {
       ScrollTrigger.update();
     };
