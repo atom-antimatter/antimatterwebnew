@@ -101,8 +101,12 @@ export function setupInteractions(
             end: "+=4000",
             pinSpacing: true,
             pin: true,
-            scrub: 0.3,
             anticipatePin: 1,
+            scrub: true,
+            invalidateOnRefresh: true,
+            pinType: "transform",
+            fastScrollEnd: false,
+            preventOverlaps: true,
           };
 
           const timeline2 = gsap.timeline({
@@ -179,7 +183,7 @@ export function setupInteractions(
 
         timeline.to(
           "#particles3d",
-          { duration: 1, ease: "power1.inOut", x: xValue, y: "5%" },
+          { duration: 1, ease: "power1.inOut", x: xValue },
           0
         );
       }
