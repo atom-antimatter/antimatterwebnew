@@ -174,7 +174,7 @@ export const ServicesData: ServiceProps[] = [
       </>
     ),
     description:
-      "From concept to conversational AI, we build voice agents powered by OpenAI's Realtime API. Trained on your content, seamlessly integrated, and ready to engage your customers 24/7. Here, every conversation matters.",
+      "From concept to conversational AI, we build voice agents powered by OpenAI's Realtime API, Hume EVI, and other leading providers. Trained on your content, seamlessly integrated, and ready to engage your customers 24/7. Here, every conversation matters.",
     tagline: ["Natural conversations,", "powered by AI."],
     items: [
       { 
