@@ -3,9 +3,11 @@
 import React, { PropsWithChildren } from "react";
 import { motion } from "motion/react";
 
-type Props = PropsWithChildren & React.ComponentProps<"h2">;
+type Props = PropsWithChildren & {
+  className?: string;
+};
 
-const CenterTitle = ({ children, ...props }: Props) => {
+const CenterTitle = ({ children, className, ...props }: Props) => {
   return (
     <div className="relative text-3xl sm:text-title overflow-visible">
       <div
@@ -13,8 +15,7 @@ const CenterTitle = ({ children, ...props }: Props) => {
           to-background w-full h-[calc(100%+30px)] from-10%  to-90%"
       ></div>
       <motion.h2 
-        className="relative" 
-        {...props}
+        className={`relative ${className || ""}`}
         initial={{ 
           textShadow: "0px 0px 0px rgba(0, 0, 0, 0)" 
         }}
@@ -33,6 +34,7 @@ const CenterTitle = ({ children, ...props }: Props) => {
           times: [0, 0.25, 0.5, 0.75, 1]
         }}
         viewport={{ once: true }}
+        {...props}
       >
         {children}
       </motion.h2>
