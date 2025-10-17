@@ -34,7 +34,7 @@ const WorkBox = ({
           <h3 className="text-lg font-semibold">{title}</h3>
         </div>
         <div
-          className={`text-foreground/40 text-sm sm:text-base max-w-20 sm:max-w-max duration-300 ${styles.work}`}
+          className={`hidden sm:block text-foreground/40 text-sm sm:text-base max-w-20 sm:max-w-max duration-300 ${styles.work}`}
         >
           {workType}
         </div>
