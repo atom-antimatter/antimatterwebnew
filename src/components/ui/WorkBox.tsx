@@ -45,27 +45,25 @@ const WorkBox = ({
       } ${styles.box}`}
       {...props}
     >
-      <div className={`flex flex-col gap-3`}>
-        <div className={`flex justify-between relative`}>
-          <div className="flex gap-4 sm:gap-10 items-center">
-            <div className="text-lg">{number}</div>
-            <h3 className="text-lg font-semibold">{title}</h3>
+      <div className={`flex justify-between items-center relative`}>
+        <div className="flex gap-4 sm:gap-10 items-center flex-wrap">
+          <div className="text-lg">{number}</div>
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <div className="hidden sm:flex gap-2 flex-wrap">
+            {tags.map((tag, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-foreground/20 bg-foreground/5 text-foreground/60 text-xs"
+              >
+                {getTagIcon(tag)}
+                <span>{tag}</span>
+              </div>
+            ))}
           </div>
-          <GoArrowUpRight
-            className={`size-7 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 duration-200 ${styles.icon}`}
-          />
         </div>
-        <div className="hidden sm:flex gap-2 flex-wrap ml-14">
-          {tags.map((tag, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-foreground/20 bg-foreground/5 text-foreground/60 text-xs"
-            >
-              {getTagIcon(tag)}
-              <span>{tag}</span>
-            </div>
-          ))}
-        </div>
+        <GoArrowUpRight
+          className={`size-7 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 duration-200 ${styles.icon}`}
+        />
       </div>
     </TransitionLink>
   );
