@@ -29,10 +29,10 @@ const ContactPage = () => {
               Let&apos;s talk about your next big idea. Use the form to tell us
               more, or simply drop us an email at{" "}
               <a
-                href="mailto:clients@antimatterai.com"
+                href="mailto:atom@antimatterai.com"
                 className="text-tertiary underline"
               >
-                clients@antimatterai.com
+                atom@antimatterai.com
               </a>
             </p>
             <ContactForm />

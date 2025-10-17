@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="w-main mx-auto pb-5 md:pb-10 relative z-20">
         <div className="flex flex-col md:flex-row gap-20 md:gap-5 justify-between">
           <div className="flex flex-col font-light text-lg">
-            <p className="text-2xl">clients@antimatterai.com</p>
+            <p className="text-2xl">atom@antimatterai.com</p>
             <div className="flex mt-3">
               <a
                 href=""
@@ -64,10 +64,9 @@ const Footer = () => {
             <div>
               <h2 className="text-foreground/50 mb-2">Resources</h2>
               <div className="flex flex-col gap-2">
-                <Link href={"/"}>Clinix AI</Link>
-                <Link href={"/"}>ShadowShield AI</Link>
-                <Link href={"/"}>Synergies4 AI</Link>
-                <Link href={"/"}>Support</Link>
+                <Link href={"/case-study/clinixAI"}>Clinix AI</Link>
+                <Link href={"/case-study/synergies4"}>Synergies4</Link>
+                <Link href={"/contact"}>Support</Link>
               </div>
             </div>
           </div>

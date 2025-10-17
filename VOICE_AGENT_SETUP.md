@@ -152,5 +152,5 @@ Monitor your usage in the [Hume Dashboard](https://platform.hume.ai/).
 For issues or questions about the voice agent implementation:
 - Check the browser console for error messages
 - Review the Hume EVI docs: https://docs.hume.ai/
-- Contact the Antimatter AI team at clients@antimatterai.com
+- Contact the Antimatter AI team at atom@antimatterai.com
 
