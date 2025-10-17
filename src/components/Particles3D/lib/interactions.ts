@@ -97,11 +97,11 @@ export function setupInteractions(
           ) as HTMLElement[];
           const scrollTriggerCards: ScrollTrigger.Vars | undefined = {
             trigger: "#services",
-            start: "center-=100 center",
+            start: "center center",
             end: "+=4000",
             pinSpacing: true,
             pin: true,
-            scrub: true,
+            scrub: 0.5,
             anticipatePin: 1,
           };
 
