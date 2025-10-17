@@ -97,17 +97,12 @@ export function setupInteractions(
           ) as HTMLElement[];
           const scrollTriggerCards: ScrollTrigger.Vars | undefined = {
             trigger: "#services",
-            start: "center-=100 center",
+            start: "center center",
             end: "+=4000",
             pinSpacing: true,
             pin: true,
-            // markers: true,
-            anticipatePin: 1,
             scrub: true,
             invalidateOnRefresh: true,
-            pinType: "transform",
-            fastScrollEnd: false, // Prevent snap-back on fast scrolling
-            preventOverlaps: true, // Prevent conflicts with other ScrollTriggers
           };
 
           const timeline2 = gsap.timeline({

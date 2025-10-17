@@ -33,6 +33,9 @@ export function LenisIntegration() {
     // Listen to Lenis scroll events (only on desktop)
     if (!isMobile) {
       lenis.on("scroll", updateScrollTrigger);
+    } else {
+      // On mobile, use native scroll events since Lenis is disabled
+      window.addEventListener("scroll", updateScrollTrigger, { passive: true });
     }
 
     // Initial refresh after mount
@@ -45,36 +48,19 @@ export function LenisIntegration() {
 
     window.addEventListener("resize", handleResize);
 
-    // Mobile-specific: prevent touch events from interfering
+    // Mobile-specific: disable smooth scroll on mobile to prevent conflicts
     if (isMobile) {
-      const preventOverscroll = (e: TouchEvent) => {
-        const target = e.target as Element;
-        if (target.closest('[data-lenis-prevent]')) return;
-        
-        const container = document.documentElement;
-        const scrollTop = container.scrollTop;
-        const scrollHeight = container.scrollHeight;
-        const height = container.clientHeight;
-        const wheelDelta = e.touches[0].clientY;
-        
-        if (wheelDelta < 0 && scrollTop === 0) {
-          e.preventDefault();
-        } else if (wheelDelta > 0 && scrollTop + height >= scrollHeight) {
-          e.preventDefault();
-        }
-      };
-
-      document.addEventListener('touchmove', preventOverscroll, { passive: false });
-      
-      return () => {
-        document.removeEventListener('touchmove', preventOverscroll);
-        window.removeEventListener("resize", handleResize);
-      };
+      // Disable Lenis smooth scroll on mobile to use native scrolling
+      lenis.stop();
     }
 
     // Cleanup
     return () => {
-      lenis.off("scroll", updateScrollTrigger);
+      if (!isMobile) {
+        lenis.off("scroll", updateScrollTrigger);
+      } else {
+        window.removeEventListener("scroll", updateScrollTrigger);
+      }
       window.removeEventListener("resize", handleResize);
     };
   }, [lenis]);

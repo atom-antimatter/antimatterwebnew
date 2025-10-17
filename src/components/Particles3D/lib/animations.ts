@@ -209,6 +209,13 @@ export function startAnimationLoop(params: AnimateParams): () => void {
         isRunning = false;
         return;
       }
+
+      // Additional check for WebGL context loss
+      if (renderer.getContext() && renderer.getContext().isContextLost()) {
+        console.warn("WebGL context lost, stopping animation");
+        isRunning = false;
+        return;
+      }
       
       renderer.render(scene, camera);
 
