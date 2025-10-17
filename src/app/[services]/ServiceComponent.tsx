@@ -16,10 +16,10 @@ const ServiceComponent = () => {
   return (
     <TransitionContainer>
       <MainLayout>
-        <div>
+        <div className="overflow-x-hidden">
           <TitleH1Anim
             className="text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-semibold uppercase"
-            linesClass="overflow-hidden "
+            linesClass="overflow-hidden pr-2"
           >
             {service?.pageTitle}
           </TitleH1Anim>
