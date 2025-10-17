@@ -30,21 +30,12 @@ export function LenisIntegration() {
     // Listen to Lenis scroll events
     lenis.on("scroll", updateScrollTrigger);
 
-    // Enhanced ScrollTrigger refresh with Lenis sync
-    const refreshScrollTrigger = () => {
-      // Temporarily stop Lenis during refresh
-      lenis.stop();
-      ScrollTrigger.refresh();
-      // Restart Lenis after refresh
-      setTimeout(() => lenis.start(), 100);
-    };
-
     // Initial refresh after mount
-    refreshScrollTrigger();
+    ScrollTrigger.refresh();
 
     // Handle resize events
     const handleResize = () => {
-      refreshScrollTrigger();
+      ScrollTrigger.refresh();
     };
 
     window.addEventListener("resize", handleResize);

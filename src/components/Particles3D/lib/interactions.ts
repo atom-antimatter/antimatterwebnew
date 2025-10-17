@@ -101,25 +101,13 @@ export function setupInteractions(
             end: "+=4000",
             pinSpacing: true,
             pin: true,
-            markers: true, // Enable debug markers to see trigger points
+            // markers: true,
             anticipatePin: 1,
-            scrub: 0.3, // Smoother scrub value
+            scrub: true,
             invalidateOnRefresh: true,
             pinType: "transform",
             fastScrollEnd: false, // Prevent snap-back on fast scrolling
             preventOverlaps: true, // Prevent conflicts with other ScrollTriggers
-            onEnter: () => {
-              console.log("ScrollTrigger entered");
-            },
-            onLeave: () => {
-              console.log("ScrollTrigger left");
-            },
-            onUpdate: (self) => {
-              // Debug progress
-              if (self.progress > 0.95) {
-                console.log("Near end of ScrollTrigger");
-              }
-            }
           };
 
           const timeline2 = gsap.timeline({
