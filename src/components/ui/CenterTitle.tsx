@@ -7,27 +7,35 @@ type Props = PropsWithChildren & React.ComponentProps<"h2">;
 
 const CenterTitle = ({ children, ...props }: Props) => {
   return (
-    <div className="relative text-3xl sm:text-title overflow-hidden">
+    <div className="relative text-3xl sm:text-title overflow-visible">
       <div
         className="absolute left-0 top-1/2 -translate-y-1/2 bg-radial from-transparent 
           to-background w-full h-[calc(100%+30px)] from-10%  to-90%"
       ></div>
-      <h2 className="relative" {...props}>{children}</h2>
-      {/* Reveal curtains - split from center */}
-      <motion.div
-        className="absolute top-0 left-0 h-full w-1/2 bg-background origin-left"
-        initial={{ scaleX: 1 }}
-        whileInView={{ scaleX: 0 }}
-        transition={{ duration: 1, ease: "easeInOut" }}
+      <motion.h2 
+        className="relative" 
+        {...props}
+        initial={{ 
+          textShadow: "0px 0px 0px rgba(0, 0, 0, 0)" 
+        }}
+        whileInView={{ 
+          textShadow: [
+            "0px 0px 0px rgba(0, 0, 0, 0)",
+            "0px 2px 4px rgba(0, 0, 0, 0.1)",
+            "0px 4px 8px rgba(0, 0, 0, 0.2)",
+            "0px 6px 12px rgba(0, 0, 0, 0.3)",
+            "0px 8px 20px rgba(0, 0, 0, 0.4)"
+          ]
+        }}
+        transition={{ 
+          duration: 1.5, 
+          ease: "easeOut",
+          times: [0, 0.25, 0.5, 0.75, 1]
+        }}
         viewport={{ once: true }}
-      />
-      <motion.div
-        className="absolute top-0 right-0 h-full w-1/2 bg-background origin-right"
-        initial={{ scaleX: 1 }}
-        whileInView={{ scaleX: 0 }}
-        transition={{ duration: 1, ease: "easeInOut" }}
-        viewport={{ once: true }}
-      />
+      >
+        {children}
+      </motion.h2>
     </div>
   );
 };
