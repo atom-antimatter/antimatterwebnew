@@ -16,12 +16,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         touchMultiplier: 2,
         lerp: 0.1,
         infinite: false,
-        autoResize: true,
-        // Disable on mobile if problematic
-        ...(typeof window !== 'undefined' && window.innerWidth < 768 ? {
-          smooth: false, // Disable smooth scroll on mobile to prevent glitching
-          duration: 0,
-        } : {})
+        autoResize: true
       }}>
         <main>{children}</main>
         <LenisIntegration />
