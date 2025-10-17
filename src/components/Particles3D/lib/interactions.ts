@@ -179,7 +179,7 @@ export function setupInteractions(
 
         timeline.to(
           "#particles3d",
-          { duration: 1, ease: "power1.inOut", x: xValue },
+          { duration: 1, ease: "power1.inOut", x: xValue, y: "5%" },
           0
         );
       }
