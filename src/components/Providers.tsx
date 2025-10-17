@@ -19,9 +19,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         infinite: false,
         autoResize: true,
         prevent: (node) => node.hasAttribute('data-lenis-prevent'),
-        // Mobile-specific fixes
-        touchInertiaMultiplier: 35,
-        wheelInertiaMultiplier: 35,
         // Disable on mobile if problematic
         ...(typeof window !== 'undefined' && window.innerWidth < 768 ? {
           smooth: false, // Disable smooth scroll on mobile to prevent glitching
