@@ -66,11 +66,26 @@ export function startAnimationLoop(params: AnimateParams): () => void {
 
   let rafId = 0;
   let t = 0;
+  let isRunning = true;
+  let lastFrameTime = 0;
+  const targetFPS = 60;
+  const frameInterval = 1000 / targetFPS;
 
-  function frame() {
+  function frame(currentTime: number = 0) {
+    if (!isRunning) return;
+    
+    // Throttle frame rate to prevent overwhelming on slower devices
+    if (currentTime - lastFrameTime < frameInterval) {
+      rafId = requestAnimationFrame(frame);
+      return;
+    }
+    lastFrameTime = currentTime;
+    
     rafId = requestAnimationFrame(frame);
-    const dt = Math.min(clock.getDelta(), 0.05);
-    const morphProgress = morphProgressRef.current;
+    
+    try {
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const morphProgress = morphProgressRef.current;
 
     for (let i = 0; i < particleCount; i++) {
       hoverIntensity[i] = Math.max(0, hoverIntensity[i] - transitionSpeed);
@@ -186,25 +201,40 @@ export function startAnimationLoop(params: AnimateParams): () => void {
     if (instancedMesh.instanceColor)
       instancedMesh.instanceColor.needsUpdate = true;
 
-    t += 0.02;
-    renderer.render(scene, camera);
-
-    if (currentIndexRef.current > 1) {
-      // shapeGroup.rotation.y = (shapeGroup.rotation.y % 2) * Math.PI;
-      gsap.to(shapeGroup.rotation, {
-        y: Math.PI,
-        duration: 1,
-        ease: "power1.out",
-      });
-    } else {
-      shapeGroup.rotation.y += 0.001;
-      if (shapeGroup.rotation.y >= 2 * Math.PI) {
-        shapeGroup.rotation.y -= 2 * Math.PI;
+      t += 0.02;
+      
+      // Check if renderer context is still valid
+      if (renderer.domElement && !renderer.domElement.isConnected) {
+        console.warn("3D renderer disconnected, stopping animation");
+        isRunning = false;
+        return;
       }
+      
+      renderer.render(scene, camera);
+
+      if (currentIndexRef.current > 1) {
+        // shapeGroup.rotation.y = (shapeGroup.rotation.y % 2) * Math.PI;
+        gsap.to(shapeGroup.rotation, {
+          y: Math.PI,
+          duration: 1,
+          ease: "power1.out",
+        });
+      } else {
+        shapeGroup.rotation.y += 0.001;
+        if (shapeGroup.rotation.y >= 2 * Math.PI) {
+          shapeGroup.rotation.y -= 2 * Math.PI;
+        }
+      }
+    } catch (error) {
+      console.error("3D animation error:", error);
+      isRunning = false;
     }
   }
 
   frame();
 
-  return () => cancelAnimationFrame(rafId);
+  return () => {
+    isRunning = false;
+    cancelAnimationFrame(rafId);
+  };
 }

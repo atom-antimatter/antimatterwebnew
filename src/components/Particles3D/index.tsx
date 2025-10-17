@@ -25,7 +25,11 @@ export default function Particles3D() {
 
     const baseColor = 0xd7d7d7;
     const hoverColor = 0xbbbcf7;
-    const particleCount = 4000;
+    
+    // Optimize particle count based on device performance
+    const isMobile = window.innerWidth < 768;
+    const isLowEndDevice = navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4;
+    const particleCount = isMobile || isLowEndDevice ? 2000 : 4000;
 
     const particleSystem: ParticleSystem = createParticleSystem({
       particleCount,
