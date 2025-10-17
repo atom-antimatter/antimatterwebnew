@@ -16,7 +16,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         touchMultiplier: 2,
         lerp: 0.1,
         infinite: false,
-        autoResize: true
+        autoResize: true,
+        syncTouch: true,
+        syncTouchLerp: 0.1,
+        touchInertiaMultiplier: 35
       }}>
         <main>{children}</main>
         <LenisIntegration />

@@ -30,13 +30,8 @@ export function LenisIntegration() {
       ScrollTrigger.update();
     };
 
-    // Listen to Lenis scroll events (only on desktop)
-    if (!isMobile) {
-      lenis.on("scroll", updateScrollTrigger);
-    } else {
-      // On mobile, use native scroll events since Lenis is disabled
-      window.addEventListener("scroll", updateScrollTrigger, { passive: true });
-    }
+    // Listen to Lenis scroll events on all devices
+    lenis.on("scroll", updateScrollTrigger);
 
     // Initial refresh after mount
     ScrollTrigger.refresh();
@@ -48,19 +43,9 @@ export function LenisIntegration() {
 
     window.addEventListener("resize", handleResize);
 
-    // Mobile-specific: disable smooth scroll on mobile to prevent conflicts
-    if (isMobile) {
-      // Disable Lenis smooth scroll on mobile to use native scrolling
-      lenis.stop();
-    }
-
     // Cleanup
     return () => {
-      if (!isMobile) {
-        lenis.off("scroll", updateScrollTrigger);
-      } else {
-        window.removeEventListener("scroll", updateScrollTrigger);
-      }
+      lenis.off("scroll", updateScrollTrigger);
       window.removeEventListener("resize", handleResize);
     };
   }, [lenis]);
