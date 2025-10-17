@@ -13,9 +13,6 @@ export function LenisIntegration() {
 
   useEffect(() => {
     if (!lenis) return;
-
-    // Detect mobile device
-    const isMobile = window.innerWidth < 768;
     
     // Configure ScrollTrigger to work with Lenis
     ScrollTrigger.config({
