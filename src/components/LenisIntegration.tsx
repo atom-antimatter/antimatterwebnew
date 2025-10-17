@@ -14,6 +14,8 @@ export function LenisIntegration() {
   useEffect(() => {
     if (!lenis) return;
     
+    const isMobile = window.innerWidth < 1024;
+    
     // Configure ScrollTrigger to work with Lenis
     ScrollTrigger.config({
       // Use Lenis's scroll position instead of native scroll
@@ -27,8 +29,13 @@ export function LenisIntegration() {
       ScrollTrigger.update();
     };
 
-    // Listen to Lenis scroll events on all devices
-    lenis.on("scroll", updateScrollTrigger);
+    // Only listen to Lenis on desktop, use native scroll on mobile
+    if (!isMobile) {
+      lenis.on("scroll", updateScrollTrigger);
+    } else {
+      // On mobile, use native scroll events
+      window.addEventListener("scroll", updateScrollTrigger, { passive: true });
+    }
 
     // Initial refresh after mount
     ScrollTrigger.refresh();
@@ -42,7 +49,11 @@ export function LenisIntegration() {
 
     // Cleanup
     return () => {
-      lenis.off("scroll", updateScrollTrigger);
+      if (!isMobile) {
+        lenis.off("scroll", updateScrollTrigger);
+      } else {
+        window.removeEventListener("scroll", updateScrollTrigger);
+      }
       window.removeEventListener("resize", handleResize);
     };
   }, [lenis]);

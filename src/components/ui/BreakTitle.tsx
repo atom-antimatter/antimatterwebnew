@@ -20,6 +20,7 @@ export default function BreakTitle({ text, align = "left", className = "" }: Bre
     if (!containerRef.current) return;
     gsap.registerPlugin(ScrollTrigger);
     const targets = containerRef.current.querySelectorAll("span[data-word]");
+    const isMobile = window.innerWidth < 1024;
     const ctx = gsap.context(() => {
       gsap.to(targets, {
         y: 0,
@@ -31,7 +32,7 @@ export default function BreakTitle({ text, align = "left", className = "" }: Bre
         stagger: 0.12,
         scrollTrigger: {
           trigger: containerRef.current!,
-          start: "top 85%",
+          start: isMobile ? "top 95%" : "top 85%",
           once: true,
         },
       });
