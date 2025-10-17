@@ -1,12 +1,12 @@
 "use client";
-import { useLoading, usePageTransition, useStartProjectModal } from "@/store";
+import { useLoading, usePageTransition } from "@/store";
 import { animate, AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import Counter from "./bits/Counter";
 import Button from "./Button";
+import TransitionLink from "./TransitionLink";
 
 const HeroComponent = () => {
-  const { setOpen } = useStartProjectModal();
   const finished = useLoading((s) => s.finished);
   const [projects, setProjects] = useState(0);
   const [satisfaction, setSatisfaction] = useState(0);
@@ -99,9 +99,11 @@ const HeroComponent = () => {
                   into real-world outcomes.
                 </p>
                 <div className="flex text-lg">
-                  <Button onClick={() => setOpen(true)}>
-                    Start Your Project
-                  </Button>
+                  <TransitionLink href="/contact">
+                    <Button>
+                      Start Your Project
+                    </Button>
+                  </TransitionLink>
                 </div>
               </div>
               <div className="flex text-sm mobile:gap-10 lg:gap-16 sm:justify-center md:justify-end justify-between w-full">

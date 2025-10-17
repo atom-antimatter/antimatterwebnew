@@ -100,7 +100,6 @@ const NavBar = () => {
 
           <NavButton
             className="hidden md:block"
-            onClick={() => setOpen(true)}
           />
           <HamMenu navData={NavData} />
         </div>
