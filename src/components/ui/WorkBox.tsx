@@ -1,4 +1,7 @@
 import { GoArrowUpRight } from "react-icons/go";
+import { MdOutlineDesignServices } from "react-icons/md";
+import { FaCode, FaMobileAlt } from "react-icons/fa";
+import { BsGraphUpArrow, FaBrain } from "react-icons/fa6";
 import styles from "./css/WorkBox.module.css";
 import TransitionLink from "./TransitionLink";
 
@@ -12,6 +15,17 @@ export interface WorkListProps {
 
 type WorkBoxProps = WorkListProps & React.ComponentProps<"a">;
 
+// Map tag names to icons
+const getTagIcon = (tag: string) => {
+  const tagLower = tag.toLowerCase();
+  if (tagLower.includes('web design')) return <MdOutlineDesignServices className="size-3" />;
+  if (tagLower.includes('app design')) return <FaMobileAlt className="size-3" />;
+  if (tagLower.includes('development')) return <FaCode className="size-3" />;
+  if (tagLower.includes('ai')) return <FaBrain className="size-3" />;
+  if (tagLower.includes('gtm')) return <BsGraphUpArrow className="size-3" />;
+  return null;
+};
+
 const WorkBox = ({
   number,
   title,
@@ -20,6 +34,8 @@ const WorkBox = ({
   active,
   ...props
 }: WorkBoxProps) => {
+  const tags = workType.split(',').map(tag => tag.trim());
+  
   return (
     <TransitionLink
       href={link}
@@ -28,19 +44,27 @@ const WorkBox = ({
       } ${styles.box}`}
       {...props}
     >
-      <div className={`flex justify-between relative `}>
-        <div className="flex gap-4 sm:gap-10">
-          <div className="text-lg">{number}</div>
-          <h3 className="text-lg font-semibold">{title}</h3>
+      <div className={`flex flex-col gap-3`}>
+        <div className={`flex justify-between relative`}>
+          <div className="flex gap-4 sm:gap-10 items-center">
+            <div className="text-lg">{number}</div>
+            <h3 className="text-lg font-semibold">{title}</h3>
+          </div>
+          <GoArrowUpRight
+            className={`size-7 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 duration-200 ${styles.icon}`}
+          />
         </div>
-        <div
-          className={`hidden sm:block text-foreground/40 text-sm sm:text-base max-w-20 sm:max-w-max duration-300 ${styles.work}`}
-        >
-          {workType}
+        <div className="hidden sm:flex gap-2 flex-wrap ml-14">
+          {tags.map((tag, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-foreground/20 bg-foreground/5 text-foreground/60 text-xs"
+            >
+              {getTagIcon(tag)}
+              <span>{tag}</span>
+            </div>
+          ))}
         </div>
-        <GoArrowUpRight
-          className={`size-7 absolute right-0 top-1/2 -translate-y-1/2 opacity-0 duration-200 ${styles.icon}`}
-        />
       </div>
     </TransitionLink>
   );
