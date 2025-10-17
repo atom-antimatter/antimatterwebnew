@@ -79,8 +79,8 @@ const ContactForm = () => {
     const budget = selectedBudget;
     const message = String(formData.get("message") || "").trim();
 
-    if (!firstName || !lastName || !email || !message) {
-      setError("Please fill in first name, last name, email, and message.");
+    if (!firstName || !lastName || !email || !phoneNumber || !selectedService || !selectedBudget || !message) {
+      setError("Please fill in all required fields.");
       setStatus("error");
       return;
     }
@@ -170,7 +170,7 @@ const ContactForm = () => {
       <div className="flex w-full gap-6 flex-wrap sm:flex-nowrap">
         <div className="w-full flex flex-col">
           <label htmlFor="phone" className="font-light text-lg mb-1">
-            Phone Number
+            Phone Number <span className="text-secondary">*</span>
           </label>
           <div className="flex gap-2">
             <CustomSelect
@@ -193,6 +193,7 @@ const ContactForm = () => {
               value={phoneNumber}
               onChange={handlePhoneChange}
               maxLength={14}
+              required
               className="flex-1 outline-none border-b-2 border-foreground/20 focus:border-secondary transition-all duration-300 bg-transparent py-3 px-1"
             />
           </div>
@@ -203,7 +204,7 @@ const ContactForm = () => {
       <div className="flex w-full gap-6 flex-wrap sm:flex-nowrap">
         <div className="w-full flex flex-col">
           <label htmlFor="service" className="font-light text-lg mb-1">
-            Service Interested In
+            Service Interested In <span className="text-secondary">*</span>
           </label>
           <CustomSelect
             name="service"
@@ -216,7 +217,7 @@ const ContactForm = () => {
         </div>
         <div className="w-full flex flex-col">
           <label htmlFor="budget" className="font-light text-lg mb-1">
-            Project Budget
+            Project Budget <span className="text-secondary">*</span>
           </label>
           <CustomSelect
             name="budget"

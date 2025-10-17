@@ -15,7 +15,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         smoothWheel: true,
         wheelMultiplier: 1,
         touchMultiplier: 2,
-        normalizeWheel: true,
         lerp: 0.1,
         infinite: false,
         autoResize: true,
