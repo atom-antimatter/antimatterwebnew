@@ -9,7 +9,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       {/* Lenis for smooth scrolling */}
       <ReactLenis root options={{ 
         duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         orientation: 'vertical',
         gestureOrientation: 'vertical',
         smoothWheel: true,
@@ -18,7 +17,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         lerp: 0.1,
         infinite: false,
         autoResize: true,
-        prevent: (node) => node.hasAttribute('data-lenis-prevent'),
         // Disable on mobile if problematic
         ...(typeof window !== 'undefined' && window.innerWidth < 768 ? {
           smooth: false, // Disable smooth scroll on mobile to prevent glitching

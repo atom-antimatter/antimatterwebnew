@@ -14,6 +14,12 @@ export function LenisIntegration() {
   useEffect(() => {
     if (!lenis) return;
 
+    // Configure Lenis with client-side functions
+    lenis.options({
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      prevent: (node: Element) => node.hasAttribute('data-lenis-prevent'),
+    });
+
     // Detect mobile device
     const isMobile = window.innerWidth < 768;
     
