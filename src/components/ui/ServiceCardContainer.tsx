@@ -108,6 +108,15 @@ const ServiceCardContainer = () => {
         style={{ overflow: "visible" }}
         onBreakpoint={(point) => setBreakpoint(point.currentBreakpoint)}
         onSlideChange={handleSlideChange}
+        touchRatio={1.5}
+        threshold={5}
+        touchAngle={45}
+        allowTouchMove={true}
+        simulateTouch={true}
+        touchStartPreventDefault={false}
+        touchMoveStopPropagation={false}
+        resistance={true}
+        resistanceRatio={0.85}
         breakpoints={{
           768: {
             slidesPerView: 2,
@@ -115,6 +124,8 @@ const ServiceCardContainer = () => {
             slidesOffsetAfter: 0,
             allowTouchMove: true,
             simulateTouch: true,
+            touchRatio: 1.5,
+            threshold: 5,
           },
           1024: {
             slidesPerView: "auto",
@@ -162,6 +173,24 @@ const ServiceCardContainer = () => {
         }
         .custom-bullet.neighbor {
           transform: scaleY(0.8);
+        }
+        
+        /* Improve touch interaction on mobile */
+        @media (max-width: 1023px) {
+          #service-cards .swiper {
+            touch-action: pan-y pan-x !important;
+          }
+          #service-cards .swiper-wrapper {
+            touch-action: pan-y pan-x !important;
+          }
+          #service-cards .swiper-slide {
+            touch-action: pan-y pan-x !important;
+            user-select: none;
+            -webkit-user-select: none;
+          }
+          #service-cards .swiper-slide > * {
+            pointer-events: auto !important;
+          }
         }
       `}</style>
     </div>
