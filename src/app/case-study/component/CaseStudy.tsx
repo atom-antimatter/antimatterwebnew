@@ -4,7 +4,7 @@ import MainLayout from "@/components/ui/MainLayout";
 import Reveal from "@/components/ui/Reveal";
 import TitleH1Anim from "@/components/ui/TitleH1Anim";
 import TransitionContainer from "@/components/ui/TransitionContainer";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import Image from "next/image";
 import Carousel from "./Carousel";
 
@@ -38,15 +38,14 @@ const CaseStudy = ({
 }: CaseStudyProps) => {
   return (
     <TransitionContainer initial={100} exit={-400}>
-      <AnimatePresence>
-        <div>
-          <MainLayout className="pt-40">
-            <motion.div
-              initial={{ opacity: 0, y: 200 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2 }}
-              className="flex flex-col gap-20 lg:gap-30"
-            >
+      <div>
+        <MainLayout className="pt-40">
+          <motion.div
+            initial={{ opacity: 0, y: 200 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="flex flex-col gap-20 lg:gap-30"
+          >
               <div className="">
                 <motion.div
                   initial={{ x: 400 }}
@@ -160,7 +159,6 @@ const CaseStudy = ({
             </div>
           )}
         </div>
-      </AnimatePresence>
     </TransitionContainer>
   );
 };
