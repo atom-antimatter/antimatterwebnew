@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
 import { createClient } from "@supabase/supabase-js";
 import { HiOutlineGlobeAlt, HiOutlineEye, HiEyeSlash } from "react-icons/hi2";
 import SitemapMindMap from "./SitemapMindMap";

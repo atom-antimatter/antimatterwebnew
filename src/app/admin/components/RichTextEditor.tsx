@@ -63,13 +63,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
           <div className="flex items-center space-x-1">
             {/* Text Formatting */}
             <button type="button" onClick={insertBold} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Bold">
-              <HiBold className="w-4 h-4" />
+              <FaBold className="w-4 h-4" />
             </button>
             <button type="button" onClick={insertItalic} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Italic">
-              <HiItalic className="w-4 h-4" />
+              <FaItalic className="w-4 h-4" />
             </button>
             <button type="button" onClick={insertCode} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Code">
-              <HiCodeBracket className="w-4 h-4" />
+              <FaCode className="w-4 h-4" />
             </button>
             
             <div className="w-px h-6 bg-zinc-700 mx-1"></div>
@@ -89,17 +89,17 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
             
             {/* Lists */}
             <button type="button" onClick={insertBulletList} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Bullet List">
-              <HiListBullet className="w-4 h-4" />
+              <FaListUl className="w-4 h-4" />
             </button>
             <button type="button" onClick={insertNumberedList} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Numbered List">
-              <HiNumberedList className="w-4 h-4" />
+              <FaListOl className="w-4 h-4" />
             </button>
             
             <div className="w-px h-6 bg-zinc-700 mx-1"></div>
             
             {/* Media */}
             <button type="button" onClick={insertLink} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Insert Link">
-              <HiLink className="w-4 h-4" />
+              <FaLink className="w-4 h-4" />
             </button>
             <button type="button" onClick={insertImage} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Insert Image">
               <HiOutlinePhoto className="w-4 h-4" />
