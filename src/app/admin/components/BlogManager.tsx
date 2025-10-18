@@ -3,12 +3,18 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { createClient } from "@supabase/supabase-js";
-import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineEye, HiOutlineCalendar } from "react-icons/hi2";
+import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineCalendar } from "react-icons/hi2";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const getSupabase = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase configuration missing");
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+};
 
 interface BlogPost {
   id: string;
@@ -36,6 +42,7 @@ export default function BlogManager() {
 
   const fetchPosts = async () => {
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("blog_posts")
         .select("*")
@@ -52,6 +59,7 @@ export default function BlogManager() {
 
   const handleSave = async (postData: Partial<BlogPost>) => {
     try {
+      const supabase = getSupabase();
       if (editingPost) {
         const { error } = await supabase
           .from("blog_posts")
@@ -79,6 +87,7 @@ export default function BlogManager() {
     if (!confirm("Are you sure you want to delete this blog post?")) return;
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase
         .from("blog_posts")
         .delete()
@@ -93,6 +102,7 @@ export default function BlogManager() {
 
   const handlePublish = async (id: string, published: boolean) => {
     try {
+      const supabase = getSupabase();
       const { error } = await supabase
         .from("blog_posts")
         .update({ 

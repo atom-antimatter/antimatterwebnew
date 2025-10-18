@@ -5,10 +5,16 @@ import { motion } from "motion/react";
 import { createClient } from "@supabase/supabase-js";
 import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineEye } from "react-icons/hi2";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const getSupabase = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase configuration missing");
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+};
 
 interface Page {
   id: string;
@@ -39,6 +45,7 @@ export default function PageManager() {
 
   const fetchPages = async () => {
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("pages")
         .select("*")
@@ -55,6 +62,7 @@ export default function PageManager() {
 
   const handleSave = async (pageData: Partial<Page>) => {
     try {
+      const supabase = getSupabase();
       if (editingPage) {
         const { error } = await supabase
           .from("pages")
@@ -82,6 +90,7 @@ export default function PageManager() {
     if (!confirm("Are you sure you want to delete this page?")) return;
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase
         .from("pages")
         .delete()

@@ -4,11 +4,6 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 interface AdminLoginProps {
   onLogin: () => void;
 }
@@ -24,6 +19,15 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     setError("");
 
     try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Supabase configuration missing");
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
       // Get admin password from database
       const { data: settings, error: settingsError } = await supabase
         .from("admin_settings")
@@ -40,7 +44,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
       } else {
         setError("Invalid password");
       }
-    } catch (err) {
+    } catch (error) {
       setError("Authentication failed");
     } finally {
       setIsLoading(false);
