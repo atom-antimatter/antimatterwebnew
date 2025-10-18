@@ -10,6 +10,8 @@ interface SitemapItem {
   type: 'page' | 'blog';
   category?: string;
   no_index: boolean;
+  is_homepage?: boolean;
+  internal_links?: string[];
 }
 
 interface SitemapMindMapProps {
@@ -20,6 +22,7 @@ export default function SitemapMindMap({ items }: SitemapMindMapProps) {
   // Group items by type and category
   const pages = items.filter(item => item.type === 'page');
   const blogPosts = items.filter(item => item.type === 'blog');
+  const homepage = pages.find(p => p.is_homepage);
   
   const blogsByCategory = blogPosts.reduce((acc, post) => {
     const cat = post.category || 'Uncategorized';
@@ -27,6 +30,20 @@ export default function SitemapMindMap({ items }: SitemapMindMapProps) {
     acc[cat].push(post);
     return acc;
   }, {} as Record<string, SitemapItem[]>);
+
+  // Calculate interlink stats
+  const allSlugs = items.map(item => item.slug);
+  const getInterlinkCount = (page: SitemapItem) => {
+    return (page.internal_links || []).filter(link => allSlugs.includes(link)).length;
+  };
+  
+  const getMissingLinks = (page: SitemapItem) => {
+    const hasLinks = page.internal_links || [];
+    const suggestedLinks = pages.filter(p => 
+      p.slug !== page.slug && !hasLinks.includes(p.slug)
+    );
+    return suggestedLinks.length;
+  };
 
   return (
     <div className="relative p-8">
@@ -46,10 +63,23 @@ export default function SitemapMindMap({ items }: SitemapMindMapProps) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
-            className="bg-gradient-to-br from-secondary to-primary px-8 py-6 rounded-2xl shadow-lg shadow-secondary/20 border-2 border-secondary/50"
+            className="bg-gradient-to-br from-yellow-500 to-yellow-600 px-8 py-6 rounded-2xl shadow-lg shadow-yellow-500/30 border-2 border-yellow-400/50 relative"
           >
-            <h3 className="text-xl font-bold text-white text-center">Antimatter AI</h3>
-            <p className="text-white/80 text-sm text-center mt-1">antimatterai.com</p>
+            <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs px-2 py-1 rounded-full font-bold">
+              HOME
+            </div>
+            <h3 className="text-xl font-bold text-white text-center">
+              {homepage?.title || "Antimatter AI"}
+            </h3>
+            <p className="text-white/80 text-sm text-center mt-1">{homepage?.slug || "/"}</p>
+            {homepage && (
+              <div className="flex items-center justify-center space-x-4 mt-2 text-xs text-white/70">
+                <span>🔗 {getInterlinkCount(homepage)} links</span>
+                {getMissingLinks(homepage) > 0 && (
+                  <span className="text-yellow-200">⚠️ {getMissingLinks(homepage)} missed</span>
+                )}
+              </div>
+            )}
           </motion.div>
 
           {/* Connection Lines */}
@@ -73,18 +103,29 @@ export default function SitemapMindMap({ items }: SitemapMindMapProps) {
               <div className="w-0.5 h-8 bg-gradient-to-b from-blue-500/40 to-transparent"></div>
               
               <div className="grid grid-cols-1 gap-3">
-                {pages.map((page, index) => (
-                  <motion.div
-                    key={page.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + index * 0.05 }}
-                    className="bg-zinc-800/50 border border-zinc-700 px-4 py-2 rounded-lg hover:border-blue-500/50 transition-colors group"
-                  >
-                    <code className="text-xs text-blue-400">{page.slug}</code>
-                    <p className="text-sm text-foreground mt-1 group-hover:text-blue-300 transition-colors">{page.title}</p>
-                  </motion.div>
-                ))}
+                {pages.filter(p => !p.is_homepage).map((page, index) => {
+                  const linkCount = getInterlinkCount(page);
+                  const missedCount = getMissingLinks(page);
+                  
+                  return (
+                    <motion.div
+                      key={page.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + index * 0.05 }}
+                      className="bg-zinc-800/50 border border-zinc-700 px-4 py-2 rounded-lg hover:border-blue-500/50 transition-colors group"
+                    >
+                      <code className="text-xs text-blue-400">{page.slug}</code>
+                      <p className="text-sm text-foreground mt-1 group-hover:text-blue-300 transition-colors">{page.title}</p>
+                      <div className="flex items-center space-x-2 mt-1 text-xs">
+                        <span className="text-green-400">🔗 {linkCount}</span>
+                        {missedCount > 0 && (
+                          <span className="text-orange-400">⚠️ {missedCount} missed</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
 
