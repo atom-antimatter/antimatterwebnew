@@ -48,7 +48,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
 
   // Process markdown to add anchors to headers
   const processContent = (content: string) => {
-    return content.replace(/^(#{1,2})\s+(.+)$/gm, (match, hashes, text) => {
+    return content.replace(/^(#{1,2})\s+(.+)$/gm, (_match, hashes, text) => {
       const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
       const level = hashes.length;
       return `<h${level} id="${id}">${text}</h${level}>`;
@@ -103,7 +103,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
               <p>📝 <strong>Markdown Tips:</strong></p>
               <p>• Use # for H1, ## for H2, ### for H3 (anchors auto-generated)</p>
               <p>• **bold** *italic* [link](url) for formatting</p>
-              <p>• Click "Image" or "YouTube" buttons to insert media</p>
+              <p>• Click &quot;Image&quot; or &quot;YouTube&quot; buttons to insert media</p>
             </div>
           </div>
         ) : (

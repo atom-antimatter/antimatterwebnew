@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import { HiArrowLeftOnRectangle, HiOutlineCog, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineGlobeAlt } from "react-icons/hi2";
+import { HiArrowLeftOnRectangle, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineGlobeAlt } from "react-icons/hi2";
 import PageManager from "./PageManager";
 import BlogManager from "./BlogManager";
 import SitemapViewer from "./SitemapViewer";
