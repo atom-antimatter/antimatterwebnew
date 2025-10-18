@@ -108,15 +108,18 @@ const ServiceCardContainer = () => {
         style={{ overflow: "visible" }}
         onBreakpoint={(point) => setBreakpoint(point.currentBreakpoint)}
         onSlideChange={handleSlideChange}
-        touchRatio={1.5}
-        threshold={5}
-        touchAngle={45}
+        touchRatio={2}
+        threshold={2}
+        touchAngle={60}
         allowTouchMove={true}
         simulateTouch={true}
         touchStartPreventDefault={false}
         touchMoveStopPropagation={false}
         resistance={true}
-        resistanceRatio={0.85}
+        resistanceRatio={0.5}
+        longSwipesRatio={0.3}
+        longSwipesMs={200}
+        shortSwipes={true}
         breakpoints={{
           768: {
             slidesPerView: 2,
@@ -124,8 +127,9 @@ const ServiceCardContainer = () => {
             slidesOffsetAfter: 0,
             allowTouchMove: true,
             simulateTouch: true,
-            touchRatio: 1.5,
-            threshold: 5,
+            touchRatio: 2,
+            threshold: 2,
+            longSwipesRatio: 0.3,
           },
           1024: {
             slidesPerView: "auto",
@@ -178,17 +182,30 @@ const ServiceCardContainer = () => {
         /* Improve touch interaction on mobile */
         @media (max-width: 1023px) {
           #service-cards .swiper {
-            touch-action: pan-y pan-x !important;
+            touch-action: pan-x pan-y !important;
+            cursor: grab;
+          }
+          #service-cards .swiper:active {
+            cursor: grabbing;
           }
           #service-cards .swiper-wrapper {
-            touch-action: pan-y pan-x !important;
+            touch-action: pan-x pan-y !important;
           }
           #service-cards .swiper-slide {
-            touch-action: pan-y pan-x !important;
+            touch-action: pan-x pan-y !important;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            cursor: grab;
+          }
+          #service-cards .swiper-slide:active {
+            cursor: grabbing;
           }
           #service-cards .swiper-slide > * {
+            pointer-events: none !important;
+          }
+          #service-cards .swiper-slide button,
+          #service-cards .swiper-slide a {
             pointer-events: auto !important;
           }
         }
