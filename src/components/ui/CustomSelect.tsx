@@ -97,7 +97,7 @@ const CustomSelect = ({
             transition={{ duration: 0.2 }}
             className="absolute z-[9999] w-full mt-2 bg-zinc-900/95 backdrop-blur-xl border border-secondary/20 rounded-2xl shadow-[0_8px_30px_rgba(168,171,243,0.2)] overflow-hidden"
           >
-            <div className="max-h-64 overflow-y-auto py-2">
+            <div className="max-h-[350px] overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-secondary/40 scrollbar-track-transparent hover:scrollbar-thumb-secondary/60">
               {options.map((option, index) => (
                 <button
                   key={option.value}
