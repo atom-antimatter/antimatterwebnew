@@ -22,30 +22,49 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+      console.log("Supabase URL:", supabaseUrl);
+      console.log("Supabase Key exists:", !!supabaseKey);
+
       if (!supabaseUrl || !supabaseKey) {
-        throw new Error("Supabase configuration missing");
+        setError("Supabase configuration missing. Please set environment variables.");
+        setIsLoading(false);
+        return;
       }
 
       const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Get admin password from database
+      console.log("Fetching admin password from database...");
       const { data: settings, error: settingsError } = await supabase
         .from("admin_settings")
         .select("value")
         .eq("key", "admin_password")
         .single();
 
+      console.log("Settings data:", settings);
+      console.log("Settings error:", settingsError);
+
       if (settingsError) {
-        throw new Error("Failed to verify credentials");
+        setError(`Database error: ${settingsError.message}`);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!settings) {
+        setError("Admin password not found in database");
+        setIsLoading(false);
+        return;
       }
 
       if (password === settings.value) {
+        console.log("Login successful!");
         onLogin();
       } else {
         setError("Invalid password");
       }
     } catch (error) {
-      setError("Authentication failed");
+      console.error("Authentication error:", error);
+      setError(error instanceof Error ? error.message : "Authentication failed");
     } finally {
       setIsLoading(false);
     }
