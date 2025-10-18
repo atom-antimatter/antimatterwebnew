@@ -182,11 +182,7 @@ const ServiceCardContainer = () => {
         /* Improve touch interaction on mobile */
         @media (max-width: 1023px) {
           #service-cards .swiper {
-            touch-action: pan-y !important;
-            cursor: grab;
-          }
-          #service-cards .swiper:active {
-            cursor: grabbing;
+            touch-action: manipulation !important;
           }
           #service-cards .swiper-wrapper {
             touch-action: pan-y !important;
@@ -201,6 +197,12 @@ const ServiceCardContainer = () => {
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
+            pointer-events: none;
+          }
+          #service-cards .swiper-slide button,
+          #service-cards .swiper-slide a,
+          #service-cards .swiper-slide input {
+            pointer-events: auto;
           }
         }
       `}</style>
