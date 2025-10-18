@@ -58,67 +58,129 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700 rounded-lg p-2">
-        <div className="flex items-center space-x-2">
-          <button
-            type="button"
-            onClick={insertImage}
-            className="flex items-center space-x-1 px-3 py-1.5 hover:bg-zinc-700 rounded transition-colors text-foreground/80 hover:text-foreground"
-            title="Insert Image"
-          >
-            <HiOutlinePhoto className="w-4 h-4" />
-            <span className="text-sm">Image</span>
-          </button>
-          <button
-            type="button"
-            onClick={insertYouTube}
-            className="flex items-center space-x-1 px-3 py-1.5 hover:bg-zinc-700 rounded transition-colors text-foreground/80 hover:text-foreground"
-            title="Embed YouTube"
-          >
-            <HiOutlineVideoCamera className="w-4 h-4" />
-            <span className="text-sm">YouTube</span>
-          </button>
+      <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center space-x-1">
+            {/* Text Formatting */}
+            <button type="button" onClick={insertBold} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Bold">
+              <HiBold className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={insertItalic} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Italic">
+              <HiItalic className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={insertCode} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Code">
+              <HiCodeBracket className="w-4 h-4" />
+            </button>
+            
+            <div className="w-px h-6 bg-zinc-700 mx-1"></div>
+            
+            {/* Headings */}
+            <button type="button" onClick={insertH1} className="px-2 py-1 hover:bg-zinc-700 rounded transition-colors text-sm font-bold" title="Heading 1">
+              H1
+            </button>
+            <button type="button" onClick={insertH2} className="px-2 py-1 hover:bg-zinc-700 rounded transition-colors text-sm font-bold" title="Heading 2">
+              H2
+            </button>
+            <button type="button" onClick={insertH3} className="px-2 py-1 hover:bg-zinc-700 rounded transition-colors text-sm font-bold" title="Heading 3">
+              H3
+            </button>
+            
+            <div className="w-px h-6 bg-zinc-700 mx-1"></div>
+            
+            {/* Lists */}
+            <button type="button" onClick={insertBulletList} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Bullet List">
+              <HiListBullet className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={insertNumberedList} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Numbered List">
+              <HiNumberedList className="w-4 h-4" />
+            </button>
+            
+            <div className="w-px h-6 bg-zinc-700 mx-1"></div>
+            
+            {/* Media */}
+            <button type="button" onClick={insertLink} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Insert Link">
+              <HiLink className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={insertImage} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Insert Image">
+              <HiOutlinePhoto className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={insertYouTube} className="p-2 hover:bg-zinc-700 rounded transition-colors" title="Embed YouTube">
+              <HiOutlineVideoCamera className="w-4 h-4" />
+            </button>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded transition-colors ${
+                showPreview ? "bg-secondary/20 text-secondary" : "hover:bg-zinc-700"
+              }`}
+            >
+              <HiOutlineEye className="w-4 h-4" />
+              <span className="text-sm">Markdown Preview</span>
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => setShowBlogPreview(!showBlogPreview)}
+              className="px-4 py-1.5 bg-secondary hover:bg-secondary/80 text-white rounded-lg transition-colors text-sm"
+            >
+              Preview Blog Page
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowPreview(!showPreview)}
-          className="flex items-center space-x-1 px-3 py-1.5 hover:bg-zinc-700 rounded transition-colors text-secondary"
-        >
-          <HiOutlineEye className="w-4 h-4" />
-          <span className="text-sm">{showPreview ? "Edit" : "Preview"}</span>
-        </button>
       </div>
 
       {/* Editor/Preview */}
-      <div className="grid grid-cols-1 gap-4">
-        {!showPreview ? (
-          <div>
-            <textarea
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              className="w-full h-96 px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-secondary resize-none"
-              placeholder={placeholder || "Write your content in Markdown...\n\n# Heading 1\n## Heading 2\n\n**Bold** *Italic*\n\n[Link](url)\n\n- List item"}
-            />
-            <div className="mt-2 text-xs text-foreground/60 space-y-1">
-              <p>📝 <strong>Markdown Tips:</strong></p>
-              <p>• Use # for H1, ## for H2, ### for H3 (anchors auto-generated)</p>
-              <p>• **bold** *italic* [link](url) for formatting</p>
-              <p>• Click &quot;Image&quot; or &quot;YouTube&quot; buttons to insert media</p>
-            </div>
+      {!showPreview ? (
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full h-96 px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-secondary resize-none"
+          placeholder={placeholder || "Write your content in Markdown...\n\n# Heading 1\n## Heading 2\n\n**Bold** *Italic*\n\n[Link](url)\n\n- List item"}
+        />
+      ) : (
+        <div className="w-full min-h-96 px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+          <div className="prose prose-invert max-w-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw, rehypeSanitize]}
+            >
+              {processContent(value)}
+            </ReactMarkdown>
           </div>
-        ) : (
-          <div className="w-full min-h-96 px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
-            <div className="prose prose-invert max-w-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw, rehypeSanitize]}
+        </div>
+      )}
+
+      {/* Blog Page Preview Modal */}
+      {showBlogPreview && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowBlogPreview(false)}>
+          <div className="bg-background border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">Blog Post Preview</h3>
+              <button
+                onClick={() => setShowBlogPreview(false)}
+                className="text-foreground/60 hover:text-foreground transition-colors"
               >
-                {processContent(value)}
-              </ReactMarkdown>
+                ✕
+              </button>
+            </div>
+            <div className="p-8">
+              <h1 className="text-4xl font-bold text-foreground mb-4">{blogTitle || "Blog Post Title"}</h1>
+              <div className="prose prose-invert max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                >
+                  {processContent(value)}
+                </ReactMarkdown>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <style jsx global>{`
         .video-wrapper {

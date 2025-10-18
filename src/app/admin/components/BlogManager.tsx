@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { createClient } from "@supabase/supabase-js";
 import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineCalendar } from "react-icons/hi2";
 import RichTextEditor from "./RichTextEditor";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -335,6 +336,7 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
             value={formData.content}
             onChange={(content) => setFormData({ ...formData, content })}
             placeholder="Write your blog post content in Markdown..."
+            blogTitle={formData.title}
           />
         </div>
 
@@ -370,17 +372,14 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
           <label className="block text-sm font-medium text-foreground mb-2">
             Category *
           </label>
-          <select
+          <CustomSelect
+            name="category"
+            id="category"
+            placeholder="Select a category..."
+            options={BLOG_CATEGORIES.map(cat => ({ value: cat, label: cat }))}
             value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
-            required
-          >
-            <option value="">Select a category...</option>
-            {BLOG_CATEGORIES.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
+            onChange={(cat) => setFormData({ ...formData, category: cat })}
+          />
         </div>
 
         <div className="flex items-center space-x-2">

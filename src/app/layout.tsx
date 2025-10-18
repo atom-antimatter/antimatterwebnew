@@ -64,13 +64,27 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body className={`${geistSans.className} antialiased overflow-x-hidden`}>
-        <NavBar />
-        <div className="relative">
-          <Providers>{children}</Providers>
-        </div>
-        <StartProjectModal />
-        <Footer />
+        <ConditionalLayout>{children}</ConditionalLayout>
       </body>
     </html>
+  );
+}
+
+function ConditionalLayout({ children }: { children: React.ReactNode }) {
+  "use client";
+  
+  const { usePathname } = require("next/navigation");
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith("/admin");
+
+  return (
+    <>
+      {!isAdminRoute && <NavBar />}
+      <div className="relative">
+        <Providers>{children}</Providers>
+      </div>
+      {!isAdminRoute && <StartProjectModal />}
+      {!isAdminRoute && <Footer />}
+    </>
   );
 }

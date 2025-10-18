@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { createClient } from "@supabase/supabase-js";
-import { HiOutlineGlobeAlt, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineEye, HiEyeSlash } from "react-icons/hi2";
+import { HiOutlineGlobeAlt, HiOutlineEye, HiEyeSlash } from "react-icons/hi2";
+import SitemapMindMap from "./SitemapMindMap";
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -78,28 +79,6 @@ export default function SitemapViewer() {
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'page':
-        return HiOutlineDocumentText;
-      case 'blog':
-        return HiOutlineNewspaper;
-      default:
-        return HiOutlineGlobeAlt;
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'page':
-        return "text-blue-400";
-      case 'blog':
-        return "text-green-400";
-      default:
-        return "text-foreground";
-    }
-  };
-
   const getIndexedCount = () => {
     return sitemapItems.filter(item => !item.no_index).length;
   };
@@ -162,55 +141,14 @@ export default function SitemapViewer() {
         </div>
       </div>
 
-      {/* Sitemap Tree */}
+      {/* Sitemap Mind Map */}
       <div className="bg-zinc-900/30 backdrop-blur-xl border border-zinc-800 rounded-xl overflow-hidden">
         <div className="p-4 border-b border-zinc-800">
-          <h3 className="text-lg font-semibold text-foreground">Site Structure</h3>
+          <h3 className="text-lg font-semibold text-foreground">Site Structure Mind Map</h3>
         </div>
         
-        <div className="p-4">
-          <div className="space-y-2">
-            {sitemapItems.map((item, index) => {
-              const Icon = getTypeIcon(item.type);
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-lg hover:bg-zinc-800/50 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Icon className={`w-5 h-5 ${getTypeColor(item.type)}`} />
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <p className="text-foreground font-medium">{item.title}</p>
-                        {item.category && (
-                          <span className="px-2 py-0.5 bg-secondary/20 text-secondary rounded-full text-xs">
-                            {item.category}
-                          </span>
-                        )}
-                      </div>
-                      <code className="text-sm text-foreground/60">{item.slug}</code>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      item.no_index 
-                        ? "bg-red-900/30 text-red-400" 
-                        : "bg-green-900/30 text-green-400"
-                    }`}>
-                      {item.no_index ? "No Index" : "Indexed"}
-                    </span>
-                    <span className="text-xs text-foreground/60">
-                      {new Date(item.updated_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+        <div className="min-h-[600px]">
+          <SitemapMindMap items={sitemapItems} />
         </div>
       </div>
 
