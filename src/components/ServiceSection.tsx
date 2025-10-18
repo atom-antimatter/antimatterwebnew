@@ -4,7 +4,7 @@ import BreakTitle from "./ui/BreakTitle";
 
 const ServiceSection = () => {
   return (
-    <div id="service-section" className="pt-[50vh] pb-[50vh]">
+    <div id="service-section" className="pt-[40vh] pb-[60vh] lg:pt-[60vh] lg:pb-[60vh]">
       <div className="flex w-full justify-end" id="services">
         <div className="w-full lg:w-3/5 flex flex-col gap-10">
           <div className="flex flex-col sm:flex-row gap-10 sm:gap-30 xl:gap-43 justify-between">

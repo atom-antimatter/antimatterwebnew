@@ -182,31 +182,25 @@ const ServiceCardContainer = () => {
         /* Improve touch interaction on mobile */
         @media (max-width: 1023px) {
           #service-cards .swiper {
-            touch-action: pan-x pan-y !important;
+            touch-action: pan-y !important;
             cursor: grab;
           }
           #service-cards .swiper:active {
             cursor: grabbing;
           }
           #service-cards .swiper-wrapper {
-            touch-action: pan-x pan-y !important;
+            touch-action: pan-y !important;
           }
           #service-cards .swiper-slide {
-            touch-action: pan-x pan-y !important;
+            touch-action: pan-y !important;
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            cursor: grab;
           }
-          #service-cards .swiper-slide:active {
-            cursor: grabbing;
-          }
-          #service-cards .swiper-slide > * {
-            pointer-events: none !important;
-          }
-          #service-cards .swiper-slide button,
-          #service-cards .swiper-slide a {
-            pointer-events: auto !important;
+          #service-cards .swiper-slide * {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
           }
         }
       `}</style>
