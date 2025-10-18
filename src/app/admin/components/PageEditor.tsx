@@ -8,15 +8,15 @@ interface Page {
   id?: string;
   slug: string;
   title: string;
-  meta_description: string;
-  meta_keywords: string;
-  canonical_url: string;
-  og_title: string;
-  og_description: string;
-  og_image: string;
-  twitter_title: string;
-  twitter_description: string;
-  twitter_image: string;
+  meta_description: string | null;
+  meta_keywords: string | null;
+  canonical_url: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image: string | null;
+  twitter_title: string | null;
+  twitter_description: string | null;
+  twitter_image: string | null;
   no_index: boolean;
   is_homepage: boolean;
 }
