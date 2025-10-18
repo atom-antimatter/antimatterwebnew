@@ -20,9 +20,10 @@ interface SitemapItem {
   id: string;
   slug: string;
   title: string;
-  type: 'page' | 'blog' | 'news';
+  type: 'page' | 'blog';
   no_index: boolean;
   updated_at: string;
+  category?: string;
 }
 
 export default function SitemapViewer() {
@@ -47,18 +48,10 @@ export default function SitemapViewer() {
       // Fetch blog posts
       const { data: blogPosts, error: blogError } = await supabase
         .from("blog_posts")
-        .select("id, slug, title, published, updated_at")
+        .select("id, slug, title, category, published, updated_at")
         .eq("published", true);
 
       if (blogError) throw blogError;
-
-      // Fetch news articles
-      const { data: newsArticles, error: newsError } = await supabase
-        .from("news_articles")
-        .select("id, slug, title, published, updated_at")
-        .eq("published", true);
-
-      if (newsError) throw newsError;
 
       // Combine all items
       const allItems: SitemapItem[] = [
@@ -71,16 +64,9 @@ export default function SitemapViewer() {
           slug: `/blog/${post.slug}`,
           title: post.title,
           type: 'blog' as const,
+          category: post.category,
           no_index: false,
           updated_at: post.updated_at
-        })),
-        ...(newsArticles || []).map(article => ({
-          id: article.id,
-          slug: `/news/${article.slug}`,
-          title: article.title,
-          type: 'news' as const,
-          no_index: false,
-          updated_at: article.updated_at
         }))
       ];
 
@@ -98,8 +84,6 @@ export default function SitemapViewer() {
         return HiOutlineDocumentText;
       case 'blog':
         return HiOutlineNewspaper;
-      case 'news':
-        return HiOutlineNewspaper;
       default:
         return HiOutlineGlobeAlt;
     }
@@ -111,8 +95,6 @@ export default function SitemapViewer() {
         return "text-blue-400";
       case 'blog':
         return "text-green-400";
-      case 'news':
-        return "text-purple-400";
       default:
         return "text-foreground";
     }
@@ -201,7 +183,14 @@ export default function SitemapViewer() {
                   <div className="flex items-center space-x-3">
                     <Icon className={`w-5 h-5 ${getTypeColor(item.type)}`} />
                     <div>
-                      <p className="text-foreground font-medium">{item.title}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-foreground font-medium">{item.title}</p>
+                        {item.category && (
+                          <span className="px-2 py-0.5 bg-secondary/20 text-secondary rounded-full text-xs">
+                            {item.category}
+                          </span>
+                        )}
+                      </div>
                       <code className="text-sm text-foreground/60">{item.slug}</code>
                     </div>
                   </div>

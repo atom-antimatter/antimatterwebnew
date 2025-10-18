@@ -24,11 +24,19 @@ interface BlogPost {
   content: string;
   featured_image: string | null;
   author: string;
+  category: string | null;
   published: boolean;
   published_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
+const BLOG_CATEGORIES = [
+  'AI & Machine Learning',
+  'Product Development',
+  'Case Studies',
+  'Company News'
+];
 
 export default function BlogManager() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -182,7 +190,7 @@ export default function BlogManager() {
                   {post.excerpt || "No excerpt available"}
                 </p>
                 
-                <div className="flex items-center space-x-4 text-sm text-foreground/60">
+                <div className="flex items-center space-x-4 text-sm text-foreground/60 flex-wrap gap-2">
                   <div className="flex items-center space-x-1">
                     <HiOutlineCalendar className="w-4 h-4" />
                     <span>
@@ -193,6 +201,11 @@ export default function BlogManager() {
                     </span>
                   </div>
                   <span>by {post.author}</span>
+                  {post.category && (
+                    <span className="px-2 py-1 bg-secondary/20 text-secondary rounded-full text-xs">
+                      {post.category}
+                    </span>
+                  )}
                   <code className="bg-zinc-800 px-2 py-1 rounded text-xs">
                     /blog/{post.slug}
                   </code>
@@ -250,6 +263,7 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
     content: post?.content || "",
     featured_image: post?.featured_image || "",
     author: post?.author || "Antimatter AI",
+    category: post?.category || "",
     published: post?.published || false,
   });
 
@@ -352,6 +366,23 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
               placeholder="Author name"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Category *
+          </label>
+          <select
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+            required
+          >
+            <option value="">Select a category...</option>
+            {BLOG_CATEGORIES.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
 
         <div className="flex items-center space-x-2">
