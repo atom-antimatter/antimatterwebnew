@@ -27,16 +27,10 @@ export const metadata: Metadata = {
     siteName: "Antimatter AI",
     images: [
       {
-        url: "/opengraph-image",
+        url: "/images/HeroOpenGraph.png",
         width: 1200,
         height: 630,
-        alt: "Antimatter AI homepage",
-      },
-      {
-        url: "/images/clientsLightCurve.jpg",
-        width: 1458,
-        height: 86,
-        alt: "Antimatter AI light curve graphic",
+        alt: "Antimatter AI - Digital Solutions That Matter",
       },
     ],
     locale: "en_US",
@@ -48,8 +42,7 @@ export const metadata: Metadata = {
     description:
       "We empower organizations with AI that turns complex challenges into real-world outcomes.",
     images: [
-      { url: "/opengraph-image", alt: "Antimatter AI homepage" },
-      { url: "/images/clientsLightCurve.jpg", alt: "Antimatter AI light curve graphic" },
+      { url: "/images/HeroOpenGraph.png", alt: "Antimatter AI - Digital Solutions That Matter" },
     ],
   },
   icons: {
