@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { createClient } from "@supabase/supabase-js";
-import { HiOutlineGlobe, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi2";
+import { HiOutlineGlobeAlt, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineEye, HiEyeSlash } from "react-icons/hi2";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -93,7 +93,7 @@ export default function SitemapViewer() {
       case 'news':
         return HiOutlineNewspaper;
       default:
-        return HiOutlineGlobe;
+        return HiOutlineGlobeAlt;
     }
   };
 
@@ -138,7 +138,7 @@ export default function SitemapViewer() {
         <div className="bg-zinc-900/30 backdrop-blur-xl border border-zinc-800 rounded-xl p-4">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-blue-900/30 rounded-lg">
-              <HiOutlineGlobe className="w-5 h-5 text-blue-400" />
+              <HiOutlineGlobeAlt className="w-5 h-5 text-blue-400" />
             </div>
             <div>
               <p className="text-sm text-foreground/60">Total Pages</p>
@@ -162,7 +162,7 @@ export default function SitemapViewer() {
         <div className="bg-zinc-900/30 backdrop-blur-xl border border-zinc-800 rounded-xl p-4">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-red-900/30 rounded-lg">
-              <HiOutlineEyeOff className="w-5 h-5 text-red-400" />
+              <HiEyeSlash className="w-5 h-5 text-red-400" />
             </div>
             <div>
               <p className="text-sm text-foreground/60">No Index</p>

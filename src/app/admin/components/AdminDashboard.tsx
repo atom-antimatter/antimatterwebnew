@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import { HiOutlineLogout, HiOutlineCog, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineGlobe } from "react-icons/hi2";
+import { HiArrowLeftOnRectangle, HiOutlineCog, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineGlobeAlt } from "react-icons/hi2";
 import PageManager from "./PageManager";
 import BlogManager from "./BlogManager";
 import NewsManager from "./NewsManager";
@@ -21,7 +21,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: "pages" as ActiveTab, label: "Pages", icon: HiOutlineDocumentText },
     { id: "blog" as ActiveTab, label: "Blog", icon: HiOutlineNewspaper },
     { id: "news" as ActiveTab, label: "News", icon: HiOutlineNewspaper },
-    { id: "sitemap" as ActiveTab, label: "Sitemap", icon: HiOutlineGlobe },
+    { id: "sitemap" as ActiveTab, label: "Sitemap", icon: HiOutlineGlobeAlt },
   ];
 
   const renderContent = () => {
@@ -52,7 +52,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               onClick={onLogout}
               className="flex items-center space-x-2 text-foreground/60 hover:text-foreground transition-colors"
             >
-              <HiOutlineLogout className="w-5 h-5" />
+              <HiArrowLeftOnRectangle className="w-5 h-5" />
               <span>Logout</span>
             </button>
           </div>
