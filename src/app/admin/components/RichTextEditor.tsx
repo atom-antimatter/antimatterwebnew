@@ -1,20 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { HiOutlinePhoto, HiOutlineVideoCamera, HiOutlineEye } from "react-icons/hi2";
+import { FaBold, FaItalic, FaLink, FaListUl, FaListOl, FaCode } from "react-icons/fa";
 
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  blogTitle?: string;
 }
 
-export default function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange, placeholder, blogTitle }: RichTextEditorProps) {
   const [showPreview, setShowPreview] = useState(false);
+  const [showBlogPreview, setShowBlogPreview] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertAtCursor = (before: string, after: string = "") => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.substring(start, end);
+    const newText = value.substring(0, start) + before + selectedText + after + value.substring(end);
+    
+    onChange(newText);
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length);
+    }, 0);
+  };
+
+  const insertBold = () => insertAtCursor("**", "**");
+  const insertItalic = () => insertAtCursor("*", "*");
+  const insertH1 = () => insertAtCursor("# ", "");
+  const insertH2 = () => insertAtCursor("## ", "");
+  const insertH3 = () => insertAtCursor("### ", "");
+  const insertBulletList = () => insertAtCursor("\n- ", "");
+  const insertNumberedList = () => insertAtCursor("\n1. ", "");
+  const insertCode = () => insertAtCursor("`", "`");
+  
+  const insertLink = () => {
+    const url = prompt("Enter URL:");
+    if (url) {
+      insertAtCursor("[", `](${url})`);
+    }
+  };
 
   const insertImage = () => {
     const url = prompt("Enter image URL:");
