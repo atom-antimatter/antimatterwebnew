@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { createClient } from "@supabase/supabase-js";
 import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineCalendar } from "react-icons/hi2";
+import RichTextEditor from "./RichTextEditor";
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -330,13 +331,10 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
           <label className="block text-sm font-medium text-foreground mb-2">
             Content *
           </label>
-          <textarea
+          <RichTextEditor
             value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
-            rows={10}
-            placeholder="Write your blog post content here..."
-            required
+            onChange={(content) => setFormData({ ...formData, content })}
+            placeholder="Write your blog post content in Markdown..."
           />
         </div>
 

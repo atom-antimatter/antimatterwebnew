@@ -112,7 +112,17 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-secondary hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-10 rounded-full transition-all duration-300 relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(93.92deg, #8587e3 -13.51%, #4c4dac 40.91%, #696aac 113.69%)',
+                boxShadow: '0px 0px 10px #696aac, inset 0px 0px 2px rgba(255, 255, 255, 0.61)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0px 0px 25px #696aac, inset 0px 0px 6.69843px rgba(255, 255, 255, 0.9)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0px 0px 10px #696aac, inset 0px 0px 2px rgba(255, 255, 255, 0.61)';
+              }}
             >
               {isLoading ? "Authenticating..." : "Sign In"}
             </button>
