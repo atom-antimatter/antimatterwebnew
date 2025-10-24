@@ -22,6 +22,7 @@ export function EmotionTrackingDemo() {
   const [textInput, setTextInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [isCameraStarted, setIsCameraStarted] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -39,6 +40,8 @@ export function EmotionTrackingDemo() {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        setIsCameraStarted(true);
+        console.log('Camera started successfully');
       }
     } catch (error) {
       console.error("Error accessing webcam:", error);
@@ -50,6 +53,8 @@ export function EmotionTrackingDemo() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
+      setIsCameraStarted(false);
+      console.log('Camera stopped');
     }
   }, []);
 
@@ -88,7 +93,7 @@ export function EmotionTrackingDemo() {
   }, [isRecording]);
 
   // Analyze facial expressions
-  const analyzeFacial = async () => {
+  const analyzeFacial = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
     
     const canvas = canvasRef.current;
@@ -123,7 +128,7 @@ export function EmotionTrackingDemo() {
         setIsAnalyzing(false);
       }
     }, 'image/jpeg', 0.8);
-  };
+  }, []);
 
   // Handle audio file upload
   const handleAudioFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,13 +216,17 @@ export function EmotionTrackingDemo() {
   // Auto-analyze facial expressions when webcam is active
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (activeTab === 'facial' && videoRef.current?.srcObject) {
+    if (activeTab === 'facial' && isCameraStarted && videoRef.current?.srcObject) {
+      console.log('Starting facial analysis interval');
       interval = setInterval(analyzeFacial, 2000); // Analyze every 2 seconds
     }
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval) {
+        console.log('Clearing facial analysis interval');
+        clearInterval(interval);
+      }
     };
-  }, [activeTab]);
+  }, [activeTab, isCameraStarted, analyzeFacial]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -311,6 +320,14 @@ export function EmotionTrackingDemo() {
                   >
                     <LuSquare size={16} />
                     Stop Camera
+                  </button>
+                  <button
+                    onClick={analyzeFacial}
+                    disabled={!isCameraStarted || isAnalyzing}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <LuCamera size={16} />
+                    {isAnalyzing ? 'Analyzing...' : 'Analyze Now'}
                   </button>
                 </div>
                 <p className="text-sm text-gray-400">
