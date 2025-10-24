@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { LuCamera, LuMic, LuType, LuPlay, LuSquare } from "react-icons/lu";
 
 interface EmotionScore {
@@ -45,12 +45,12 @@ export function EmotionTrackingDemo() {
   };
 
   // Stop webcam
-  const stopWebcam = () => {
+  const stopWebcam = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
-  };
+  }, []);
 
   // Start audio recording
   const startAudioRecording = async () => {
@@ -79,12 +79,12 @@ export function EmotionTrackingDemo() {
   };
 
   // Stop audio recording
-  const stopAudioRecording = () => {
+  const stopAudioRecording = useCallback(() => {
     if (audioRef.current && isRecording) {
       audioRef.current.stop();
       setIsRecording(false);
     }
-  };
+  }, [isRecording]);
 
   // Analyze facial expressions
   const analyzeFacial = async () => {
@@ -189,7 +189,7 @@ export function EmotionTrackingDemo() {
       stopWebcam();
       stopAudioRecording();
     };
-  }, []);
+  }, [stopWebcam, stopAudioRecording]);
 
   const getTopEmotions = (emotions: EmotionScore[] = [], limit = 5) => {
     return emotions

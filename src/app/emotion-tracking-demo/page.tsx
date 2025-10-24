@@ -12,7 +12,7 @@ export default function EmotionTrackingDemoPage() {
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Experience real-time emotion detection across facial expressions, voice, and text. 
-            Powered by Hume AI's state-of-the-art emotion measurement models.
+            Powered by Hume AI&apos;s state-of-the-art emotion measurement models.
           </p>
         </div>
         
