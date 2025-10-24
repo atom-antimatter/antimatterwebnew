@@ -25,6 +25,8 @@ export function EmotionTrackingDemo() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isCameraStarted, setIsCameraStarted] = useState(false);
   const [humeClient, setHumeClient] = useState<HumeWebSocketClient | null>(null);
+  const [sessionData, setSessionData] = useState<EmotionData[]>([]);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,6 +61,8 @@ export function EmotionTrackingDemo() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setIsCameraStarted(true);
+        setSessionStartTime(new Date());
+        setSessionData([]); // Reset session data
         console.log('Camera started successfully');
       }
     } catch (error) {
@@ -124,28 +128,27 @@ export function EmotionTrackingDemo() {
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
 
-    setIsAnalyzing(true);
-    
-    // Simulate real-time analysis like Hume playground
-    setTimeout(() => {
-      // Generate realistic mock emotions that change over time
-      const mockEmotions = [
-        { name: 'boredom', score: Math.random() * 0.5 + 0.2 },
-        { name: 'confusion', score: Math.random() * 0.4 + 0.3 },
-        { name: 'concentration', score: Math.random() * 0.4 + 0.2 },
-        { name: 'calmness', score: Math.random() * 0.3 + 0.1 },
-        { name: 'joy', score: Math.random() * 0.3 + 0.1 },
-        { name: 'amusement', score: Math.random() * 0.2 + 0.1 },
-        { name: 'anger', score: Math.random() * 0.1 },
-        { name: 'disgust', score: Math.random() * 0.1 },
-        { name: 'sadness', score: Math.random() * 0.1 },
-        { name: 'surprise', score: Math.random() * 0.2 + 0.1 }
-      ].sort((a, b) => b.score - a.score);
+    // Generate realistic mock emotions that change over time
+    const mockEmotions = [
+      { name: 'boredom', score: Math.random() * 0.5 + 0.2 },
+      { name: 'confusion', score: Math.random() * 0.4 + 0.3 },
+      { name: 'concentration', score: Math.random() * 0.4 + 0.2 },
+      { name: 'calmness', score: Math.random() * 0.3 + 0.1 },
+      { name: 'joy', score: Math.random() * 0.3 + 0.1 },
+      { name: 'amusement', score: Math.random() * 0.2 + 0.1 },
+      { name: 'anger', score: Math.random() * 0.1 },
+      { name: 'disgust', score: Math.random() * 0.1 },
+      { name: 'sadness', score: Math.random() * 0.1 },
+      { name: 'surprise', score: Math.random() * 0.2 + 0.1 }
+    ].sort((a, b) => b.score - a.score);
 
-      setEmotions(prev => ({ ...prev, facial: mockEmotions }));
-      console.log('Facial analysis results:', mockEmotions);
-      setIsAnalyzing(false);
-    }, 500); // Simulate processing time
+    const newEmotionData = { facial: mockEmotions };
+    setEmotions(prev => ({ ...prev, facial: mockEmotions }));
+    
+    // Add to session data
+    setSessionData(prev => [...prev, newEmotionData]);
+    
+    console.log('Facial analysis results:', mockEmotions);
   }, []);
 
   // Handle audio file upload
@@ -278,6 +281,101 @@ export function EmotionTrackingDemo() {
     return "text-red-400";
   };
 
+  // Export session data
+  const exportSessionData = async () => {
+    if (sessionData.length === 0) {
+      alert('No session data to export');
+      return;
+    }
+
+    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const summaryData = {
+      averageEmotions: calculateAverageEmotions(sessionData),
+      topEmotions: getTopEmotionsFromSession(sessionData)
+    };
+
+    const exportData = {
+      sessionInfo: {
+        sessionId,
+        startTime: sessionStartTime?.toISOString(),
+        endTime: new Date().toISOString(),
+        duration: sessionStartTime ? Math.round((new Date().getTime() - sessionStartTime.getTime()) / 1000) : 0,
+        totalAnalyses: sessionData.length,
+        analysisType: activeTab
+      },
+      emotions: sessionData,
+      summary: summaryData
+    };
+
+    // Save to Supabase
+    try {
+      const response = await fetch('/api/emotion-sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          startTime: sessionStartTime?.toISOString(),
+          endTime: new Date().toISOString(),
+          analysisType: activeTab,
+          sessionData,
+          summaryData
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Session data saved to Supabase');
+      } else {
+        console.error('Failed to save session data to Supabase');
+      }
+    } catch (error) {
+      console.error('Error saving to Supabase:', error);
+    }
+
+    // Download JSON file
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `emotion-analysis-session-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const calculateAverageEmotions = (data: EmotionData[]) => {
+    if (data.length === 0) return {};
+    
+    const emotionTotals: { [key: string]: number } = {};
+    const emotionCounts: { [key: string]: number } = {};
+    
+    data.forEach(entry => {
+      if (entry.facial) {
+        entry.facial.forEach(emotion => {
+          emotionTotals[emotion.name] = (emotionTotals[emotion.name] || 0) + emotion.score;
+          emotionCounts[emotion.name] = (emotionCounts[emotion.name] || 0) + 1;
+        });
+      }
+    });
+    
+    const averages: { [key: string]: number } = {};
+    Object.keys(emotionTotals).forEach(emotion => {
+      averages[emotion] = emotionTotals[emotion] / emotionCounts[emotion];
+    });
+    
+    return averages;
+  };
+
+  const getTopEmotionsFromSession = (data: EmotionData[]) => {
+    const averages = calculateAverageEmotions(data);
+    return Object.entries(averages)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([name, score]) => ({ name, score }));
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       {/* Tab Navigation */}
@@ -352,11 +450,19 @@ export function EmotionTrackingDemo() {
                   </button>
                   <button
                     onClick={analyzeFacial}
-                    disabled={!isCameraStarted || isAnalyzing}
+                    disabled={!isCameraStarted}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <LuCamera size={16} />
-                    {isAnalyzing ? 'Analyzing...' : 'Analyze Now'}
+                    Analyze Now
+                  </button>
+                  <button
+                    onClick={exportSessionData}
+                    disabled={sessionData.length === 0}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <LuUpload size={16} />
+                    Export Session ({sessionData.length})
                   </button>
                 </div>
                 <p className="text-sm text-gray-400">
@@ -437,12 +543,6 @@ export function EmotionTrackingDemo() {
 
         {/* Results Section */}
         <div className="space-y-6">
-          {isAnalyzing && (
-            <div className="bg-gray-900 rounded-lg p-6 text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-secondary border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-400">Analyzing emotions...</p>
-            </div>
-          )}
 
           {activeTab === 'facial' && emotions.facial && (
             <div className="bg-gray-900 rounded-lg p-6">
