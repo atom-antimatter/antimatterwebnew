@@ -11,6 +11,7 @@ interface EmotionScore {
 }
 
 interface EmotionData {
+  timestamp: string;
   facial?: EmotionScore[];
   prosody?: EmotionScore[];
   burst?: EmotionScore[];
@@ -143,7 +144,10 @@ export function EmotionTrackingDemo() {
       { name: 'sadness', score: Math.random() * 0.05 }
     ].sort((a, b) => b.score - a.score);
 
-    const newEmotionData = { facial: mockEmotions };
+    const newEmotionData = { 
+      timestamp: new Date().toISOString(),
+      facial: mockEmotions 
+    };
     setEmotions(prev => ({ ...prev, facial: mockEmotions }));
     
     // Add to session data
