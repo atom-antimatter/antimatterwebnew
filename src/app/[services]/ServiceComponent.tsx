@@ -15,7 +15,7 @@ const ServiceComponent = () => {
   if (!service) notFound();
   return (
     <TransitionContainer>
-      <MainLayout>
+      <MainLayout className="pt-40">
         <div className="overflow-x-hidden">
           <TitleH1Anim
             className="text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-semibold uppercase"
