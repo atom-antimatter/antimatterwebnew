@@ -40,16 +40,34 @@ export function EmotionTrackingDemo() {
   useEffect(() => {
     const initHumeClient = async () => {
       try {
-        // For now, let's use mock data to test the UI
-        // TODO: Add real Hume API key when available
-        console.log('Initializing emotion analysis (mock mode)');
-        setHumeClient(null); // Use mock mode for now
+        const apiKey = process.env.NEXT_PUBLIC_HUME_API_KEY;
+        console.log('Hume API Key available:', !!apiKey);
+        
+        if (apiKey) {
+          const client = new HumeWebSocketClient(apiKey);
+          await client.connect();
+          setHumeClient(client);
+          console.log('✅ Hume WebSocket client connected successfully');
+        } else {
+          console.warn('⚠️ Hume API key not found in environment variables');
+          console.log('Please add NEXT_PUBLIC_HUME_API_KEY to your .env.local file');
+          console.log('Using mock data for development');
+          setHumeClient(null);
+        }
       } catch (error) {
-        console.error('Failed to initialize emotion analysis:', error);
+        console.error('❌ Failed to initialize Hume WebSocket:', error);
+        console.log('Falling back to mock data');
+        setHumeClient(null);
       }
     };
 
     initHumeClient();
+
+    return () => {
+      if (humeClient) {
+        humeClient.disconnect();
+      }
+    };
   }, []);
 
   // Start webcam
@@ -135,25 +153,33 @@ export function EmotionTrackingDemo() {
 
     try {
       if (humeClient) {
-        // Use WebSocket for real-time analysis - convert canvas to blob
+        // Use real Hume WebSocket API for emotion analysis
         canvas.toBlob(async (blob) => {
           if (!blob) return;
           
-          const result = await humeClient.analyzeImage(blob);
-          if (result && Array.isArray(result) && result.length > 0) {
-            // Sort emotions by score (highest first) for dynamic ordering
-            const sortedEmotions = result.sort((a, b) => b.score - a.score);
-            
-            setEmotions(prev => ({ ...prev, facial: sortedEmotions }));
-            
-            // Add to session data
-            const newEmotionData = { 
-              timestamp: new Date().toISOString(),
-              facial: sortedEmotions 
-            };
-            setSessionData(prev => [...prev, newEmotionData]);
-            
-            console.log('Real-time facial analysis results:', sortedEmotions);
+          try {
+            const result = await humeClient.analyzeImage(blob);
+            if (result && Array.isArray(result) && result.length > 0) {
+              // Sort emotions by score (highest first) for dynamic ordering
+              const sortedEmotions = result.sort((a, b) => b.score - a.score);
+              
+              setEmotions(prev => ({ ...prev, facial: sortedEmotions }));
+              
+              // Add to session data
+              const newEmotionData = { 
+                timestamp: new Date().toISOString(),
+                facial: sortedEmotions 
+              };
+              setSessionData(prev => [...prev, newEmotionData]);
+              
+              console.log('🎯 Real Hume AI facial analysis results:', sortedEmotions);
+            } else {
+              console.warn('No emotions detected from Hume AI');
+            }
+          } catch (apiError) {
+            console.error('Hume API error:', apiError);
+            console.log('Falling back to mock data for this analysis');
+            // Fall through to mock data
           }
         }, 'image/jpeg', 0.8);
       } else {
@@ -685,8 +711,10 @@ export function EmotionTrackingDemo() {
           {activeTab === 'facial' && emotions.facial && (
             <div className="bg-gray-900 rounded-lg p-6">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <h3 className="text-xl font-semibold">Streaming API status: Connected</h3>
+                <div className={`w-3 h-3 rounded-full animate-pulse ${humeClient ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                <h3 className="text-xl font-semibold">
+                  Streaming API status: {humeClient ? 'Connected to Hume AI' : 'Mock Mode'}
+                </h3>
               </div>
               
               {/* Top Expressions - like Hume playground with dynamic sorting */}
