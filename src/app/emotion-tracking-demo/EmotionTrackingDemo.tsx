@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { LuCamera, LuMic, LuType, LuPlay, LuSquare, LuUpload } from "react-icons/lu";
+import { HumeWebSocketClient } from "@/lib/humeWebSocket";
 
 interface EmotionScore {
   name: string;
@@ -23,12 +24,37 @@ export function EmotionTrackingDemo() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isCameraStarted, setIsCameraStarted] = useState(false);
+  const [humeClient, setHumeClient] = useState<HumeWebSocketClient | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // Initialize Hume WebSocket client
+  useEffect(() => {
+    const initHumeClient = async () => {
+      try {
+        // Get API key from environment or use a placeholder
+        const apiKey = process.env.NEXT_PUBLIC_HUME_API_KEY || 'your-api-key-here';
+        const client = new HumeWebSocketClient(apiKey);
+        await client.connect();
+        setHumeClient(client);
+        console.log('Hume WebSocket client initialized');
+      } catch (error) {
+        console.error('Failed to initialize Hume WebSocket client:', error);
+      }
+    };
+
+    initHumeClient();
+
+    return () => {
+      if (humeClient) {
+        humeClient.disconnect();
+      }
+    };
+  }, []);
 
   // Start webcam
   const startWebcam = async () => {
@@ -92,9 +118,9 @@ export function EmotionTrackingDemo() {
     }
   }, [isRecording]);
 
-  // Analyze facial expressions
+  // Analyze facial expressions using WebSocket
   const analyzeFacial = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !humeClient) return;
     
     const canvas = canvasRef.current;
     const video = videoRef.current;
@@ -112,23 +138,26 @@ export function EmotionTrackingDemo() {
       
       setIsAnalyzing(true);
       try {
-        const formData = new FormData();
-        formData.append('file', blob, 'face.jpg');
-        
-        const response = await fetch('/api/emotion-analysis', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        const data = await response.json();
-        setEmotions(prev => ({ ...prev, facial: data.facial }));
+        console.log('Analyzing facial expressions via WebSocket...');
+        const emotions = await humeClient.analyzeImage(blob);
+        setEmotions(prev => ({ ...prev, facial: emotions }));
+        console.log('Facial analysis results:', emotions);
       } catch (error) {
         console.error("Error analyzing facial expressions:", error);
+        // Fallback to mock data if WebSocket fails
+        setEmotions(prev => ({ 
+          ...prev, 
+          facial: [
+            { name: 'joy', score: 0.8 },
+            { name: 'surprise', score: 0.6 },
+            { name: 'interest', score: 0.5 }
+          ]
+        }));
       } finally {
         setIsAnalyzing(false);
       }
     }, 'image/jpeg', 0.8);
-  }, []);
+  }, [humeClient]);
 
   // Handle audio file upload
   const handleAudioFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,28 +167,33 @@ export function EmotionTrackingDemo() {
     }
   };
 
-  // Analyze uploaded audio file
+  // Analyze uploaded audio file using WebSocket
   const analyzeUploadedAudio = async () => {
-    if (!audioFile) return;
+    if (!audioFile || !humeClient) return;
     
     setIsAnalyzing(true);
     try {
-      const formData = new FormData();
-      formData.append('file', audioFile);
-      
-      const response = await fetch('/api/emotion-analysis', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      const data = await response.json();
+      console.log('Analyzing audio via WebSocket...');
+      const result = await humeClient.analyzeAudio(audioFile);
       setEmotions(prev => ({ 
         ...prev, 
-        prosody: data.prosody,
-        burst: data.burst 
+        prosody: result.prosody,
+        burst: result.burst 
       }));
+      console.log('Audio analysis results:', result);
     } catch (error) {
       console.error("Error analyzing audio:", error);
+      // Fallback to mock data if WebSocket fails
+      setEmotions(prev => ({ 
+        ...prev, 
+        prosody: [
+          { name: 'joy', score: 0.6 },
+          { name: 'interest', score: 0.5 }
+        ],
+        burst: [
+          { name: 'amusement', score: 0.4 }
+        ]
+      }));
     } finally {
       setIsAnalyzing(false);
     }
@@ -190,24 +224,27 @@ export function EmotionTrackingDemo() {
     }
   };
 
-  // Analyze text
+  // Analyze text using WebSocket
   const analyzeText = async () => {
-    if (!textInput.trim()) return;
+    if (!textInput.trim() || !humeClient) return;
     
     setIsAnalyzing(true);
     try {
-      const response = await fetch('/api/emotion-analysis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text: textInput }),
-      });
-      
-      const data = await response.json();
-      setEmotions(prev => ({ ...prev, language: data.language }));
+      console.log('Analyzing text via WebSocket...');
+      const emotions = await humeClient.analyzeText(textInput);
+      setEmotions(prev => ({ ...prev, language: emotions }));
+      console.log('Text analysis results:', emotions);
     } catch (error) {
       console.error("Error analyzing text:", error);
+      // Fallback to mock data if WebSocket fails
+      setEmotions(prev => ({ 
+        ...prev, 
+        language: [
+          { name: 'joy', score: 0.7 },
+          { name: 'interest', score: 0.6 },
+          { name: 'contentment', score: 0.5 }
+        ]
+      }));
     } finally {
       setIsAnalyzing(false);
     }

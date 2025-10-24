@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const HUME_API_KEY = process.env.HUME_API_KEY;
-const HUME_API_URL = 'https://api.hume.ai/v0/batch/jobs';
+const HUME_WEBSOCKET_URL = 'wss://api.hume.ai/v0/stream/models';
 
 export async function POST(request: NextRequest) {
   try {
