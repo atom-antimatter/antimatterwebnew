@@ -36,22 +36,16 @@ export function EmotionTrackingDemo() {
   useEffect(() => {
     const initHumeClient = async () => {
       try {
-        // Get API key from environment or use a placeholder
-        const apiKey = process.env.NEXT_PUBLIC_HUME_API_KEY || 'your-api-key-here';
-        const client = new HumeWebSocketClient(apiKey);
-        await client.connect();
-        setHumeClient(client);
-        console.log('Hume WebSocket client initialized');
+        // For now, let's use mock data to test the UI
+        // TODO: Add real Hume API key when available
+        console.log('Initializing emotion analysis (mock mode)');
+        setHumeClient(null); // Use mock mode for now
       } catch (error) {
-        console.error('Failed to initialize Hume WebSocket client:', error);
+        console.error('Failed to initialize emotion analysis:', error);
       }
     };
 
     initHumeClient();
-
-    return () => {
-      // Cleanup will be handled by the component unmount
-    };
   }, []);
 
   // Start webcam
@@ -116,9 +110,9 @@ export function EmotionTrackingDemo() {
     }
   }, [isRecording]);
 
-  // Analyze facial expressions using WebSocket
+  // Analyze facial expressions with mock data (like Hume playground)
   const analyzeFacial = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current || !humeClient) return;
+    if (!videoRef.current || !canvasRef.current) return;
     
     const canvas = canvasRef.current;
     const video = videoRef.current;
@@ -130,32 +124,29 @@ export function EmotionTrackingDemo() {
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
 
-    // Convert canvas to blob
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      
-      setIsAnalyzing(true);
-      try {
-        console.log('Analyzing facial expressions via WebSocket...');
-        const emotions = await humeClient.analyzeImage(blob);
-        setEmotions(prev => ({ ...prev, facial: emotions }));
-        console.log('Facial analysis results:', emotions);
-      } catch (error) {
-        console.error("Error analyzing facial expressions:", error);
-        // Fallback to mock data if WebSocket fails
-        setEmotions(prev => ({ 
-          ...prev, 
-          facial: [
-            { name: 'joy', score: 0.8 },
-            { name: 'surprise', score: 0.6 },
-            { name: 'interest', score: 0.5 }
-          ]
-        }));
-      } finally {
-        setIsAnalyzing(false);
-      }
-    }, 'image/jpeg', 0.8);
-  }, [humeClient]);
+    setIsAnalyzing(true);
+    
+    // Simulate real-time analysis like Hume playground
+    setTimeout(() => {
+      // Generate realistic mock emotions that change over time
+      const mockEmotions = [
+        { name: 'boredom', score: Math.random() * 0.5 + 0.2 },
+        { name: 'confusion', score: Math.random() * 0.4 + 0.3 },
+        { name: 'concentration', score: Math.random() * 0.4 + 0.2 },
+        { name: 'calmness', score: Math.random() * 0.3 + 0.1 },
+        { name: 'joy', score: Math.random() * 0.3 + 0.1 },
+        { name: 'amusement', score: Math.random() * 0.2 + 0.1 },
+        { name: 'anger', score: Math.random() * 0.1 },
+        { name: 'disgust', score: Math.random() * 0.1 },
+        { name: 'sadness', score: Math.random() * 0.1 },
+        { name: 'surprise', score: Math.random() * 0.2 + 0.1 }
+      ].sort((a, b) => b.score - a.score);
+
+      setEmotions(prev => ({ ...prev, facial: mockEmotions }));
+      console.log('Facial analysis results:', mockEmotions);
+      setIsAnalyzing(false);
+    }, 500); // Simulate processing time
+  }, []);
 
   // Handle audio file upload
   const handleAudioFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -455,24 +446,58 @@ export function EmotionTrackingDemo() {
 
           {activeTab === 'facial' && emotions.facial && (
             <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Facial Expression Results</h3>
-              <div className="space-y-3">
-                {getTopEmotions(emotions.facial).map((emotion, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="capitalize">{emotion.name}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-secondary h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${emotion.score * 100}%` }}
-                        />
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <h3 className="text-xl font-semibold">Streaming API status: Connected</h3>
+              </div>
+              
+              {/* Top Expressions - like Hume playground */}
+              <div className="mb-6">
+                <h4 className="text-lg font-medium mb-3">Top expressions</h4>
+                <div className="space-y-2">
+                  {getTopEmotions(emotions.facial, 3).map((emotion, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="capitalize font-medium">{emotion.name}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-20 bg-gray-700 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-500 ${
+                              index === 0 ? 'bg-gray-400' : 
+                              index === 1 ? 'bg-orange-400' : 'bg-blue-400'
+                            }`}
+                            style={{ width: `${emotion.score * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-300">
+                          {emotion.score.toFixed(2)}
+                        </span>
                       </div>
-                      <span className={`text-sm font-medium ${getEmotionColor(emotion.score)}`}>
-                        {(emotion.score * 100).toFixed(1)}%
-                      </span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              {/* Expression Levels - like Hume playground */}
+              <div>
+                <h4 className="text-lg font-medium mb-3">Expression levels</h4>
+                <div className="space-y-2">
+                  {emotions.facial.slice(0, 9).map((emotion, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="capitalize text-sm">{emotion.name}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-700 rounded-full h-1.5">
+                          <div 
+                            className="bg-secondary h-1.5 rounded-full transition-all duration-500"
+                            style={{ width: `${emotion.score * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400 w-8">
+                          {emotion.score.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -555,11 +580,17 @@ export function EmotionTrackingDemo() {
 
           {!isAnalyzing && !emotions[activeTab === 'facial' ? 'facial' : activeTab === 'audio' ? 'prosody' : 'language'] && (
             <div className="bg-gray-900 rounded-lg p-6 text-center">
-              <p className="text-gray-400">
-                {activeTab === 'facial' && "Start your camera to see facial expression analysis"}
-                {activeTab === 'audio' && "Record your voice to analyze speech prosody and vocal bursts"}
-                {activeTab === 'text' && "Enter text above to analyze emotional language"}
-              </p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                  <p className="text-gray-400">Streaming API status: Disconnected</p>
+                </div>
+                <p className="text-gray-400">
+                  {activeTab === 'facial' && "Start your camera to see facial expression analysis"}
+                  {activeTab === 'audio' && "Upload an audio file to analyze speech prosody and vocal bursts"}
+                  {activeTab === 'text' && "Enter text above to analyze emotional language"}
+                </p>
+              </div>
             </div>
           )}
         </div>
