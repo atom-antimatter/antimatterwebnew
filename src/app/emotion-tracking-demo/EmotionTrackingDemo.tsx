@@ -137,10 +137,9 @@ export function EmotionTrackingDemo() {
           if (!blob) return;
           
           const result = await humeClient.analyzeImage(blob);
-          if (result && result.predictions && result.predictions.length > 0) {
-            const emotions = result.predictions[0].emotions;
+          if (result && Array.isArray(result) && result.length > 0) {
             // Sort emotions by score (highest first) for dynamic ordering
-            const sortedEmotions = emotions.sort((a, b) => b.score - a.score);
+            const sortedEmotions = result.sort((a, b) => b.score - a.score);
             
             setEmotions(prev => ({ ...prev, facial: sortedEmotions }));
             
