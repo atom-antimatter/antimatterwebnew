@@ -20,6 +20,7 @@ export type ServiceProps = {
   description?: string;
   tagline?: string[];
   items: ServiceItemProps[];
+  hidden?: boolean; // Hide from public navigation but keep in CMS
   customCTA?: {
     text: string;
     href: string;
@@ -207,6 +208,7 @@ export const ServicesData: ServiceProps[] = [
     icon: LuHeart,
     link: "/emotion-tracking",
     title: "Emotion AI",
+    hidden: true, // Hidden from public navigation but visible in CMS
     pageTitle: (
       <>
         AI that <br />

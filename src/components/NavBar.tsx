@@ -231,7 +231,7 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
         </div>
 
         <div className="col-span-6 grid grid-cols-3">
-          {ServicesData.filter(s => s.link !== "/voice-agents").map((s) => (
+          {ServicesData.filter(s => s.link !== "/voice-agents" && !s.hidden).map((s) => (
             <div
               key={s.title}
               className="flex flex-col gap-3 col-span-1 text-xs font-light  "
