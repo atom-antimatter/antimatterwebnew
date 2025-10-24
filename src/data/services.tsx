@@ -126,10 +126,10 @@ export const ServicesData: ServiceProps[] = [
     title: "Healthcare Apps",
     pageTitle: (
       <>
-        Web3 Solutions
+        Healthcare Apps
         <br />
-        that
-        <span className="text-secondary font-bold italic mr-3">Make Sense</span>
+        built for
+        <span className="text-secondary font-bold italic mr-3">Care & Compliance</span>
       </>
     ),
     description:
