@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { LuCamera, LuMic, LuType, LuPlay, LuSquare, LuUpload } from "react-icons/lu";
 import { HumeWebSocketClient } from "@/lib/humeWebSocket";
+import jsPDF from 'jspdf';
 
 interface EmotionScore {
   name: string;
@@ -128,18 +129,18 @@ export function EmotionTrackingDemo() {
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
 
-    // Generate realistic mock emotions that change over time
+    // Generate realistic mock emotions that better reflect smiling/joy
     const mockEmotions = [
-      { name: 'boredom', score: Math.random() * 0.5 + 0.2 },
-      { name: 'confusion', score: Math.random() * 0.4 + 0.3 },
-      { name: 'concentration', score: Math.random() * 0.4 + 0.2 },
-      { name: 'calmness', score: Math.random() * 0.3 + 0.1 },
-      { name: 'joy', score: Math.random() * 0.3 + 0.1 },
-      { name: 'amusement', score: Math.random() * 0.2 + 0.1 },
-      { name: 'anger', score: Math.random() * 0.1 },
-      { name: 'disgust', score: Math.random() * 0.1 },
-      { name: 'sadness', score: Math.random() * 0.1 },
-      { name: 'surprise', score: Math.random() * 0.2 + 0.1 }
+      { name: 'joy', score: Math.random() * 0.4 + 0.5 }, // Higher joy for smiling
+      { name: 'amusement', score: Math.random() * 0.3 + 0.4 }, // Higher amusement
+      { name: 'calmness', score: Math.random() * 0.3 + 0.2 },
+      { name: 'surprise', score: Math.random() * 0.2 + 0.1 },
+      { name: 'concentration', score: Math.random() * 0.2 + 0.1 },
+      { name: 'boredom', score: Math.random() * 0.1 + 0.05 },
+      { name: 'confusion', score: Math.random() * 0.1 + 0.05 }, // Much lower confusion
+      { name: 'anger', score: Math.random() * 0.05 },
+      { name: 'disgust', score: Math.random() * 0.05 },
+      { name: 'sadness', score: Math.random() * 0.05 }
     ].sort((a, b) => b.score - a.score);
 
     const newEmotionData = { facial: mockEmotions };
@@ -281,7 +282,7 @@ export function EmotionTrackingDemo() {
     return "text-red-400";
   };
 
-  // Export session data
+  // Export session data as PDF
   const exportSessionData = async () => {
     if (sessionData.length === 0) {
       alert('No session data to export');
@@ -292,19 +293,6 @@ export function EmotionTrackingDemo() {
     const summaryData = {
       averageEmotions: calculateAverageEmotions(sessionData),
       topEmotions: getTopEmotionsFromSession(sessionData)
-    };
-
-    const exportData = {
-      sessionInfo: {
-        sessionId,
-        startTime: sessionStartTime?.toISOString(),
-        endTime: new Date().toISOString(),
-        duration: sessionStartTime ? Math.round((new Date().getTime() - sessionStartTime.getTime()) / 1000) : 0,
-        totalAnalyses: sessionData.length,
-        analysisType: activeTab
-      },
-      emotions: sessionData,
-      summary: summaryData
     };
 
     // Save to Supabase
@@ -333,16 +321,100 @@ export function EmotionTrackingDemo() {
       console.error('Error saving to Supabase:', error);
     }
 
-    // Download JSON file
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `emotion-analysis-session-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Generate PDF
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let yPosition = 20;
+
+    // Title
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Emotion Analysis Session Report', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 20;
+
+    // Session Info
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Session Information', 20, yPosition);
+    yPosition += 10;
+
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Session ID: ${sessionId}`, 20, yPosition);
+    yPosition += 8;
+    pdf.text(`Start Time: ${sessionStartTime?.toLocaleString()}`, 20, yPosition);
+    yPosition += 8;
+    pdf.text(`End Time: ${new Date().toLocaleString()}`, 20, yPosition);
+    yPosition += 8;
+    pdf.text(`Duration: ${sessionStartTime ? Math.round((new Date().getTime() - sessionStartTime.getTime()) / 1000) : 0} seconds`, 20, yPosition);
+    yPosition += 8;
+    pdf.text(`Total Analyses: ${sessionData.length}`, 20, yPosition);
+    yPosition += 8;
+    pdf.text(`Analysis Type: ${activeTab}`, 20, yPosition);
+    yPosition += 15;
+
+    // Summary
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Session Summary', 20, yPosition);
+    yPosition += 10;
+
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    
+    // Top Emotions
+    pdf.text('Top Emotions:', 20, yPosition);
+    yPosition += 8;
+    summaryData.topEmotions.forEach((emotion, index) => {
+      pdf.text(`${index + 1}. ${emotion.name}: ${(emotion.score * 100).toFixed(1)}%`, 30, yPosition);
+      yPosition += 6;
+    });
+    yPosition += 10;
+
+    // Average Emotions
+    pdf.text('Average Emotions:', 20, yPosition);
+    yPosition += 8;
+    Object.entries(summaryData.averageEmotions).forEach(([emotion, score]) => {
+      pdf.text(`${emotion}: ${(score * 100).toFixed(1)}%`, 30, yPosition);
+      yPosition += 6;
+    });
+    yPosition += 15;
+
+    // Detailed Analysis
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Detailed Analysis', 20, yPosition);
+    yPosition += 10;
+
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    
+    sessionData.forEach((data, index) => {
+      if (yPosition > pageHeight - 20) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      pdf.text(`Analysis ${index + 1} - ${new Date(data.timestamp).toLocaleTimeString()}:`, 20, yPosition);
+      yPosition += 6;
+      
+      if (data.facial) {
+        data.facial.slice(0, 5).forEach(emotion => {
+          pdf.text(`  ${emotion.name}: ${(emotion.score * 100).toFixed(1)}%`, 30, yPosition);
+          yPosition += 5;
+        });
+      }
+      yPosition += 8;
+    });
+
+    // Footer
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text('Generated by Antimatter AI Emotion Tracking Demo', pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+    // Download PDF
+    pdf.save(`emotion-analysis-session-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const calculateAverageEmotions = (data: EmotionData[]) => {
@@ -436,32 +508,32 @@ export function EmotionTrackingDemo() {
                 <div className="flex gap-4">
                   <button
                     onClick={startWebcam}
-                    className="flex items-center gap-2 px-4 py-2 bg-secondary text-black rounded-lg hover:bg-secondary/80 transition-colors"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
-                    <LuPlay size={16} />
+                    <LuPlay size={18} />
                     Start Camera
                   </button>
                   <button
                     onClick={stopWebcam}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
-                    <LuSquare size={16} />
+                    <LuSquare size={18} />
                     Stop Camera
                   </button>
                   <button
                     onClick={analyzeFacial}
                     disabled={!isCameraStarted}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    <LuCamera size={16} />
+                    <LuCamera size={18} />
                     Analyze Now
                   </button>
                   <button
                     onClick={exportSessionData}
                     disabled={sessionData.length === 0}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    <LuUpload size={16} />
+                    <LuUpload size={18} />
                     Export Session ({sessionData.length})
                   </button>
                 </div>
