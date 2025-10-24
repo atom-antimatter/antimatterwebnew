@@ -20,8 +20,8 @@ const CompanyPage = () => {
             </h1>
             <div className="max-w-3xl 2xl:max-w-[920px]">
               <p className="text-4xl/tight sm:text-5xl/tight 2xl:text-6xl/tight font-semibold">
-                We're a design-led AI studio turning complex challenges into
-                measurable results.
+                We&apos;re a design-led AI studio turning complex challenges
+                into measurable results.
               </p>
               <div className="mt-20 mobile:mt-40 sm:mt-64 flex flex-col sm:flex-row gap-6 capitalize items-center">
                 <ScrollToSection id="story">
@@ -150,7 +150,7 @@ const CompanyPage = () => {
               How We Think
             </h2>
             <p className="text-center italic mt-5 sm:text-xl">
-              We don't just build products — we <br /> build momentum.
+              We don&apos;t just build products — we <br /> build momentum.
             </p>
             <h3 className="text-2xl text-foreground/65 mt-20">CORE BELIEFS</h3>
             <div className="flex flex-col mt-5">
@@ -181,7 +181,7 @@ const CompanyPage = () => {
           <div className="flex flex-col md:flex-row gap-10 justify-between">
             <div>
               <h2 className="text-xl mobile:text-2xl lg:text-3xl xl:text-4xl">
-                Let's Create Something
+                Let&apos;s Create Something
               </h2>
               <h3 className="italic text-4xl mobile:text-5xl lg:text-6xl xl:text-7xl font-bold">
                 That Matters
@@ -189,7 +189,7 @@ const CompanyPage = () => {
             </div>
             <div className="flex flex-col md:items-end">
               <p>
-                We've built AI for good, for growth, and for the{" "}
+                We&apos;ve built AI for good, for growth, and for the{" "}
                 <span className="mobile:block">
                   greater impact. What will we build with you?
                 </span>

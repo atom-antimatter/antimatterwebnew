@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ServicesData, ServiceProps } from "@/data/services";
-import { getServiceAnalytics, validateServices } from "@/lib/serviceScanner";
-import { HiOutlineEye, HiOutlineEyeSlash, HiOutlineLink, HiOutlinePencil, HiOutlineArrowPath } from "react-icons/hi2";
+import { getServiceAnalytics } from "@/lib/serviceScanner";
+import {
+  HiOutlineEye,
+  HiOutlineEyeSlash,
+  HiOutlineLink,
+  HiOutlinePencil,
+  HiOutlineArrowPath,
+} from "react-icons/hi2";
 import { motion } from "motion/react";
 
 interface ServiceManagerProps {
@@ -12,15 +18,15 @@ interface ServiceManagerProps {
 
 export default function ServiceManager({ onEditService }: ServiceManagerProps) {
   const [services, setServices] = useState<ServiceProps[]>(ServicesData);
-  const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+  const [filter, setFilter] = useState<"all" | "visible" | "hidden">("all");
   const [analytics, setAnalytics] = useState(getServiceAnalytics());
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const filteredServices = services.filter(service => {
+  const filteredServices = services.filter((service) => {
     switch (filter) {
-      case 'visible':
+      case "visible":
         return !service.hidden;
-      case 'hidden':
+      case "hidden":
         return service.hidden;
       default:
         return true;
@@ -34,11 +40,9 @@ export default function ServiceManager({ onEditService }: ServiceManagerProps) {
   };
 
   const toggleVisibility = (service: ServiceProps) => {
-    setServices(prev => 
-      prev.map(s => 
-        s.link === service.link 
-          ? { ...s, hidden: !s.hidden }
-          : s
+    setServices((prev) =>
+      prev.map((s) =>
+        s.link === service.link ? { ...s, hidden: !s.hidden } : s
       )
     );
     // Update analytics after visibility change
@@ -69,7 +73,9 @@ export default function ServiceManager({ onEditService }: ServiceManagerProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Service Management</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            Service Management
+          </h2>
           <p className="text-foreground/60 mt-1">
             Manage your services and their visibility on the website
           </p>
@@ -92,34 +98,34 @@ export default function ServiceManager({ onEditService }: ServiceManagerProps) {
       {/* Filters */}
       <div className="flex space-x-2">
         <button
-          onClick={() => setFilter('all')}
+          onClick={() => setFilter("all")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            filter === 'all'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+            filter === "all"
+              ? "bg-primary text-primary-foreground"
+              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
           }`}
         >
           All Services ({services.length})
         </button>
         <button
-          onClick={() => setFilter('visible')}
+          onClick={() => setFilter("visible")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            filter === 'visible'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+            filter === "visible"
+              ? "bg-primary text-primary-foreground"
+              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
           }`}
         >
-          Visible ({services.filter(s => !s.hidden).length})
+          Visible ({services.filter((s) => !s.hidden).length})
         </button>
         <button
-          onClick={() => setFilter('hidden')}
+          onClick={() => setFilter("hidden")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            filter === 'hidden'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+            filter === "hidden"
+              ? "bg-primary text-primary-foreground"
+              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
           }`}
         >
-          Hidden ({services.filter(s => s.hidden).length})
+          Hidden ({services.filter((s) => s.hidden).length})
         </button>
       </div>
 
@@ -139,7 +145,9 @@ export default function ServiceManager({ onEditService }: ServiceManagerProps) {
                   <service.icon className="w-6 h-6 text-zinc-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-zinc-900">{service.title}</h3>
+                  <h3 className="font-semibold text-zinc-900">
+                    {service.title}
+                  </h3>
                   <p className="text-sm text-zinc-500">/{service.link}</p>
                 </div>
               </div>
@@ -156,11 +164,11 @@ export default function ServiceManager({ onEditService }: ServiceManagerProps) {
                   onClick={() => toggleVisibility(service)}
                   className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                     service.hidden
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                      : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                      : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
                   }`}
                 >
-                  {service.hidden ? 'Show' : 'Hide'}
+                  {service.hidden ? "Show" : "Hide"}
                 </button>
                 <a
                   href={service.link}
@@ -207,10 +215,13 @@ export default function ServiceManager({ onEditService }: ServiceManagerProps) {
             <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-blue-900">Auto-Detection Enabled</h4>
+            <h4 className="text-sm font-medium text-blue-900">
+              Auto-Detection Enabled
+            </h4>
             <p className="text-sm text-blue-700 mt-1">
-              New services added to the codebase will automatically appear in this CMS. 
-              The system scans for new service definitions and updates the management interface accordingly.
+              New services added to the codebase will automatically appear in
+              this CMS. The system scans for new service definitions and updates
+              the management interface accordingly.
             </p>
           </div>
         </div>

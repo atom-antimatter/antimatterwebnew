@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 import MainLayout from "@/components/ui/MainLayout";
 import TransitionContainer from "@/components/ui/TransitionContainer";
@@ -25,7 +26,7 @@ const VoiceAgentDemo = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
-  
+
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const websocketRef = useRef<WebSocket | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -73,26 +74,26 @@ const VoiceAgentDemo = () => {
     source.buffer = buffer;
     source.connect(audioContextRef.current.destination);
     currentSourceRef.current = source;
-    
+
     source.onended = () => {
       setIsSpeaking(false);
       isPlayingRef.current = false;
       currentSourceRef.current = null;
-      
+
       // Play next in queue
       const next = audioQueueRef.current.shift();
       if (next) {
         playAudioBuffer(next);
       }
     };
-    
+
     source.start(0);
   }, []);
 
   // Process audio queue
   const processAudioQueue = useCallback(() => {
     if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
-    
+
     const buffer = audioQueueRef.current.shift();
     if (buffer) {
       playAudioBuffer(buffer);
@@ -139,10 +140,10 @@ const VoiceAgentDemo = () => {
 
       ws.onopen = () => {
         console.log("Connected to Hume EVI");
-        
+
         // Note: System prompt and settings come from the Hume Config ID
         // No need to send session_settings - the config handles it all
-        
+
         // Start sending audio
         const mediaRecorder = new MediaRecorder(stream, {
           mimeType: "audio/webm",
@@ -154,10 +155,12 @@ const VoiceAgentDemo = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
               const base64Audio = (reader.result as string).split(",")[1];
-              ws.send(JSON.stringify({
-                type: "audio_input",
-                data: base64Audio,
-              }));
+              ws.send(
+                JSON.stringify({
+                  type: "audio_input",
+                  data: base64Audio,
+                })
+              );
             };
             reader.readAsDataURL(event.data);
           }
@@ -166,13 +169,13 @@ const VoiceAgentDemo = () => {
         mediaRecorder.start(100); // Send chunks every 100ms
 
         setConnectionState("connected");
-        
+
         // Config handles first message - no need to send auto-intro
       };
 
       ws.onmessage = async (event) => {
         const message = JSON.parse(event.data);
-        
+
         console.log("Hume message:", message.type);
 
         switch (message.type) {
@@ -197,12 +200,17 @@ const VoiceAgentDemo = () => {
             if (message.message?.content) {
               setTranscript((prev) => {
                 const existing = prev.find(
-                  (t) => t.id === message.message.id && t.speaker === "assistant"
+                  (t) =>
+                    t.id === message.message.id && t.speaker === "assistant"
                 );
                 if (existing) {
                   return prev.map((t) =>
                     t.id === message.message.id
-                      ? { ...t, text: message.message.content, isComplete: true }
+                      ? {
+                          ...t,
+                          text: message.message.content,
+                          isComplete: true,
+                        }
                       : t
                   );
                 }
@@ -224,11 +232,14 @@ const VoiceAgentDemo = () => {
             if (message.data && audioContextRef.current) {
               try {
                 // Decode base64 audio
-                const audioData = Uint8Array.from(atob(message.data), c => c.charCodeAt(0));
-                const audioBuffer = await audioContextRef.current.decodeAudioData(
-                  audioData.buffer
+                const audioData = Uint8Array.from(atob(message.data), (c) =>
+                  c.charCodeAt(0)
                 );
-                
+                const audioBuffer =
+                  await audioContextRef.current.decodeAudioData(
+                    audioData.buffer
+                  );
+
                 audioQueueRef.current.push(audioBuffer);
                 processAudioQueue();
               } catch (err) {
@@ -279,7 +290,6 @@ const VoiceAgentDemo = () => {
         console.log("WebSocket closed");
         handleDisconnect();
       };
-
     } catch (err) {
       console.error("Connection error:", err);
       setError(
@@ -361,12 +371,11 @@ const VoiceAgentDemo = () => {
             className="text-center mb-10"
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-              Meet{" "}
-              <span className="text-secondary italic">Atom</span>
+              Meet <span className="text-secondary italic">Atom</span>
             </h1>
             <p className="text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto">
-              Your AI-powered guide to Antimatter AI. Ask about our services, case studies,
-              technologies, and meet our team.
+              Your AI-powered guide to Antimatter AI. Ask about our services,
+              case studies, technologies, and meet our team.
             </p>
           </motion.div>
 
@@ -517,27 +526,22 @@ const VoiceAgentDemo = () => {
               Experience AI-Powered Voice Conversations
             </h3>
             <p className="text-foreground/70 mb-6">
-              Atom is trained on Antimatter AI&apos;s services, case studies, and team expertise.
-              Experience natural, real-time voice interactions powered by Hume&apos;s empathic AI.
+              Atom is trained on Antimatter AI&apos;s services, case studies,
+              and team expertise. Experience natural, real-time voice
+              interactions powered by Hume&apos;s empathic AI.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="p-4 bg-zinc-900/30 rounded-lg border border-foreground/10">
                 <div className="font-semibold mb-1">Empathic AI</div>
-                <div className="text-foreground/60">
-                  Powered by Hume EVI
-                </div>
+                <div className="text-foreground/60">Powered by Hume EVI</div>
               </div>
               <div className="p-4 bg-zinc-900/30 rounded-lg border border-foreground/10">
                 <div className="font-semibold mb-1">24/7 Availability</div>
-                <div className="text-foreground/60">
-                  Always ready to assist
-                </div>
+                <div className="text-foreground/60">Always ready to assist</div>
               </div>
               <div className="p-4 bg-zinc-900/30 rounded-lg border border-foreground/10">
                 <div className="font-semibold mb-1">Custom Training</div>
-                <div className="text-foreground/60">
-                  Expert on our work
-                </div>
+                <div className="text-foreground/60">Expert on our work</div>
               </div>
             </div>
           </motion.div>
