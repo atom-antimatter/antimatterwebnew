@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { ServicesData, ServiceProps } from "@/data/services";
 import { getServiceAnalytics, validateServices } from "@/lib/serviceScanner";
-import { HiOutlineEye, HiOutlineEyeSlash, HiOutlineExternalLink, HiOutlinePencil, HiOutlineRefresh } from "react-icons/hi2";
+import { HiOutlineEye, HiOutlineEyeSlash, HiOutlineLink, HiOutlinePencil, HiOutlineArrowPath } from "react-icons/hi2";
 import { motion } from "motion/react";
 
 interface ServiceManagerProps {
@@ -84,7 +84,7 @@ export default function ServiceManager({ onEditService }: ServiceManagerProps) {
           onClick={refreshServices}
           className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
         >
-          <HiOutlineRefresh className="w-4 h-4" />
+          <HiOutlineArrowPath className="w-4 h-4" />
           <span>Refresh</span>
         </button>
       </div>
@@ -168,7 +168,7 @@ export default function ServiceManager({ onEditService }: ServiceManagerProps) {
                   rel="noopener noreferrer"
                   className="flex items-center space-x-1 px-3 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                 >
-                  <HiOutlineExternalLink className="w-3 h-3" />
+                  <HiOutlineLink className="w-3 h-3" />
                   <span>View</span>
                 </a>
                 {onEditService && (
