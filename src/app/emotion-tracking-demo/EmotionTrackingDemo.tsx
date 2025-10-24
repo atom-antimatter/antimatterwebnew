@@ -116,7 +116,7 @@ export function EmotionTrackingDemo() {
     }
   }, [isRecording]);
 
-  // Analyze facial expressions with mock data (like Hume playground)
+  // Real-time facial analysis with WebSocket streaming
   const analyzeFacial = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
     
@@ -130,31 +130,62 @@ export function EmotionTrackingDemo() {
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
 
-    // Generate realistic mock emotions that better reflect smiling/joy
-    const mockEmotions = [
-      { name: 'joy', score: Math.random() * 0.4 + 0.5 }, // Higher joy for smiling
-      { name: 'amusement', score: Math.random() * 0.3 + 0.4 }, // Higher amusement
-      { name: 'calmness', score: Math.random() * 0.3 + 0.2 },
-      { name: 'surprise', score: Math.random() * 0.2 + 0.1 },
-      { name: 'concentration', score: Math.random() * 0.2 + 0.1 },
-      { name: 'boredom', score: Math.random() * 0.1 + 0.05 },
-      { name: 'confusion', score: Math.random() * 0.1 + 0.05 }, // Much lower confusion
-      { name: 'anger', score: Math.random() * 0.05 },
-      { name: 'disgust', score: Math.random() * 0.05 },
-      { name: 'sadness', score: Math.random() * 0.05 }
-    ].sort((a, b) => b.score - a.score);
+    try {
+      if (humeClient) {
+        // Use WebSocket for real-time analysis
+        const result = await humeClient.analyzeImage(canvas.toDataURL('image/jpeg', 0.8));
+        if (result && result.predictions && result.predictions.length > 0) {
+          const emotions = result.predictions[0].emotions;
+          // Sort emotions by score (highest first) for dynamic ordering
+          const sortedEmotions = emotions.sort((a, b) => b.score - a.score);
+          
+          setEmotions(prev => ({ ...prev, facial: sortedEmotions }));
+          
+          // Add to session data
+          const newEmotionData = { 
+            timestamp: new Date().toISOString(),
+            facial: sortedEmotions 
+          };
+          setSessionData(prev => [...prev, newEmotionData]);
+          
+          console.log('Real-time facial analysis results:', sortedEmotions);
+        }
+      } else {
+        // Enhanced mock data with more realistic emotion variations
+        const baseEmotions = [
+          { name: 'joy', baseScore: 0.6 },
+          { name: 'amusement', baseScore: 0.5 },
+          { name: 'calmness', baseScore: 0.4 },
+          { name: 'surprise', baseScore: 0.3 },
+          { name: 'concentration', baseScore: 0.2 },
+          { name: 'boredom', baseScore: 0.1 },
+          { name: 'confusion', baseScore: 0.05 },
+          { name: 'anger', baseScore: 0.02 },
+          { name: 'disgust', baseScore: 0.01 },
+          { name: 'sadness', baseScore: 0.01 }
+        ];
 
-    const newEmotionData = { 
-      timestamp: new Date().toISOString(),
-      facial: mockEmotions 
-    };
-    setEmotions(prev => ({ ...prev, facial: mockEmotions }));
-    
-    // Add to session data
-    setSessionData(prev => [...prev, newEmotionData]);
-    
-    console.log('Facial analysis results:', mockEmotions);
-  }, []);
+        // Generate dynamic emotions with realistic variations
+        const mockEmotions = baseEmotions.map(emotion => ({
+          name: emotion.name,
+          score: Math.max(0, emotion.baseScore + (Math.random() - 0.5) * 0.3)
+        })).sort((a, b) => b.score - a.score); // Sort by score descending
+
+        setEmotions(prev => ({ ...prev, facial: mockEmotions }));
+        
+        // Add to session data
+        const newEmotionData = { 
+          timestamp: new Date().toISOString(),
+          facial: mockEmotions 
+        };
+        setSessionData(prev => [...prev, newEmotionData]);
+        
+        console.log('Mock facial analysis results:', mockEmotions);
+      }
+    } catch (error) {
+      console.error('Facial analysis error:', error);
+    }
+  }, [humeClient]);
 
   // Handle audio file upload
   const handleAudioFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -509,36 +540,48 @@ export function EmotionTrackingDemo() {
                   />
                   <canvas ref={canvasRef} className="hidden" />
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-3">
                   <button
                     onClick={startWebcam}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="group relative overflow-hidden bg-black border border-white/20 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-white hover:text-black hover:border-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:hover:text-white"
                   >
-                    <LuPlay size={18} />
-                    Start Camera
+                    <span className="relative z-10 flex items-center gap-2">
+                      <LuPlay size={18} />
+                      Start Camera
+                    </span>
+                    <div className="absolute inset-0 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                   </button>
                   <button
                     onClick={stopWebcam}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="group relative overflow-hidden bg-gray-800 border border-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-gray-600 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <LuSquare size={18} />
-                    Stop Camera
+                    <span className="relative z-10 flex items-center gap-2">
+                      <LuSquare size={18} />
+                      Stop Camera
+                    </span>
+                    <div className="absolute inset-0 bg-gray-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                   </button>
                   <button
                     onClick={analyzeFacial}
                     disabled={!isCameraStarted}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    className="group relative overflow-hidden bg-blue-600 border border-blue-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-blue-500 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
                   >
-                    <LuCamera size={18} />
-                    Analyze Now
+                    <span className="relative z-10 flex items-center gap-2">
+                      <LuCamera size={18} />
+                      Analyze Now
+                    </span>
+                    <div className="absolute inset-0 bg-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                   </button>
                   <button
                     onClick={exportSessionData}
                     disabled={sessionData.length === 0}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    className="group relative overflow-hidden bg-emerald-600 border border-emerald-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-emerald-500 hover:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
                   >
-                    <LuUpload size={18} />
-                    Export Session ({sessionData.length})
+                    <span className="relative z-10 flex items-center gap-2">
+                      <LuUpload size={18} />
+                      Export Session ({sessionData.length})
+                    </span>
+                    <div className="absolute inset-0 bg-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                   </button>
                 </div>
                 <p className="text-sm text-gray-400">
@@ -627,24 +670,28 @@ export function EmotionTrackingDemo() {
                 <h3 className="text-xl font-semibold">Streaming API status: Connected</h3>
               </div>
               
-              {/* Top Expressions - like Hume playground */}
+              {/* Top Expressions - like Hume playground with dynamic sorting */}
               <div className="mb-6">
-                <h4 className="text-lg font-medium mb-3">Top expressions</h4>
+                <h4 className="text-lg font-medium mb-3 flex items-center gap-2">
+                  Top expressions
+                  <span className="text-xs text-gray-400">(Live ranking)</span>
+                </h4>
                 <div className="space-y-2">
                   {getTopEmotions(emotions.facial, 3).map((emotion, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div key={index} className="flex items-center justify-between group">
                       <span className="capitalize font-medium">{emotion.name}</span>
                       <div className="flex items-center gap-2">
-                        <div className="w-20 bg-gray-700 rounded-full h-2">
+                        <div className="w-20 bg-gray-700 rounded-full h-2 overflow-hidden">
                           <div 
                             className={`h-2 rounded-full transition-all duration-500 ${
-                              index === 0 ? 'bg-gray-400' : 
-                              index === 1 ? 'bg-orange-400' : 'bg-blue-400'
+                              index === 0 ? 'bg-gradient-to-r from-yellow-400 to-orange-400' : 
+                              index === 1 ? 'bg-gradient-to-r from-blue-400 to-cyan-400' : 
+                              'bg-gradient-to-r from-purple-400 to-pink-400'
                             }`}
                             style={{ width: `${emotion.score * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm font-medium text-gray-300">
+                        <span className="text-sm font-medium text-gray-300 font-mono">
                           {emotion.score.toFixed(2)}
                         </span>
                       </div>
@@ -653,21 +700,24 @@ export function EmotionTrackingDemo() {
                 </div>
               </div>
 
-              {/* Expression Levels - like Hume playground */}
+              {/* Expression Levels - like Hume playground with dynamic sorting */}
               <div>
-                <h4 className="text-lg font-medium mb-3">Expression levels</h4>
-                <div className="space-y-2">
+                <h4 className="text-lg font-medium mb-3 flex items-center gap-2">
+                  Expression levels
+                  <span className="text-xs text-gray-400">(Dynamic sorting)</span>
+                </h4>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
                   {emotions.facial.slice(0, 9).map((emotion, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="capitalize text-sm">{emotion.name}</span>
+                    <div key={index} className="flex items-center justify-between group hover:bg-gray-800/50 rounded px-2 py-1 transition-colors">
+                      <span className="capitalize text-sm font-medium">{emotion.name}</span>
                       <div className="flex items-center gap-2">
-                        <div className="w-16 bg-gray-700 rounded-full h-1.5">
+                        <div className="w-16 bg-gray-700 rounded-full h-1.5 overflow-hidden">
                           <div 
-                            className="bg-secondary h-1.5 rounded-full transition-all duration-500"
+                            className="bg-gradient-to-r from-emerald-400 to-cyan-400 h-1.5 rounded-full transition-all duration-500"
                             style={{ width: `${emotion.score * 100}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-400 w-8">
+                        <span className="text-xs text-gray-400 w-8 font-mono">
                           {emotion.score.toFixed(2)}
                         </span>
                       </div>
