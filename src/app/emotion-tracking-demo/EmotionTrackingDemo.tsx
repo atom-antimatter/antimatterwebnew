@@ -50,9 +50,7 @@ export function EmotionTrackingDemo() {
     initHumeClient();
 
     return () => {
-      if (humeClient) {
-        humeClient.disconnect();
-      }
+      // Cleanup will be handled by the component unmount
     };
   }, []);
 
@@ -270,8 +268,11 @@ export function EmotionTrackingDemo() {
     return () => {
       stopWebcam();
       stopAudioRecording();
+      if (humeClient) {
+        humeClient.disconnect();
+      }
     };
-  }, [stopWebcam, stopAudioRecording]);
+  }, [stopWebcam, stopAudioRecording, humeClient]);
 
   const getTopEmotions = (emotions: EmotionScore[] = [], limit = 5) => {
     return emotions
