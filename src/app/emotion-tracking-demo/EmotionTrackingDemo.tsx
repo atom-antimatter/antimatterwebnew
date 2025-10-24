@@ -11,7 +11,7 @@ interface EmotionScore {
 }
 
 interface EmotionData {
-  timestamp: string;
+  timestamp?: string;
   facial?: EmotionScore[];
   prosody?: EmotionScore[];
   burst?: EmotionScore[];
@@ -400,7 +400,7 @@ export function EmotionTrackingDemo() {
         yPosition = 20;
       }
       
-      pdf.text(`Analysis ${index + 1} - ${new Date(data.timestamp).toLocaleTimeString()}:`, 20, yPosition);
+      pdf.text(`Analysis ${index + 1} - ${data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : 'No timestamp'}:`, 20, yPosition);
       yPosition += 6;
       
       if (data.facial) {
