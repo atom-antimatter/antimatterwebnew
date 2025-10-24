@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { LuCamera, LuMic, LuType, LuPlay, LuSquare } from "react-icons/lu";
+import { LuCamera, LuMic, LuType, LuPlay, LuSquare, LuUpload } from "react-icons/lu";
 
 interface EmotionScore {
   name: string;
@@ -21,6 +21,7 @@ export function EmotionTrackingDemo() {
   const [emotions, setEmotions] = useState<EmotionData>({});
   const [textInput, setTextInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -124,7 +125,42 @@ export function EmotionTrackingDemo() {
     }, 'image/jpeg', 0.8);
   };
 
-  // Analyze audio
+  // Handle audio file upload
+  const handleAudioFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAudioFile(file);
+    }
+  };
+
+  // Analyze uploaded audio file
+  const analyzeUploadedAudio = async () => {
+    if (!audioFile) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', audioFile);
+      
+      const response = await fetch('/api/emotion-analysis', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const data = await response.json();
+      setEmotions(prev => ({ 
+        ...prev, 
+        prosody: data.prosody,
+        burst: data.burst 
+      }));
+    } catch (error) {
+      console.error("Error analyzing audio:", error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Analyze audio (legacy function for recording)
   const analyzeAudio = async (audioBlob: Blob) => {
     setIsAnalyzing(true);
     try {
@@ -288,29 +324,40 @@ export function EmotionTrackingDemo() {
             <div className="bg-gray-900 rounded-lg p-6">
               <h3 className="text-xl font-semibold mb-4">Voice & Audio Analysis</h3>
               <div className="space-y-4">
-                <div className="h-32 bg-gray-800 rounded-lg flex items-center justify-center">
-                  {isRecording ? (
+                <div className="h-32 bg-gray-800 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-600">
+                  {audioFile ? (
                     <div className="text-center">
-                      <div className="w-8 h-8 bg-red-500 rounded-full animate-pulse mx-auto mb-2"></div>
-                      <p className="text-red-400">Recording...</p>
+                      <p className="text-white font-medium">{audioFile.name}</p>
+                      <p className="text-gray-400 text-sm">
+                        {(audioFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
                     </div>
                   ) : (
-                    <p className="text-gray-400">Click record to analyze your voice</p>
+                    <p className="text-gray-400">Upload an audio file to analyze</p>
                   )}
                 </div>
-                <button
-                  onClick={isRecording ? stopAudioRecording : startAudioRecording}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    isRecording 
-                      ? 'bg-red-600 text-white hover:bg-red-700' 
-                      : 'bg-secondary text-black hover:bg-secondary/80'
-                  }`}
-                >
-                  {isRecording ? <LuSquare size={16} /> : <LuPlay size={16} />}
-                  {isRecording ? 'Stop Recording' : 'Start Recording'}
-                </button>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 px-4 py-2 bg-secondary text-black rounded-lg hover:bg-secondary/80 transition-colors cursor-pointer">
+                    <LuUpload size={16} />
+                    Choose Audio File
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleAudioFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  <button
+                    onClick={analyzeUploadedAudio}
+                    disabled={!audioFile || isAnalyzing}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <LuPlay size={16} />
+                    {isAnalyzing ? 'Analyzing...' : 'Analyze Audio'}
+                  </button>
+                </div>
                 <p className="text-sm text-gray-400">
-                  Record your voice to analyze speech prosody and vocal bursts
+                  Upload an audio file to analyze speech prosody and vocal bursts
                 </p>
               </div>
             </div>
