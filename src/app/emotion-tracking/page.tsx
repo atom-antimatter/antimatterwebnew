@@ -1,5 +1,5 @@
 import ServiceComponent from "../[services]/ServiceComponent";
 
 export default function EmotionTrackingPage() {
-  return <ServiceComponent serviceSlug="emotion-tracking" />;
+  return <ServiceComponent />;
 }
