@@ -396,7 +396,7 @@ export function EmotionTrackingDemo() {
                           </span>
                         </div>
                       </div>
-                    )))}
+                    ))}
                   </div>
                 </div>
               )}
