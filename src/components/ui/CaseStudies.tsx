@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import WorkBox, { WorkListProps } from "./WorkBox";
 import Image from "next/image";
 import Reveal from "./Reveal";

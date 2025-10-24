@@ -12,7 +12,7 @@ const Footer = () => {
             <p className="text-2xl">atom@antimatterai.com</p>
             <div className="flex mt-3">
               <a
-                href=""
+                href="https://www.linkedin.com/company/antimatter-ai/"
                 target="_blank"
                 className="flex items-center border-b pb-0.5"
               >

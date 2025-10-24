@@ -1,6 +1,6 @@
 "use client";
 import { ServiceProps, ServicesData } from "@/data/services";
-import { useLoading, useStartProjectModal } from "@/store";
+import { useLoading } from "@/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -12,8 +12,9 @@ import TransitionLink from "./ui/TransitionLink";
 
 type NavItem = { href?: string; text: string };
 const NavData: NavItem[] = [
-  { href: "/", text: "Home" },
+  // { href: "/", text: "Home" },
   { href: "/work", text: "Work" },
+  { href: "/company", text: "Company" },
   { text: "Services" },
   { href: "/contact", text: "Contact" },
 ];
@@ -21,7 +22,7 @@ const NavData: NavItem[] = [
 const NavBar = () => {
   const finished = useLoading((s) => s.finished);
   const path = usePathname();
-  const { setOpen } = useStartProjectModal();
+  // const { setOpen } = useStartProjectModal();
 
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -98,9 +99,7 @@ const NavBar = () => {
             </ul>
           </nav>
 
-          <NavButton
-            className="hidden md:block"
-          />
+          <NavButton className="hidden md:block" />
           <HamMenu navData={NavData} />
         </div>
       </div>
@@ -231,7 +230,7 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
         </div>
 
         <div className="col-span-6 grid grid-cols-3">
-          {ServicesData.filter(s => s.link !== "/voice-agents").map((s) => (
+          {ServicesData.filter((s) => s.link !== "/voice-agents").map((s) => (
             <div
               key={s.title}
               className="flex flex-col gap-3 col-span-1 text-xs font-light  "
