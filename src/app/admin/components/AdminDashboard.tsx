@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import { HiArrowLeftOnRectangle, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineGlobeAlt } from "react-icons/hi2";
+import { HiArrowLeftOnRectangle, HiOutlineDocumentText, HiOutlineNewspaper, HiOutlineGlobeAlt, HiOutlineCog } from "react-icons/hi2";
 import PageManager from "./PageManager";
 import BlogManager from "./BlogManager";
 import SitemapViewer from "./SitemapViewer";
+import ServiceManager from "./ServiceManager";
 
 interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type ActiveTab = "pages" | "blog" | "sitemap";
+type ActiveTab = "pages" | "blog" | "sitemap" | "services";
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("pages");
@@ -19,6 +20,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const tabs = [
     { id: "pages" as ActiveTab, label: "Pages", icon: HiOutlineDocumentText },
     { id: "blog" as ActiveTab, label: "Blog", icon: HiOutlineNewspaper },
+    { id: "services" as ActiveTab, label: "Services", icon: HiOutlineCog },
     { id: "sitemap" as ActiveTab, label: "Sitemap", icon: HiOutlineGlobeAlt },
   ];
 
@@ -28,6 +30,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         return <PageManager />;
       case "blog":
         return <BlogManager />;
+      case "services":
+        return <ServiceManager />;
       case "sitemap":
         return <SitemapViewer />;
       default:
