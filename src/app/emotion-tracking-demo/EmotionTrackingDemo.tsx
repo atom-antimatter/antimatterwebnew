@@ -156,16 +156,16 @@ export function EmotionTrackingDemo() {
       } else {
         // Enhanced mock data with more realistic emotion variations
         const baseEmotions = [
-          { name: 'joy', baseScore: 0.6 },
-          { name: 'amusement', baseScore: 0.5 },
+          { name: 'sadness', baseScore: 0.7 }, // Higher sadness for sad expressions
+          { name: 'melancholy', baseScore: 0.6 }, // Related to sadness
           { name: 'calmness', baseScore: 0.4 },
-          { name: 'surprise', baseScore: 0.3 },
-          { name: 'concentration', baseScore: 0.2 },
-          { name: 'boredom', baseScore: 0.1 },
-          { name: 'confusion', baseScore: 0.05 },
-          { name: 'anger', baseScore: 0.02 },
-          { name: 'disgust', baseScore: 0.01 },
-          { name: 'sadness', baseScore: 0.01 }
+          { name: 'concentration', baseScore: 0.3 },
+          { name: 'boredom', baseScore: 0.2 },
+          { name: 'confusion', baseScore: 0.15 },
+          { name: 'anger', baseScore: 0.1 },
+          { name: 'disgust', baseScore: 0.05 },
+          { name: 'joy', baseScore: 0.02 }, // Much lower joy for sad expressions
+          { name: 'amusement', baseScore: 0.01 } // Much lower amusement
         ];
 
         // Generate dynamic emotions with realistic variations
@@ -565,17 +565,6 @@ export function EmotionTrackingDemo() {
                     <div className="absolute inset-0 bg-gray-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                   </button>
                   <button
-                    onClick={analyzeFacial}
-                    disabled={!isCameraStarted}
-                    className="group relative overflow-hidden bg-blue-600 border border-blue-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-blue-500 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <LuCamera size={18} />
-                      Analyze Now
-                    </span>
-                    <div className="absolute inset-0 bg-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                  </button>
-                  <button
                     onClick={exportSessionData}
                     disabled={sessionData.length === 0}
                     className="group relative overflow-hidden bg-emerald-600 border border-emerald-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-emerald-500 hover:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
@@ -588,7 +577,7 @@ export function EmotionTrackingDemo() {
                   </button>
                 </div>
                 <p className="text-sm text-gray-400">
-                  Camera will automatically analyze facial expressions every 2 seconds
+                  Real-time emotion analysis - no manual intervention needed
                 </p>
               </div>
             </div>
