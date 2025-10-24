@@ -132,24 +132,28 @@ export function EmotionTrackingDemo() {
 
     try {
       if (humeClient) {
-        // Use WebSocket for real-time analysis
-        const result = await humeClient.analyzeImage(canvas.toDataURL('image/jpeg', 0.8));
-        if (result && result.predictions && result.predictions.length > 0) {
-          const emotions = result.predictions[0].emotions;
-          // Sort emotions by score (highest first) for dynamic ordering
-          const sortedEmotions = emotions.sort((a, b) => b.score - a.score);
+        // Use WebSocket for real-time analysis - convert canvas to blob
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
           
-          setEmotions(prev => ({ ...prev, facial: sortedEmotions }));
-          
-          // Add to session data
-          const newEmotionData = { 
-            timestamp: new Date().toISOString(),
-            facial: sortedEmotions 
-          };
-          setSessionData(prev => [...prev, newEmotionData]);
-          
-          console.log('Real-time facial analysis results:', sortedEmotions);
-        }
+          const result = await humeClient.analyzeImage(blob);
+          if (result && result.predictions && result.predictions.length > 0) {
+            const emotions = result.predictions[0].emotions;
+            // Sort emotions by score (highest first) for dynamic ordering
+            const sortedEmotions = emotions.sort((a, b) => b.score - a.score);
+            
+            setEmotions(prev => ({ ...prev, facial: sortedEmotions }));
+            
+            // Add to session data
+            const newEmotionData = { 
+              timestamp: new Date().toISOString(),
+              facial: sortedEmotions 
+            };
+            setSessionData(prev => [...prev, newEmotionData]);
+            
+            console.log('Real-time facial analysis results:', sortedEmotions);
+          }
+        }, 'image/jpeg', 0.8);
       } else {
         // Enhanced mock data with more realistic emotion variations
         const baseEmotions = [
