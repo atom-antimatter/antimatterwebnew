@@ -1,29 +1,40 @@
 import Button from "@/components/ui/Button";
 import MainLayout from "@/components/ui/MainLayout";
+import Reveal from "@/components/ui/Reveal";
 import ScrollToSection from "@/components/ui/ScrollToSection";
 import TransitionContainer from "@/components/ui/TransitionContainer";
 import TransitionLink from "@/components/ui/TransitionLink";
 import Image from "next/image";
-import React from "react";
 import { HiMiniArrowLongRight } from "react-icons/hi2";
 import { IoLogoLinkedin } from "react-icons/io5";
+import Interactions, { AccentMapAnim } from "./components/Interactions";
 // import Career from "./components/Career";
 
 const CompanyPage = () => {
   return (
-    <TransitionContainer>
+    <TransitionContainer initial={100} exit={-400}>
       <MainLayout className="pt-32 mobile:pt-52 md:pt-60">
         <div>
           <div className="flex flex-col lg:flex-row justify-between w-full gap-10">
-            <h1 className="uppercase text-lg sm:text-xl xl:text-2xl/tight font-normal shrink-0 pt-1 2xl:pt-3">
+            <h1
+              className="uppercase text-lg sm:text-xl xl:text-2xl/tight font-normal shrink-0 pt-1 2xl:pt-3"
+              id="tagline"
+            >
               Companies create products. <br /> Antimatter Creates Impact.
             </h1>
             <div className="max-w-3xl 2xl:max-w-[920px]">
-              <p className="text-4xl/tight sm:text-5xl/tight 2xl:text-6xl/tight font-semibold">
+              <p
+                className="text-4xl/tight sm:text-5xl/tight 2xl:text-6xl/tight font-semibold"
+                id="summary"
+              >
                 We&apos;re a design-led AI studio turning complex challenges
                 into measurable results.
               </p>
-              <div className="mt-20 mobile:mt-40 sm:mt-64 flex flex-col sm:flex-row gap-6 capitalize items-center">
+              <Reveal
+                initialAnim
+                y={0}
+                className="mt-20 mobile:mt-40 sm:mt-64 flex flex-col sm:flex-row gap-6 capitalize items-center"
+              >
                 <ScrollToSection id="story">
                   <Button>
                     <span className="">Watch Our Story</span>
@@ -34,24 +45,47 @@ const CompanyPage = () => {
                     Meet the team <HiMiniArrowLongRight className="size-7" />
                   </div>
                 </ScrollToSection>
-              </div>
+              </Reveal>
             </div>
           </div>
           <div className="pt-40 mt-40" id="story">
-            <h2 className="text-2xl text-foreground/65">OUR STORY</h2>
-            <p className="text-3xl/tight sm:text-4xl/tight xl:text-5xl/tight font-semibold mt-10">
-              Antimatter AI operates at the intersection of cutting-edge
-              technology and transformative design.
-            </p>
+            <Reveal y={30}>
+              <h2 className="text-2xl text-foreground/65">OUR STORY</h2>
+            </Reveal>
+            <div
+              className="relative text-3xl/tight sm:text-4xl/tight xl:text-[52px]/tight font-semibold mt-10"
+              id="story-container"
+            >
+              <p id="story-text" className="absolute inset-0 ">
+                Antimatter AI operates at the intersection of cutting-edge
+                technology and transformative design.
+              </p>
+              <p className="text-foreground/10">
+                Antimatter AI operates at the intersection of cutting-edge
+                technology and transformative design.
+              </p>
+            </div>
             <div className="flex flex-col md:flex-row justify-between mt-32 sm:mt-40 items-center gap-10 md:gap-0">
-              <Image
-                src={"/images/dotted-world-map-atlanta.jpg"}
-                alt="map"
-                width={639}
-                height={470}
-                quality={100}
-                className="max-w-[500px] xl:max-w-[639px] w-full"
-              />
+              <div className="relative">
+                <Image
+                  src={"/images/dotted-world-map-atlanta.svg"}
+                  alt="map"
+                  width={639}
+                  height={470}
+                  quality={100}
+                  className="max-w-[500px] xl:max-w-[639px] w-full"
+                />
+                <AccentMapAnim>
+                  <Image
+                    src={"/images/dotted-world-map-atlanta_accent.svg"}
+                    alt="map"
+                    width={639}
+                    height={470}
+                    quality={100}
+                    className="max-w-[500px] xl:max-w-[639px] w-full"
+                  />
+                </AccentMapAnim>
+              </div>
               <p className="text-2xl xl:text-3xl font-semibold max-w-md xl:max-w-xl">
                 Founded in Atlanta by{" "}
                 <span className="text-tertiary">
@@ -223,6 +257,7 @@ const CompanyPage = () => {
           </div>
         </div>
       </div>
+      <Interactions />
     </TransitionContainer>
   );
 };
