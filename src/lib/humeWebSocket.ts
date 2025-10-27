@@ -37,24 +37,37 @@ export class HumeWebSocketClient {
 
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Correct WebSocket URL with API key as query parameter (browser limitation)
       const wsUrl = `wss://api.hume.ai/v0/stream/models?apiKey=${this.apiKey}`;
+      
+      console.log('🔌 Connecting to Hume WebSocket:', wsUrl.replace(this.apiKey, '***'));
       
       this.socket = new WebSocket(wsUrl);
       
       this.socket.onopen = () => {
-        console.log('Hume WebSocket connected');
+        console.log('🔌 Hume WebSocket connected');
         this.isConnected = true;
+        
+        // Send initial configuration message with models
+        const configMessage = {
+          models: {
+            face: {}
+          }
+        };
+        
+        this.socket?.send(JSON.stringify(configMessage));
+        console.log('📤 Sent initial configuration:', configMessage);
         resolve();
       };
       
       this.socket.onerror = (error) => {
-        console.error('Hume WebSocket error:', error);
+        console.error('❌ Hume WebSocket error:', error);
         this.isConnected = false;
         reject(error);
       };
       
-      this.socket.onclose = () => {
-        console.log('Hume WebSocket disconnected');
+      this.socket.onclose = (event) => {
+        console.log('🔌 Hume WebSocket disconnected:', event.code, event.reason);
         this.isConnected = false;
       };
     });
@@ -71,23 +84,30 @@ export class HumeWebSocketClient {
           const base64 = reader.result as string;
           const base64Data = base64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
           
+          // Correct message format according to documentation
           const message = {
-            models: {
-              face: {}
-            },
             data: base64Data
           };
+
+          console.log('📤 Sending image data to Hume AI...');
 
           const messageHandler = (event: MessageEvent) => {
             try {
               const response: HumeWebSocketResponse = JSON.parse(event.data);
+              console.log('📥 Received response from Hume AI:', response);
               
               if (response.face?.predictions?.[0]?.emotions) {
                 this.socket?.removeEventListener('message', messageHandler);
-                resolve(response.face.predictions[0].emotions);
+                const emotions = response.face.predictions[0].emotions;
+                console.log('🎯 Extracted emotions:', emotions);
+                resolve(emotions);
+              } else {
+                console.warn('⚠️ No emotions found in response:', response);
+                this.socket?.removeEventListener('message', messageHandler);
+                reject(new Error('No emotions found in response'));
               }
             } catch (error) {
-              console.error('Error parsing WebSocket response:', error);
+              console.error('❌ Error parsing response:', error);
               this.socket?.removeEventListener('message', messageHandler);
               reject(error);
             }
@@ -95,6 +115,16 @@ export class HumeWebSocketClient {
 
           this.socket?.addEventListener('message', messageHandler);
           this.socket?.send(JSON.stringify(message));
+          
+          // Set timeout to prevent hanging
+          setTimeout(() => {
+            this.socket?.removeEventListener('message', messageHandler);
+            reject(new Error('Timeout waiting for response'));
+          }, 10000);
+        };
+        
+        reader.onerror = () => {
+          reject(new Error('Failed to read image file'));
         };
         
         reader.readAsDataURL(imageBlob);
