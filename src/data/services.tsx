@@ -2,7 +2,7 @@ import { IconType } from "react-icons";
 import { MdOutlineDesignServices } from "react-icons/md";
 import { FaCode } from "react-icons/fa6";
 import { BsGraphUpArrow } from "react-icons/bs";
-import { LuBrain, LuCpu, LuHeart } from "react-icons/lu";
+import { LuBrain, LuCpu } from "react-icons/lu";
 import { RiStethoscopeLine } from "react-icons/ri";
 import { HiSpeakerWave } from "react-icons/hi2";
 
@@ -198,47 +198,6 @@ export const ServicesData: ServiceProps[] = [
     customCTA: {
       text: "Try Antimatter Voice Agent",
       href: "/voice-agent-demo",
-      secondary: {
-        text: "Build Your Own",
-        href: "/contact",
-      },
-    },
-  },
-  {
-    icon: LuHeart,
-    link: "/emotion-tracking",
-    title: "Emotion AI",
-    hidden: true, // Hidden from public navigation but visible in CMS
-    pageTitle: (
-      <>
-        AI that <br />
-        <span className="text-secondary font-bold italic mr-3">understands</span> human emotion
-      </>
-    ),
-    description:
-      "From facial expressions to voice tone and text sentiment, we build AI that reads human emotion with unprecedented accuracy. Powered by state-of-the-art emotion science, our solutions understand the full spectrum of human expression.",
-    tagline: ["Emotion AI that", "truly understands."],
-    items: [
-      { 
-        title: "Facial Expression Analysis",
-        desc: "Real-time detection of 48 emotional dimensions from facial movements, including subtle expressions like admiration, disappointment, and empathic pain."
-      },
-      { 
-        title: "Speech Prosody & Vocal Bursts",
-        desc: "Analyze tone, rhythm, and timbre of speech plus vocal bursts (laughs, sighs, cries) across 48 emotional dimensions for complete vocal emotion understanding."
-      },
-      { 
-        title: "Emotional Language Processing",
-        desc: "Advanced text sentiment analysis across 53 emotional dimensions, detecting nuanced emotional language that goes beyond simple positive/negative sentiment."
-      },
-      { 
-        title: "Custom Emotion Models",
-        desc: "Train specialized models for your specific use case—from mental health monitoring to customer satisfaction tracking—using transfer learning from our emotion models."
-      },
-    ],
-    customCTA: {
-      text: "Try Emotion AI Demo",
-      href: "/emotion-tracking-demo",
       secondary: {
         text: "Build Your Own",
         href: "/contact",
