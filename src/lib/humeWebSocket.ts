@@ -165,46 +165,77 @@ export class HumeWebSocketClient {
 
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
+      
+      reader.onerror = () => {
+        console.error('❌ Error reading audio file');
+        reject(new Error('Failed to read audio file'));
+      };
+      
       reader.onload = () => {
-        const base64 = reader.result as string;
-        const base64Data = base64.split(',')[1]; // Remove data:audio/wav;base64, prefix
-        
-        const message = {
-          models: {
-            prosody: {},
-            burst: {}
-          },
-          data: base64Data
-        };
+        try {
+          const base64 = reader.result as string;
+          const base64Data = base64.split(',')[1]; // Remove data:audio/wav;base64, prefix
+          
+          const message = {
+            models: {
+              prosody: {},
+              burst: {}
+            },
+            data: base64Data
+          };
 
-        const messageHandler = (event: MessageEvent) => {
-          try {
-            const response: HumeWebSocketResponse = JSON.parse(event.data);
-            
-            const result: { prosody: EmotionScore[], burst: EmotionScore[] } = {
-              prosody: [],
-              burst: []
-            };
+          console.log('📤 Sending audio data to Hume AI...');
 
-            if (response.prosody?.predictions?.[0]?.emotions) {
-              result.prosody = response.prosody.predictions[0].emotions;
+          const messageHandler = (event: MessageEvent) => {
+            try {
+              const response: HumeWebSocketResponse = JSON.parse(event.data);
+              console.log('📥 Received audio response from Hume AI:', response);
+              
+              const result: { prosody: EmotionScore[], burst: EmotionScore[] } = {
+                prosody: [],
+                burst: []
+              };
+
+              if (response.prosody?.predictions?.[0]?.emotions) {
+                result.prosody = response.prosody.predictions[0].emotions;
+                console.log('🎯 Extracted prosody emotions:', result.prosody);
+              }
+
+              if (response.burst?.predictions?.[0]?.emotions) {
+                result.burst = response.burst.predictions[0].emotions;
+                console.log('🎯 Extracted burst emotions:', result.burst);
+              }
+
+              this.socket?.removeEventListener('message', messageHandler);
+              resolve(result);
+            } catch (error) {
+              console.error('❌ Error parsing audio response:', error);
+              this.socket?.removeEventListener('message', messageHandler);
+              reject(error);
             }
+          };
 
-            if (response.burst?.predictions?.[0]?.emotions) {
-              result.burst = response.burst.predictions[0].emotions;
-            }
-
+          // Set up timeout for audio analysis
+          const timeout = setTimeout(() => {
+            console.warn('⏰ Audio analysis timeout');
             this.socket?.removeEventListener('message', messageHandler);
-            resolve(result);
-          } catch (error) {
-            console.error('Error parsing WebSocket response:', error);
-            this.socket?.removeEventListener('message', messageHandler);
-            reject(error);
-          }
-        };
+            reject(new Error('Audio analysis timeout'));
+          }, 30000); // 30 second timeout
 
-        this.socket?.addEventListener('message', messageHandler);
-        this.socket?.send(JSON.stringify(message));
+          const timeoutHandler = () => {
+            clearTimeout(timeout);
+            this.socket?.removeEventListener('message', messageHandler);
+            reject(new Error('WebSocket disconnected during audio analysis'));
+          };
+
+          this.socket?.addEventListener('message', messageHandler);
+          this.socket?.addEventListener('close', timeoutHandler);
+          this.socket?.send(JSON.stringify(message));
+          
+        } catch (error) {
+          console.error('❌ Error processing audio data:', error);
+          reject(error);
+        }
       };
       
       reader.readAsDataURL(audioBlob);
