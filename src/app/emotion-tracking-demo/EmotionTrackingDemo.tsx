@@ -53,18 +53,19 @@ export function EmotionTrackingDemo() {
     const initHumeClient = async () => {
       try {
         const apiKey = process.env.NEXT_PUBLIC_HUME_API_KEY;
-        console.log("Hume API Key available:", !!apiKey);
+        console.log("🔑 Hume API Key available:", !!apiKey);
+        console.log("🔑 API Key length:", apiKey ? apiKey.length : 0);
+        console.log("🔑 API Key starts with:", apiKey ? apiKey.substring(0, 10) + "..." : "N/A");
 
-        if (apiKey) {
+        if (apiKey && apiKey.length > 10) {
+          console.log("🚀 Initializing Hume WebSocket client...");
           const client = new HumeWebSocketClient(apiKey);
           await client.connect();
           setHumeClient(client);
           console.log("✅ Hume WebSocket client connected successfully");
         } else {
-          console.warn("⚠️ Hume API key not found in environment variables");
-          console.log(
-            "Please add NEXT_PUBLIC_HUME_API_KEY to your .env.local file"
-          );
+          console.warn("⚠️ Hume API key not found or invalid in environment variables");
+          console.log("Please add NEXT_PUBLIC_HUME_API_KEY to your .env.local file");
           console.log("Using mock data for development");
           setHumeClient(null);
         }
@@ -225,28 +226,30 @@ export function EmotionTrackingDemo() {
           "aesthetic appreciation",
         ];
 
-        // Generate realistic emotion scores that vary based on time and expression
-        const timeVariation = Math.sin(Date.now() / 1000) * 0.3; // Oscillating variation
-        const randomVariation = (Math.random() - 0.5) * 0.4; // Random variation
-        const sessionVariation = Math.sin(Date.now() / 2000) * 0.2; // Slower variation
+        // Generate realistic emotion scores that vary dynamically like Hume playground
+        const timeVariation = Math.sin(Date.now() / 1000) * 0.4; // Oscillating variation
+        const randomVariation = (Math.random() - 0.5) * 0.6; // Random variation
+        const sessionVariation = Math.sin(Date.now() / 2000) * 0.3; // Slower variation
+        const microVariation = Math.sin(Date.now() / 500) * 0.2; // Fast micro-variations
 
         const mockEmotions = allEmotions
           .map((emotion) => {
-            let baseScore = 0.05; // Base low score for all emotions
+            let baseScore = 0.02; // Base low score for all emotions
 
             // More sophisticated emotion patterns that change over time
             if (emotion === "joy" || emotion === "amusement") {
               baseScore =
-                0.4 +
+                0.5 +
                 Math.abs(timeVariation) +
                 randomVariation +
-                sessionVariation;
+                sessionVariation +
+                microVariation;
             } else if (emotion === "calmness") {
               baseScore =
-                0.3 + Math.abs(timeVariation * 0.7) + randomVariation * 0.6;
+                0.4 + Math.abs(timeVariation * 0.8) + randomVariation * 0.7 + microVariation * 0.5;
             } else if (emotion === "concentration") {
               baseScore =
-                0.25 + Math.abs(randomVariation * 0.4) + sessionVariation * 0.3;
+                0.3 + Math.abs(randomVariation * 0.5) + sessionVariation * 0.4 + microVariation * 0.3;
             } else if (emotion === "surprise") {
               baseScore =
                 0.2 +
@@ -283,7 +286,7 @@ export function EmotionTrackingDemo() {
         };
         setSessionData((prev) => [...prev, newEmotionData]);
 
-        console.log("Mock facial analysis results:", mockEmotions);
+        console.log("🎭 Mock facial analysis results (dynamic simulation):", mockEmotions);
       }
     } catch (error) {
       console.error("Facial analysis error:", error);
