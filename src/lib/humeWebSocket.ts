@@ -163,6 +163,13 @@ export class HumeWebSocketClient {
       throw new Error('WebSocket not connected');
     }
 
+    // Check file size - if too large, we'll need to chunk it or use a different approach
+    const maxSize = 10 * 1024 * 1024; // 10MB limit
+    if (audioBlob.size > maxSize) {
+      console.warn(`⚠️ Audio file too large (${(audioBlob.size / 1024 / 1024).toFixed(2)}MB). Max size: ${maxSize / 1024 / 1024}MB`);
+      throw new Error(`Audio file too large. Maximum size is ${maxSize / 1024 / 1024}MB. Your file is ${(audioBlob.size / 1024 / 1024).toFixed(2)}MB.`);
+    }
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
@@ -175,6 +182,10 @@ export class HumeWebSocketClient {
         try {
           const base64 = reader.result as string;
           const base64Data = base64.split(',')[1]; // Remove data:audio/wav;base64, prefix
+          
+          // Check base64 size
+          const base64SizeKB = (base64Data.length * 0.75) / 1024;
+          console.log(`📊 Audio file size: ${(audioBlob.size / 1024).toFixed(2)}KB, Base64 size: ${base64SizeKB.toFixed(2)}KB`);
           
           const message = {
             models: {
@@ -207,10 +218,12 @@ export class HumeWebSocketClient {
               }
 
               this.socket?.removeEventListener('message', messageHandler);
+              this.socket?.removeEventListener('close', timeoutHandler);
               resolve(result);
             } catch (error) {
               console.error('❌ Error parsing audio response:', error);
               this.socket?.removeEventListener('message', messageHandler);
+              this.socket?.removeEventListener('close', timeoutHandler);
               reject(error);
             }
           };
@@ -219,18 +232,29 @@ export class HumeWebSocketClient {
           const timeout = setTimeout(() => {
             console.warn('⏰ Audio analysis timeout');
             this.socket?.removeEventListener('message', messageHandler);
+            this.socket?.removeEventListener('close', timeoutHandler);
             reject(new Error('Audio analysis timeout'));
           }, 30000); // 30 second timeout
 
           const timeoutHandler = () => {
             clearTimeout(timeout);
             this.socket?.removeEventListener('message', messageHandler);
+            this.socket?.removeEventListener('close', timeoutHandler);
             reject(new Error('WebSocket disconnected during audio analysis'));
           };
 
           this.socket?.addEventListener('message', messageHandler);
           this.socket?.addEventListener('close', timeoutHandler);
-          this.socket?.send(JSON.stringify(message));
+          
+          try {
+            this.socket?.send(JSON.stringify(message));
+          } catch (sendError) {
+            console.error('❌ Error sending audio data:', sendError);
+            clearTimeout(timeout);
+            this.socket?.removeEventListener('message', messageHandler);
+            this.socket?.removeEventListener('close', timeoutHandler);
+            reject(new Error('Failed to send audio data - file may be too large'));
+          }
           
         } catch (error) {
           console.error('❌ Error processing audio data:', error);

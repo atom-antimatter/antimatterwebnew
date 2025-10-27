@@ -299,6 +299,12 @@ export function EmotionTrackingDemo() {
   ) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Check file size (10MB limit)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        alert(`Audio file too large! Maximum size is ${maxSize / 1024 / 1024}MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB. Please use a smaller file.`);
+        return;
+      }
       setAudioFile(file);
     }
   };
@@ -775,8 +781,7 @@ export function EmotionTrackingDemo() {
                   </button>
                 </div>
                 <p className="text-sm text-gray-400">
-                  Upload an audio file to analyze speech prosody and vocal
-                  bursts
+                  Upload an audio file to analyze speech prosody and vocal bursts (max 10MB)
                 </p>
               </div>
             </div>
