@@ -84,11 +84,12 @@ const WorkComponent = ({ WorkData }: { WorkData: WorkCardProps[] }) => {
               delay={id % 2 === 0 ? 0.3 : 0}
               className={`${
                 id === 1
-                  ? "col-span-1 md:col-span-6 lg:col-span-7 xl:col-span-8"
+                  ? "col-span-1 md:col-span-6 lg:col-span-7 xl:col-span-7"
                   : id === 2
-                  ? "col-span-1 md:col-span-6 lg:col-span-5 xl:col-span-4"
+                  ? "col-span-1 md:col-span-6 lg:col-span-5 xl:col-span-5"
                   : "col-span-1 md:col-span-6"
               } relative group`}
+              initialAnim={id < 3}
               key={id}
             >
               <TransitionLink href={link}>
