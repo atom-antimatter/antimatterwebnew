@@ -1,3 +1,4 @@
+import { MotionDiv } from "@/components/Motion";
 import Button from "@/components/ui/Button";
 import MainLayout from "@/components/ui/MainLayout";
 import Reveal from "@/components/ui/Reveal";
@@ -7,7 +8,8 @@ import TransitionLink from "@/components/ui/TransitionLink";
 import Image from "next/image";
 import { HiMiniArrowLongRight } from "react-icons/hi2";
 import { IoLogoLinkedin } from "react-icons/io5";
-import Interactions, { AccentMapAnim } from "./components/Interactions";
+import Interactions from "./components/Interactions";
+import BreakTitle from "@/components/ui/BreakTitle";
 // import Career from "./components/Career";
 
 const CompanyPage = () => {
@@ -75,7 +77,13 @@ const CompanyPage = () => {
                   quality={100}
                   className="max-w-[500px] xl:max-w-[639px] w-full"
                 />
-                <AccentMapAnim>
+                <MotionDiv
+                  initial={{ clipPath: "circle(100% at 50% 50%)" }}
+                  whileInView={{ clipPath: "circle(0% at 48% 73%)" }}
+                  transition={{ duration: 1.2, ease: "easeInOut" }}
+                  viewport={{ once: true, amount: 0.8, margin: "30px" }}
+                  className="absolute top-0 left-0 w-full h-full"
+                >
                   <Image
                     src={"/images/dotted-world-map-atlanta_accent.svg"}
                     alt="map"
@@ -84,9 +92,12 @@ const CompanyPage = () => {
                     quality={100}
                     className="max-w-[500px] xl:max-w-[639px] w-full"
                   />
-                </AccentMapAnim>
+                </MotionDiv>
               </div>
-              <p className="text-2xl xl:text-3xl font-semibold max-w-md xl:max-w-xl">
+              <p
+                className="text-2xl xl:text-3xl font-semibold max-w-md xl:max-w-xl"
+                id="story-paragraph"
+              >
                 Founded in Atlanta by{" "}
                 <span className="text-tertiary">
                   marketers, designers, and engineers
@@ -97,11 +108,13 @@ const CompanyPage = () => {
             </div>
           </div>
           <div className="py-20 sm:py-40">
-            <h2 className="text-center text-3xl md:text-4xl font-bold">
-              Key highlights{" "}
-            </h2>
+            <Reveal>
+              <h2 className="text-center text-3xl md:text-4xl font-bold">
+                Key highlights{" "}
+              </h2>
+            </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xl:gap-5 w-full mt-20 flex-wrap">
-              <div className="">
+              <Reveal>
                 <div className="p-8 2xl:p-18 flex flex-col gap-5 pt-32 lg:pt-54 2xl:pt-60 rounded-xl border border-foreground/19 h-full">
                   <h3 className="font-semibold text-3xl md:text-4xl xl:text-5xl max-w-xs">
                     Design-First Innovation
@@ -110,8 +123,8 @@ const CompanyPage = () => {
                     Award-winning UI/UX and 3D web experiences
                   </p>
                 </div>
-              </div>
-              <div className="">
+              </Reveal>
+              <Reveal delay={0.2}>
                 <div className="p-8 2xl:p-18 flex flex-col gap-5 pt-32 lg:pt-54 2xl:pt-60 rounded-xl border border-foreground/19 h-full">
                   <h3 className="font-semibold text-3xl md:text-4xl xl:text-5xl max-w-xs">
                     Engineering Excellence
@@ -120,8 +133,8 @@ const CompanyPage = () => {
                     Next.js, GSAP, Three.js, and scalable AI architectures
                   </p>
                 </div>
-              </div>
-              <div className="sm:col-span-2 lg:col-span-1">
+              </Reveal>
+              <Reveal delay={0.4} className="sm:col-span-2 lg:col-span-1">
                 <div className="p-8 2xl:p-18 flex flex-col gap-5 pt-32 lg:pt-54 2xl:pt-60 rounded-xl border border-foreground/19 h-full">
                   <h3 className="font-semibold text-3xl md:text-4xl xl:text-5xl max-w-3xs md:max-w-xs">
                     Real-World Impact
@@ -131,16 +144,17 @@ const CompanyPage = () => {
                     outcomes
                   </p>
                 </div>
-              </div>
+              </Reveal>
             </div>
           </div>
           <div className="py-20 sm:py-40" id="team">
-            <h2 className="text-center text-3xl md:text-4xl font-bold">
-              Meet the Minds <br /> Behind Antimatter
-            </h2>
+            <BreakTitle text="Meet the Team" align="center" />
+            <BreakTitle text="Behind Antimatter" align="center" />
+
             <div className="flex flex-wrap justify-center gap-5 xl:gap-10 w-full mt-20">
-              {teamData.map((team) => (
-                <div
+              {teamData.map((team, index) => (
+                <Reveal
+                  delay={index * 0.15}
                   key={team.name}
                   className="rounded-xl w-full sm:w-[calc(50%-0.625rem)] lg:w-full relative border-2 border-foreground/19 lg:basis-0 lg:grow overflow-hidden pb-10 lg:pb-20 2xl:pb-10 group"
                 >
@@ -175,21 +189,27 @@ const CompanyPage = () => {
                       <IoLogoLinkedin />
                     </a>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
           <div className=" py-20 sm:py-40">
-            <h2 className="text-center text-3xl md:text-4xl font-bold">
-              How We Think
-            </h2>
-            <p className="text-center italic mt-5 sm:text-xl">
-              We don&apos;t just build products — we <br /> build momentum.
-            </p>
-            <h3 className="text-2xl text-foreground/65 mt-20">CORE BELIEFS</h3>
+            <Reveal>
+              <h2 className="text-center text-3xl md:text-4xl font-bold">
+                How We Think
+              </h2>
+              <p className="text-center italic mt-5 sm:text-xl">
+                We don&apos;t just build products — we <br /> build momentum.
+              </p>
+            </Reveal>
+            <Reveal>
+              <h3 className="text-2xl text-foreground/65 mt-20">
+                CORE BELIEFS
+              </h3>
+            </Reveal>
             <div className="flex flex-col mt-5">
               {coreBeliefs.map((core, index) => (
-                <div
+                <Reveal
                   key={core}
                   className="py-4 sm:py-8 border-b last:border-b-0 border-foreground/40"
                 >
@@ -201,7 +221,7 @@ const CompanyPage = () => {
                       {core}
                     </p>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>

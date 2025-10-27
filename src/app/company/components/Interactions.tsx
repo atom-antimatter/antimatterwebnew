@@ -15,6 +15,7 @@ const Interactions = () => {
         type: "lines",
         mask: "lines",
       });
+
       gsap.fromTo(
         tagline.lines,
         {
@@ -51,6 +52,24 @@ const Interactions = () => {
           { maxWidth: "100%", duration: 1 },
           i * 0.7
         );
+      });
+
+      const paragraph = new SplitText("#story-paragraph", {
+        type: "lines",
+        mask: "lines",
+      });
+
+      gsap.from(paragraph.lines, {
+        yPercent: 150,
+        rotate: 4,
+        stagger: 0.1,
+        ease: "power2.out",
+        duration: 0.8,
+        scrollTrigger: {
+          trigger: "#story-paragraph",
+          start: "top 80%",
+          once: true,
+        },
       });
 
       return () => {
