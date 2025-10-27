@@ -47,16 +47,6 @@ export class HumeWebSocketClient {
       this.socket.onopen = () => {
         console.log('🔌 Hume WebSocket connected');
         this.isConnected = true;
-        
-        // Send initial configuration message with models
-        const configMessage = {
-          models: {
-            face: {}
-          }
-        };
-        
-        this.socket?.send(JSON.stringify(configMessage));
-        console.log('📤 Sent initial configuration:', configMessage);
         resolve();
       };
       
@@ -86,6 +76,9 @@ export class HumeWebSocketClient {
           
           // Correct message format according to documentation
           const message = {
+            models: {
+              face: {}
+            },
             data: base64Data
           };
 
