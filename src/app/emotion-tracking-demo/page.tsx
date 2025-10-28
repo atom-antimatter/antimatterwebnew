@@ -12,9 +12,9 @@ export default function EmotionTrackingDemoPage() {
             <br />
             <span className="text-secondary font-bold italic">Demo</span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Custom-built emotion AI combining Hume AI&apos;s real-time facial tracking with OpenAI GPT-5&apos;s advanced text sentiment analysis.
-          </p>
+                 <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                   Understand emotions at scale. Test our AI that detects sentiment from faces and text.
+                 </p>
         </div>
         
         <EmotionTrackingDemo />

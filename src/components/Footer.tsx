@@ -59,9 +59,9 @@ const Footer = () => {
                 <TransitionLink href={"/voice-agents"}>
                   Voice Agents
                 </TransitionLink>
-                <TransitionLink href={"/emotion-ai"}>
-                  Emotion AI
-                </TransitionLink>
+               <TransitionLink href={"/emotion-ai"}>
+                 Sentiment AI
+               </TransitionLink>
               </div>
             </div>
             <div>

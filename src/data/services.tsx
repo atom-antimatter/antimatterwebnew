@@ -207,36 +207,36 @@ export const ServicesData: ServiceProps[] = [
   {
     icon: LuHeart,
     link: "/emotion-ai",
-    title: "Emotion AI",
+    title: "Sentiment AI",
     pageTitle: (
       <>
-        Emotion AI that <br />
-        <span className="text-secondary font-bold italic mr-3">just works</span>
+        Sentiment AI for <br />
+        <span className="text-secondary font-bold italic mr-3">data-driven decisions</span>
       </>
     ),
     description:
-      "From concept to deployment, we built custom sentiment tracking AI on top of Hume AI and OpenAI GPT-5. Real-time emotion detection, seamlessly integrated, and ready to understand your customers 24/7. Here, every emotion matters.",
-    tagline: ["Emotional intelligence,", "powered by AI."],
+      "Transform emotional data into business intelligence. Analyze customer calls, employee feedback, and user interactions to make informed decisions that drive growth and retention.",
+    tagline: ["Emotion as a business metric."],
     items: [
       { 
-        title: "Real-Time Facial Expression Tracking",
-        desc: "Live emotion detection through webcam analysis powered by Hume AI. Track facial expressions in real-time across 53 emotional dimensions with human-like accuracy."
+        title: "Customer Sentiment Dashboards",
+        desc: "Real-time sentiment analysis of customer calls, support tickets, and feedback. Track satisfaction trends, identify at-risk accounts, and optimize customer experience with actionable insights."
       },
       { 
-        title: "Advanced Text Sentiment Analysis",
-        desc: "Comprehensive text emotion analysis using our custom AI built on GPT-5. Detect sentiment, intent, and emotional nuances with confidence scores and detailed insights."
+        title: "Employee Engagement Metrics",
+        desc: "Monitor team sentiment through meeting analysis, feedback surveys, and communication patterns. Detect burnout risks, measure engagement levels, and improve workplace culture with data-driven insights."
       },
       { 
-        title: "Multi-Dimensional Emotion Metrics",
-        desc: "Visualize emotional data through interactive radar charts. Track intensity, positivity, authenticity, complexity, clarity, and energy across all interactions."
+        title: "Predictive Analytics",
+        desc: "Leverage emotional data to predict customer churn, employee turnover, and business outcomes. Our AI models identify patterns and trends before they become problems, enabling proactive decision-making."
       },
       { 
-        title: "Custom Training & Integration",
-        desc: "Seamlessly integrate emotion AI into your applications. From customer support to healthcare, our custom-trained models adapt to your specific use case and industry needs."
+        title: "ROI Measurement & Reporting",
+        desc: "Quantify the impact of emotional intelligence on your business. Track conversion rates, retention metrics, and revenue impact with comprehensive reporting and analytics dashboards."
       },
     ],
     customCTA: {
-      text: "Try Emotion AI Demo",
+      text: "Try Sentiment AI Demo",
       href: "/emotion-tracking-demo",
       secondary: {
         text: "Build Your Own",

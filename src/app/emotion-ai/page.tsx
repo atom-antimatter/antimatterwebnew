@@ -2,9 +2,9 @@ import ServiceComponent from "../[services]/ServiceComponent";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Emotion AI & Sentiment Analysis | Antimatter AI",
+  title: "Sentiment AI for Data-Driven Decisions | Antimatter AI",
   description:
-    "Advanced emotion detection and sentiment analysis powered by our custom AI built on Hume AI and OpenAI GPT-5. Real-time facial expression tracking and 53-dimensional text emotion analysis.",
+    "Transform emotional data into business intelligence. Analyze customer calls, employee feedback, and user interactions to make informed decisions that drive growth and retention.",
 };
 
 export default function EmotionAIPage() {
