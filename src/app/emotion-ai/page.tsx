@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import TransitionLink from "@/components/ui/TransitionLink";
-import { LuBrain, LuMessageSquare, LuBarChart3, LuSparkles } from "react-icons/lu";
+import { LuBrain, LuMessageSquare, LuBarChart, LuSparkles } from "react-icons/lu";
 
 export const metadata: Metadata = {
   title: "Emotion AI & Sentiment Analysis | Antimatter AI",
@@ -92,7 +92,7 @@ export default function EmotionAIPage() {
             <div className="bg-gray-900 rounded-lg p-8 border border-gray-800">
               <div className="flex items-center gap-3 mb-4">
                 <div className="bg-secondary/10 p-3 rounded-lg">
-                  <LuBarChart3 className="text-secondary" size={32} />
+                  <LuBarChart className="text-secondary" size={32} />
                 </div>
                 <div>
                   <span className="text-secondary font-semibold text-sm">03</span>
