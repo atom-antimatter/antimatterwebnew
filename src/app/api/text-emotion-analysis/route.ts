@@ -98,7 +98,7 @@ async function analyzeWithOpenAI(text: string) {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o', // Latest GPT-4 model (GPT-5 not yet available)
+      model: 'gpt-5', // Using GPT-5
       messages: [
         {
           role: 'system',

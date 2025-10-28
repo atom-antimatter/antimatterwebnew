@@ -1,36 +1,36 @@
 # AI Emotion Tracking Demo - Updated Implementation
 
 ## Overview
-The emotion tracking demo has been updated to focus on **text analysis only** with a beautiful radar chart visualization similar to the provided reference image. The system now combines:
+The emotion tracking demo combines real-time facial expression tracking with comprehensive text analysis. The system features:
 
 1. **Hume AI** - 53-dimensional emotion detection
-2. **OpenAI GPT-4** - Advanced sentiment and intent analysis
+2. **OpenAI GPT-5** - Advanced sentiment and intent analysis
 
 ## Key Changes
 
 ### 1. Removed Components
-- ❌ Facial expression analysis (webcam)
-- ❌ Audio/voice analysis (file upload)
-- ❌ Tab navigation between different modes
+- ❌ Audio/voice file upload analysis
 
-### 2. New Features
-- ✅ **Text-only analysis** with comprehensive emotional insights
-- ✅ **Radar chart visualization** showing 6 key emotional metrics:
+### 2. Kept/Enhanced Features
+- ✅ **Real-time facial expression tracking** via webcam with Hume AI
+- ✅ **Text analysis** with comprehensive emotional insights
+- ✅ **Radar chart visualization** for text analysis showing 6 key emotional metrics:
   - Intensity
   - Positivity
   - Authenticity
   - Complexity
   - Clarity
   - Energy
-- ✅ **Sentiment analysis** (positive/negative/neutral/mixed) with confidence scores
-- ✅ **Intent detection** (inform/persuade/express/request/question) with confidence scores
-- ✅ **Detailed AI analysis** paragraph explaining the emotional content
-- ✅ **Top emotions display** showing Hume AI's 53-dimensional emotion scores with visual bars
+- ✅ **Sentiment analysis** for text (positive/negative/neutral/mixed) with confidence scores
+- ✅ **Intent detection** for text (inform/persuade/express/request/question) with confidence scores
+- ✅ **Detailed AI analysis** paragraph explaining the emotional content of text
+- ✅ **Top emotions display** for both facial and text showing Hume AI's 53-dimensional emotion scores
+- ✅ **Tab navigation** between Facial Expressions and Text Analysis modes
 
-### 3. New API Endpoint
+### 3. New API Endpoint & Updated Model
 Created `/api/text-emotion-analysis` that:
 - Calls Hume AI for emotion detection
-- Calls OpenAI GPT-4 for sentiment and intent analysis
+- Calls OpenAI GPT-5 for sentiment and intent analysis
 - Combines results into a comprehensive analysis
 
 ### 4. UI Improvements
@@ -57,8 +57,8 @@ OPENAI_API_KEY=your_openai_api_key_here
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Charts**: Recharts (radar chart visualization)
 - **AI APIs**: 
-  - Hume AI (emotion detection)
-  - OpenAI GPT-4 (sentiment & intent analysis)
+  - Hume AI (real-time facial & text emotion detection)
+  - OpenAI GPT-5 (text sentiment & intent analysis)
 
 ## Files Modified
 
@@ -72,11 +72,17 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ## How It Works
 
+### Facial Expression Mode:
+1. User starts their webcam
+2. Real-time facial analysis every 2 seconds using Hume AI
+3. Results show live emotion tracking with top expressions and detailed scores
+
+### Text Analysis Mode:
 1. User enters text in the textarea
 2. Clicks "Analyze Text" button
 3. System makes parallel API calls to:
    - Hume AI for 53-dimensional emotion detection
-   - OpenAI GPT-4 for sentiment, intent, and detailed analysis
+   - OpenAI GPT-5 for sentiment, intent, and detailed analysis
 4. Results are displayed in:
    - Radar chart (6 key emotional metrics)
    - Sentiment card (with confidence)

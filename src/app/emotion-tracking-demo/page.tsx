@@ -11,7 +11,7 @@ export default function EmotionTrackingDemoPage() {
             <span className="text-secondary font-bold italic">Demo</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Experience comprehensive text emotion analysis powered by Hume AI&apos;s 53-dimensional emotion detection and OpenAI GPT-4&apos;s advanced sentiment and intent analysis.
+            Experience real-time facial expression tracking and comprehensive text analysis powered by Hume AI&apos;s 53-dimensional emotion detection and OpenAI GPT-5&apos;s advanced sentiment and intent analysis.
           </p>
         </div>
         
