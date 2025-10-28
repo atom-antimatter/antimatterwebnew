@@ -295,14 +295,14 @@ export function EmotionTrackingDemo() {
     <div className="max-w-6xl mx-auto">
       {/* Modern Animated Tab Navigation */}
       <div className="flex justify-center mb-12">
-        <div className="relative inline-flex bg-[#1a1d2e] border border-white/10 rounded-2xl p-1.5">
+        <div className="relative inline-flex bg-[#1a1d2e] border border-white/10 rounded-2xl p-1.5 gap-1.5">
           {/* Animated Background */}
           <motion.div
-            className="absolute top-1.5 h-[calc(100%-12px)] bg-secondary rounded-xl shadow-lg shadow-secondary/20"
+            className="absolute top-1.5 bottom-1.5 bg-secondary rounded-xl shadow-lg shadow-secondary/20"
             initial={false}
             animate={{
-              left: activeTab === "facial" ? "6px" : "calc(50% + 3px)",
-              width: "calc(50% - 9px)",
+              left: activeTab === "facial" ? "6px" : "calc(50%)",
+              right: activeTab === "facial" ? "calc(50%)" : "6px",
             }}
             transition={{
               type: "spring",
@@ -314,7 +314,7 @@ export function EmotionTrackingDemo() {
           {/* Facial Tab */}
           <button
             onClick={() => setActiveTab("facial")}
-            className="relative z-10 flex items-center justify-center gap-2.5 px-10 py-3.5 rounded-xl transition-all duration-200 min-w-[220px]"
+            className="relative z-10 flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl transition-all duration-200 w-[230px]"
           >
             <motion.div
               animate={{
@@ -341,7 +341,7 @@ export function EmotionTrackingDemo() {
           {/* Text Tab */}
           <button
             onClick={() => setActiveTab("text")}
-            className="relative z-10 flex items-center justify-center gap-2.5 px-10 py-3.5 rounded-xl transition-all duration-200 min-w-[220px]"
+            className="relative z-10 flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl transition-all duration-200 w-[230px]"
           >
             <motion.div
               animate={{
