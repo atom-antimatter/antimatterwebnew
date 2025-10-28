@@ -13,7 +13,7 @@ export default function EmotionTrackingDemoPage() {
             <span className="text-secondary font-bold italic">Demo</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Experience real-time facial expression tracking and comprehensive text analysis. We built our own sentiment tracking AI on top of Hume AI&apos;s 53-dimensional emotion detection combined with OpenAI GPT-5&apos;s advanced sentiment and intent analysis.
+            Custom-built emotion AI combining Hume AI&apos;s real-time facial tracking with OpenAI GPT-5&apos;s advanced text sentiment analysis.
           </p>
         </div>
         
