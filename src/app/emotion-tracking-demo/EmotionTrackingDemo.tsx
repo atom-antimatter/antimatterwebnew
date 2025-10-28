@@ -316,9 +316,9 @@ export function EmotionTrackingDemo() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       {/* Modern Animated Tab Navigation */}
-      <div className="flex justify-center mb-12 px-4">
+      <div className="flex justify-center mb-12">
         <div className="relative inline-flex bg-[#1a1d2e] border border-white/10 rounded-2xl p-1.5 gap-1.5 w-full max-w-[90vw] sm:max-w-none sm:w-auto">
           {/* Animated Background */}
           <motion.div
@@ -394,9 +394,9 @@ export function EmotionTrackingDemo() {
 
       {/* Facial Expression Tab */}
       {activeTab === "facial" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-gray-900 rounded-lg p-6">
-            <h3 className="text-xl font-semibold mb-4">Facial Expression Analysis</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+          <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+            <h3 className="text-lg sm:text-xl font-semibold mb-4">Facial Expression Analysis</h3>
             <div className="space-y-4">
                 <div className="relative">
                   <video
@@ -436,14 +436,14 @@ export function EmotionTrackingDemo() {
             </div>
           </div>
 
-          <div className="bg-gray-900 rounded-lg p-6">
+          <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
             <div className="flex items-center gap-2 mb-4">
               <div
                 className={`w-3 h-3 rounded-full animate-pulse ${
                   humeClient ? "bg-green-500" : "bg-yellow-500"
                 }`}
               ></div>
-              <h3 className="text-xl font-semibold">
+              <h3 className="text-lg sm:text-xl font-semibold">
                 {humeClient ? "Connected to Hume AI" : "Mock Mode"}
               </h3>
             </div>
@@ -517,9 +517,9 @@ export function EmotionTrackingDemo() {
 
       {/* Text Analysis Tab */}
       {activeTab === "text" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <div className="bg-gray-900 rounded-lg p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+          <div className="space-y-4 sm:space-y-6 w-full">
+            <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
               <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <LuType className="text-secondary" size={24} />
                 Text Emotion Analysis
@@ -567,8 +567,8 @@ export function EmotionTrackingDemo() {
 
             {textAnalysisResult && (
               <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-900 rounded-lg p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+                  <div className="bg-gray-900 rounded-lg p-3 sm:p-4 w-full">
                     <h4 className="text-sm font-medium text-gray-400 mb-2">Sentiment</h4>
                     <div
                       className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border mb-2 ${getSentimentColor(
@@ -593,7 +593,7 @@ export function EmotionTrackingDemo() {
                     </p>
                   </div>
 
-                  <div className="bg-gray-900 rounded-lg p-4">
+                  <div className="bg-gray-900 rounded-lg p-3 sm:p-4 w-full">
                     <h4 className="text-sm font-medium text-gray-400 mb-2">Intent</h4>
                     <div
                       className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border mb-2 ${getIntentColor(
@@ -619,7 +619,7 @@ export function EmotionTrackingDemo() {
                   </div>
                 </div>
 
-                <div className="bg-gray-900 rounded-lg p-6">
+                <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
                   <h4 className="text-lg font-semibold mb-3">Emotional Analysis</h4>
                   <p className="text-gray-300 text-sm leading-relaxed">
                     {textAnalysisResult.analysis}
@@ -629,22 +629,23 @@ export function EmotionTrackingDemo() {
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 w-full">
             {textAnalysisResult ? (
               <>
-                <div className="bg-gray-900 rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-6 text-center">Emotional Metrics</h3>
-                  <ResponsiveContainer width="100%" height={350}>
+                <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-center">Emotional Metrics</h3>
+                  <ResponsiveContainer width="100%" height={300} className="sm:h-[350px]">
                     <RadarChart data={getRadarChartData()}>
                       <PolarGrid stroke="#374151" />
                       <PolarAngleAxis
                         dataKey="metric"
-                        tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                        tick={{ fill: "#9CA3AF", fontSize: 10 }}
+                        className="text-[10px] sm:text-xs"
                       />
                       <PolarRadiusAxis
                         angle={90}
                         domain={[0, 100]}
-                        tick={{ fill: "#6B7280", fontSize: 10 }}
+                        tick={{ fill: "#6B7280", fontSize: 8 }}
                       />
                       <Radar
                         name="Score"
@@ -659,13 +660,14 @@ export function EmotionTrackingDemo() {
                           border: "1px solid #374151",
                           borderRadius: "8px",
                           color: "#fff",
+                          fontSize: "12px",
                         }}
                       />
                     </RadarChart>
                   </ResponsiveContainer>
-                  <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-4">
                     {getRadarChartData().map((item) => (
-                      <div key={item.metric} className="flex items-center justify-between text-sm">
+                      <div key={item.metric} className="flex items-center justify-between text-xs sm:text-sm">
                         <span className="text-gray-400">{item.metric}</span>
                         <span className="font-semibold text-secondary">{item.value}</span>
                       </div>
@@ -673,17 +675,17 @@ export function EmotionTrackingDemo() {
                   </div>
                 </div>
 
-                <div className="bg-gray-900 rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4">Emotional Language Results</h3>
-                  <div className="space-y-3">
+                <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Emotional Language Results</h3>
+                  <div className="space-y-2 sm:space-y-3">
                     {textAnalysisResult.emotions.slice(0, 8).map((emotion, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between hover:bg-gray-800/50 rounded-lg px-3 py-2 transition-colors"
+                        className="flex items-center justify-between gap-2 hover:bg-gray-800/50 rounded-lg px-2 sm:px-3 py-2 transition-colors w-full"
                       >
-                        <span className="capitalize font-medium">{emotion.name}</span>
-                        <div className="flex items-center gap-3">
-                          <div className="w-32 bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                        <span className="capitalize font-medium text-sm sm:text-base flex-shrink-0">{emotion.name}</span>
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end min-w-0">
+                          <div className="w-20 sm:w-32 bg-gray-700 rounded-full h-2.5 overflow-hidden flex-shrink-0">
                             <div
                               className={`h-2.5 rounded-full transition-all duration-500 ${
                                 index === 0
@@ -697,7 +699,7 @@ export function EmotionTrackingDemo() {
                               style={{ width: `${emotion.score * 100}%` }}
                             />
                           </div>
-                          <span className="text-sm font-medium text-gray-300 font-mono w-12 text-right">
+                          <span className="text-xs sm:text-sm font-medium text-gray-300 font-mono w-10 sm:w-12 text-right flex-shrink-0">
                             {(emotion.score * 100).toFixed(1)}%
                           </span>
                         </div>
@@ -707,14 +709,14 @@ export function EmotionTrackingDemo() {
                 </div>
               </>
             ) : (
-              <div className="bg-gray-900 rounded-lg p-12 text-center h-full flex flex-col items-center justify-center">
-                <LuBrain className="text-secondary mx-auto mb-6" size={48} />
-                <h3 className="text-xl font-semibold mb-2">AI-Powered Emotion Analysis</h3>
-                <p className="text-gray-400 max-w-md">
+              <div className="bg-gray-900 rounded-lg p-6 sm:p-12 text-center h-full flex flex-col items-center justify-center w-full">
+                <LuBrain className="text-secondary mx-auto mb-4 sm:mb-6" size={40} />
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">AI-Powered Emotion Analysis</h3>
+                <p className="text-sm sm:text-base text-gray-400 max-w-md px-4">
                   Enter text to see comprehensive emotional analysis with sentiment, intent, and
                   53-dimensional emotion detection powered by Hume AI and OpenAI GPT-5.
                 </p>
-                <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 justify-center">
                   <span className="text-xs px-3 py-1 bg-secondary/10 text-secondary rounded-full border border-secondary/20">
                     Hume AI
                   </span>
