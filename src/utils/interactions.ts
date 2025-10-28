@@ -16,6 +16,43 @@ const Interactions = () => {
     // Check if particles3d exists (only on homepage)
     const particles3d = document.querySelector("#particles3d");
     if (!particles3d) return;
+
+    // Add a global scroll listener to ensure 3D elements stay visible
+    let lastScrollY = window.scrollY;
+    let scrollTimeout: NodeJS.Timeout;
+    
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const currentScrollY = window.scrollY;
+        const scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
+        
+        // If scrolling up and particles are hidden, restore them
+        if (scrollDirection === 'up' && currentScrollY < window.innerHeight * 2) {
+          const particlesElement = document.querySelector("#particles3d") as HTMLElement;
+          if (particlesElement) {
+            const computedStyle = window.getComputedStyle(particlesElement);
+            const opacity = parseFloat(computedStyle.opacity);
+            const transform = computedStyle.transform;
+            
+            // If particles are hidden or moved off-screen, restore them
+            if (opacity < 0.1 || transform.includes('translateY(-100%)')) {
+              gsap.to("#particles3d", {
+                opacity: 1,
+                y: "0%",
+                duration: 0.5,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+            }
+          }
+        }
+        
+        lastScrollY = currentScrollY;
+      }, 100); // Debounce scroll events
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
     const ctx = gsap.context(() => {
       const timeline = gsap.timeline({
@@ -72,6 +109,15 @@ const Interactions = () => {
             overwrite: "auto",
           });
         },
+        onEnterBack: () => {
+          // Restore opacity when scrolling back up
+          gsap.to("#particles3d", {
+            opacity: 1,
+            duration: 0.3,
+            ease: "power2.out",
+            overwrite: "auto",
+          });
+        },
       });
 
       tl1.fromTo(
@@ -105,7 +151,11 @@ const Interactions = () => {
         title2.revert();
       };
     });
-    return () => ctx.revert();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+      ctx.revert();
+    };
   }, [finished]);
   return null;
 };

@@ -151,18 +151,37 @@ export function setupInteractions(
           const scrollTriggerExit: ScrollTrigger.Vars = {
             trigger: "#service-section",
             start: "bottom bottom",
+            end: "bottom top",
             scrub: true,
             invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              // Gradually move particles up but keep them visible
+              gsap.to("#particles3d", {
+                y: `-${self.progress * 50}%`,
+                overwrite: "auto",
+              });
+            },
+            onLeave: () => {
+              // When leaving the service section, hide particles
+              gsap.to("#particles3d", {
+                y: "-100%",
+                duration: 0.5,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+            },
+            onEnterBack: () => {
+              // When scrolling back up, restore particles
+              gsap.to("#particles3d", {
+                y: "0%",
+                duration: 0.5,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+            },
           };
 
           const timeline3 = gsap.timeline({ scrollTrigger: scrollTriggerExit });
-
-          timeline3.to("#particles3d", {
-            duration: 1,
-            delay: 0.2,
-            ease: "none",
-            y: "-100%",
-          });
         }
 
         const xValue = isDesktop ? "-60%" : isScreen1 ? "-60%" : "-50%";
@@ -172,11 +191,19 @@ export function setupInteractions(
             trigger: "body",
             start: "top top",
             end: "+=90%",
-            scrub: true,
+            scrub: 0.5, // Add slight delay to prevent jittery animations
             invalidateOnRefresh: true,
             onUpdate: (self) => {
               if (self.progress > 0.6) morphToShape(1);
               if (self.progress < 0.5) morphToShape(0);
+            },
+            onRefresh: () => {
+              // Ensure particles are visible when scroll trigger refreshes
+              gsap.set("#particles3d", { 
+                opacity: 1, 
+                y: "0%",
+                overwrite: "auto" 
+              });
             },
           },
         });
