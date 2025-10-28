@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { LuCamera, LuType, LuPlay, LuSquare, LuSparkles } from "react-icons/lu";
+import { LuCamera, LuType, LuPlay, LuSquare, LuBrain } from "react-icons/lu";
 import { HumeWebSocketClient } from "@/lib/humeWebSocket";
 import {
   RadarChart,
@@ -475,7 +475,7 @@ export function EmotionTrackingDemo() {
                     </>
                   ) : (
                     <>
-                      <LuSparkles size={18} />
+                      <LuBrain size={18} />
                       Analyze Text
                     </>
                   )}
@@ -635,7 +635,7 @@ export function EmotionTrackingDemo() {
               </>
             ) : (
               <div className="bg-gray-900 rounded-lg p-12 text-center h-full flex flex-col items-center justify-center">
-                <LuSparkles className="text-secondary mx-auto mb-6" size={48} />
+                <LuBrain className="text-secondary mx-auto mb-6" size={48} />
                 <h3 className="text-xl font-semibold mb-2">AI-Powered Emotion Analysis</h3>
                 <p className="text-gray-400 max-w-md">
                   Enter text to see comprehensive emotional analysis with sentiment, intent, and
