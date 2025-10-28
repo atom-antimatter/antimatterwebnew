@@ -1,3 +1,5 @@
+"use client";
+
 import { EmotionTrackingDemo } from "./EmotionTrackingDemo";
 
 export default function EmotionTrackingDemoPage() {

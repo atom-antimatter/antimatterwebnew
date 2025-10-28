@@ -2,7 +2,7 @@ import { IconType } from "react-icons";
 import { MdOutlineDesignServices } from "react-icons/md";
 import { FaCode } from "react-icons/fa6";
 import { BsGraphUpArrow } from "react-icons/bs";
-import { LuBrain, LuCpu } from "react-icons/lu";
+import { LuBrain, LuCpu, LuHeart } from "react-icons/lu";
 import { RiStethoscopeLine } from "react-icons/ri";
 import { HiSpeakerWave } from "react-icons/hi2";
 
@@ -198,6 +198,46 @@ export const ServicesData: ServiceProps[] = [
     customCTA: {
       text: "Try Antimatter Voice Agent",
       href: "/voice-agent-demo",
+      secondary: {
+        text: "Build Your Own",
+        href: "/contact",
+      },
+    },
+  },
+  {
+    icon: LuHeart,
+    link: "/emotion-ai",
+    title: "Emotion AI",
+    pageTitle: (
+      <>
+        Emotion AI that <br />
+        <span className="text-secondary font-bold italic mr-3">just works</span>
+      </>
+    ),
+    description:
+      "From concept to deployment, we built custom sentiment tracking AI on top of Hume AI and OpenAI GPT-5. Real-time emotion detection, seamlessly integrated, and ready to understand your customers 24/7. Here, every emotion matters.",
+    tagline: ["Emotional intelligence,", "powered by AI."],
+    items: [
+      { 
+        title: "Real-Time Facial Expression Tracking",
+        desc: "Live emotion detection through webcam analysis powered by Hume AI. Track facial expressions in real-time across 53 emotional dimensions with human-like accuracy."
+      },
+      { 
+        title: "Advanced Text Sentiment Analysis",
+        desc: "Comprehensive text emotion analysis using our custom AI built on GPT-5. Detect sentiment, intent, and emotional nuances with confidence scores and detailed insights."
+      },
+      { 
+        title: "Multi-Dimensional Emotion Metrics",
+        desc: "Visualize emotional data through interactive radar charts. Track intensity, positivity, authenticity, complexity, clarity, and energy across all interactions."
+      },
+      { 
+        title: "Custom Training & Integration",
+        desc: "Seamlessly integrate emotion AI into your applications. From customer support to healthcare, our custom-trained models adapt to your specific use case and industry needs."
+      },
+    ],
+    customCTA: {
+      text: "Try Emotion AI Demo",
+      href: "/emotion-tracking-demo",
       secondary: {
         text: "Build Your Own",
         href: "/contact",

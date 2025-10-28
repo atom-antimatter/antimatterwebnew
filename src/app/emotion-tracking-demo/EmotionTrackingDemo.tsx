@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { LuCamera, LuType, LuPlay, LuSquare, LuBrain } from "react-icons/lu";
 import { HumeWebSocketClient } from "@/lib/humeWebSocket";
+import { motion } from "motion/react";
 import {
   RadarChart,
   PolarGrid,
@@ -292,30 +293,72 @@ export function EmotionTrackingDemo() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Tab Navigation */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-gray-900 rounded-lg p-1 flex">
+      {/* Modern Animated Tab Navigation */}
+      <div className="flex justify-center mb-12">
+        <div className="relative bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-1.5 flex gap-1">
+          {/* Animated Background */}
+          <motion.div
+            className="absolute top-1.5 h-[calc(100%-12px)] bg-gradient-to-r from-secondary via-purple-400 to-secondary rounded-xl"
+            initial={false}
+            animate={{
+              left: activeTab === "facial" ? "6px" : "50%",
+              width: activeTab === "facial" ? "calc(50% - 9px)" : "calc(50% - 9px)",
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+            }}
+          />
+          
+          {/* Facial Tab */}
           <button
             onClick={() => setActiveTab("facial")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
-              activeTab === "facial"
-                ? "bg-secondary text-black"
-                : "text-gray-400 hover:text-white"
-            }`}
+            className="relative z-10 flex items-center gap-2 px-8 py-3.5 rounded-xl transition-all duration-200"
           >
-            <LuCamera size={20} />
-            Facial Expressions
+            <motion.div
+              animate={{
+                scale: activeTab === "facial" ? 1.1 : 1,
+                color: activeTab === "facial" ? "#000000" : "#9CA3AF",
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <LuCamera size={20} />
+            </motion.div>
+            <motion.span
+              className="font-semibold text-sm"
+              animate={{
+                color: activeTab === "facial" ? "#000000" : "#9CA3AF",
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              Facial Expressions
+            </motion.span>
           </button>
+          
+          {/* Text Tab */}
           <button
             onClick={() => setActiveTab("text")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
-              activeTab === "text"
-                ? "bg-secondary text-black"
-                : "text-gray-400 hover:text-white"
-            }`}
+            className="relative z-10 flex items-center gap-2 px-8 py-3.5 rounded-xl transition-all duration-200"
           >
-            <LuType size={20} />
-            Text Analysis
+            <motion.div
+              animate={{
+                scale: activeTab === "text" ? 1.1 : 1,
+                color: activeTab === "text" ? "#000000" : "#9CA3AF",
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <LuType size={20} />
+            </motion.div>
+            <motion.span
+              className="font-semibold text-sm"
+              animate={{
+                color: activeTab === "text" ? "#000000" : "#9CA3AF",
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              Text Analysis
+            </motion.span>
           </button>
         </div>
       </div>
