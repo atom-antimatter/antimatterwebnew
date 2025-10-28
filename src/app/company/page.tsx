@@ -273,6 +273,7 @@ const CompanyPage = () => {
                 loop
                 muted
                 playsInline
+                poster="/Antimatter-astronaut-fallback.webp"
                 className="rotate-12 lg:rotate-0 w-full"
               />
             </div>
