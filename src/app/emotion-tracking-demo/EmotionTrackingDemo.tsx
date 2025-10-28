@@ -295,14 +295,14 @@ export function EmotionTrackingDemo() {
     <div className="max-w-6xl mx-auto">
       {/* Modern Animated Tab Navigation */}
       <div className="flex justify-center mb-12">
-        <div className="relative bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-1.5 flex gap-1">
+        <div className="relative inline-flex bg-[#1a1d2e] border border-white/10 rounded-2xl p-1.5">
           {/* Animated Background */}
           <motion.div
-            className="absolute top-1.5 h-[calc(100%-12px)] bg-gradient-to-r from-secondary via-purple-400 to-secondary rounded-xl"
+            className="absolute top-1.5 h-[calc(100%-12px)] bg-secondary rounded-xl shadow-lg shadow-secondary/20"
             initial={false}
             animate={{
-              left: activeTab === "facial" ? "6px" : "50%",
-              width: activeTab === "facial" ? "calc(50% - 9px)" : "calc(50% - 9px)",
+              left: activeTab === "facial" ? "6px" : "calc(50% + 3px)",
+              width: "calc(50% - 9px)",
             }}
             transition={{
               type: "spring",
@@ -314,21 +314,23 @@ export function EmotionTrackingDemo() {
           {/* Facial Tab */}
           <button
             onClick={() => setActiveTab("facial")}
-            className="relative z-10 flex items-center gap-2 px-8 py-3.5 rounded-xl transition-all duration-200"
+            className="relative z-10 flex items-center justify-center gap-2.5 px-10 py-3.5 rounded-xl transition-all duration-200 min-w-[220px]"
           >
             <motion.div
               animate={{
-                scale: activeTab === "facial" ? 1.1 : 1,
-                color: activeTab === "facial" ? "#000000" : "#9CA3AF",
+                scale: activeTab === "facial" ? 1 : 0.95,
               }}
               transition={{ duration: 0.2 }}
             >
-              <LuCamera size={20} />
+              <LuCamera 
+                size={20} 
+                className={activeTab === "facial" ? "text-black" : "text-gray-500"}
+              />
             </motion.div>
             <motion.span
-              className="font-semibold text-sm"
+              className="font-semibold text-base whitespace-nowrap"
               animate={{
-                color: activeTab === "facial" ? "#000000" : "#9CA3AF",
+                color: activeTab === "facial" ? "#000000" : "#6B7280",
               }}
               transition={{ duration: 0.2 }}
             >
@@ -339,21 +341,23 @@ export function EmotionTrackingDemo() {
           {/* Text Tab */}
           <button
             onClick={() => setActiveTab("text")}
-            className="relative z-10 flex items-center gap-2 px-8 py-3.5 rounded-xl transition-all duration-200"
+            className="relative z-10 flex items-center justify-center gap-2.5 px-10 py-3.5 rounded-xl transition-all duration-200 min-w-[220px]"
           >
             <motion.div
               animate={{
-                scale: activeTab === "text" ? 1.1 : 1,
-                color: activeTab === "text" ? "#000000" : "#9CA3AF",
+                scale: activeTab === "text" ? 1 : 0.95,
               }}
               transition={{ duration: 0.2 }}
             >
-              <LuType size={20} />
+              <LuType 
+                size={20}
+                className={activeTab === "text" ? "text-black" : "text-gray-500"}
+              />
             </motion.div>
             <motion.span
-              className="font-semibold text-sm"
+              className="font-semibold text-base whitespace-nowrap"
               animate={{
-                color: activeTab === "text" ? "#000000" : "#9CA3AF",
+                color: activeTab === "text" ? "#000000" : "#6B7280",
               }}
               transition={{ duration: 0.2 }}
             >
