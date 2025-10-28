@@ -301,8 +301,8 @@ export function EmotionTrackingDemo() {
             className="absolute top-1.5 bottom-1.5 bg-secondary rounded-xl shadow-lg shadow-secondary/20"
             initial={false}
             animate={{
-              left: activeTab === "facial" ? "6px" : "calc(50%)",
-              right: activeTab === "facial" ? "calc(50%)" : "6px",
+              left: activeTab === "facial" ? "6px" : "calc(50% + 0.75px)",
+              width: "230px",
             }}
             transition={{
               type: "spring",
