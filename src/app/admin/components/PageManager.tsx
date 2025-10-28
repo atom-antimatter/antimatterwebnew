@@ -31,6 +31,7 @@ interface Page {
   twitter_image: string | null;
   no_index: boolean;
   is_homepage: boolean;
+  category: string | null;
   updated_at: string;
 }
 
@@ -39,6 +40,7 @@ export default function PageManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<Page | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [isPopulating, setIsPopulating] = useState(false);
 
   useEffect(() => {
     fetchPages();
@@ -51,7 +53,8 @@ export default function PageManager() {
         .from("pages")
         .select("*")
         .order("is_homepage", { ascending: false })
-        .order("updated_at", { ascending: false });
+        .order("category")
+        .order("slug");
 
       if (error) throw error;
       setPages(data || []);
@@ -59,6 +62,31 @@ export default function PageManager() {
       console.error("Error fetching pages:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const populateAllPages = async () => {
+    if (!confirm("This will add all missing pages to the database. Continue?")) return;
+    
+    setIsPopulating(true);
+    try {
+      const response = await fetch("/api/populate-pages", {
+        method: "POST",
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert(`Success! ${result.count} pages added.`);
+        await fetchPages();
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error populating pages:", error);
+      alert("Failed to populate pages. Check console for details.");
+    } finally {
+      setIsPopulating(false);
     }
   };
 
