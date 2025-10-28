@@ -99,20 +99,44 @@ export function EmotionTrackingDemo() {
   // Start webcam
   const startWebcam = async () => {
     try {
+      // Request camera permissions with better mobile support
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
+        video: { 
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
         audio: false,
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+        };
         setIsCameraStarted(true);
         setSessionData([]);
         console.log("Camera started successfully");
+        
+        // Scroll to show camera on mobile after a short delay
+        setTimeout(() => {
+          videoRef.current?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }, 300);
       }
     } catch (error) {
       console.error("Error accessing webcam:", error);
-      alert("Failed to access camera. Please ensure camera permissions are granted.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      if (errorMessage.includes("Permission denied") || errorMessage.includes("NotAllowedError")) {
+        alert("Camera access denied. Please enable camera permissions in your browser settings and try again.");
+      } else if (errorMessage.includes("NotFoundError") || errorMessage.includes("DevicesNotFoundError")) {
+        alert("No camera found. Please ensure your device has a camera.");
+      } else {
+        alert("Failed to access camera. Please check your browser settings and try again.");
+      }
     }
   };
 
@@ -294,15 +318,15 @@ export function EmotionTrackingDemo() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Modern Animated Tab Navigation */}
-      <div className="flex justify-center mb-12">
-        <div className="relative inline-flex bg-[#1a1d2e] border border-white/10 rounded-2xl p-1.5 gap-1.5">
+      <div className="flex justify-center mb-12 px-4">
+        <div className="relative inline-flex bg-[#1a1d2e] border border-white/10 rounded-2xl p-1.5 gap-1.5 w-full max-w-[90vw] sm:max-w-none sm:w-auto">
           {/* Animated Background */}
           <motion.div
             className="absolute top-1.5 bottom-1.5 bg-secondary rounded-xl shadow-lg shadow-secondary/20"
             initial={false}
             animate={{
               left: activeTab === "facial" ? "6px" : "calc(50% + 0.75px)",
-              width: "230px",
+              width: "calc(50% - 9px)",
             }}
             transition={{
               type: "spring",
@@ -314,7 +338,7 @@ export function EmotionTrackingDemo() {
           {/* Facial Tab */}
           <button
             onClick={() => setActiveTab("facial")}
-            className="relative z-10 flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl transition-all duration-200 w-[230px]"
+            className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-200 flex-1 sm:flex-none sm:w-[230px]"
           >
             <motion.div
               animate={{
@@ -323,25 +347,26 @@ export function EmotionTrackingDemo() {
               transition={{ duration: 0.2 }}
             >
               <LuCamera 
-                size={20} 
-                className={activeTab === "facial" ? "text-black" : "text-gray-500"}
+                size={18} 
+                className={`sm:w-5 sm:h-5 ${activeTab === "facial" ? "text-black" : "text-gray-500"}`}
               />
             </motion.div>
             <motion.span
-              className="font-semibold text-base whitespace-nowrap"
+              className="font-semibold text-xs sm:text-base whitespace-nowrap"
               animate={{
                 color: activeTab === "facial" ? "#000000" : "#6B7280",
               }}
               transition={{ duration: 0.2 }}
             >
-              Facial Expressions
+              <span className="hidden sm:inline">Facial Expressions</span>
+              <span className="sm:hidden">Facial</span>
             </motion.span>
           </button>
           
           {/* Text Tab */}
           <button
             onClick={() => setActiveTab("text")}
-            className="relative z-10 flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl transition-all duration-200 w-[230px]"
+            className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-200 flex-1 sm:flex-none sm:w-[230px]"
           >
             <motion.div
               animate={{
@@ -350,12 +375,12 @@ export function EmotionTrackingDemo() {
               transition={{ duration: 0.2 }}
             >
               <LuType 
-                size={20}
-                className={activeTab === "text" ? "text-black" : "text-gray-500"}
+                size={18}
+                className={`sm:w-5 sm:h-5 ${activeTab === "text" ? "text-black" : "text-gray-500"}`}
               />
             </motion.div>
             <motion.span
-              className="font-semibold text-base whitespace-nowrap"
+              className="font-semibold text-xs sm:text-base whitespace-nowrap"
               animate={{
                 color: activeTab === "text" ? "#000000" : "#6B7280",
               }}
@@ -373,15 +398,16 @@ export function EmotionTrackingDemo() {
           <div className="bg-gray-900 rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4">Facial Expression Analysis</h3>
             <div className="space-y-4">
-              <div className="relative">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  muted
-                  className="w-full h-64 bg-gray-800 rounded-lg object-cover"
-                />
-                <canvas ref={canvasRef} className="hidden" />
-              </div>
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-64 bg-gray-800 rounded-lg object-cover"
+                  />
+                  <canvas ref={canvasRef} className="hidden" />
+                </div>
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={startWebcam}
