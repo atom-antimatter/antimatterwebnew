@@ -2,76 +2,87 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  LuCamera,
-  LuMic,
-  LuType,
-  LuPlay,
-  LuSquare,
-  LuUpload,
-} from "react-icons/lu";
+import { LuCamera, LuType, LuPlay, LuSquare, LuBrain } from "react-icons/lu";
 import { HumeWebSocketClient } from "@/lib/humeWebSocket";
-import jsPDF from "jspdf";
+import { motion } from "motion/react";
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 interface EmotionScore {
   name: string;
   score: number;
 }
 
+interface EmotionalMetrics {
+  intensity: number;
+  positivity: number;
+  authenticity: number;
+  complexity: number;
+  clarity: number;
+  energy: number;
+}
+
+interface TextAnalysisResult {
+  emotions: EmotionScore[];
+  sentiment: {
+    label: string;
+    confidence: number;
+    description: string;
+  };
+  intent: {
+    primary: string;
+    confidence: number;
+    description: string;
+  };
+  analysis: string;
+  emotionalMetrics: EmotionalMetrics;
+}
+
 interface EmotionData {
   timestamp?: string;
   facial?: EmotionScore[];
-  prosody?: EmotionScore[];
-  burst?: EmotionScore[];
-  language?: EmotionScore[];
 }
 
 export function EmotionTrackingDemo() {
-  const [activeTab, setActiveTab] = useState<"facial" | "audio" | "text">(
-    "facial"
-  );
-  const [isRecording, setIsRecording] = useState(false);
-  const [emotions, setEmotions] = useState<EmotionData>({});
+  const [activeTab, setActiveTab] = useState<"facial" | "text">("text");
   const [textInput, setTextInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [textAnalysisResult, setTextAnalysisResult] = useState<TextAnalysisResult | null>(null);
+  const [messageCount, setMessageCount] = useState(0);
+  
+  // Facial tracking state
+  const [facialEmotions, setFacialEmotions] = useState<EmotionScore[]>([]);
   const [isCameraStarted, setIsCameraStarted] = useState(false);
-  const [humeClient, setHumeClient] = useState<HumeWebSocketClient | null>(
-    null
-  );
+  const [humeClient, setHumeClient] = useState<HumeWebSocketClient | null>(null);
   const [sessionData, setSessionData] = useState<EmotionData[]>([]);
-  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const audioRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
 
   // Initialize Hume WebSocket client
   useEffect(() => {
     const initHumeClient = async () => {
       try {
         const apiKey = process.env.NEXT_PUBLIC_HUME_API_KEY;
-        console.log("🔑 Hume API Key available:", !!apiKey);
-        console.log("🔑 API Key length:", apiKey ? apiKey.length : 0);
-        console.log("🔑 API Key starts with:", apiKey ? apiKey.substring(0, 10) + "..." : "N/A");
-
         if (apiKey && apiKey.length > 10) {
-          console.log("🚀 Initializing Hume WebSocket client...");
           const client = new HumeWebSocketClient(apiKey);
           await client.connect();
           setHumeClient(client);
-          console.log("✅ Hume WebSocket client connected successfully");
+          console.log("✅ Hume WebSocket client connected");
         } else {
-          console.warn("⚠️ Hume API key not found or invalid in environment variables");
-          console.log("Please add NEXT_PUBLIC_HUME_API_KEY to your .env.local file");
-          console.log("Using mock data for development");
+          console.warn("⚠️ Hume API key not found");
           setHumeClient(null);
         }
       } catch (error) {
         console.error("❌ Failed to initialize Hume WebSocket:", error);
-        console.log("Falling back to mock data");
         setHumeClient(null);
       }
     };
@@ -88,20 +99,44 @@ export function EmotionTrackingDemo() {
   // Start webcam
   const startWebcam = async () => {
     try {
+      // Request camera permissions with better mobile support
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
+        video: { 
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
         audio: false,
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+        };
         setIsCameraStarted(true);
-        setSessionStartTime(new Date());
-        setSessionData([]); // Reset session data
+        setSessionData([]);
         console.log("Camera started successfully");
+        
+        // Scroll to show camera on mobile after a short delay
+        setTimeout(() => {
+          videoRef.current?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }, 300);
       }
     } catch (error) {
       console.error("Error accessing webcam:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      if (errorMessage.includes("Permission denied") || errorMessage.includes("NotAllowedError")) {
+        alert("Camera access denied. Please enable camera permissions in your browser settings and try again.");
+      } else if (errorMessage.includes("NotFoundError") || errorMessage.includes("DevicesNotFoundError")) {
+        alert("No camera found. Please ensure your device has a camera.");
+      } else {
+        alert("Failed to access camera. Please check your browser settings and try again.");
+      }
     }
   };
 
@@ -115,41 +150,7 @@ export function EmotionTrackingDemo() {
     }
   }, []);
 
-  // Start audio recording
-  const startAudioRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      audioRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: "audio/wav" });
-        analyzeAudio(audioBlob);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-    }
-  };
-
-  // Stop audio recording
-  const stopAudioRecording = useCallback(() => {
-    if (audioRef.current && isRecording) {
-      audioRef.current.stop();
-      setIsRecording(false);
-    }
-  }, [isRecording]);
-
-  // Real-time facial analysis with WebSocket streaming (like Hume playground)
+  // Real-time facial analysis
   const analyzeFacial = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
 
@@ -159,16 +160,12 @@ export function EmotionTrackingDemo() {
 
     if (!ctx) return;
 
-    // Set canvas size to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
-    // Draw current video frame to canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     try {
       if (humeClient) {
-        // Use real Hume WebSocket API for emotion analysis
         canvas.toBlob(
           async (blob) => {
             if (!blob) return;
@@ -176,236 +173,64 @@ export function EmotionTrackingDemo() {
             try {
               const result = await humeClient.analyzeImage(blob);
               if (result && Array.isArray(result) && result.length > 0) {
-                // Sort emotions by score (highest first) for dynamic ordering
                 const sortedEmotions = result.sort((a, b) => b.score - a.score);
+                setFacialEmotions(sortedEmotions);
 
-                setEmotions((prev) => ({ ...prev, facial: sortedEmotions }));
-
-                // Add to session data
                 const newEmotionData = {
                   timestamp: new Date().toISOString(),
                   facial: sortedEmotions,
                 };
                 setSessionData((prev) => [...prev, newEmotionData]);
-
-                console.log(
-                  "🎯 Real Hume AI facial analysis results:",
-                  sortedEmotions
-                );
-              } else {
-                console.warn("No emotions detected from Hume AI");
               }
             } catch (apiError) {
               console.error("Hume API error:", apiError);
-              console.log("Falling back to mock data for this analysis");
-              // Fall through to mock data
             }
           },
           "image/jpeg",
           0.8
         );
       } else {
-        // Dynamic emotion detection that responds to facial expressions like Hume playground
+        // Mock data for development
         const allEmotions = [
-          "joy",
-          "amusement",
-          "excitement",
-          "calmness",
-          "surprise",
-          "concentration",
-          "boredom",
-          "confusion",
-          "anger",
-          "disgust",
-          "sadness",
-          "melancholy",
-          "fear",
-          "anxiety",
-          "triumph",
-          "admiration",
-          "aesthetic appreciation",
+          "joy", "amusement", "excitement", "calmness", "surprise",
+          "concentration", "boredom", "confusion", "interest", "contentment"
         ];
 
-        // Generate realistic emotion scores that vary dynamically like Hume playground
-        const timeVariation = Math.sin(Date.now() / 1000) * 0.4; // Oscillating variation
-        const randomVariation = (Math.random() - 0.5) * 0.6; // Random variation
-        const sessionVariation = Math.sin(Date.now() / 2000) * 0.3; // Slower variation
-        const microVariation = Math.sin(Date.now() / 500) * 0.2; // Fast micro-variations
+        const timeVariation = Math.sin(Date.now() / 1000) * 0.4;
+        const randomVariation = (Math.random() - 0.5) * 0.6;
 
         const mockEmotions = allEmotions
           .map((emotion) => {
-            let baseScore = 0.02; // Base low score for all emotions
-
-            // More sophisticated emotion patterns that change over time
+            let baseScore = 0.02;
             if (emotion === "joy" || emotion === "amusement") {
-              baseScore =
-                0.5 +
-                Math.abs(timeVariation) +
-                randomVariation +
-                sessionVariation +
-                microVariation;
+              baseScore = 0.5 + Math.abs(timeVariation) + randomVariation;
             } else if (emotion === "calmness") {
-              baseScore =
-                0.4 + Math.abs(timeVariation * 0.8) + randomVariation * 0.7 + microVariation * 0.5;
+              baseScore = 0.4 + Math.abs(timeVariation * 0.8);
             } else if (emotion === "concentration") {
-              baseScore =
-                0.3 + Math.abs(randomVariation * 0.5) + sessionVariation * 0.4 + microVariation * 0.3;
-            } else if (emotion === "surprise") {
-              baseScore =
-                0.2 +
-                Math.abs(randomVariation * 0.5) +
-                Math.abs(timeVariation * 0.3);
-            } else if (emotion === "excitement") {
-              baseScore =
-                0.15 + Math.abs(timeVariation * 0.4) + randomVariation * 0.3;
-            } else if (emotion === "boredom") {
-              baseScore = 0.1 + Math.abs(randomVariation * 0.2);
-            } else if (emotion === "confusion") {
-              baseScore = 0.08 + Math.abs(randomVariation * 0.15);
-            } else if (emotion === "sadness") {
-              baseScore = 0.05 + Math.abs(randomVariation * 0.1);
-            } else if (emotion === "anger") {
-              baseScore = 0.03 + Math.abs(randomVariation * 0.08);
-            } else {
-              baseScore = 0.02 + Math.abs(randomVariation * 0.05);
+              baseScore = 0.3 + Math.abs(randomVariation * 0.5);
             }
-
             return {
               name: emotion,
-              score: Math.max(0, Math.min(1, baseScore)), // Clamp between 0 and 1
+              score: Math.max(0, Math.min(1, baseScore)),
             };
           })
-          .sort((a, b) => b.score - a.score); // Sort by score descending
+          .sort((a, b) => b.score - a.score);
 
-        setEmotions((prev) => ({ ...prev, facial: mockEmotions }));
-
-        // Add to session data
-        const newEmotionData = {
-          timestamp: new Date().toISOString(),
-          facial: mockEmotions,
-        };
-        setSessionData((prev) => [...prev, newEmotionData]);
-
-        console.log("🎭 Mock facial analysis results (dynamic simulation):", mockEmotions);
+        setFacialEmotions(mockEmotions);
       }
     } catch (error) {
       console.error("Facial analysis error:", error);
     }
   }, [humeClient]);
 
-  // Handle audio file upload
-  const handleAudioFileUpload = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Check file size (10MB limit)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        alert(`Audio file too large! Maximum size is ${maxSize / 1024 / 1024}MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB. Please use a smaller file.`);
-        return;
-      }
-      setAudioFile(file);
-    }
-  };
-
-  // Analyze uploaded audio file using WebSocket
-  const analyzeUploadedAudio = async () => {
-    if (!audioFile || !humeClient) return;
-
-    setIsAnalyzing(true);
-    try {
-      console.log("Analyzing audio via WebSocket...");
-      const result = await humeClient.analyzeAudio(audioFile);
-      setEmotions((prev) => ({
-        ...prev,
-        prosody: result.prosody,
-        burst: result.burst,
-      }));
-      console.log("Audio analysis results:", result);
-    } catch (error) {
-      console.error("Error analyzing audio:", error);
-      // Fallback to mock data if WebSocket fails
-      setEmotions((prev) => ({
-        ...prev,
-        prosody: [
-          { name: "joy", score: 0.6 },
-          { name: "interest", score: 0.5 },
-        ],
-        burst: [{ name: "amusement", score: 0.4 }],
-      }));
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Analyze audio (legacy function for recording)
-  const analyzeAudio = async (audioBlob: Blob) => {
-    setIsAnalyzing(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", audioBlob, "audio.wav");
-
-      const response = await fetch("/api/emotion-analysis", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      setEmotions((prev) => ({
-        ...prev,
-        prosody: data.prosody,
-        burst: data.burst,
-      }));
-    } catch (error) {
-      console.error("Error analyzing audio:", error);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Analyze text using WebSocket
-  const analyzeText = async () => {
-    if (!textInput.trim() || !humeClient) return;
-
-    setIsAnalyzing(true);
-    try {
-      console.log("Analyzing text via WebSocket...");
-      const emotions = await humeClient.analyzeText(textInput);
-      setEmotions((prev) => ({ ...prev, language: emotions }));
-      console.log("Text analysis results:", emotions);
-    } catch (error) {
-      console.error("Error analyzing text:", error);
-      // Fallback to mock data if WebSocket fails
-      setEmotions((prev) => ({
-        ...prev,
-        language: [
-          { name: "joy", score: 0.7 },
-          { name: "interest", score: 0.6 },
-          { name: "contentment", score: 0.5 },
-        ],
-      }));
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
   // Auto-analyze facial expressions when webcam is active
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (
-      activeTab === "facial" &&
-      isCameraStarted &&
-      videoRef.current?.srcObject
-    ) {
-      console.log("Starting facial analysis interval");
-      interval = setInterval(analyzeFacial, 2000); // Analyze every 2 seconds
+    if (activeTab === "facial" && isCameraStarted && videoRef.current?.srcObject) {
+      interval = setInterval(analyzeFacial, 2000);
     }
     return () => {
-      if (interval) {
-        console.log("Clearing facial analysis interval");
-        clearInterval(interval);
-      }
+      if (interval) clearInterval(interval);
     };
   }, [activeTab, isCameraStarted, analyzeFacial]);
 
@@ -413,12 +238,75 @@ export function EmotionTrackingDemo() {
   useEffect(() => {
     return () => {
       stopWebcam();
-      stopAudioRecording();
       if (humeClient) {
         humeClient.disconnect();
       }
     };
-  }, [stopWebcam, stopAudioRecording, humeClient]);
+  }, [stopWebcam, humeClient]);
+
+  // Analyze text with enhanced AI analysis
+  const analyzeText = async () => {
+    if (!textInput.trim()) return;
+
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch("/api/text-emotion-analysis", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: textInput }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Analysis failed");
+      }
+
+      const data = await response.json();
+      setTextAnalysisResult(data);
+      setMessageCount((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error analyzing text:", error);
+      alert("Failed to analyze text. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Transform emotional metrics for radar chart
+  const getRadarChartData = () => {
+    if (!textAnalysisResult) return [];
+
+    const metrics = textAnalysisResult.emotionalMetrics;
+    return [
+      { metric: "Intensity", value: metrics.intensity, fullMark: 100 },
+      { metric: "Positivity", value: metrics.positivity, fullMark: 100 },
+      { metric: "Authenticity", value: metrics.authenticity, fullMark: 100 },
+      { metric: "Complexity", value: metrics.complexity, fullMark: 100 },
+      { metric: "Clarity", value: metrics.clarity, fullMark: 100 },
+      { metric: "Energy", value: metrics.energy, fullMark: 100 },
+    ];
+  };
+
+  const getSentimentColor = (label: string) => {
+    switch (label.toLowerCase()) {
+      case "positive": return "text-green-400 bg-green-400/10 border-green-400/20";
+      case "negative": return "text-red-400 bg-red-400/10 border-red-400/20";
+      case "mixed": return "text-yellow-400 bg-yellow-400/10 border-yellow-400/20";
+      default: return "text-gray-400 bg-gray-400/10 border-gray-400/20";
+    }
+  };
+
+  const getIntentColor = (intent: string) => {
+    switch (intent.toLowerCase()) {
+      case "inform": return "text-blue-400 bg-blue-400/10 border-blue-400/20";
+      case "persuade": return "text-purple-400 bg-purple-400/10 border-purple-400/20";
+      case "express": return "text-pink-400 bg-pink-400/10 border-pink-400/20";
+      case "request": return "text-cyan-400 bg-cyan-400/10 border-cyan-400/20";
+      case "question": return "text-indigo-400 bg-indigo-400/10 border-indigo-400/20";
+      default: return "text-gray-400 bg-gray-400/10 border-gray-400/20";
+    }
+  };
 
   const getTopEmotions = (emotions: EmotionScore[] = [], limit = 5) => {
     return emotions
@@ -427,610 +315,423 @@ export function EmotionTrackingDemo() {
       .filter((emotion) => emotion.score > 0.1);
   };
 
-  const getEmotionColor = (score: number) => {
-    if (score > 0.7) return "text-green-400";
-    if (score > 0.4) return "text-yellow-400";
-    return "text-red-400";
-  };
-
-  // Export session data as PDF
-  const exportSessionData = async () => {
-    if (sessionData.length === 0) {
-      alert("No session data to export");
-      return;
-    }
-
-    const sessionId = `session-${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
-    const summaryData = {
-      averageEmotions: calculateAverageEmotions(sessionData),
-      topEmotions: getTopEmotionsFromSession(sessionData),
-    };
-
-    // Save to Supabase
-    try {
-      const response = await fetch("/api/emotion-sessions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sessionId,
-          startTime: sessionStartTime?.toISOString(),
-          endTime: new Date().toISOString(),
-          analysisType: activeTab,
-          sessionData,
-          summaryData,
-        }),
-      });
-
-      if (response.ok) {
-        console.log("Session data saved to Supabase");
-      } else {
-        console.error("Failed to save session data to Supabase");
-      }
-    } catch (error) {
-      console.error("Error saving to Supabase:", error);
-    }
-
-    // Generate PDF
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    let yPosition = 20;
-
-    // Title
-    pdf.setFontSize(20);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Emotion Analysis Session Report", pageWidth / 2, yPosition, {
-      align: "center",
-    });
-    yPosition += 20;
-
-    // Session Info
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Session Information", 20, yPosition);
-    yPosition += 10;
-
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(`Session ID: ${sessionId}`, 20, yPosition);
-    yPosition += 8;
-    pdf.text(
-      `Start Time: ${sessionStartTime?.toLocaleString()}`,
-      20,
-      yPosition
-    );
-    yPosition += 8;
-    pdf.text(`End Time: ${new Date().toLocaleString()}`, 20, yPosition);
-    yPosition += 8;
-    pdf.text(
-      `Duration: ${
-        sessionStartTime
-          ? Math.round(
-              (new Date().getTime() - sessionStartTime.getTime()) / 1000
-            )
-          : 0
-      } seconds`,
-      20,
-      yPosition
-    );
-    yPosition += 8;
-    pdf.text(`Total Analyses: ${sessionData.length}`, 20, yPosition);
-    yPosition += 8;
-    pdf.text(`Analysis Type: ${activeTab}`, 20, yPosition);
-    yPosition += 15;
-
-    // Summary
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Session Summary", 20, yPosition);
-    yPosition += 10;
-
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-
-    // Top Emotions
-    pdf.text("Top Emotions:", 20, yPosition);
-    yPosition += 8;
-    summaryData.topEmotions.forEach((emotion, index) => {
-      pdf.text(
-        `${index + 1}. ${emotion.name}: ${(emotion.score * 100).toFixed(1)}%`,
-        30,
-        yPosition
-      );
-      yPosition += 6;
-    });
-    yPosition += 10;
-
-    // Average Emotions
-    pdf.text("Average Emotions:", 20, yPosition);
-    yPosition += 8;
-    Object.entries(summaryData.averageEmotions).forEach(([emotion, score]) => {
-      pdf.text(`${emotion}: ${(score * 100).toFixed(1)}%`, 30, yPosition);
-      yPosition += 6;
-    });
-    yPosition += 15;
-
-    // Detailed Analysis
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Detailed Analysis", 20, yPosition);
-    yPosition += 10;
-
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "normal");
-
-    sessionData.forEach((data, index) => {
-      if (yPosition > pageHeight - 20) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-
-      pdf.text(
-        `Analysis ${index + 1} - ${
-          data.timestamp
-            ? new Date(data.timestamp).toLocaleTimeString()
-            : "No timestamp"
-        }:`,
-        20,
-        yPosition
-      );
-      yPosition += 6;
-
-      if (data.facial) {
-        data.facial.slice(0, 5).forEach((emotion) => {
-          pdf.text(
-            `  ${emotion.name}: ${(emotion.score * 100).toFixed(1)}%`,
-            30,
-            yPosition
-          );
-          yPosition += 5;
-        });
-      }
-      yPosition += 8;
-    });
-
-    // Footer
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "italic");
-    pdf.text(
-      "Generated by Antimatter AI Emotion Tracking Demo",
-      pageWidth / 2,
-      pageHeight - 10,
-      { align: "center" }
-    );
-
-    // Download PDF
-    pdf.save(
-      `emotion-analysis-session-${new Date().toISOString().split("T")[0]}.pdf`
-    );
-  };
-
-  const calculateAverageEmotions = (data: EmotionData[]) => {
-    if (data.length === 0) return {};
-
-    const emotionTotals: { [key: string]: number } = {};
-    const emotionCounts: { [key: string]: number } = {};
-
-    data.forEach((entry) => {
-      if (entry.facial) {
-        entry.facial.forEach((emotion) => {
-          emotionTotals[emotion.name] =
-            (emotionTotals[emotion.name] || 0) + emotion.score;
-          emotionCounts[emotion.name] = (emotionCounts[emotion.name] || 0) + 1;
-        });
-      }
-    });
-
-    const averages: { [key: string]: number } = {};
-    Object.keys(emotionTotals).forEach((emotion) => {
-      averages[emotion] = emotionTotals[emotion] / emotionCounts[emotion];
-    });
-
-    return averages;
-  };
-
-  const getTopEmotionsFromSession = (data: EmotionData[]) => {
-    const averages = calculateAverageEmotions(data);
-    return Object.entries(averages)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([name, score]) => ({ name, score }));
-  };
-
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Tab Navigation */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-gray-900 rounded-lg p-1 flex">
+    <div className="w-full">
+      {/* Modern Animated Tab Navigation */}
+      <div className="flex justify-center mb-12">
+        <div className="relative inline-flex bg-[#1a1d2e] border border-white/10 rounded-2xl p-1.5 gap-1.5 w-full max-w-[90vw] sm:max-w-none sm:w-auto">
+          {/* Animated Background */}
+          <motion.div
+            className="absolute top-1.5 bottom-1.5 bg-secondary rounded-xl shadow-lg shadow-secondary/20"
+            initial={false}
+            animate={{
+              left: activeTab === "facial" ? "6px" : "calc(50% + 0.75px)",
+              width: "calc(50% - 9px)",
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+            }}
+          />
+          
+          {/* Facial Tab */}
           <button
             onClick={() => setActiveTab("facial")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
-              activeTab === "facial"
-                ? "bg-secondary text-black"
-                : "text-gray-400 hover:text-white"
-            }`}
+            className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-200 flex-1 sm:flex-none sm:w-[230px]"
           >
-            <LuCamera size={20} />
-            Facial Expressions
+            <motion.div
+              animate={{
+                scale: activeTab === "facial" ? 1 : 0.95,
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <LuCamera 
+                size={18} 
+                className={`sm:w-5 sm:h-5 ${activeTab === "facial" ? "text-black" : "text-gray-500"}`}
+              />
+            </motion.div>
+            <motion.span
+              className="font-semibold text-xs sm:text-base whitespace-nowrap"
+              animate={{
+                color: activeTab === "facial" ? "#000000" : "#6B7280",
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <span className="hidden sm:inline">Facial Expressions</span>
+              <span className="sm:hidden">Facial</span>
+            </motion.span>
           </button>
-          <button
-            onClick={() => setActiveTab("audio")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
-              activeTab === "audio"
-                ? "bg-secondary text-black"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <LuMic size={20} />
-            Voice & Audio
-          </button>
+          
+          {/* Text Tab */}
           <button
             onClick={() => setActiveTab("text")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
-              activeTab === "text"
-                ? "bg-secondary text-black"
-                : "text-gray-400 hover:text-white"
-            }`}
+            className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-200 flex-1 sm:flex-none sm:w-[230px]"
           >
-            <LuType size={20} />
-            Text Analysis
+            <motion.div
+              animate={{
+                scale: activeTab === "text" ? 1 : 0.95,
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              <LuType 
+                size={18}
+                className={`sm:w-5 sm:h-5 ${activeTab === "text" ? "text-black" : "text-gray-500"}`}
+              />
+            </motion.div>
+            <motion.span
+              className="font-semibold text-xs sm:text-base whitespace-nowrap"
+              animate={{
+                color: activeTab === "text" ? "#000000" : "#6B7280",
+              }}
+              transition={{ duration: 0.2 }}
+            >
+              Text Analysis
+            </motion.span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Input Section */}
-        <div className="space-y-6">
-          {activeTab === "facial" && (
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">
-                Facial Expression Analysis
-              </h3>
-              <div className="space-y-4">
+      {/* Facial Expression Tab */}
+      {activeTab === "facial" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+          <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+            <h3 className="text-lg sm:text-xl font-semibold mb-4">Facial Expression Analysis</h3>
+            <div className="space-y-4">
                 <div className="relative">
                   <video
                     ref={videoRef}
                     autoPlay
+                    playsInline
                     muted
                     className="w-full h-64 bg-gray-800 rounded-lg object-cover"
                   />
                   <canvas ref={canvasRef} className="hidden" />
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={startWebcam}
-                    className="group relative overflow-hidden bg-black border border-white/20 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-white hover:text-black hover:border-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:hover:text-white"
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <LuPlay size={18} />
-                      Start Camera
-                    </span>
-                    <div className="absolute inset-0 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                  </button>
-                  <button
-                    onClick={stopWebcam}
-                    className="group relative overflow-hidden bg-gray-800 border border-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-gray-600 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <LuSquare size={18} />
-                      Stop Camera
-                    </span>
-                    <div className="absolute inset-0 bg-gray-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                  </button>
-                  <button
-                    onClick={exportSessionData}
-                    disabled={sessionData.length === 0}
-                    className="group relative overflow-hidden bg-emerald-600 border border-emerald-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-emerald-500 hover:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <LuUpload size={18} />
-                      Export Session ({sessionData.length})
-                    </span>
-                    <div className="absolute inset-0 bg-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                  </button>
-                </div>
-                <p className="text-sm text-gray-400">
-                  Real-time emotion analysis - no manual intervention needed
-                </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={startWebcam}
+                  disabled={isCameraStarted}
+                  className="group relative overflow-hidden bg-black border border-white/20 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-white hover:text-black hover:border-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <LuPlay size={18} />
+                    Start Camera
+                  </span>
+                </button>
+                <button
+                  onClick={stopWebcam}
+                  disabled={!isCameraStarted}
+                  className="group relative overflow-hidden bg-gray-800 border border-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <LuSquare size={18} />
+                    Stop Camera
+                  </span>
+                </button>
               </div>
+              <p className="text-sm text-gray-400">
+                Real-time emotion analysis powered by Hume AI
+              </p>
             </div>
-          )}
+          </div>
 
-          {activeTab === "audio" && (
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">
-                Voice & Audio Analysis
+          <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+            <div className="flex items-center gap-2 mb-4">
+              <div
+                className={`w-3 h-3 rounded-full animate-pulse ${
+                  humeClient ? "bg-green-500" : "bg-yellow-500"
+                }`}
+              ></div>
+              <h3 className="text-lg sm:text-xl font-semibold">
+                {humeClient ? "Connected to Hume AI" : "Mock Mode"}
               </h3>
-              <div className="space-y-4">
-                <div className="h-32 bg-gray-800 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-600">
-                  {audioFile ? (
-                    <div className="text-center">
-                      <p className="text-white font-medium">{audioFile.name}</p>
-                      <p className="text-gray-400 text-sm">
-                        {(audioFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-400">
-                      Upload an audio file to analyze
-                    </p>
-                  )}
+            </div>
+
+            {facialEmotions.length > 0 ? (
+              <>
+                <div className="mb-6">
+                  <h4 className="text-lg font-medium mb-3">Top Expressions</h4>
+                  <div className="space-y-2">
+                    {getTopEmotions(facialEmotions, 3).map((emotion, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="capitalize font-medium">{emotion.name}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-500 ${
+                                index === 0
+                                  ? "bg-gradient-to-r from-yellow-400 to-orange-400"
+                                  : index === 1
+                                  ? "bg-gradient-to-r from-blue-400 to-cyan-400"
+                                  : "bg-gradient-to-r from-purple-400 to-pink-400"
+                              }`}
+                              style={{ width: `${emotion.score * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium font-mono">
+                            {emotion.score.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 px-4 py-2 bg-secondary text-black rounded-lg hover:bg-secondary/80 transition-colors cursor-pointer">
-                    <LuUpload size={16} />
-                    Choose Audio File
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleAudioFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                  <button
-                    onClick={analyzeUploadedAudio}
-                    disabled={!audioFile || isAnalyzing}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <LuPlay size={16} />
-                    {isAnalyzing ? "Analyzing..." : "Analyze Audio"}
-                  </button>
+
+                <div>
+                  <h4 className="text-lg font-medium mb-3">Expression Levels</h4>
+                  <div className="space-y-1 max-h-64 overflow-y-auto">
+                    {facialEmotions.slice(0, 12).map((emotion, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between hover:bg-gray-800/50 rounded px-2 py-1"
+                      >
+                        <span className="capitalize text-sm">{emotion.name}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-emerald-400 to-cyan-400 h-1.5 rounded-full transition-all duration-500"
+                              style={{ width: `${emotion.score * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-400 w-8 font-mono">
+                            {emotion.score.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-sm text-gray-400">
-                  Upload an audio file to analyze speech prosody and vocal bursts (max 10MB)
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <LuCamera className="text-gray-600 mx-auto mb-4" size={48} />
+                <p className="text-gray-400">
+                  Start your camera to see facial expression analysis
                 </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
+      )}
 
-          {activeTab === "text" && (
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">
+      {/* Text Analysis Tab */}
+      {activeTab === "text" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+          <div className="space-y-4 sm:space-y-6 w-full">
+            <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <LuType className="text-secondary" size={24} />
                 Text Emotion Analysis
               </h3>
               <div className="space-y-4">
                 <textarea
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="Enter text to analyze emotional language..."
-                  className="w-full h-32 bg-gray-800 border border-gray-700 rounded-lg p-4 text-white placeholder-gray-400 resize-none"
+                  placeholder="Enter text to analyze emotional language, sentiment, and intent...&#10;&#10;Example: 'I'm really excited about this new project! It's going to be challenging, but I think we can make something amazing together.'"
+                  className="w-full h-40 bg-gray-800 border border-gray-700 rounded-lg p-4 text-white placeholder-gray-400 resize-none focus:outline-none focus:border-secondary/50 transition-colors"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      analyzeText();
+                    }
+                  }}
                 />
                 <button
                   onClick={analyzeText}
                   disabled={!textInput.trim() || isAnalyzing}
-                  className="flex items-center gap-2 px-4 py-2 bg-secondary text-black rounded-lg hover:bg-secondary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative overflow-hidden bg-secondary text-black px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed w-full flex items-center justify-center gap-2"
                 >
-                  <LuType size={16} />
-                  {isAnalyzing ? "Analyzing..." : "Analyze Text"}
+                  {isAnalyzing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-black border-t-transparent"></div>
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <LuBrain size={18} />
+                      Analyze Text
+                    </>
+                  )}
                 </button>
                 <p className="text-sm text-gray-400">
-                  Analyze emotional language across 53 emotional dimensions
+                  Powered by Hume AI & OpenAI GPT-5 • 53 emotional dimensions + sentiment & intent
                 </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Results Section */}
-        <div className="space-y-6">
-          {activeTab === "facial" && emotions.facial && (
-            <div className="bg-gray-900 rounded-lg p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className={`w-3 h-3 rounded-full animate-pulse ${
-                    humeClient ? "bg-green-500" : "bg-yellow-500"
-                  }`}
-                ></div>
-                <h3 className="text-xl font-semibold">
-                  Streaming API status:{" "}
-                  {humeClient ? "Connected to Hume AI" : "Mock Mode"}
-                </h3>
-              </div>
-
-              {/* Top Expressions - like Hume playground with dynamic sorting */}
-              <div className="mb-6">
-                <h4 className="text-lg font-medium mb-3 flex items-center gap-2">
-                  Top expressions
-                  <span className="text-xs text-gray-400">(Live ranking)</span>
-                </h4>
-                <div className="space-y-2">
-                  {getTopEmotions(emotions.facial, 3).map((emotion, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between group"
-                    >
-                      <span className="capitalize font-medium">
-                        {emotion.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-gray-700 rounded-full h-2 overflow-hidden">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-500 ${
-                              index === 0
-                                ? "bg-gradient-to-r from-yellow-400 to-orange-400"
-                                : index === 1
-                                ? "bg-gradient-to-r from-blue-400 to-cyan-400"
-                                : "bg-gradient-to-r from-purple-400 to-pink-400"
-                            }`}
-                            style={{ width: `${emotion.score * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-300 font-mono">
-                          {emotion.score.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Expression Levels - like Hume playground with dynamic sorting */}
-              <div>
-                <h4 className="text-lg font-medium mb-3 flex items-center gap-2">
-                  Expression levels
-                  <span className="text-xs text-gray-400">
-                    (Dynamic sorting)
-                  </span>
-                </h4>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {emotions.facial.slice(0, 9).map((emotion, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between group hover:bg-gray-800/50 rounded px-2 py-1 transition-colors"
-                    >
-                      <span className="capitalize text-sm font-medium">
-                        {emotion.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-emerald-400 to-cyan-400 h-1.5 rounded-full transition-all duration-500"
-                            style={{ width: `${emotion.score * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-400 w-8 font-mono">
-                          {emotion.score.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "audio" && (emotions.prosody || emotions.burst) && (
-            <div className="space-y-4">
-              {emotions.prosody && (
-                <div className="bg-gray-900 rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4">Speech Prosody</h3>
-                  <div className="space-y-3">
-                    {getTopEmotions(emotions.prosody).map((emotion, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between"
-                      >
-                        <span className="capitalize">{emotion.name}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 bg-gray-700 rounded-full h-2">
-                            <div
-                              className="bg-secondary h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${emotion.score * 100}%` }}
-                            />
-                          </div>
-                          <span
-                            className={`text-sm font-medium ${getEmotionColor(
-                              emotion.score
-                            )}`}
-                          >
-                            {(emotion.score * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                {messageCount > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span>{messageCount} analysis completed</span>
                   </div>
-                </div>
-              )}
-
-              {emotions.burst && (
-                <div className="bg-gray-900 rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4">Vocal Bursts</h3>
-                  <div className="space-y-3">
-                    {getTopEmotions(emotions.burst).map((emotion, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between"
-                      >
-                        <span className="capitalize">{emotion.name}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 bg-gray-700 rounded-full h-2">
-                            <div
-                              className="bg-secondary h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${emotion.score * 100}%` }}
-                            />
-                          </div>
-                          <span
-                            className={`text-sm font-medium ${getEmotionColor(
-                              emotion.score
-                            )}`}
-                          >
-                            {(emotion.score * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          )}
 
-          {activeTab === "text" && emotions.language && (
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">
-                Emotional Language Results
-              </h3>
-              <div className="space-y-3">
-                {getTopEmotions(emotions.language).map((emotion, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="capitalize">{emotion.name}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-700 rounded-full h-2">
+            {textAnalysisResult && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+                  <div className="bg-gray-900 rounded-lg p-3 sm:p-4 w-full">
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Sentiment</h4>
+                    <div
+                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border mb-2 ${getSentimentColor(
+                        textAnalysisResult.sentiment.label
+                      )}`}
+                    >
+                      {textAnalysisResult.sentiment.label.toUpperCase()}
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
                         <div
-                          className="bg-secondary h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${emotion.score * 100}%` }}
+                          className="bg-gradient-to-r from-secondary to-purple-400 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${textAnalysisResult.sentiment.confidence}%` }}
                         />
                       </div>
-                      <span
-                        className={`text-sm font-medium ${getEmotionColor(
-                          emotion.score
-                        )}`}
-                      >
-                        {(emotion.score * 100).toFixed(1)}%
+                      <span className="text-xs text-gray-400 font-mono">
+                        {textAnalysisResult.sentiment.confidence}%
                       </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {!isAnalyzing &&
-            !emotions[
-              activeTab === "facial"
-                ? "facial"
-                : activeTab === "audio"
-                ? "prosody"
-                : "language"
-            ] && (
-              <div className="bg-gray-900 rounded-lg p-6 text-center">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                    <p className="text-gray-400">
-                      Streaming API status: Disconnected
+                    <p className="text-xs text-gray-400">
+                      {textAnalysisResult.sentiment.description}
                     </p>
                   </div>
-                  <p className="text-gray-400">
-                    {activeTab === "facial" &&
-                      "Start your camera to see facial expression analysis"}
-                    {activeTab === "audio" &&
-                      "Upload an audio file to analyze speech prosody and vocal bursts"}
-                    {activeTab === "text" &&
-                      "Enter text above to analyze emotional language"}
+
+                  <div className="bg-gray-900 rounded-lg p-3 sm:p-4 w-full">
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Intent</h4>
+                    <div
+                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border mb-2 ${getIntentColor(
+                        textAnalysisResult.intent.primary
+                      )}`}
+                    >
+                      {textAnalysisResult.intent.primary.toUpperCase()}
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-cyan-400 to-blue-400 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${textAnalysisResult.intent.confidence}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400 font-mono">
+                        {textAnalysisResult.intent.confidence}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      {textAnalysisResult.intent.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+                  <h4 className="text-lg font-semibold mb-3">Emotional Analysis</h4>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    {textAnalysisResult.analysis}
                   </p>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="space-y-4 sm:space-y-6 w-full">
+            {textAnalysisResult ? (
+              <>
+                <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-center">Emotional Metrics</h3>
+                  <ResponsiveContainer width="100%" height={300} className="sm:h-[350px]">
+                    <RadarChart data={getRadarChartData()}>
+                      <PolarGrid stroke="#374151" />
+                      <PolarAngleAxis
+                        dataKey="metric"
+                        tick={{ fill: "#9CA3AF", fontSize: 10 }}
+                        className="text-[10px] sm:text-xs"
+                      />
+                      <PolarRadiusAxis
+                        angle={90}
+                        domain={[0, 100]}
+                        tick={{ fill: "#6B7280", fontSize: 8 }}
+                      />
+                      <Radar
+                        name="Score"
+                        dataKey="value"
+                        stroke="#9d88ff"
+                        fill="#9d88ff"
+                        fillOpacity={0.6}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#1F2937",
+                          border: "1px solid #374151",
+                          borderRadius: "8px",
+                          color: "#fff",
+                          fontSize: "12px",
+                        }}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-4">
+                    {getRadarChartData().map((item) => (
+                      <div key={item.metric} className="flex items-center justify-between text-xs sm:text-sm">
+                        <span className="text-gray-400">{item.metric}</span>
+                        <span className="font-semibold text-secondary">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-gray-900 rounded-lg p-4 sm:p-6 w-full">
+                  <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Emotional Language Results</h3>
+                  <div className="space-y-2 sm:space-y-3">
+                    {textAnalysisResult.emotions.slice(0, 8).map((emotion, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between gap-2 hover:bg-gray-800/50 rounded-lg px-2 sm:px-3 py-2 transition-colors w-full"
+                      >
+                        <span className="capitalize font-medium text-sm sm:text-base flex-shrink-0">{emotion.name}</span>
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end min-w-0">
+                          <div className="w-20 sm:w-32 bg-gray-700 rounded-full h-2.5 overflow-hidden flex-shrink-0">
+                            <div
+                              className={`h-2.5 rounded-full transition-all duration-500 ${
+                                index === 0
+                                  ? "bg-gradient-to-r from-yellow-400 to-orange-400"
+                                  : index === 1
+                                  ? "bg-gradient-to-r from-emerald-400 to-cyan-400"
+                                  : index === 2
+                                  ? "bg-gradient-to-r from-blue-400 to-indigo-400"
+                                  : "bg-gradient-to-r from-purple-400 to-pink-400"
+                              }`}
+                              style={{ width: `${emotion.score * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-300 font-mono w-10 sm:w-12 text-right flex-shrink-0">
+                            {(emotion.score * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="bg-gray-900 rounded-lg p-6 sm:p-12 text-center h-full flex flex-col items-center justify-center w-full">
+                <LuBrain className="text-secondary mx-auto mb-4 sm:mb-6" size={40} />
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">AI-Powered Emotion Analysis</h3>
+                <p className="text-sm sm:text-base text-gray-400 max-w-md px-4">
+                  Enter text to see comprehensive emotional analysis with sentiment, intent, and
+                  53-dimensional emotion detection powered by Hume AI and OpenAI GPT-5.
+                </p>
+                <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 justify-center">
+                  <span className="text-xs px-3 py-1 bg-secondary/10 text-secondary rounded-full border border-secondary/20">
+                    Hume AI
+                  </span>
+                  <span className="text-xs px-3 py-1 bg-secondary/10 text-secondary rounded-full border border-secondary/20">
+                    OpenAI GPT-5
+                  </span>
+                  <span className="text-xs px-3 py-1 bg-secondary/10 text-secondary rounded-full border border-secondary/20">
+                    53 Emotions
+                  </span>
                 </div>
               </div>
             )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

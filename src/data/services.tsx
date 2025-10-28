@@ -2,7 +2,7 @@ import { IconType } from "react-icons";
 import { MdOutlineDesignServices } from "react-icons/md";
 import { FaCode } from "react-icons/fa6";
 import { BsGraphUpArrow } from "react-icons/bs";
-import { LuBrain, LuCpu } from "react-icons/lu";
+import { LuBrain, LuCpu, LuHeart } from "react-icons/lu";
 import { RiStethoscopeLine } from "react-icons/ri";
 import { HiSpeakerWave } from "react-icons/hi2";
 
@@ -198,6 +198,46 @@ export const ServicesData: ServiceProps[] = [
     customCTA: {
       text: "Try Antimatter Voice Agent",
       href: "/voice-agent-demo",
+      secondary: {
+        text: "Build Your Own",
+        href: "/contact",
+      },
+    },
+  },
+  {
+    icon: LuHeart,
+    link: "/emotion-ai",
+    title: "Sentiment AI",
+    pageTitle: (
+      <>
+        Sentiment AI for <br />
+        <span className="text-secondary font-bold italic mr-3">data-driven decisions</span>
+      </>
+    ),
+    description:
+      "Transform emotional data into business intelligence. Analyze customer calls, employee feedback, and user interactions to make informed decisions that drive growth and retention.",
+    tagline: ["Emotion as a business metric."],
+    items: [
+      { 
+        title: "Customer Sentiment Dashboards",
+        desc: "Real-time sentiment analysis of customer calls, support tickets, and feedback. Track satisfaction trends, identify at-risk accounts, and optimize customer experience with actionable insights."
+      },
+      { 
+        title: "Employee Engagement Metrics",
+        desc: "Monitor team sentiment through meeting analysis, feedback surveys, and communication patterns. Detect burnout risks, measure engagement levels, and improve workplace culture with data-driven insights."
+      },
+      { 
+        title: "Predictive Analytics",
+        desc: "Leverage emotional data to predict customer churn, employee turnover, and business outcomes. Our AI models identify patterns and trends before they become problems, enabling proactive decision-making."
+      },
+      { 
+        title: "ROI Measurement & Reporting",
+        desc: "Quantify the impact of emotional intelligence on your business. Track conversion rates, retention metrics, and revenue impact with comprehensive reporting and analytics dashboards."
+      },
+    ],
+    customCTA: {
+      text: "Try Sentiment AI Demo",
+      href: "/emotion-tracking-demo",
       secondary: {
         text: "Build Your Own",
         href: "/contact",
