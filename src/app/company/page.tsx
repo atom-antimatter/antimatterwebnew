@@ -230,7 +230,7 @@ const CompanyPage = () => {
           </div> */}
         </div>
       </MainLayout>
-      <div className="mobile:h-[900px] md:h-[800px] xl:h-[900px] relative">
+      <div className="mobile:h-[900px] md:h-[800px] xl:h-[950px] relative">
         <div className=" w-main mx-auto relative z-10">
           <div className="flex flex-col md:flex-row gap-10 justify-between">
             <div>
@@ -264,15 +264,18 @@ const CompanyPage = () => {
             </div>
           </div>
         </div>
-        <div className="relative mb-20 mobile:absolute wide:pl-20 wide:left-1/2 mobile:top-64 overflow-hidden md:top-44 lg:top-10  right-0 mt-10">
-          <div className="relative w-full mobile:w-xl lg:w-2xl xl:w-3xl ">
-            <Image
-              src={"/images/CompanyCTA.jpg"}
-              alt="cta"
-              width={610}
-              height={610}
-              className="rotate-12 lg:rotate-0 w-full"
-            />
+        <div className="relative mb-20 mobile:absolute wide:pl-20 wide:left-1/2 mobile:top-64 overflow-hidden md:top-44 lg:top-28 xl:top-20 right-0 mobile:-right-24 md:right-0 mt-10">
+          <div className="relative w-full mobile:w-4xl lg:w-[950px] xl:w-[1480px] flex justify-end ml-[35%] mobile:ml-0">
+            <div className="w-[200%] mobile:w-full grow shrink-0">
+              <video
+                src="/Antimatter-astronaut-loop-1.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="rotate-12 lg:rotate-0 w-full"
+              />
+            </div>
             <div className="w-20 absolute right-0 h-full from-20% bg-gradient-to-l top-0 from-background to-transparent" />
           </div>
         </div>
