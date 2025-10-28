@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import TransitionLink from "@/components/ui/TransitionLink";
 import { LuBrain, LuMessageSquare, LuChartBar, LuSparkles } from "react-icons/lu";
 
@@ -130,7 +129,7 @@ export default function EmotionAIPage() {
             Built on cutting-edge AI technology
           </h2>
           <p className="text-gray-400 text-lg mb-12">
-            Our emotion AI combines the best of Hume AI's 53-dimensional emotion detection with OpenAI GPT-5's advanced natural language understanding to deliver unparalleled emotional intelligence.
+            Our emotion AI combines the best of Hume AI&apos;s 53-dimensional emotion detection with OpenAI GPT-5&apos;s advanced natural language understanding to deliver unparalleled emotional intelligence.
           </p>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
@@ -159,7 +158,7 @@ export default function EmotionAIPage() {
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Ready to understand your customers' emotions?
+            Ready to understand your customers&apos; emotions?
           </h2>
           <p className="text-xl text-gray-400 mb-8">
             Experience our emotion AI demo or contact us to build a custom solution for your business.
