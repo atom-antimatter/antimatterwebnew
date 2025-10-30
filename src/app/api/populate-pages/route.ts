@@ -4,13 +4,19 @@ import { ServicesData } from "@/data/services";
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Use service role key for server-side operations that need to bypass RLS
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase configuration missing");
   }
 
-  return createClient(supabaseUrl, supabaseKey);
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
 };
 
 // Define all pages in the site
@@ -170,7 +176,17 @@ export async function POST(request: Request) {
       .from("pages")
       .select("slug");
     
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error("Error fetching existing pages:", fetchError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Failed to fetch existing pages: ${fetchError.message}`,
+          details: fetchError,
+        },
+        { status: 500 }
+      );
+    }
     
     const existingSlugs = new Set(existingPages?.map(p => p.slug) || []);
     
@@ -198,7 +214,19 @@ export async function POST(request: Request) {
       .insert(pagesWithDefaults)
       .select();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error inserting pages:", error);
+      console.error("Pages attempted:", pagesWithDefaults.length);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Failed to insert pages: ${error.message}`,
+          details: error,
+          attemptedCount: newPages.length,
+        },
+        { status: 500 }
+      );
+    }
     
     return NextResponse.json({
       success: true,
@@ -211,7 +239,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: error.message || "Unknown error occurred",
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
       { status: 500 }
     );

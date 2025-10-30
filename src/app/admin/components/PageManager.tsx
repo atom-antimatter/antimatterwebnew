@@ -76,15 +76,23 @@ export default function PageManager() {
       
       const result = await response.json();
       
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP error! status: ${response.status}`);
+      }
+      
       if (result.success) {
-        alert(`Success! ${result.count} pages added.`);
+        const message = result.count === 0 
+          ? `All pages already exist (${result.existingCount || pages.length} total).`
+          : `Success! ${result.count} pages added to the database.`;
+        alert(message);
         await fetchPages();
       } else {
-        alert(`Error: ${result.error}`);
+        throw new Error(result.error || "Unknown error occurred");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error populating pages:", error);
-      alert("Failed to populate pages. Check console for details.");
+      const errorMessage = error.message || "Failed to populate pages. Please check the browser console and server logs for details.";
+      alert(`Error: ${errorMessage}`);
     } finally {
       setIsPopulating(false);
     }
