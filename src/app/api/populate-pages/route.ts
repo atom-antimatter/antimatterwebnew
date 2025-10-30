@@ -96,9 +96,9 @@ const allPages = [
   },
   {
     slug: "/emotion-ai",
-    title: "Emotion AI & Sentiment Analysis - Antimatter AI",
+    title: "Sentiment AI for Data-Driven Decisions | Antimatter AI",
     meta_description:
-      "Custom sentiment tracking AI built on Hume AI and OpenAI GPT-5. Real-time facial expression and text emotion detection.",
+      "Transform emotional data into business intelligence. Analyze customer calls, employee feedback, and user interactions to make informed decisions that drive growth and retention.",
     category: "solutions",
   },
   // Demo pages

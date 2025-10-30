@@ -153,16 +153,35 @@ export default function PageManager() {
           <h2 className="text-2xl font-bold text-foreground">Pages</h2>
           <p className="text-foreground/60">Manage page SEO settings and metadata</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingPage(null);
-            setShowForm(true);
-          }}
-          className="flex items-center space-x-2 bg-secondary hover:bg-secondary/80 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <HiOutlinePlus className="w-5 h-5" />
-          <span>Add Page</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={populateAllPages}
+            disabled={isPopulating}
+            className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPopulating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <span>Populating...</span>
+              </>
+            ) : (
+              <>
+                <HiOutlinePlus className="w-5 h-5" />
+                <span>Populate All Pages</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => {
+              setEditingPage(null);
+              setShowForm(true);
+            }}
+            className="flex items-center space-x-2 bg-secondary hover:bg-secondary/80 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <HiOutlinePlus className="w-5 h-5" />
+            <span>Add Page</span>
+          </button>
+        </div>
       </div>
 
       {/* Page Editor Modal */}
@@ -190,6 +209,16 @@ export default function PageManager() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
+              {pages.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-foreground/60 mb-4">No pages found in the database.</p>
+                      <p className="text-sm text-foreground/40 mb-4">Click &quot;Populate All Pages&quot; to add all site pages automatically.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
               {pages.map((page) => (
                 <tr key={page.id} className="hover:bg-zinc-800/30">
                   <td className="px-6 py-4">
