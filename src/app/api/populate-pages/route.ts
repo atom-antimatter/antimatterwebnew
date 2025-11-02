@@ -259,21 +259,29 @@ export async function POST() {
           updated_at: new Date().toISOString(),
         };
         
+        // Insert new page - use insert (not upsert) to only add new pages
+        // Existing pages will only be updated when explicitly edited in admin portal
         const { data, error } = await supabase
           .from("pages")
           .insert([pageData])
           .select();
         
         if (error) {
-          console.error(`Error inserting page ${page.slug}:`, error);
-          console.error(`Page data attempted:`, JSON.stringify(pageData, null, 2));
-          errors.push({ 
-            slug: page.slug, 
-            error: error.message,
-            details: error,
-            code: error.code,
-            hint: error.hint
-          });
+          // Handle duplicate key errors gracefully (page already exists)
+          if (error.code === '23505' || error.message.includes('duplicate') || error.message.includes('unique')) {
+            console.log(`Page ${page.slug} already exists, skipping...`);
+            // Don't count as error - page already exists, which is fine
+          } else {
+            console.error(`Error inserting page ${page.slug}:`, error);
+            console.error(`Page data attempted:`, JSON.stringify(pageData, null, 2));
+            errors.push({ 
+              slug: page.slug, 
+              error: error.message,
+              details: error,
+              code: error.code,
+              hint: error.hint
+            });
+          }
         } else if (data && data.length > 0) {
           insertedPages.push(...data);
           console.log(`Successfully inserted page: ${page.slug}`);

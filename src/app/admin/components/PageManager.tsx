@@ -43,8 +43,46 @@ export default function PageManager() {
   const [isPopulating, setIsPopulating] = useState(false);
 
   useEffect(() => {
-    fetchPages();
+    const initializePages = async () => {
+      await fetchPages();
+      // Auto-sync pages if database is empty (check after fetch)
+      const supabase = getSupabase();
+      const { data: existingPages } = await supabase
+        .from("pages")
+        .select("slug")
+        .limit(1);
+      
+      if (!existingPages || existingPages.length === 0) {
+        autoSyncPages();
+      }
+    };
+    
+    initializePages();
   }, []);
+
+  const autoSyncPages = async () => {
+    try {
+      console.log("Auto-syncing pages to database...");
+      const response = await fetch("/api/populate-pages", {
+        method: "POST",
+      });
+      
+      const result = await response.json();
+      
+      if (result.success && result.count > 0) {
+        console.log(`Auto-synced ${result.count} pages to database`);
+        await fetchPages();
+      } else if (result.warnings && result.errors && result.errors.length > 0) {
+        console.warn(`Auto-sync partial: ${result.count} pages added, ${result.errors.length} failed`);
+        await fetchPages(); // Refresh anyway to show what was added
+      } else if (result.count === 0) {
+        console.log("All pages already exist in database");
+      }
+    } catch (error: any) {
+      console.error("Error auto-syncing pages:", error);
+      // Don't show alert on auto-sync, just log to console
+    }
+  };
 
   const fetchPages = async () => {
     try {
