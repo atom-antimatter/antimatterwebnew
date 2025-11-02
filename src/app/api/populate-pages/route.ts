@@ -5,7 +5,9 @@ import { ServicesData } from "@/data/services";
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   // Use service role key for server-side operations that need to bypass RLS
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Service role key provided by user
+  const serviceRoleKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpbGNtZHBua3pnd3Z3c254bGF2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODY4NjMxMCwiZXhwIjoyMDc0MjYyMzEwfQ.zeVKENE9mXTdUjv51UwTid2GCLPA3cQZj5h8B9mLqHo";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || serviceRoleKey;
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase configuration missing");
@@ -15,6 +17,9 @@ const getSupabase = () => {
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    db: {
+      schema: 'public'
     }
   });
 };
@@ -171,6 +176,16 @@ export async function POST(request: Request) {
   try {
     const supabase = getSupabase();
     
+    // Refresh schema cache by doing a full select first
+    const { error: schemaError } = await supabase
+      .from("pages")
+      .select("*")
+      .limit(0);
+    
+    if (schemaError && !schemaError.message.includes("relation") && !schemaError.message.includes("does not exist")) {
+      console.warn("Schema cache refresh warning:", schemaError);
+    }
+    
     // First, get existing pages to avoid duplicates
     const { data: existingPages, error: fetchError } = await supabase
       .from("pages")
@@ -201,38 +216,77 @@ export async function POST(request: Request) {
       });
     }
     
-    // Insert new pages
-    const pagesWithDefaults = newPages.map(page => ({
-      ...page,
-      no_index: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
+    // Insert new pages - do one at a time to avoid schema cache issues
+    const insertedPages = [];
+    const errors = [];
     
-    const { data, error } = await supabase
-      .from("pages")
-      .insert(pagesWithDefaults)
-      .select();
+    for (const page of newPages) {
+      try {
+        // Map page data with explicit field names matching database schema
+        const pageData = {
+          slug: page.slug,
+          title: page.title,
+          meta_description: page.meta_description || null,
+          meta_keywords: page.meta_keywords || null,
+          canonical_url: page.canonical_url || null,
+          og_title: page.og_title || null,
+          og_description: page.og_description || null,
+          og_image: page.og_image || null,
+          twitter_title: page.twitter_title || null,
+          twitter_description: page.twitter_description || null,
+          twitter_image: page.twitter_image || null,
+          no_index: page.no_index !== undefined ? page.no_index : false,
+          is_homepage: page.is_homepage !== undefined ? page.is_homepage : false,
+          category: page.category || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        
+        const { data, error } = await supabase
+          .from("pages")
+          .insert([pageData])
+          .select();
+        
+        if (error) {
+          console.error(`Error inserting page ${page.slug}:`, error);
+          errors.push({ slug: page.slug, error: error.message });
+        } else if (data && data.length > 0) {
+          insertedPages.push(...data);
+        }
+      } catch (err: any) {
+        console.error(`Error inserting page ${page.slug}:`, err);
+        errors.push({ slug: page.slug, error: err.message });
+      }
+    }
     
-    if (error) {
-      console.error("Error inserting pages:", error);
-      console.error("Pages attempted:", pagesWithDefaults.length);
+    if (insertedPages.length === 0 && errors.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: `Failed to insert pages: ${error.message}`,
-          details: error,
+          error: `Failed to insert pages. ${errors.length} errors occurred.`,
+          details: errors,
           attemptedCount: newPages.length,
         },
         { status: 500 }
       );
     }
     
+    if (errors.length > 0) {
+      return NextResponse.json({
+        success: true,
+        message: `Partially successful: ${insertedPages.length} pages added, ${errors.length} failed`,
+        count: insertedPages.length,
+        pages: insertedPages,
+        errors: errors,
+        warnings: true,
+      });
+    }
+    
     return NextResponse.json({
       success: true,
-      message: `Successfully populated ${newPages.length} pages`,
-      count: newPages.length,
-      pages: data,
+      message: `Successfully populated ${insertedPages.length} pages`,
+      count: insertedPages.length,
+      pages: insertedPages,
     });
   } catch (error: any) {
     console.error("Error populating pages:", error);
