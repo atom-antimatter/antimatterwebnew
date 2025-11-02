@@ -87,21 +87,59 @@ export default function PageManager() {
   const fetchPages = async () => {
     try {
       const supabase = getSupabase();
+      // Fetch pages - don't order by category to avoid schema cache issues
       const { data, error } = await supabase
         .from("pages")
         .select("*")
         .order("is_homepage", { ascending: false })
-        .order("category")
         .order("slug");
 
       if (error) {
         console.error("Error fetching pages:", error);
         console.error("Error details:", JSON.stringify(error, null, 2));
+        
+        // If category column error, try fetching without it
+        if (error.message?.includes('category')) {
+          console.log("Retrying fetch without category column...");
+          const { data: retryData, error: retryError } = await supabase
+            .from("pages")
+            .select("*")
+            .order("is_homepage", { ascending: false })
+            .order("slug");
+          
+          if (retryError) {
+            console.error("Retry also failed:", retryError);
+            setPages([]);
+            throw retryError;
+          }
+          
+          setPages(retryData || []);
+          return;
+        }
+        
         // Set empty array on error but don't break the UI
         setPages([]);
         throw error;
       }
-      setPages(data || []);
+      
+      // Sort by category in JavaScript if category column exists
+      const sortedData = data ? [...data].sort((a, b) => {
+        // Homepage first
+        if (a.is_homepage && !b.is_homepage) return -1;
+        if (!a.is_homepage && b.is_homepage) return 1;
+        
+        // Then by category if available
+        if (a.category && b.category) {
+          if (a.category !== b.category) {
+            return a.category.localeCompare(b.category);
+          }
+        }
+        
+        // Finally by slug
+        return a.slug.localeCompare(b.slug);
+      }) : [];
+      
+      setPages(sortedData);
     } catch (error: any) {
       console.error("Error fetching pages:", error);
       // Log full error for debugging
