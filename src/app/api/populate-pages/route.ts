@@ -202,41 +202,53 @@ export async function POST() {
       console.warn("Schema cache refresh warning:", schemaError);
     }
     
-    // First, get existing pages to avoid duplicates
-    const { data: existingPages, error: fetchError } = await supabase
-      .from("pages")
-      .select("slug");
+    // Get existing pages count for reporting
+    let existingPages: any[] = [];
+    let existingSlugs = new Set<string>();
     
-    if (fetchError) {
-      console.error("Error fetching existing pages:", fetchError);
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Failed to fetch existing pages: ${fetchError.message}`,
-          details: fetchError,
-        },
-        { status: 500 }
-      );
+    try {
+      const { data, error: fetchError } = await supabase
+        .from("pages")
+        .select("slug");
+      
+      if (fetchError) {
+        console.error("Error fetching existing pages:", fetchError);
+        // Continue anyway - we'll insert all and handle duplicates
+      } else {
+        existingPages = data || [];
+        existingSlugs = new Set(existingPages.map(p => p.slug));
+      }
+    } catch (err) {
+      console.error("Error in fetch existing pages:", err);
+      // Continue with insert anyway
     }
     
-    const existingSlugs = new Set(existingPages?.map(p => p.slug) || []);
+    // Try to insert all pages - handle duplicates gracefully
+    const pagesToInsert = allPages;
+    const existingPagesCount = existingPages.length;
     
-    // Filter out pages that already exist
-    const newPages = allPages.filter(page => !existingSlugs.has(page.slug));
-    
-    if (newPages.length === 0) {
+    // If all pages exist, still return success (they're already there)
+    if (existingSlugs.size === allPages.length) {
       return NextResponse.json({ 
         success: true, 
         message: "All pages already exist",
-        count: 0 
+        count: 0,
+        skipped: existingPagesCount
       });
     }
     
-    // Insert new pages - do one at a time to avoid schema cache issues
+    // Insert all pages - do one at a time to avoid schema cache issues
+    // Handle duplicates gracefully (skip if exists)
     const insertedPages = [];
     const errors = [];
+    const skippedPages = [];
     
-    for (const page of newPages) {
+    for (const page of pagesToInsert) {
+      // Skip if already exists (unless we want to force update)
+      if (existingSlugs.has(page.slug)) {
+        skippedPages.push(page.slug);
+        continue;
+      }
       try {
         // Map page data with explicit field names matching database schema
         // Convert empty strings to null for optional fields
@@ -268,8 +280,9 @@ export async function POST() {
         
         if (error) {
           // Handle duplicate key errors gracefully (page already exists)
-          if (error.code === '23505' || error.message.includes('duplicate') || error.message.includes('unique')) {
-            console.log(`Page ${page.slug} already exists, skipping...`);
+          if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+            console.log(`Page ${page.slug} already exists (duplicate key), skipping...`);
+            skippedPages.push(page.slug);
             // Don't count as error - page already exists, which is fine
           } else {
             console.error(`Error inserting page ${page.slug}:`, error);
@@ -296,34 +309,50 @@ export async function POST() {
       }
     }
     
-    if (insertedPages.length === 0 && errors.length > 0) {
+    if (insertedPages.length === 0 && errors.length > 0 && skippedPages.length === 0) {
       return NextResponse.json(
         {
           success: false,
           error: `Failed to insert pages. ${errors.length} errors occurred.`,
           details: errors,
-          attemptedCount: newPages.length,
+          attemptedCount: pagesToInsert.length,
         },
         { status: 500 }
       );
     }
     
+    // Build response message
+    let message = "";
+    if (insertedPages.length > 0) {
+      message = `Successfully added ${insertedPages.length} pages`;
+    }
+    if (skippedPages.length > 0) {
+      message += message ? `, skipped ${skippedPages.length} existing pages` : `Skipped ${skippedPages.length} existing pages`;
+    }
+    if (errors.length > 0) {
+      message += message ? `, ${errors.length} errors occurred` : `${errors.length} errors occurred`;
+    }
+    
     if (errors.length > 0) {
       return NextResponse.json({
         success: true,
-        message: `Partially successful: ${insertedPages.length} pages added, ${errors.length} failed`,
+        message: message || "Partially successful",
         count: insertedPages.length,
+        skipped: skippedPages.length,
         pages: insertedPages,
         errors: errors,
+        skippedPages: skippedPages,
         warnings: true,
       });
     }
     
     return NextResponse.json({
       success: true,
-      message: `Successfully populated ${insertedPages.length} pages`,
+      message: message || `Successfully populated ${insertedPages.length} pages`,
       count: insertedPages.length,
+      skipped: skippedPages.length,
       pages: insertedPages,
+      skippedPages: skippedPages,
     });
   } catch (error: any) {
     console.error("Error populating pages:", error);
