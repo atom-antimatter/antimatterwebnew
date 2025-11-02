@@ -98,13 +98,34 @@ export default function PageManager() {
       }
       
       if (result.success) {
-        const message = result.count === 0 
+        let message = result.count === 0 
           ? `All pages already exist (${result.existingCount || pages.length} total).`
           : `Success! ${result.count} pages added to the database.`;
+        
+        // Show warnings if there were partial errors
+        if (result.warnings && result.errors && result.errors.length > 0) {
+          const errorSummary = result.errors.slice(0, 5).map((e: any) => `• ${e.slug}: ${e.error}`).join('\n');
+          const moreErrors = result.errors.length > 5 ? `\n\n...and ${result.errors.length - 5} more errors` : '';
+          message += `\n\n⚠️ ${result.errors.length} pages failed:\n${errorSummary}${moreErrors}`;
+          console.error("Populate errors:", result.errors);
+        }
+        
         alert(message);
         await fetchPages();
       } else {
-        throw new Error(result.error || "Unknown error occurred");
+        // Show detailed error information
+        let errorMessage = result.error || "Unknown error occurred";
+        if (result.details && Array.isArray(result.details)) {
+          const errorSummary = result.details.slice(0, 10).map((e: any) => {
+            const slug = e.slug || 'unknown';
+            const errMsg = e.error || e.message || 'Unknown error';
+            return `• ${slug}: ${errMsg}`;
+          }).join('\n');
+          const moreErrors = result.details.length > 10 ? `\n\n...and ${result.details.length - 10} more errors` : '';
+          errorMessage += `\n\nErrors:\n${errorSummary}${moreErrors}`;
+          console.error("Detailed populate errors:", result.details);
+        }
+        throw new Error(errorMessage);
       }
     } catch (error: any) {
       console.error("Error populating pages:", error);
