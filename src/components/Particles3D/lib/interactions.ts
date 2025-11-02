@@ -181,7 +181,8 @@ export function setupInteractions(
             },
           };
 
-          const timeline3 = gsap.timeline({ scrollTrigger: scrollTriggerExit });
+          // Create timeline to activate scroll trigger (variable intentionally unused)
+          gsap.timeline({ scrollTrigger: scrollTriggerExit });
         }
 
         const xValue = isDesktop ? "-60%" : isScreen1 ? "-60%" : "-50%";

@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { ServicesData } from "@/data/services";
+
+interface PageData {
+  slug: string;
+  title: string;
+  meta_description?: string;
+  meta_keywords?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
+  twitter_title?: string;
+  twitter_description?: string;
+  twitter_image?: string;
+  no_index?: boolean;
+  is_homepage?: boolean;
+  category?: string;
+}
 
 const getSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,7 +41,7 @@ const getSupabase = () => {
 };
 
 // Define all pages in the site
-const allPages = [
+const allPages: PageData[] = [
   {
     slug: "/",
     title: "Antimatter AI - Building Digital Solutions That Matter",
@@ -172,7 +188,7 @@ const allPages = [
   },
 ];
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const supabase = getSupabase();
     
@@ -226,18 +242,18 @@ export async function POST(request: Request) {
         const pageData = {
           slug: page.slug,
           title: page.title,
-          meta_description: page.meta_description || null,
-          meta_keywords: page.meta_keywords || null,
-          canonical_url: page.canonical_url || null,
-          og_title: page.og_title || null,
-          og_description: page.og_description || null,
-          og_image: page.og_image || null,
-          twitter_title: page.twitter_title || null,
-          twitter_description: page.twitter_description || null,
-          twitter_image: page.twitter_image || null,
-          no_index: page.no_index !== undefined ? page.no_index : false,
-          is_homepage: page.is_homepage !== undefined ? page.is_homepage : false,
-          category: page.category || null,
+          meta_description: page.meta_description ?? null,
+          meta_keywords: page.meta_keywords ?? null,
+          canonical_url: page.canonical_url ?? null,
+          og_title: page.og_title ?? null,
+          og_description: page.og_description ?? null,
+          og_image: page.og_image ?? null,
+          twitter_title: page.twitter_title ?? null,
+          twitter_description: page.twitter_description ?? null,
+          twitter_image: page.twitter_image ?? null,
+          no_index: page.no_index ?? false,
+          is_homepage: page.is_homepage ?? false,
+          category: page.category ?? null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
