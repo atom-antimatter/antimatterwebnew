@@ -101,26 +101,54 @@ export default function PageManager() {
   const handleSave = async (pageData: Partial<Page>) => {
     try {
       const supabase = getSupabase();
+      
+      // Convert empty strings to null for optional fields
+      const cleanedData: any = {
+        ...pageData,
+        meta_description: pageData.meta_description && pageData.meta_description.trim() ? pageData.meta_description.trim() : null,
+        meta_keywords: pageData.meta_keywords && pageData.meta_keywords.trim() ? pageData.meta_keywords.trim() : null,
+        canonical_url: pageData.canonical_url && pageData.canonical_url.trim() ? pageData.canonical_url.trim() : null,
+        og_title: pageData.og_title && pageData.og_title.trim() ? pageData.og_title.trim() : null,
+        og_description: pageData.og_description && pageData.og_description.trim() ? pageData.og_description.trim() : null,
+        og_image: pageData.og_image && pageData.og_image.trim() ? pageData.og_image.trim() : null,
+        twitter_title: pageData.twitter_title && pageData.twitter_title.trim() ? pageData.twitter_title.trim() : null,
+        twitter_description: pageData.twitter_description && pageData.twitter_description.trim() ? pageData.twitter_description.trim() : null,
+        twitter_image: pageData.twitter_image && pageData.twitter_image.trim() ? pageData.twitter_image.trim() : null,
+        updated_at: new Date().toISOString(),
+      };
+      
       if (editingPage) {
         const { error } = await supabase
           .from("pages")
-          .update({ ...pageData, updated_at: new Date().toISOString() })
+          .update(cleanedData)
           .eq("id", editingPage.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating page:", error);
+          alert(`Error updating page: ${error.message}`);
+          throw error;
+        }
       } else {
+        cleanedData.created_at = new Date().toISOString();
         const { error } = await supabase
           .from("pages")
-          .insert([{ ...pageData, created_at: new Date().toISOString() }]);
+          .insert([cleanedData]);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating page:", error);
+          alert(`Error creating page: ${error.message}`);
+          throw error;
+        }
       }
 
       await fetchPages();
       setEditingPage(null);
       setShowForm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving page:", error);
+      if (!error.message || !error.message.includes("Error")) {
+        alert(`Failed to save page: ${error.message || "Unknown error"}`);
+      }
     }
   };
 

@@ -207,6 +207,20 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
                   <p className="text-xs text-foreground/60 mt-1">{formData.meta_description.length}/160 characters</p>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Meta Keywords
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.meta_keywords}
+                    onChange={(e) => setFormData({ ...formData, meta_keywords: e.target.value })}
+                    className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+                    placeholder="comma, separated, keywords"
+                  />
+                  <p className="text-xs text-foreground/60 mt-1">Comma-separated keywords for SEO</p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
@@ -316,6 +330,82 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
                     className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
                     rows={2}
                     placeholder="Open Graph description (defaults to meta description)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Twitter Card */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-medium text-foreground">Twitter Card</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({
+                      ...formData,
+                      twitter_title: formData.twitter_title || formData.title,
+                      twitter_description: formData.twitter_description || formData.meta_description,
+                      twitter_image: formData.twitter_image || "/images/HeroOpenGraph.png",
+                    });
+                  }}
+                  className="text-sm text-secondary hover:text-secondary/80 transition-colors"
+                >
+                  Auto-fill from page data
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Twitter Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.twitter_title}
+                      onChange={(e) => setFormData({ ...formData, twitter_title: e.target.value })}
+                      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+                      placeholder="Twitter card title (defaults to page title)"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Twitter Image
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={formData.twitter_image}
+                        onChange={(e) => setFormData({ ...formData, twitter_image: e.target.value })}
+                        className="flex-1 px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+                        placeholder="/images/HeroOpenGraph.png"
+                      />
+                      <label className="cursor-pointer px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition-colors flex items-center">
+                        <HiOutlineCloudArrowUp className="w-5 h-5" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(e, 'twitter_image')}
+                          className="hidden"
+                          disabled={isUploading}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Twitter Description
+                  </label>
+                  <textarea
+                    value={formData.twitter_description}
+                    onChange={(e) => setFormData({ ...formData, twitter_description: e.target.value })}
+                    className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+                    rows={2}
+                    placeholder="Twitter card description (defaults to meta description)"
                   />
                 </div>
               </div>

@@ -239,21 +239,22 @@ export async function POST() {
     for (const page of newPages) {
       try {
         // Map page data with explicit field names matching database schema
+        // Convert empty strings to null for optional fields
         const pageData = {
           slug: page.slug,
           title: page.title,
-          meta_description: page.meta_description ?? null,
-          meta_keywords: page.meta_keywords ?? null,
-          canonical_url: page.canonical_url ?? null,
-          og_title: page.og_title ?? null,
-          og_description: page.og_description ?? null,
-          og_image: page.og_image ?? null,
-          twitter_title: page.twitter_title ?? null,
-          twitter_description: page.twitter_description ?? null,
-          twitter_image: page.twitter_image ?? null,
+          meta_description: (page.meta_description && page.meta_description.trim()) || null,
+          meta_keywords: (page.meta_keywords && page.meta_keywords.trim()) || null,
+          canonical_url: (page.canonical_url && page.canonical_url.trim()) || null,
+          og_title: (page.og_title && page.og_title.trim()) || null,
+          og_description: (page.og_description && page.og_description.trim()) || null,
+          og_image: (page.og_image && page.og_image.trim()) || null,
+          twitter_title: (page.twitter_title && page.twitter_title.trim()) || null,
+          twitter_description: (page.twitter_description && page.twitter_description.trim()) || null,
+          twitter_image: (page.twitter_image && page.twitter_image.trim()) || null,
           no_index: page.no_index ?? false,
           is_homepage: page.is_homepage ?? false,
-          category: page.category ?? null,
+          category: (page.category && page.category.trim()) || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -265,13 +266,25 @@ export async function POST() {
         
         if (error) {
           console.error(`Error inserting page ${page.slug}:`, error);
-          errors.push({ slug: page.slug, error: error.message });
+          console.error(`Page data attempted:`, JSON.stringify(pageData, null, 2));
+          errors.push({ 
+            slug: page.slug, 
+            error: error.message,
+            details: error,
+            code: error.code,
+            hint: error.hint
+          });
         } else if (data && data.length > 0) {
           insertedPages.push(...data);
+          console.log(`Successfully inserted page: ${page.slug}`);
+        } else {
+          console.warn(`No data returned for page ${page.slug} (but no error)`);
+          errors.push({ slug: page.slug, error: "No data returned from insert" });
         }
       } catch (err: any) {
         console.error(`Error inserting page ${page.slug}:`, err);
-        errors.push({ slug: page.slug, error: err.message });
+        console.error(`Page data attempted:`, JSON.stringify(page, null, 2));
+        errors.push({ slug: page.slug, error: err.message, stack: err.stack });
       }
     }
     
