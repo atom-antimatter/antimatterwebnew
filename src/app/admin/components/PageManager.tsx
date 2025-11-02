@@ -56,10 +56,27 @@ export default function PageManager() {
         .order("category")
         .order("slug");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching pages:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        // Set empty array on error but don't break the UI
+        setPages([]);
+        throw error;
+      }
       setPages(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching pages:", error);
+      // Log full error for debugging
+      if (error.message) {
+        console.error("Error message:", error.message);
+      }
+      if (error.details) {
+        console.error("Error details:", error.details);
+      }
+      if (error.hint) {
+        console.error("Error hint:", error.hint);
+      }
+      setPages([]);
     } finally {
       setIsLoading(false);
     }
