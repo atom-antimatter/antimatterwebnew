@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
  * Health check endpoint to debug DNS + DB connectivity without initializing Payload
  * GET /api/payload-health
  */
-export async function GET() {
+export async function GET(request: Request) {
   const startedAt = Date.now()
   const result: any = {
     timestamp: new Date().toISOString(),
@@ -19,6 +19,8 @@ export async function GET() {
   }
 
   try {
+    const url = new URL(request.url)
+    const shouldInit = url.searchParams.get('init') === 'true'
     const databaseUrl = process.env.DATABASE_URL
     if (!databaseUrl) {
       return NextResponse.json(
@@ -67,6 +69,19 @@ export async function GET() {
       }
       if (e?.message?.includes('password authentication failed') || e?.message?.includes('Tenant or user not found')) {
         result.hint = 'Check Pooler username format (postgres.<project_ref>) and password. Ensure sslmode=require.'
+      }
+    }
+
+    // Optionally try initializing Payload to surface runtime errors
+    if (shouldInit) {
+      try {
+        const { getPayload } = await import('payload')
+        const config = (await import('@payload-config')).default
+        const t1 = Date.now()
+        await getPayload({ config })
+        result.payload = { initialized: true, latencyMs: Date.now() - t1 }
+      } catch (e: any) {
+        result.payload = { initialized: false, error: e?.message, code: e?.code }
       }
     }
 
