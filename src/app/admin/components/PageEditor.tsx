@@ -272,39 +272,9 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
     onSave(formData);
   };
 
-  if (!isOpen) return null;
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="sticky top-0 bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-800 px-6 py-4 flex items-center justify-between z-10">
-            <h3 className="text-xl font-semibold text-foreground">
-              {page ? "Edit Page" : "Add New Page"}
-            </h3>
-            <button
-              onClick={onClose}
-              className="text-foreground/60 hover:text-foreground transition-colors p-1"
-            >
-              <HiOutlineXMark className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+  // If not used as modal, render without modal wrapper
+  const formContent = (
+    <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info */}
             <div>
               <h4 className="text-lg font-medium text-foreground mb-4">Basic Information</h4>
@@ -632,6 +602,55 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
               </button>
             </div>
           </form>
+  );
+
+  // If not open, don't render (for modal mode)
+  if (!isOpen) return null;
+
+  // Check if we're being used as a page (render without modal wrapper)
+  // We detect this by checking if parent has specific class or if window.location suggests it
+  const isPageMode = typeof window !== 'undefined' && window.location.pathname.includes('/admin/pages/edit');
+
+  if (isPageMode) {
+    return (
+      <div className="bg-zinc-900/30 backdrop-blur-xl border border-zinc-800 rounded-xl p-6">
+        {formContent}
+      </div>
+    );
+  }
+
+  // Modal mode
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="sticky top-0 bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-800 px-6 py-4 flex items-center justify-between z-10">
+            <h3 className="text-xl font-semibold text-foreground">
+              {page ? "Edit Page" : "Add New Page"}
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-foreground/60 hover:text-foreground transition-colors p-1"
+            >
+              <HiOutlineXMark className="w-6 h-6" />
+            </button>
+          </div>
+          <div className="p-6">
+            {formContent}
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>

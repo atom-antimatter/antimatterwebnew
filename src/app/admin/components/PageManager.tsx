@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineEye, HiOutlineHome, HiOutlineArrowPath } from "react-icons/hi2";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineEye, HiOutlineHome, HiOutlineArrowPath, HiOutlineArrowsUpDown, HiOutlineMagnifyingGlass } from "react-icons/hi2";
 import { getSupabaseClient } from "@/lib/supabaseClient";
-import PageEditor from "./PageEditor";
 
 interface Page {
   id: string;
@@ -26,12 +26,17 @@ interface Page {
   updated_at: string;
 }
 
+type SortField = 'slug' | 'title' | 'meta_description' | 'no_index' | 'updated_at';
+type SortDirection = 'asc' | 'desc';
+
 export default function PageManager() {
+  const router = useRouter();
   const [pages, setPages] = useState<Page[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingPage, setEditingPage] = useState<Page | null>(null);
-  const [showForm, setShowForm] = useState(false);
   const [isPopulating, setIsPopulating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
     const initializePages = async () => {
@@ -204,60 +209,54 @@ export default function PageManager() {
     }
   };
 
-  const handleSave = async (pageData: Partial<Page>) => {
-    try {
-      const supabase = getSupabaseClient() as any;
-      
-      // Convert empty strings to null for optional fields
-      const cleanedData: any = {
-        ...pageData,
-        meta_description: pageData.meta_description && pageData.meta_description.trim() ? pageData.meta_description.trim() : null,
-        meta_keywords: pageData.meta_keywords && pageData.meta_keywords.trim() ? pageData.meta_keywords.trim() : null,
-        canonical_url: pageData.canonical_url && pageData.canonical_url.trim() ? pageData.canonical_url.trim() : null,
-        og_title: pageData.og_title && pageData.og_title.trim() ? pageData.og_title.trim() : null,
-        og_description: pageData.og_description && pageData.og_description.trim() ? pageData.og_description.trim() : null,
-        og_image: pageData.og_image && pageData.og_image.trim() ? pageData.og_image.trim() : null,
-        twitter_title: pageData.twitter_title && pageData.twitter_title.trim() ? pageData.twitter_title.trim() : null,
-        twitter_description: pageData.twitter_description && pageData.twitter_description.trim() ? pageData.twitter_description.trim() : null,
-        twitter_image: pageData.twitter_image && pageData.twitter_image.trim() ? pageData.twitter_image.trim() : null,
-        category: pageData.category && pageData.category.trim() ? pageData.category.trim() : null,
-        parent_slug: pageData.parent_slug && pageData.parent_slug.trim() ? pageData.parent_slug.trim() : null,
-        internal_links: pageData.internal_links && Array.isArray(pageData.internal_links) && pageData.internal_links.length > 0 ? pageData.internal_links : null,
-        updated_at: new Date().toISOString(),
-      };
-      
-      if (editingPage) {
-        const { error } = await supabase
-          .from("pages")
-          .update(cleanedData)
-          .eq("id", editingPage.id);
+  // Filter and sort pages
+  const filteredAndSortedPages = useMemo(() => {
+    let filtered = pages;
 
-        if (error) {
-          console.error("Error updating page:", error);
-          alert(`Error updating page: ${error.message}`);
-          throw error;
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = pages.filter(page => 
+        page.slug.toLowerCase().includes(query) ||
+        page.title.toLowerCase().includes(query) ||
+        (page.meta_description && page.meta_description.toLowerCase().includes(query))
+      );
+    }
+
+    // Apply sorting
+    if (sortField) {
+      filtered = [...filtered].sort((a, b) => {
+        let aVal: any = a[sortField];
+        let bVal: any = b[sortField];
+
+        if (sortField === 'updated_at') {
+          aVal = new Date(aVal).getTime();
+          bVal = new Date(bVal).getTime();
+        } else if (sortField === 'no_index') {
+          aVal = aVal ? 1 : 0;
+          bVal = bVal ? 1 : 0;
+        } else if (typeof aVal === 'string') {
+          aVal = aVal.toLowerCase();
+          bVal = (bVal || '').toLowerCase();
         }
-      } else {
-        cleanedData.created_at = new Date().toISOString();
-        const { error } = await supabase
-          .from("pages")
-          .insert([cleanedData]);
 
-        if (error) {
-          console.error("Error creating page:", error);
-          alert(`Error creating page: ${error.message}`);
-          throw error;
-        }
-      }
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
 
-      await fetchPages();
-      setEditingPage(null);
-      setShowForm(false);
-    } catch (error: any) {
-      console.error("Error saving page:", error);
-      if (!error.message || !error.message.includes("Error")) {
-        alert(`Failed to save page: ${error.message || "Unknown error"}`);
-      }
+    return filtered;
+  }, [pages, searchQuery, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to ascending
+      setSortField(field);
+      setSortDirection('asc');
     }
   };
 
@@ -317,10 +316,7 @@ export default function PageManager() {
             )}
           </button>
           <button
-            onClick={() => {
-              setEditingPage(null);
-              setShowForm(true);
-            }}
+            onClick={() => router.push("/admin/pages/edit/new")}
             className="flex items-center space-x-2 bg-secondary hover:bg-secondary/80 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <HiOutlinePlus className="w-5 h-5" />
@@ -329,34 +325,88 @@ export default function PageManager() {
         </div>
       </div>
 
-      {/* Page Editor Modal */}
-      <PageEditor
-        page={editingPage}
-        isOpen={showForm}
-        onClose={() => {
-          setShowForm(false);
-          setEditingPage(null);
-        }}
-        onSave={handleSave}
-      />
+
+      {/* Search and Filter */}
+      <div className="bg-zinc-900/30 backdrop-blur-xl border border-zinc-800 rounded-xl p-4">
+        <div className="relative">
+          <HiOutlineMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground/40" />
+          <input
+            type="text"
+            placeholder="Search pages by slug, title, or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-secondary"
+          />
+        </div>
+      </div>
 
       <div className="bg-zinc-900/30 backdrop-blur-xl border border-zinc-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-zinc-800/50">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Page</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Title</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Meta Description</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">No Index</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Updated</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">
+                  <button
+                    onClick={() => handleSort('slug')}
+                    className="flex items-center gap-2 hover:text-secondary transition-colors"
+                  >
+                    Page
+                    <HiOutlineArrowsUpDown className="w-4 h-4" />
+                  </button>
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">
+                  <button
+                    onClick={() => handleSort('title')}
+                    className="flex items-center gap-2 hover:text-secondary transition-colors"
+                  >
+                    Title
+                    <HiOutlineArrowsUpDown className="w-4 h-4" />
+                  </button>
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">
+                  <button
+                    onClick={() => handleSort('meta_description')}
+                    className="flex items-center gap-2 hover:text-secondary transition-colors"
+                  >
+                    Meta Description
+                    <HiOutlineArrowsUpDown className="w-4 h-4" />
+                  </button>
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">
+                  <button
+                    onClick={() => handleSort('no_index')}
+                    className="flex items-center gap-2 hover:text-secondary transition-colors"
+                  >
+                    No Index
+                    <HiOutlineArrowsUpDown className="w-4 h-4" />
+                  </button>
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">
+                  <button
+                    onClick={() => handleSort('updated_at')}
+                    className="flex items-center gap-2 hover:text-secondary transition-colors"
+                  >
+                    Updated
+                    <HiOutlineArrowsUpDown className="w-4 h-4" />
+                  </button>
+                </th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
+              {filteredAndSortedPages.length === 0 && pages.length > 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-foreground/60 mb-2">No pages match your search.</p>
+                      <p className="text-sm text-foreground/40">Try adjusting your search query.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
               {pages.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <p className="text-foreground/60 mb-4">No pages found in the database.</p>
                       <p className="text-sm text-foreground/40 mb-4">Click &quot;Sync Pages&quot; to sync all site pages to the database.</p>
@@ -364,7 +414,7 @@ export default function PageManager() {
                   </td>
                 </tr>
               )}
-              {pages.map((page) => (
+              {filteredAndSortedPages.map((page) => (
                 <tr key={page.id} className="hover:bg-zinc-800/30">
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
@@ -410,10 +460,7 @@ export default function PageManager() {
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => {
-                          setEditingPage(page);
-                          setShowForm(true);
-                        }}
+                        onClick={() => router.push(`/admin/pages/edit/${encodeURIComponent(page.slug)}`)}
                         className="text-secondary hover:text-secondary/80 p-1"
                       >
                         <HiOutlinePencil className="w-4 h-4" />
