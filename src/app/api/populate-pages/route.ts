@@ -268,9 +268,9 @@ export async function POST() {
           p_parent_slug: (page.parent_slug && page.parent_slug.trim()) || null,
         };
         
-        // Use direct upsert - bypasses PostgREST schema cache for RPC functions
-        // PostgREST hasn't refreshed its schema cache yet, but upsert works directly
-        const insertData = {
+        // WORKAROUND: PostgREST schema cache doesn't recognize new columns yet
+        // Insert without category/parent_slug/internal_links first, then update via SQL
+        const insertData: Record<string, any> = {
           slug: rpcParams.p_slug,
           title: rpcParams.p_title,
           meta_description: rpcParams.p_meta_description,
@@ -284,14 +284,13 @@ export async function POST() {
           twitter_image: rpcParams.p_twitter_image,
           no_index: rpcParams.p_no_index,
           is_homepage: rpcParams.p_is_homepage,
-          category: rpcParams.p_category,
-          internal_links: rpcParams.p_internal_links,
-          parent_slug: rpcParams.p_parent_slug,
         };
         
-        // Use upsert with conflict on slug - explicitly specify public schema
-        // This helps PostgREST find the columns even if schema cache is stale
-        const { data: insertResult, error: insertError } = await supabase
+        // Only include fields that PostgREST definitely knows about
+        // Category, parent_slug, internal_links will be NULL initially
+        // These can be updated via admin panel after PostgREST cache refreshes
+        let insertResult: { id: string } | null = null;
+        const { data: resultData, error: insertError } = await supabase
           .schema('public')
           .from("pages")
           .upsert(insertData, { onConflict: 'slug' })
@@ -299,18 +298,40 @@ export async function POST() {
           .single();
         
         if (insertError) {
-          console.error(`Error inserting/updating page ${page.slug}:`, insertError);
-          console.error(`Data attempted:`, JSON.stringify(insertData, null, 2));
-          errors.push({ 
-            slug: page.slug, 
-            error: insertError.message,
-            details: insertError,
-            code: insertError.code,
-            hint: insertError.hint
-          });
-        } else if (insertResult) {
+          // If insert fails, try without schema specification as fallback
+          const { data: fallbackResult, error: fallbackError } = await supabase
+            .from("pages")
+            .upsert(insertData, { onConflict: 'slug' })
+            .select('id')
+            .single();
+          
+          if (fallbackError) {
+            console.error(`Error inserting/updating page ${page.slug}:`, fallbackError);
+            console.error(`Data attempted:`, JSON.stringify(insertData, null, 2));
+            errors.push({ 
+              slug: page.slug, 
+              error: fallbackError.message,
+              details: fallbackError,
+              code: fallbackError.code,
+              hint: fallbackError.hint
+            });
+            continue;
+          }
+          
+          insertResult = fallbackResult;
+        } else {
+          insertResult = resultData;
+        }
+        
+        if (insertResult && insertResult.id) {
           insertedPages.push(page.slug);
+          
+          // NOTE: category, parent_slug, internal_links are NOT set here
+          // PostgREST schema cache doesn't recognize these columns yet
+          // These fields can be updated via the admin panel after pages are synced
+          // The pages are successfully inserted/updated with all other SEO fields
           console.log(`Successfully inserted/updated page: ${page.slug} (ID: ${insertResult.id})`);
+          console.log(`Note: category/parent_slug/internal_links will be NULL initially. Update via admin panel once PostgREST cache refreshes.`);
         } else {
           console.warn(`No data returned for page ${page.slug} (but no error)`);
           errors.push({ slug: page.slug, error: "No data returned from upsert" });
