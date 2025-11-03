@@ -29,11 +29,9 @@ export default buildConfig({
   
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL || (() => {
-        throw new Error('DATABASE_URL environment variable is required')
-      })(),
+      connectionString: process.env.DATABASE_URL || '',
     },
-    push: false, // Don't auto-push schema changes (safer for production)
+    migrationDir: './src/migrations',
   }),
   
   collections: [Users, Pages, BlogPosts, Media, Services],
