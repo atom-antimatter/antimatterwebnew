@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineCalendar } from "react-icons/hi2";
-import { getSupabaseClient } from "@/lib/supabaseClient";
-import RichTextEditor from "./RichTextEditor";
+import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineCalendar, HiOutlineSparkles } from "react-icons/hi2";
+import { getSupabaseClient, uploadBlogImage } from "@/lib/supabaseClient";
+import TipTapEditor from "./TipTapEditor";
+import BlogAIChat from "./BlogAIChat";
 import CustomSelect from "@/components/ui/CustomSelect";
 
 interface BlogPost {
@@ -14,12 +15,18 @@ interface BlogPost {
   excerpt: string | null;
   content: string;
   featured_image: string | null;
+  featured_image_alt: string | null;
   author: string;
   category: string | null;
   published: boolean;
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  seo_keywords: string[] | null;
+  reading_time: number | null;
+  chapters: Array<{ id: string; title: string; level: number }> | null;
+  internal_links: string[] | null;
+  external_sources: any[] | null;
 }
 
 const BLOG_CATEGORIES = [
@@ -34,10 +41,28 @@ export default function BlogManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [existingPages, setExistingPages] = useState<string[]>([]);
 
   useEffect(() => {
     fetchPosts();
+    fetchExistingPages();
   }, []);
+
+  const fetchExistingPages = async () => {
+    try {
+      const supabase = getSupabaseClient() as any;
+      const { data, error } = await supabase
+        .from("pages")
+        .select("slug")
+        .order("slug");
+
+      if (error) throw error;
+      setExistingPages((data || []).map((p: any) => p.slug));
+    } catch (error) {
+      console.error("Error fetching existing pages:", error);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -136,17 +161,60 @@ export default function BlogManager() {
           <h2 className="text-2xl font-bold text-foreground">Blog Posts</h2>
           <p className="text-foreground/60">Manage blog content and publishing</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingPost(null);
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => {
+              setEditingPost(null);
+              setShowAIChat(true);
+            }}
+            className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-secondary hover:from-purple-700 hover:to-secondary/80 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <HiOutlineSparkles className="w-5 h-5" />
+            <span>AI Generate</span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingPost(null);
+              setShowForm(true);
+            }}
+            className="flex items-center space-x-2 bg-secondary hover:bg-secondary/80 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <HiOutlinePlus className="w-5 h-5" />
+            <span>New Post</span>
+          </button>
+        </div>
+      </div>
+
+      {showAIChat && (
+        <BlogAIChat
+          onClose={() => setShowAIChat(false)}
+          onContentGenerated={(data) => {
+            setEditingPost({
+              id: "",
+              title: data.title,
+              slug: data.slug,
+              excerpt: data.excerpt,
+              content: data.content,
+              featured_image: data.featuredImage || null,
+              featured_image_alt: null,
+              author: "Antimatter AI",
+              category: null,
+              published: false,
+              published_at: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              seo_keywords: data.keywords,
+              reading_time: null,
+              chapters: null,
+              internal_links: null,
+              external_sources: null,
+            });
+            setShowAIChat(false);
             setShowForm(true);
           }}
-          className="flex items-center space-x-2 bg-secondary hover:bg-secondary/80 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <HiOutlinePlus className="w-5 h-5" />
-          <span>New Post</span>
-        </button>
-      </div>
+          existingPages={existingPages}
+        />
+      )}
 
       {showForm && (
         <BlogForm
@@ -156,6 +224,7 @@ export default function BlogManager() {
             setShowForm(false);
             setEditingPost(null);
           }}
+          existingPages={existingPages}
         />
       )}
 
@@ -247,23 +316,95 @@ interface BlogFormProps {
   post: BlogPost | null;
   onSave: (data: Partial<BlogPost>) => void;
   onCancel: () => void;
+  existingPages: string[];
 }
 
-function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
+function BlogForm({ post, onSave, onCancel, existingPages }: BlogFormProps) {
   const [formData, setFormData] = useState({
     title: post?.title || "",
     slug: post?.slug || "",
     excerpt: post?.excerpt || "",
     content: post?.content || "",
     featured_image: post?.featured_image || "",
+    featured_image_alt: post?.featured_image_alt || "",
     author: post?.author || "Antimatter AI",
     category: post?.category || "",
     published: post?.published || false,
+    seo_keywords: post?.seo_keywords || [],
+    reading_time: post?.reading_time || null,
+    chapters: post?.chapters || [],
+    internal_links: post?.internal_links || [],
   });
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [seoScore, setSeoScore] = useState<number | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Calculate reading time
+    const wordCount = formData.content.replace(/<[^>]*>/g, "").split(/\s+/).length;
+    const readingTime = Math.ceil(wordCount / 200);
+    
+    onSave({
+      ...formData,
+      reading_time: readingTime,
+    });
+  };
+
+  const handleFeaturedImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const result = await uploadBlogImage(file);
+      if ("url" in result) {
+        setFormData({
+          ...formData,
+          featured_image: result.url,
+          featured_image_alt: formData.title || "Blog post image",
+        });
+      } else {
+        alert("Failed to upload image: " + result.error);
+      }
+    } catch (error) {
+      console.error("Error uploading featured image:", error);
+      alert("Failed to upload image");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const autoGenerateSlug = () => {
+    const slug = formData.title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
+    setFormData({ ...formData, slug });
+  };
+
+  const analyzeSEO = async () => {
+    try {
+      const response = await fetch("/api/blog-seo-analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          content: formData.content,
+          metaDescription: formData.excerpt,
+          keywords: formData.seo_keywords,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSeoScore(data.score);
+      }
+    } catch (error) {
+      console.error("Error analyzing SEO:", error);
+    }
   };
 
   return (
@@ -286,6 +427,7 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onBlur={autoGenerateSlug}
               className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
               placeholder="Blog post title"
               required
@@ -296,14 +438,23 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
             <label className="block text-sm font-medium text-foreground mb-2">
               Slug *
             </label>
-            <input
-              type="text"
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
-              placeholder="blog-post-slug"
-              required
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                className="flex-1 px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+                placeholder="blog-post-slug"
+                required
+              />
+              <button
+                type="button"
+                onClick={autoGenerateSlug}
+                className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-sm transition-colors"
+              >
+                Auto
+              </button>
+            </div>
           </div>
         </div>
 
@@ -324,10 +475,11 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
           <label className="block text-sm font-medium text-foreground mb-2">
             Content *
           </label>
-          <RichTextEditor
-            value={formData.content}
+          <TipTapEditor
+            content={formData.content}
             onChange={(content) => setFormData({ ...formData, content })}
-            placeholder="Write your blog post content in Markdown..."
+            onChaptersChange={(chapters) => setFormData({ ...formData, chapters })}
+            placeholder="Write your blog post content..."
             blogTitle={formData.title}
           />
         </div>
@@ -335,15 +487,36 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Featured Image URL
+              Featured Image
             </label>
-            <input
-              type="url"
-              value={formData.featured_image}
-              onChange={(e) => setFormData({ ...formData, featured_image: e.target.value })}
-              className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
-              placeholder="/images/blog/featured-image.jpg"
-            />
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={formData.featured_image}
+                  onChange={(e) => setFormData({ ...formData, featured_image: e.target.value })}
+                  className="flex-1 px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+                  placeholder="Image URL"
+                />
+                <label className="cursor-pointer px-4 py-2 bg-secondary hover:bg-secondary/80 text-white rounded-lg transition-colors flex items-center">
+                  {isUploadingImage ? "Uploading..." : "Upload"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFeaturedImageUpload}
+                    className="hidden"
+                    disabled={isUploadingImage}
+                  />
+                </label>
+              </div>
+              {formData.featured_image && (
+                <img
+                  src={formData.featured_image}
+                  alt="Featured"
+                  className="w-full h-40 object-cover rounded-lg"
+                />
+              )}
+            </div>
           </div>
 
           <div>
@@ -374,18 +547,89 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
           />
         </div>
 
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="published"
-            checked={formData.published}
-            onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-            className="rounded border-zinc-700 bg-zinc-800 text-secondary focus:ring-secondary"
-          />
-          <label htmlFor="published" className="text-sm text-foreground">
-            Publish immediately
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            SEO Keywords
           </label>
+          <input
+            type="text"
+            value={Array.isArray(formData.seo_keywords) ? formData.seo_keywords.join(", ") : ""}
+            onChange={(e) => setFormData({ ...formData, seo_keywords: e.target.value.split(",").map(k => k.trim()).filter(Boolean) })}
+            className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+            placeholder="keyword1, keyword2, keyword3"
+          />
+          <p className="text-xs text-foreground/60 mt-1">Comma-separated keywords for SEO</p>
         </div>
+
+        {formData.chapters && formData.chapters.length > 0 && (
+          <div className="bg-zinc-800/30 border border-zinc-700 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-foreground mb-2">
+              Chapters ({formData.chapters.length})
+            </h4>
+            <ul className="space-y-1">
+              {formData.chapters.map((chapter) => (
+                <li key={chapter.id} className="text-sm text-foreground/80 flex items-center">
+                  <span className={chapter.level === 2 ? "font-medium" : "ml-4"}>
+                    {chapter.title}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between bg-zinc-800/30 border border-zinc-700 rounded-lg p-4">
+          <div className="flex items-center space-x-4">
+            <input
+              type="checkbox"
+              id="published"
+              checked={formData.published}
+              onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+              className="rounded border-zinc-700 bg-zinc-800 text-secondary focus:ring-secondary"
+            />
+            <label htmlFor="published" className="text-sm text-foreground">
+              Publish immediately
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={analyzeSEO}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-sm transition-colors"
+          >
+            Analyze SEO
+          </button>
+        </div>
+
+        {seoScore !== null && (
+          <div className="bg-zinc-800/30 border border-zinc-700 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-foreground">SEO Score</h4>
+              <span
+                className={`text-2xl font-bold ${
+                  seoScore >= 80
+                    ? "text-green-400"
+                    : seoScore >= 60
+                    ? "text-yellow-400"
+                    : "text-red-400"
+                }`}
+              >
+                {seoScore}/100
+              </span>
+            </div>
+            <div className="w-full bg-zinc-700 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full transition-all ${
+                  seoScore >= 80
+                    ? "bg-green-400"
+                    : seoScore >= 60
+                    ? "bg-yellow-400"
+                    : "bg-red-400"
+                }`}
+                style={{ width: `${seoScore}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-end space-x-4 pt-4">
           <button

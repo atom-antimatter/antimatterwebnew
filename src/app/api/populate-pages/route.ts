@@ -507,39 +507,81 @@ export async function POST() {
           internal_links: rpcParams.p_internal_links,
         };
         
-        // First upsert known fields (always works)
+        // First check if page exists, then update or insert accordingly
         let insertResult: { id: string } | null = null;
-        const { data: resultData, error: insertError } = await supabase
-          .schema('public')
-          .from("pages")
-          .upsert(knownFields, { onConflict: 'slug' })
-          .select('id')
-          .single();
         
-        if (insertError) {
-          // If insert fails, try without schema specification as fallback
-          const { data: fallbackResult, error: fallbackError } = await supabase
+        // Check if page already exists
+        const { data: existingPage, error: checkError } = await supabase
+          .from("pages")
+          .select('id')
+          .eq('slug', page.slug)
+          .maybeSingle();
+        
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error(`Error checking existing page ${page.slug}:`, checkError);
+          errors.push({ 
+            slug: page.slug, 
+            error: checkError.message,
+            details: checkError,
+          });
+          continue;
+        }
+        
+        if (existingPage) {
+          // Page exists - do an UPDATE
+          const { data: updateData, error: updateError } = await supabase
             .from("pages")
-            .upsert(knownFields, { onConflict: 'slug' })
+            .update({
+              title: knownFields.title,
+              meta_description: knownFields.meta_description,
+              meta_keywords: knownFields.meta_keywords,
+              canonical_url: knownFields.canonical_url,
+              og_title: knownFields.og_title,
+              og_description: knownFields.og_description,
+              og_image: knownFields.og_image,
+              twitter_title: knownFields.twitter_title,
+              twitter_description: knownFields.twitter_description,
+              twitter_image: knownFields.twitter_image,
+              no_index: knownFields.no_index,
+              is_homepage: knownFields.is_homepage,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingPage.id)
             .select('id')
             .single();
           
-          if (fallbackError) {
-            console.error(`Error inserting/updating page ${page.slug}:`, fallbackError);
+          if (updateError) {
+            console.error(`Error updating page ${page.slug}:`, updateError);
             console.error(`Data attempted:`, JSON.stringify(knownFields, null, 2));
             errors.push({ 
               slug: page.slug, 
-              error: fallbackError.message,
-              details: fallbackError,
-              code: fallbackError.code,
-              hint: fallbackError.hint
+              error: updateError.message,
+              details: updateError,
             });
             continue;
           }
           
-          insertResult = fallbackResult;
+          insertResult = updateData;
         } else {
-          insertResult = resultData;
+          // Page doesn't exist - do an INSERT
+          const { data: insertData, error: insertError } = await supabase
+            .from("pages")
+            .insert(knownFields)
+            .select('id')
+            .single();
+          
+          if (insertError) {
+            console.error(`Error inserting page ${page.slug}:`, insertError);
+            console.error(`Data attempted:`, JSON.stringify(knownFields, null, 2));
+            errors.push({ 
+              slug: page.slug, 
+              error: insertError.message,
+              details: insertError,
+            });
+            continue;
+          }
+          
+          insertResult = insertData;
         }
         
         if (!insertResult || !insertResult.id) {
