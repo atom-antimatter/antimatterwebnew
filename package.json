@@ -13,15 +13,6 @@
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts"
   },
-  "overrides": {
-    "payload": "3.62.1",
-    "@payloadcms/db-postgres": "3.62.1",
-    "@payloadcms/next": "3.62.1",
-    "@payloadcms/plugin-cloud-storage": "3.62.1",
-    "@payloadcms/plugin-seo": "3.62.1",
-    "@payloadcms/richtext-lexical": "3.62.1",
-    "@payloadcms/ui": "3.62.1"
-  },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.62.1",
     "@payloadcms/next": "^3.62.1",
