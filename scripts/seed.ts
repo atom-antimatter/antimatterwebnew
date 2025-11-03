@@ -9,7 +9,7 @@ console.log('PAYLOAD_SECRET loaded:', !!process.env.PAYLOAD_SECRET)
 
 // NOW import config after env vars are loaded
 import { getPayload } from 'payload'
-import config from '../payload.config.js'
+import config from '../payload.config'
 
 // Services data (extracted from static files, without JSX)
 const servicesData = [

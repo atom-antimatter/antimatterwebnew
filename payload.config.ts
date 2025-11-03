@@ -4,11 +4,11 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { Users } from './collections/Users.ts'
-import { Pages } from './collections/Pages.ts'
-import { BlogPosts } from './collections/BlogPosts.ts'
-import { Media } from './collections/Media.ts'
-import { Services } from './collections/Services.ts'
+import { Users } from './collections/Users'
+import { Pages } from './collections/Pages'
+import { BlogPosts } from './collections/BlogPosts'
+import { Media } from './collections/Media'
+import { Services } from './collections/Services'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
