@@ -478,6 +478,7 @@ function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
             onChange={(content) => setFormData({ ...formData, content })}
             onChaptersChange={(chapters) => setFormData({ ...formData, chapters })}
             placeholder="Write your blog post content..."
+            blogTitle={formData.title}
           />
         </div>
 
