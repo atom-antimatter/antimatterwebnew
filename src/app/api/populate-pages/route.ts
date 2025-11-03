@@ -567,46 +567,32 @@ export async function POST() {
       }
     }
     
-    // Batch update extended fields using PostgREST REST API directly
-    // This bypasses the JS client's schema cache by going straight to the API
+    // Batch update extended fields using RPC function - bypasses PostgREST schema cache completely
     if (extendedFieldsUpdates.length > 0) {
-      console.log(`\n=== Batch updating ${extendedFieldsUpdates.length} pages with categories and internal links ===`);
-      
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpbGNtZHBua3pnd3Z3c254bGF2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODY4NjMxMCwiZXhwIjoyMDc0MjYyMzEwfQ.zeVKENE9mXTdUjv51UwTid2GCLPA3cQZj5h8B9mLqHo";
+      console.log(`\n=== Batch updating ${extendedFieldsUpdates.length} pages with categories and internal links via RPC ===`);
       
       let successCount = 0;
       let failCount = 0;
       
       for (const update of extendedFieldsUpdates) {
         try {
-          // Use PostgREST REST API directly - this should work even if JS client cache doesn't
-          const response = await fetch(`${supabaseUrl}/rest/v1/pages?id=eq.${update.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': serviceRoleKey,
-              'Authorization': `Bearer ${serviceRoleKey}`,
-              'Prefer': 'return=minimal',
-            },
-            body: JSON.stringify({
-              category: update.category,
-              parent_slug: update.parent_slug,
-              internal_links: update.internal_links,
-              updated_at: new Date().toISOString(),
-            }),
+          // Use RPC function to update extended fields - this executes raw SQL and bypasses schema cache
+          const { error: rpcError } = await supabase.rpc('update_page_extended_fields', {
+            p_id: update.id,
+            p_category: update.category,
+            p_parent_slug: update.parent_slug,
+            p_internal_links: update.internal_links,
           });
           
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Failed to update ${update.slug}: ${response.status} ${errorText}`);
+          if (rpcError) {
+            console.error(`RPC failed for ${update.slug}:`, rpcError.message);
             failCount++;
           } else {
             console.log(`✓ Updated ${update.slug}: category=${update.category || 'null'}, parent=${update.parent_slug || 'null'}, links=${update.internal_links?.length || 0}`);
             successCount++;
           }
-        } catch (sqlErr: any) {
-          console.error(`Update exception for ${update.slug}:`, sqlErr.message);
+        } catch (rpcErr: any) {
+          console.error(`RPC exception for ${update.slug}:`, rpcErr.message);
           failCount++;
         }
       }
