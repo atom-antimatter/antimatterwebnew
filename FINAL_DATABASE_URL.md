@@ -1,18 +1,20 @@
 # FINAL DATABASE_URL - Copy This Exactly
 
-## ✅ Use This In Vercel
+## ✅ Use Supabase Connection Pooler (Session) in Vercel
+
+Copy the EXACT string from Supabase Dashboard → Database → Connection pooling → Session.
 
 ```
-postgresql://postgres.ailcmdpnkzgwvwsnxlav:aunqjK18VVLjqcK9@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+postgresql://postgres.<project_ref>:<password>@aws-<region>-<project_ref>.pooler.supabase.net:5432/postgres?sslmode=require
 ```
 
 ## Breaking It Down
 
 - **Protocol:** `postgresql://`
-- **Username:** `postgres.ailcmdpnkzgwvwsnxlav` (your project ref with dot)
-- **Password:** `aunqjK18VVLjqcK9`
-- **Host:** `aws-0-us-east-1.pooler.supabase.com` (NOT db.xxx)
-- **Port:** `6543` (transaction pooler)
+- **Username:** `postgres.<project_ref>` (includes your project ref)
+- **Password:** `<password>` (from Dashboard)
+- **Host:** `aws-<region>-<project_ref>.pooler.supabase.net` (NOT db.xxx)
+- **Port:** `5432` (Session pooler)
 - **Database:** `postgres`
 - **Params:** `?pgbouncer=true` (required for pooler)
 
@@ -20,7 +22,7 @@ postgresql://postgres.ailcmdpnkzgwvwsnxlav:aunqjK18VVLjqcK9@aws-0-us-east-1.pool
 
 1. Go to Vercel → Settings → Environment Variables
 2. Edit `DATABASE_URL`
-3. **Copy the string above EXACTLY**
+3. **Paste the Session Pooler string from the Dashboard EXACTLY**
 4. Save
 5. Wait 30 seconds
 6. Visit: https://www.antimatterai.com/api/payload-health
@@ -30,10 +32,9 @@ postgresql://postgres.ailcmdpnkzgwvwsnxlav:aunqjK18VVLjqcK9@aws-0-us-east-1.pool
 
 ## ⚠️ Common Mistakes
 
-- ❌ Using `db.ailcmdpnkzgwvwsnxlav.supabase.co` (DNS not found)
-- ❌ Username just `postgres` instead of `postgres.PROJECT_REF`
-- ❌ Wrong port (5432 vs 6543)
-- ❌ Missing `pgbouncer=true` parameter
+- ❌ Using `db.<project>.supabase.co` (use Pooler domain)
+- ❌ Username just `postgres` (must be `postgres.<project_ref>`)
+- ❌ Missing `sslmode=require`
 
 ## 💡 This Is The Same String That Works Locally
 

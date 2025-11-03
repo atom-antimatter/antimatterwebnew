@@ -1,8 +1,8 @@
 # Vercel Environment Variables Setup
 
-## ⚠️ Build Failing - Missing Environment Variables
+## ⚠️ Runtime DB connectivity (serverless best practice)
 
-The build is failing because Payload CMS requires `DATABASE_URL` to run migrations during build.
+Use Supabase Connection Pooler (Session) for serverless. Do not use the direct host `db.<project>.supabase.co`.
 
 ## 🔧 Fix: Add Environment Variables to Vercel
 
@@ -14,24 +14,19 @@ The build is failing because Payload CMS requires `DATABASE_URL` to run migratio
 
 ### Required Variables
 
+In Vercel → Settings → Environment Variables add/update:
+
 ```env
-DATABASE_URL
-postgresql://postgres.ailcmdpnkzgwvwsnxlav:aunqjK18VVLjqcK9@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+# Copy the EXACT Session Pooler string from Supabase Dashboard → Database → Connection pooling → Session
+DATABASE_URL=postgresql://postgres.<project_ref>:<password>@aws-<region>-<project_ref>.pooler.supabase.net:5432/postgres?sslmode=require
 
-PAYLOAD_SECRET
-r69U/cESwCxM/bRi5OQCd1COZ0O/B9MR40+Asj8Q940=
+PAYLOAD_SECRET=<your-payload-secret>
 
-NEXT_PUBLIC_SUPABASE_URL
-https://ailcmdpnkzgwvwsnxlav.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://<project_ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpbGNtZHBua3pnd3Z3c254bGF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2ODYzMTAsImV4cCI6MjA3NDI2MjMxMH0.kMGbutwYPPztmFf85sgDaPpZryyoIsNCctteGd5ViGY
-
-SUPABASE_SERVICE_ROLE_KEY
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpbGNtZHBua3pnd3Z3c254bGF2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODY4NjMxMCwiZXhwIjoyMDc0MjYyMzEwfQ.zeVKENE9mXTdUjv51UwTid2GCLPA3cQZj5h8B9mLqHo
-
-NEXT_PUBLIC_SITE_URL
-https://www.antimatterai.com
+NEXT_PUBLIC_SITE_URL=https://www.antimatterai.com
 ```
 
 ### Optional (If you want AI features)
@@ -51,10 +46,9 @@ your_openai_api_key_here
 ## 🔄 After Adding Variables
 
 1. Vercel will automatically redeploy
-2. Build will run: `payload migrate && next build`
-3. Payload will create tables in your Supabase database
-4. App will deploy successfully
-5. Admin will be accessible at: **https://www.antimatterai.com/admin**
+2. Build runs `next build`; DB access happens at runtime
+3. Visit: **/api/payload-health** to confirm DNS and DB connectivity
+4. Then visit: **/admin**
 
 ## 🎯 First Deployment
 
