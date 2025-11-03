@@ -2,6 +2,7 @@ import React from "react";
 import Button from "./ui/Button";
 import DarkVeil from "./ui/bits/DarkVeilBG";
 import SplitTextWavy from "./ui/SplitTextWavy";
+import TransitionLink from "./ui/TransitionLink";
 import { GoArrowRight } from "react-icons/go";
 
 const CTASection = () => {
@@ -19,12 +20,14 @@ const CTASection = () => {
             letterSpacingClass="tracking-normal"
           />
         </h2>
-        <Button>
-          <span className="sm:text-xl flex items-center gap-5">
-            Let&apos;s work together{" "}
-            <GoArrowRight className="size-6 sm:size-8" />
-          </span>
-        </Button>
+        <TransitionLink href="/contact">
+          <Button>
+            <span className="sm:text-xl flex items-center gap-5">
+              Let&apos;s work together{" "}
+              <GoArrowRight className="size-6 sm:size-8" />
+            </span>
+          </Button>
+        </TransitionLink>
       </div>
       <div className="absolute w-full h-full top-0 left-0 saturate-50">
         <DarkVeil hueShift={360} />
