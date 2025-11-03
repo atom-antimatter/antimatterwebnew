@@ -107,7 +107,6 @@ const pagesData = [
       canonicalUrl: 'https://www.antimatterai.com/',
       ogTitle: 'Antimatter AI — Digital Solutions That Matter',
       ogDescription: 'We empower organizations with AI that turns complex challenges into real-world outcomes.',
-      ogImage: '/images/HeroOpenGraph.png',
     },
   },
   {
