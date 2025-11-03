@@ -10,7 +10,7 @@ import { Pages } from './collections/Pages'
 import { BlogPosts } from './collections/BlogPosts'
 import { Media } from './collections/Media'
 import { Services } from './collections/Services'
-import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
+import cloudStorage from '@payloadcms/plugin-cloud-storage'
 import { createSupabaseStorageAdapter } from './src/lib/supabaseStorageAdapter'
 
 const filename = fileURLToPath(import.meta.url)
