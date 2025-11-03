@@ -16,6 +16,7 @@ interface PageData {
   no_index?: boolean;
   is_homepage?: boolean;
   category?: string;
+  parent_slug?: string;
 }
 
 const getSupabase = () => {
@@ -150,13 +151,15 @@ const allPages: PageData[] = [
       "Advanced emotion tracking and sentiment analysis solutions for customer insights and engagement.",
     category: "solutions",
   },
-  // Case studies
+  // Case studies - Note: These would be nested under a /case-study parent if it existed
+  // For now, they're at root level. If you create a /case-study index page, set parent_slug: "/case-study"
   {
     slug: "/case-study/clinixAI",
     title: "Clinix AI Case Study - Healthcare AI Platform",
     meta_description:
       "How we built Clinix AI - a comprehensive healthcare AI platform transforming patient care and clinical workflows.",
     category: "case-study",
+    parent_slug: undefined, // Can be set to "/case-study" if parent page exists
   },
   {
     slug: "/case-study/synergies4",
@@ -164,6 +167,7 @@ const allPages: PageData[] = [
     meta_description:
       "Synergies4 case study - building scalable enterprise solutions with modern technology.",
     category: "case-study",
+    parent_slug: undefined,
   },
   {
     slug: "/case-study/curehire",
@@ -171,6 +175,7 @@ const allPages: PageData[] = [
     meta_description:
       "Curehire case study - revolutionizing healthcare recruitment with AI-powered matching and automation.",
     category: "case-study",
+    parent_slug: undefined,
   },
   {
     slug: "/case-study/feature",
@@ -178,6 +183,7 @@ const allPages: PageData[] = [
     meta_description:
       "Feature case study - delivering innovative product solutions with cutting-edge technology.",
     category: "case-study",
+    parent_slug: undefined,
   },
   {
     slug: "/case-study/owasp",
@@ -185,22 +191,13 @@ const allPages: PageData[] = [
     meta_description:
       "OWASP case study - implementing enterprise-grade security solutions and compliance frameworks.",
     category: "case-study",
+    parent_slug: undefined,
   },
 ];
 
 export async function POST() {
   try {
     const supabase = getSupabase();
-    
-    // Refresh schema cache by doing a full select first
-    const { error: schemaError } = await supabase
-      .from("pages")
-      .select("*")
-      .limit(0);
-    
-    if (schemaError && !schemaError.message.includes("relation") && !schemaError.message.includes("does not exist")) {
-      console.warn("Schema cache refresh warning:", schemaError);
-    }
     
     // Get existing pages count for reporting
     let existingPages: any[] = [];
@@ -237,75 +234,68 @@ export async function POST() {
       });
     }
     
-    // Insert all pages - do one at a time to avoid schema cache issues
-    // Handle duplicates gracefully (skip if exists)
-    const insertedPages = [];
-    const errors = [];
-    const skippedPages = [];
+    // Insert all pages using RPC function - bypasses schema cache issues
+    const insertedPages: string[] = [];
+    const errors: any[] = [];
+    const skippedPages: string[] = [];
     
     for (const page of pagesToInsert) {
-      // Skip if already exists (unless we want to force update)
-      if (existingSlugs.has(page.slug)) {
+      const isExisting = existingSlugs.has(page.slug);
+      
+      // Skip if already exists and we don't want to force update
+      if (isExisting) {
         skippedPages.push(page.slug);
         continue;
       }
+      
       try {
-        // Map page data with explicit field names matching database schema
-        // Convert empty strings to null for optional fields
-        const pageData = {
-          slug: page.slug,
-          title: page.title,
-          meta_description: (page.meta_description && page.meta_description.trim()) || null,
-          meta_keywords: (page.meta_keywords && page.meta_keywords.trim()) || null,
-          canonical_url: (page.canonical_url && page.canonical_url.trim()) || null,
-          og_title: (page.og_title && page.og_title.trim()) || null,
-          og_description: (page.og_description && page.og_description.trim()) || null,
-          og_image: (page.og_image && page.og_image.trim()) || null,
-          twitter_title: (page.twitter_title && page.twitter_title.trim()) || null,
-          twitter_description: (page.twitter_description && page.twitter_description.trim()) || null,
-          twitter_image: (page.twitter_image && page.twitter_image.trim()) || null,
-          no_index: page.no_index ?? false,
-          is_homepage: page.is_homepage ?? false,
-          category: (page.category && page.category.trim()) || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+        // Build RPC parameters object - explicitly map all fields
+        const rpcParams = {
+          p_slug: page.slug,
+          p_title: page.title,
+          p_meta_description: (page.meta_description && page.meta_description.trim()) || null,
+          p_meta_keywords: (page.meta_keywords && page.meta_keywords.trim()) || null,
+          p_canonical_url: (page.canonical_url && page.canonical_url.trim()) || null,
+          p_og_title: (page.og_title && page.og_title.trim()) || null,
+          p_og_description: (page.og_description && page.og_description.trim()) || null,
+          p_og_image: (page.og_image && page.og_image.trim()) || null,
+          p_twitter_title: (page.twitter_title && page.twitter_title.trim()) || null,
+          p_twitter_description: (page.twitter_description && page.twitter_description.trim()) || null,
+          p_twitter_image: (page.twitter_image && page.twitter_image.trim()) || null,
+          p_no_index: page.no_index ?? false,
+          p_is_homepage: page.is_homepage ?? false,
+          p_category: (page.category && page.category.trim()) || null,
+          p_internal_links: null, // Will be populated later via CMS or auto-analysis
+          p_parent_slug: (page.parent_slug && page.parent_slug.trim()) || null,
         };
         
-        // Insert new page - use insert (not upsert) to only add new pages
-        // Existing pages will only be updated when explicitly edited in admin portal
-        const { data, error } = await supabase
-          .from("pages")
-          .insert([pageData])
-          .select();
+        // Call RPC function - this bypasses schema cache entirely
+        // RPC returns the UUID directly (not wrapped in data array)
+        const { data: pageId, error } = await supabase.rpc('insert_or_update_page', rpcParams);
         
         if (error) {
-          // Handle duplicate key errors gracefully (page already exists)
-          if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-            console.log(`Page ${page.slug} already exists (duplicate key), skipping...`);
-            skippedPages.push(page.slug);
-            // Don't count as error - page already exists, which is fine
-          } else {
-            console.error(`Error inserting page ${page.slug}:`, error);
-            console.error(`Page data attempted:`, JSON.stringify(pageData, null, 2));
-            errors.push({ 
-              slug: page.slug, 
-              error: error.message,
-              details: error,
-              code: error.code,
-              hint: error.hint
-            });
-          }
-        } else if (data && data.length > 0) {
-          insertedPages.push(...data);
-          console.log(`Successfully inserted page: ${page.slug}`);
+          console.error(`Error inserting/updating page ${page.slug}:`, error);
+          console.error(`RPC params attempted:`, JSON.stringify(rpcParams, null, 2));
+          errors.push({ 
+            slug: page.slug, 
+            error: error.message,
+            details: error,
+            code: error.code,
+            hint: error.hint
+          });
+        } else if (pageId) {
+          // RPC function returns UUID if successful
+          // Since we skipped existing pages above, all successful calls are inserts
+          insertedPages.push(page.slug);
+          console.log(`Successfully inserted page: ${page.slug} (ID: ${pageId})`);
         } else {
           console.warn(`No data returned for page ${page.slug} (but no error)`);
-          errors.push({ slug: page.slug, error: "No data returned from insert" });
+          errors.push({ slug: page.slug, error: "No data returned from RPC function" });
         }
       } catch (err: any) {
         console.error(`Error inserting page ${page.slug}:`, err);
         console.error(`Page data attempted:`, JSON.stringify(page, null, 2));
-        errors.push({ slug: page.slug, error: err.message, stack: err.stack });
+        errors.push({ slug: page.slug, error: err.message || "Unknown error", stack: err.stack });
       }
     }
     
@@ -324,7 +314,7 @@ export async function POST() {
     // Build response message
     let message = "";
     if (insertedPages.length > 0) {
-      message = `Successfully added ${insertedPages.length} pages`;
+      message = `Successfully inserted ${insertedPages.length} new pages`;
     }
     if (skippedPages.length > 0) {
       message += message ? `, skipped ${skippedPages.length} existing pages` : `Skipped ${skippedPages.length} existing pages`;
@@ -339,7 +329,7 @@ export async function POST() {
         message: message || "Partially successful",
         count: insertedPages.length,
         skipped: skippedPages.length,
-        pages: insertedPages,
+        insertedPages: insertedPages,
         errors: errors,
         skippedPages: skippedPages,
         warnings: true,
@@ -351,7 +341,7 @@ export async function POST() {
       message: message || `Successfully populated ${insertedPages.length} pages`,
       count: insertedPages.length,
       skipped: skippedPages.length,
-      pages: insertedPages,
+      insertedPages: insertedPages,
       skippedPages: skippedPages,
     });
   } catch (error: any) {
@@ -372,13 +362,31 @@ export async function GET() {
   try {
     const supabase = getSupabase();
     
+    // Fetch all pages - sort client-side to avoid schema cache issues
     const { data, error } = await supabase
       .from("pages")
       .select("*")
-      .order("category")
+      .order("is_homepage", { ascending: false })
       .order("slug");
     
     if (error) throw error;
+    
+    // Sort by category in JavaScript if data exists
+    if (data) {
+      data.sort((a, b) => {
+        // Homepage first
+        if (a.is_homepage && !b.is_homepage) return -1;
+        if (!a.is_homepage && b.is_homepage) return 1;
+        
+        // Then by category if available
+        if (a.category && b.category && a.category !== b.category) {
+          return a.category.localeCompare(b.category);
+        }
+        
+        // Finally by slug
+        return a.slug.localeCompare(b.slug);
+      });
+    }
     
     return NextResponse.json({
       success: true,

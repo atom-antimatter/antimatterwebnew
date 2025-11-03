@@ -26,6 +26,7 @@ interface SitemapItem {
   category?: string;
   is_homepage?: boolean;
   internal_links?: string[];
+  parent_slug?: string | null;
 }
 
 export default function SitemapViewer() {
@@ -43,7 +44,7 @@ export default function SitemapViewer() {
       // Fetch pages
       const { data: pages, error: pagesError } = await supabase
         .from("pages")
-        .select("id, slug, title, no_index, is_homepage, internal_links, updated_at");
+        .select("id, slug, title, no_index, is_homepage, internal_links, parent_slug, updated_at");
 
       if (pagesError) throw pagesError;
 
@@ -61,7 +62,8 @@ export default function SitemapViewer() {
           ...page,
           type: 'page' as const,
           is_homepage: page.is_homepage || false,
-          internal_links: page.internal_links || []
+          internal_links: page.internal_links || [],
+          parent_slug: page.parent_slug || null
         })),
         ...(blogPosts || []).map(post => ({
           id: post.id,
@@ -72,7 +74,8 @@ export default function SitemapViewer() {
           no_index: false,
           updated_at: post.updated_at,
           is_homepage: false,
-          internal_links: []
+          internal_links: [],
+          parent_slug: null
         }))
       ];
 

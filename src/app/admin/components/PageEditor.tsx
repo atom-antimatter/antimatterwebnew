@@ -3,6 +3,160 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { HiOutlineXMark, HiOutlineCloudArrowUp } from "react-icons/hi2";
+import { createClient } from "@supabase/supabase-js";
+
+const getSupabase = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase configuration missing");
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+};
+
+// Parent Page Selector Component
+interface ParentPageSelectorProps {
+  value: string;
+  onChange: (value: string) => void;
+  currentSlug: string;
+}
+
+function ParentPageSelector({ value, onChange, currentSlug }: ParentPageSelectorProps) {
+  const [pages, setPages] = useState<{ slug: string; title: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+          .from("pages")
+          .select("slug, title")
+          .order("slug");
+        
+        if (error) throw error;
+        
+        // Filter out current page to prevent circular references
+        const availablePages = (data || []).filter(p => p.slug !== currentSlug);
+        setPages(availablePages);
+      } catch (error) {
+        console.error("Error fetching pages for parent selector:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPages();
+  }, [currentSlug]);
+
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={loading}
+      className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-50"
+    >
+      <option value="">None (Root level)</option>
+      {pages.map((page) => (
+        <option key={page.slug} value={page.slug}>
+          {page.slug} - {page.title}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// Internal Links Selector Component
+interface InternalLinksSelectorProps {
+  value: string[];
+  onChange: (value: string[]) => void;
+  currentSlug: string;
+}
+
+function InternalLinksSelector({ value, onChange, currentSlug }: InternalLinksSelectorProps) {
+  const [pages, setPages] = useState<{ slug: string; title: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+          .from("pages")
+          .select("slug, title")
+          .order("slug");
+        
+        if (error) throw error;
+        
+        // Filter out current page
+        const availablePages = (data || []).filter(p => p.slug !== currentSlug);
+        setPages(availablePages);
+      } catch (error) {
+        console.error("Error fetching pages for internal links:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPages();
+  }, [currentSlug]);
+
+  const toggleLink = (slug: string) => {
+    if (value.includes(slug)) {
+      onChange(value.filter(s => s !== slug));
+    } else {
+      onChange([...value, slug]);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2 min-h-[60px] p-3 bg-zinc-800/30 border border-zinc-700 rounded-lg">
+        {value.length === 0 ? (
+          <span className="text-sm text-foreground/40">No internal links selected</span>
+        ) : (
+          value.map((slug) => (
+            <span
+              key={slug}
+              className="inline-flex items-center gap-1 px-3 py-1 bg-secondary/20 text-secondary border border-secondary/30 rounded-full text-sm"
+            >
+              <code className="text-xs">{slug}</code>
+              <button
+                type="button"
+                onClick={() => toggleLink(slug)}
+                className="ml-1 text-secondary hover:text-secondary/80 transition-colors"
+              >
+                <HiOutlineXMark className="w-4 h-4" />
+              </button>
+            </span>
+          ))
+        )}
+      </div>
+      
+      <select
+        onChange={(e) => {
+          if (e.target.value && !value.includes(e.target.value)) {
+            toggleLink(e.target.value);
+          }
+          e.target.value = ""; // Reset select
+        }}
+        disabled={loading}
+        className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-50"
+      >
+        <option value="">Add internal link...</option>
+        {pages
+          .filter(p => !value.includes(p.slug))
+          .map((page) => (
+            <option key={page.slug} value={page.slug}>
+              {page.slug} - {page.title}
+            </option>
+          ))}
+      </select>
+    </div>
+  );
+}
 
 interface Page {
   id?: string;
@@ -19,6 +173,9 @@ interface Page {
   twitter_image: string | null;
   no_index: boolean;
   is_homepage: boolean;
+  category: string | null;
+  parent_slug: string | null;
+  internal_links: string[] | null;
 }
 
 interface PageEditorProps {
@@ -43,6 +200,9 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
     twitter_image: "",
     no_index: false,
     is_homepage: false,
+    category: "",
+    parent_slug: "",
+    internal_links: [] as string[],
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -63,6 +223,9 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
         twitter_image: page.twitter_image || "",
         no_index: page.no_index || false,
         is_homepage: page.is_homepage || false,
+        category: page.category || "",
+        parent_slug: page.parent_slug || "",
+        internal_links: page.internal_links && Array.isArray(page.internal_links) ? page.internal_links : [],
       });
     } else {
       setFormData({
@@ -79,6 +242,9 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
         twitter_image: "/images/HeroOpenGraph.png",
         no_index: false,
         is_homepage: false,
+        category: "",
+        parent_slug: "",
+        internal_links: [],
       });
     }
   }, [page]);
@@ -184,6 +350,39 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
                     placeholder="Page Title"
                     required
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-3 py-2 bg-zinc-800/50 border border-zinc-700 rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+                  >
+                    <option value="">None</option>
+                    <option value="main">Main</option>
+                    <option value="services">Services</option>
+                    <option value="solutions">Solutions</option>
+                    <option value="demo">Demo</option>
+                    <option value="case-study">Case Study</option>
+                  </select>
+                  <p className="text-xs text-foreground/60 mt-1">Organize pages by category</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Parent Page
+                  </label>
+                  <ParentPageSelector
+                    value={formData.parent_slug}
+                    onChange={(value) => setFormData({ ...formData, parent_slug: value })}
+                    currentSlug={formData.slug}
+                  />
+                  <p className="text-xs text-foreground/60 mt-1">Create hierarchical page structure</p>
                 </div>
               </div>
             </div>
@@ -408,6 +607,22 @@ export default function PageEditor({ page, isOpen, onClose, onSave }: PageEditor
                     placeholder="Twitter card description (defaults to meta description)"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Internal Linking */}
+            <div>
+              <h4 className="text-lg font-medium text-foreground mb-4">Internal Linking</h4>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Internal Links
+                </label>
+                <InternalLinksSelector
+                  value={formData.internal_links}
+                  onChange={(links) => setFormData({ ...formData, internal_links: links })}
+                  currentSlug={formData.slug}
+                />
+                <p className="text-xs text-foreground/60 mt-1">Select pages that this page links to internally for sitemap and SEO analysis</p>
               </div>
             </div>
 

@@ -4,9 +4,14 @@ import OpenAI from 'openai';
 const HUME_API_KEY = process.env.HUME_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-});
+const getOpenAIClient = () => {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY environment variable is not set');
+  }
+  return new OpenAI({
+    apiKey: OPENAI_API_KEY,
+  });
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,6 +102,7 @@ async function analyzeWithOpenAI(text: string) {
   }
 
   try {
+    const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
       model: 'gpt-5', // Using GPT-5
       messages: [

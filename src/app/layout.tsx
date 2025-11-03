@@ -4,6 +4,7 @@ import Providers from "@/components/Providers";
 import StartProjectModal from "@/components/ui/StartProjectModal";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import LayoutContent from "./LayoutContent";
 
@@ -65,6 +66,19 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body className={`${geistSans.className} antialiased overflow-x-hidden`}>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-6FPMJ6P9VB"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-6FPMJ6P9VB');
+          `}
+        </Script>
         <LayoutContent>
           <NavBar />
           <Providers>{children}</Providers>

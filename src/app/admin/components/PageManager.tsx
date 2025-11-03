@@ -32,6 +32,8 @@ interface Page {
   no_index: boolean;
   is_homepage: boolean;
   category: string | null;
+  parent_slug: string | null;
+  internal_links: string[] | null;
   updated_at: string;
 }
 
@@ -58,6 +60,7 @@ export default function PageManager() {
     };
     
     initializePages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const autoSyncPages = async () => {
@@ -228,6 +231,9 @@ export default function PageManager() {
         twitter_title: pageData.twitter_title && pageData.twitter_title.trim() ? pageData.twitter_title.trim() : null,
         twitter_description: pageData.twitter_description && pageData.twitter_description.trim() ? pageData.twitter_description.trim() : null,
         twitter_image: pageData.twitter_image && pageData.twitter_image.trim() ? pageData.twitter_image.trim() : null,
+        category: pageData.category && pageData.category.trim() ? pageData.category.trim() : null,
+        parent_slug: pageData.parent_slug && pageData.parent_slug.trim() ? pageData.parent_slug.trim() : null,
+        internal_links: pageData.internal_links && Array.isArray(pageData.internal_links) && pageData.internal_links.length > 0 ? pageData.internal_links : null,
         updated_at: new Date().toISOString(),
       };
       
