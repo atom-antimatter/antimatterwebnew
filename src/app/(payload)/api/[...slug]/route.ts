@@ -2,6 +2,9 @@
 import config from '@payload-config'
 import { REST_DELETE, REST_GET, REST_PATCH, REST_POST } from '@payloadcms/next/routes'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 export const GET = REST_GET(config)
 export const POST = REST_POST(config)
 export const DELETE = REST_DELETE(config)
