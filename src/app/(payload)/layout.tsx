@@ -2,12 +2,14 @@
 import type { Metadata } from 'next'
 import '@payloadcms/next/css'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Antimatter AI CMS',
   description: 'Content Management System',
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>{children}</body>
