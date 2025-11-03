@@ -7,7 +7,7 @@ import Reveal from "@/components/ui/Reveal";
 import TransitionLink from "@/components/ui/TransitionLink";
 import LightRays from "@/components/ui/LightRays";
 import MainLayout from "@/components/ui/MainLayout";
-import { HiOutlineClock, HiOutlineSearch, HiOutlineTag } from "react-icons/hi2";
+import { HiOutlineClock, HiOutlineMagnifyingGlass, HiOutlineTag } from "react-icons/hi2";
 
 interface BlogPost {
   id: string;
@@ -79,7 +79,7 @@ export default function BlogListingClient({ posts, categories }: BlogListingClie
           <div className="flex flex-col md:flex-row gap-4 mb-12">
             {/* Search */}
             <div className="flex-1 relative">
-              <HiOutlineSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground/40" />
+              <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground/40" />
               <input
                 type="text"
                 value={searchQuery}
