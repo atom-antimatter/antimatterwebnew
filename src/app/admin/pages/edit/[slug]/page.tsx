@@ -50,11 +50,42 @@ export default function EditPage() {
           decodedSlug = "/" + decodedSlug;
         }
         
+        // Only select fields that PostgREST definitely knows about
+        // Category, parent_slug, internal_links may not be in schema cache yet
         const { data, error: fetchError } = await supabase
           .from("pages")
-          .select("*")
+          .select("id, slug, title, meta_description, meta_keywords, canonical_url, og_title, og_description, og_image, twitter_title, twitter_description, twitter_image, no_index, is_homepage, updated_at")
           .eq("slug", decodedSlug === "new" ? "" : decodedSlug)
           .maybeSingle();
+        
+        // If page found, try to get extended fields separately (category, parent_slug, internal_links)
+        // This is a workaround for PostgREST schema cache issues
+        if (data && decodedSlug !== "new") {
+          try {
+            const { data: extendedData } = await supabase
+              .from("pages")
+              .select("category, parent_slug, internal_links")
+              .eq("slug", decodedSlug)
+              .maybeSingle();
+            
+            if (extendedData) {
+              // Merge extended fields if they exist
+              Object.assign(data, {
+                category: extendedData.category || null,
+                parent_slug: extendedData.parent_slug || null,
+                internal_links: extendedData.internal_links || null,
+              });
+            }
+          } catch (extendedErr) {
+            // If extended fields fail, set them to null (non-critical)
+            console.warn("Could not fetch extended fields, setting to null:", extendedErr);
+            Object.assign(data, {
+              category: null,
+              parent_slug: null,
+              internal_links: null,
+            });
+          }
+        }
 
         if (fetchError) {
           setError(fetchError.message);
@@ -103,13 +134,55 @@ export default function EditPage() {
       };
       
       if (page?.id) {
-        // Update existing page
+        // Split data into known fields and extended fields (for PostgREST schema cache workaround)
+        const knownFields: Record<string, any> = {
+          slug: cleanedData.slug,
+          title: cleanedData.title,
+          meta_description: cleanedData.meta_description,
+          meta_keywords: cleanedData.meta_keywords,
+          canonical_url: cleanedData.canonical_url,
+          og_title: cleanedData.og_title,
+          og_description: cleanedData.og_description,
+          og_image: cleanedData.og_image,
+          twitter_title: cleanedData.twitter_title,
+          twitter_description: cleanedData.twitter_description,
+          twitter_image: cleanedData.twitter_image,
+          no_index: cleanedData.no_index,
+          is_homepage: cleanedData.is_homepage,
+          updated_at: cleanedData.updated_at,
+        };
+        
+        const extendedFields: Record<string, any> = {
+          category: cleanedData.category,
+          parent_slug: cleanedData.parent_slug,
+          internal_links: cleanedData.internal_links,
+        };
+        
+        // First update known fields
         const { error: updateError } = await supabase
           .from("pages")
-          .update(cleanedData)
+          .update(knownFields)
           .eq("id", page.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error("Error updating known fields:", updateError);
+          throw updateError;
+        }
+        
+        // Try to update extended fields separately (may fail if PostgREST doesn't know about them)
+        try {
+          const { error: extendedError } = await supabase
+            .from("pages")
+            .update(extendedFields)
+            .eq("id", page.id);
+          
+          if (extendedError) {
+            console.warn("Could not update extended fields (PostgREST schema cache issue):", extendedError);
+            // Non-critical - the main fields were updated successfully
+          }
+        } catch (extendedErr) {
+          console.warn("Extended fields update failed (non-critical):", extendedErr);
+        }
         
         // Navigate back to pages list if slug changed
         if (cleanedData.slug !== page.slug) {
@@ -121,12 +194,49 @@ export default function EditPage() {
           router.push("/admin?tab=pages");
         }
       } else {
-        // Create new page
-        const { error: insertError } = await supabase
+        // Create new page - only include known fields first
+        // Extended fields will be NULL initially (can be updated later)
+        const knownFieldsForInsert: Record<string, any> = {
+          slug: cleanedData.slug,
+          title: cleanedData.title,
+          meta_description: cleanedData.meta_description,
+          meta_keywords: cleanedData.meta_keywords,
+          canonical_url: cleanedData.canonical_url,
+          og_title: cleanedData.og_title,
+          og_description: cleanedData.og_description,
+          og_image: cleanedData.og_image,
+          twitter_title: cleanedData.twitter_title,
+          twitter_description: cleanedData.twitter_description,
+          twitter_image: cleanedData.twitter_image,
+          no_index: cleanedData.no_index,
+          is_homepage: cleanedData.is_homepage,
+        };
+        
+        const extendedFieldsForInsert: Record<string, any> = {
+          category: cleanedData.category,
+          parent_slug: cleanedData.parent_slug,
+          internal_links: cleanedData.internal_links,
+        };
+        
+        const { error: insertError, data: insertedData } = await supabase
           .from("pages")
-          .insert([cleanedData]);
+          .insert([knownFieldsForInsert])
+          .select('id')
+          .single();
 
         if (insertError) throw insertError;
+        
+        // Try to update extended fields after insert (if they exist)
+        if (insertedData && (cleanedData.category || cleanedData.parent_slug || cleanedData.internal_links)) {
+          try {
+            await supabase
+              .from("pages")
+              .update(extendedFieldsForInsert)
+              .eq("id", insertedData.id);
+          } catch (extendedErr) {
+            console.warn("Could not set extended fields on new page (non-critical):", extendedErr);
+          }
+        }
         
         const newSlugForRoute = cleanedData.slug?.startsWith("/") 
           ? cleanedData.slug.slice(1) 
