@@ -381,19 +381,9 @@ export async function POST() {
       // Continue with insert anyway
     }
     
-    // Try to insert all pages - handle duplicates gracefully
+    // Always update all pages to ensure categories and internal_links are set
     const pagesToInsert = allPages;
     const existingPagesCount = existingPages.length;
-    
-    // If all pages exist, still return success (they're already there)
-    if (existingSlugs.size === allPages.length) {
-      return NextResponse.json({ 
-        success: true, 
-        message: "All pages already exist",
-        count: 0,
-        skipped: existingPagesCount
-      });
-    }
     
     // Generate internal links based on categories and relationships for SERP sitelinks
     const generateInternalLinks = (currentPage: PageData): string[] => {
@@ -452,11 +442,8 @@ export async function POST() {
     for (const page of pagesToInsert) {
       const isExisting = existingSlugs.has(page.slug);
       
-      // Skip if already exists and we don't want to force update
-      if (isExisting) {
-        skippedPages.push(page.slug);
-        continue;
-      }
+      // Always update pages to ensure categories and internal_links are set
+      // We'll use upsert which will update existing pages
       
       try {
         // Auto-generate internal links based on category and relationships
@@ -536,14 +523,13 @@ export async function POST() {
         }
         
         if (insertResult && insertResult.id) {
-          insertedPages.push(page.slug);
-          
-          // NOTE: category, parent_slug, internal_links are NOT set here
-          // PostgREST schema cache doesn't recognize these columns yet
-          // These fields can be updated via the admin panel after pages are synced
-          // The pages are successfully inserted/updated with all other SEO fields
-          console.log(`Successfully inserted/updated page: ${page.slug} (ID: ${insertResult.id})`);
-          console.log(`Note: category/parent_slug/internal_links will be NULL initially. Update via admin panel once PostgREST cache refreshes.`);
+          if (isExisting) {
+            skippedPages.push(page.slug); // Track as updated, not inserted
+          } else {
+            insertedPages.push(page.slug);
+          }
+          console.log(`Successfully ${isExisting ? 'updated' : 'inserted'} page: ${page.slug} (ID: ${insertResult.id})`);
+          console.log(`Category: ${rpcParams.p_category}, Parent: ${rpcParams.p_parent_slug}, Internal Links: ${autoInternalLinks.length}`);
         } else {
           console.warn(`No data returned for page ${page.slug} (but no error)`);
           errors.push({ slug: page.slug, error: "No data returned from upsert" });
@@ -555,11 +541,11 @@ export async function POST() {
       }
     }
     
-    if (insertedPages.length === 0 && errors.length > 0 && skippedPages.length === 0) {
+    if (insertedPages.length === 0 && skippedPages.length === 0 && errors.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: `Failed to insert pages. ${errors.length} errors occurred.`,
+          error: `Failed to update pages. ${errors.length} errors occurred.`,
           details: errors,
           attemptedCount: pagesToInsert.length,
         },
@@ -573,7 +559,7 @@ export async function POST() {
       message = `Successfully inserted ${insertedPages.length} new pages`;
     }
     if (skippedPages.length > 0) {
-      message += message ? `, skipped ${skippedPages.length} existing pages` : `Skipped ${skippedPages.length} existing pages`;
+      message += message ? `, updated ${skippedPages.length} existing pages` : `Updated ${skippedPages.length} existing pages`;
     }
     if (errors.length > 0) {
       message += message ? `, ${errors.length} errors occurred` : `${errors.length} errors occurred`;
