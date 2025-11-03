@@ -10,7 +10,7 @@ import { Pages } from './collections/Pages'
 import { BlogPosts } from './collections/BlogPosts'
 import { Media } from './collections/Media'
 import { Services } from './collections/Services'
-import cloudStorage from '@payloadcms/plugin-cloud-storage'
+import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
 import { createSupabaseStorageAdapter } from './src/lib/supabaseStorageAdapter'
 
 const filename = fileURLToPath(import.meta.url)
@@ -39,14 +39,14 @@ export default buildConfig({
   collections: [Users, Pages, BlogPosts, Media, Services],
   
   plugins: [
-    (cloudStorage as any)({
+    cloudStorage({
       collections: {
         'payload-media': {
           adapter: createSupabaseStorageAdapter({ bucket: process.env.SUPABASE_STORAGE_BUCKET || 'media', public: true }),
           disableLocalStorage: true,
         },
       },
-    }) as any,
+    }),
     seoPlugin({
       collections: ['payload-pages', 'payload-blog-posts'],
       generateTitle: (args) => `${args.doc?.title?.value || args.doc?.title} | Antimatter AI`,
