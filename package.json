@@ -3,12 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "build": "cross-env NODE_OPTIONS=--no-deprecation payload migrate && next build",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "lint": "eslint",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "generate:types": "payload generate:types",
+    "seed": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@payloadcms/db-postgres": "^3.0.0-beta.135",
+    "@payloadcms/next": "^3.0.0-beta.135",
+    "@payloadcms/plugin-cloud-storage": "^3.0.0-beta.135",
+    "@payloadcms/plugin-seo": "^3.0.0-beta.135",
+    "@payloadcms/richtext-lexical": "^3.0.0-beta.135",
+    "@payloadcms/ui": "^3.0.0-beta.135",
     "@supabase/supabase-js": "^2.75.0",
     "@tiptap/extension-heading": "^3.10.1",
     "@tiptap/extension-image": "^3.10.1",
@@ -30,6 +39,7 @@
     "next": "15.5.2",
     "ogl": "^1.0.11",
     "openai": "^6.7.0",
+    "payload": "^3.0.0-beta.135",
     "puppeteer": "^24.21.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -39,6 +49,7 @@
     "rehype-raw": "^7.0.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "sharp": "^0.34.4",
     "swiper": "^12.0.2",
     "three": "^0.179.1",
     "zustand": "^5.0.8"
@@ -51,9 +62,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }
