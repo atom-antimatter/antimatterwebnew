@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineEye, HiOutlineHome } from "react-icons/hi2";
+import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineEye, HiOutlineHome, HiOutlineArrowPath } from "react-icons/hi2";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import PageEditor from "./PageEditor";
 
@@ -151,7 +151,7 @@ export default function PageManager() {
   };
 
   const populateAllPages = async () => {
-    if (!confirm("This will add all missing pages to the database. Continue?")) return;
+    if (!confirm("This will sync all missing pages to the database. Continue?")) return;
     
     setIsPopulating(true);
     try {
@@ -306,13 +306,13 @@ export default function PageManager() {
           >
             {isPopulating ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                <span>Populating...</span>
+                <HiOutlineArrowPath className="w-5 h-5 animate-spin" />
+                <span>Syncing...</span>
               </>
             ) : (
               <>
-                <HiOutlinePlus className="w-5 h-5" />
-                <span>Populate All Pages</span>
+                <HiOutlineArrowPath className="w-5 h-5" />
+                <span>Sync Pages</span>
               </>
             )}
           </button>
@@ -359,7 +359,7 @@ export default function PageManager() {
                   <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <p className="text-foreground/60 mb-4">No pages found in the database.</p>
-                      <p className="text-sm text-foreground/40 mb-4">Click &quot;Populate All Pages&quot; to add all site pages automatically.</p>
+                      <p className="text-sm text-foreground/40 mb-4">Click &quot;Sync Pages&quot; to sync all site pages to the database.</p>
                     </div>
                   </td>
                 </tr>

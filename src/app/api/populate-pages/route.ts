@@ -289,8 +289,10 @@ export async function POST() {
           parent_slug: rpcParams.p_parent_slug,
         };
         
-        // Use upsert with conflict on slug - this works even if PostgREST schema cache is stale
+        // Use upsert with conflict on slug - explicitly specify public schema
+        // This helps PostgREST find the columns even if schema cache is stale
         const { data: insertResult, error: insertError } = await supabase
+          .schema('public')
           .from("pages")
           .upsert(insertData, { onConflict: 'slug' })
           .select('id')
