@@ -20,8 +20,6 @@ export default buildConfig({
     user: 'payload-users',
     meta: {
       titleSuffix: '- Antimatter AI CMS',
-      favicon: '/favicon.ico',
-      ogImage: '/images/HeroOpenGraph.png',
     },
   },
   
