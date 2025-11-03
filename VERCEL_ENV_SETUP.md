@@ -16,7 +16,7 @@ The build is failing because Payload CMS requires `DATABASE_URL` to run migratio
 
 ```env
 DATABASE_URL
-postgresql://postgres:aunqjK18VVLjqcK9@db.ailcmdpnkzgwvwsnxlav.supabase.co:5432/postgres
+postgresql://postgres.ailcmdpnkzgwvwsnxlav:aunqjK18VVLjqcK9@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
 
 PAYLOAD_SECRET
 r69U/cESwCxM/bRi5OQCd1COZ0O/B9MR40+Asj8Q940=
