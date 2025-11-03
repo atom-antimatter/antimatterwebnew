@@ -1,6 +1,6 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
-export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
+export async function up({ payload }: MigrateUpArgs): Promise<void> {
   await payload.db.drizzle.execute(sql`
    CREATE TYPE "public"."enum_payload_users_role" AS ENUM('admin', 'editor');
   CREATE TYPE "public"."enum_payload_pages_category" AS ENUM('main', 'services', 'solutions', 'case-study', 'demo');
@@ -653,7 +653,7 @@ export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX IF NOT EXISTS "payload_migrations_created_at_idx" ON "payload_migrations" USING btree ("created_at");`)
 }
 
-export async function down({ payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({ payload }: MigrateDownArgs): Promise<void> {
   await payload.db.drizzle.execute(sql`
    DROP TABLE "payload_users" CASCADE;
   DROP TABLE "payload_pages" CASCADE;

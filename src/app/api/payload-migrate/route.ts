@@ -9,7 +9,7 @@ import config from '@payload-config'
  */
 export async function GET() {
   try {
-    const payload = await getPayload({ config })
+    await getPayload({ config })
     
     // Migrations are automatically run when Payload initializes
     // This endpoint just ensures Payload is initialized
