@@ -19,6 +19,7 @@ export default function OttoPixel() {
 
     // Create and inject the Otto pixel script with exact attributes as required
     // This matches the exact format from SearchAtlas installation guide
+    // The script creates another script that loads the actual OTTO pixel
     const script = document.createElement("script");
     script.setAttribute("nowprocket", "");
     script.setAttribute("nitro-exclude", "");
@@ -28,13 +29,18 @@ export default function OttoPixel() {
     script.src = "data:text/javascript;base64,dmFyIHNjcmlwdCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoInNjcmlwdCIpO3NjcmlwdC5zZXRBdHRyaWJ1dGUoIm5vd3Byb2NrZXQiLCAiIik7c2NyaXB0LnNldEF0dHJpYnV0ZSgibml0cm8tZXhjbHVkZSIsICIiKTtzY3JpcHQuc3JjID0gImh0dHBzOi8vZGFzaGJvYXJkLnNlYXJjaGF0bGFzLmNvbS9zY3JpcHRzL2R5bmFtaWNfb3B0aW1pemF0aW9uLmpzIjtzY3JpcHQuZGF0YXNldC51dWlkID0gIjdmOWNlYWU1LWU2NTktNDNjOC05OWVlLTMzYjk3MGQyYjkyZCI7c2NyaXB0LmlkID0gInNhLWR5bmFtaWMtb3B0aW1pemF0aW9uLWxvYWRlciI7ZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpOw==";
     
     // Append to head immediately to ensure it loads as early as possible
-    document.head.appendChild(script);
-    
-    // Verify script was added
-    if (document.getElementById("sa-dynamic-optimization")) {
-      console.log("OTTO Pixel script injected successfully");
+    // This needs to be in the head for SearchAtlas to detect it
+    if (document.head) {
+      document.head.appendChild(script);
     } else {
-      console.error("OTTO Pixel script failed to inject");
+      // If head isn't ready, wait for it
+      const observer = new MutationObserver(() => {
+        if (document.head && !document.getElementById("sa-dynamic-optimization")) {
+          document.head.appendChild(script);
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.documentElement, { childList: true });
     }
   }, [pathname]);
 
