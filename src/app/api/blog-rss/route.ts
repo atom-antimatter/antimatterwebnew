@@ -3,6 +3,8 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import { generateRSSItem } from "@/lib/blogHelpers";
 
+export const revalidate = 3600; // Cache for 1 hour
+
 export async function GET() {
   try {
     const payload = await getPayload({ config });

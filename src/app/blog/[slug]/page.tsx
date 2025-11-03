@@ -4,6 +4,9 @@ import config from "@payload-config";
 import type { Metadata } from "next";
 import BlogPostClient from "./BlogPostClient";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Revalidate every 5 minutes
+
 interface BlogPost {
   id: string;
   title: string;
