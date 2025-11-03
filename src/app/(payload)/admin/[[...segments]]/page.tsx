@@ -10,25 +10,16 @@ export const runtime = 'nodejs'
 
 type Params = { segments: string[] }
 type Search = { [key: string]: string | string[] }
+type Props = { params: Promise<Params>; searchParams: Promise<Search> }
 
-export const generateMetadata = async ({
-  params,
-  searchParams,
-}: {
-  params: Params
-  searchParams: Search
-}): Promise<Metadata> => {
-  return generatePageMetadata({ config, params, searchParams })
+export const generateMetadata = async ({ params, searchParams }: Props): Promise<Metadata> => {
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams])
+  return generatePageMetadata({ config, params: resolvedParams, searchParams: resolvedSearchParams })
 }
 
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: Params
-  searchParams: Search
-}) {
-  return RootPage({ config, params, searchParams, importMap })
+export default async function Page({ params, searchParams }: Props) {
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams])
+  return RootPage({ config, params: resolvedParams, searchParams: resolvedSearchParams, importMap })
 }
 
 
