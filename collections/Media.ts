@@ -3,8 +3,8 @@ import type { CollectionConfig } from 'payload'
 export const Media: CollectionConfig = {
   slug: 'payload-media',
   admin: {
-    useAsTitle: 'filename',
-    defaultColumns: ['filename', 'alt', 'mimeType', 'filesize', 'updatedAt'],
+    useAsTitle: 'alt',
+    defaultColumns: ['alt', 'updatedAt'],
   },
   upload: {
     mimeTypes: ['image/*', 'video/*'],
