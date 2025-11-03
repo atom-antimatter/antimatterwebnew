@@ -82,6 +82,27 @@ export default function RootLayout({
         </Script>
         {/* Otto Pixel - only on non-admin pages */}
         <OttoPixel />
+        {/* OTTO Pixel Script - loads early for SearchAtlas detection */}
+        <Script
+          id="sa-dynamic-optimization-loader"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (window.location.pathname.startsWith('/admin')) return;
+                if (document.getElementById('sa-dynamic-optimization')) return;
+                var script = document.createElement('script');
+                script.setAttribute('nowprocket', '');
+                script.setAttribute('nitro-exclude', '');
+                script.type = 'text/javascript';
+                script.id = 'sa-dynamic-optimization';
+                script.setAttribute('data-uuid', '7f9ceae5-e659-43c8-99ee-33b970d2b92d');
+                script.src = 'data:text/javascript;base64,dmFyIHNjcmlwdCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoInNjcmlwdCIpO3NjcmlwdC5zZXRBdHRyaWJ1dGUoIm5vd3Byb2NrZXQiLCAiIik7c2NyaXB0LnNldEF0dHJpYnV0ZSgibml0cm8tZXhjbHVkZSIsICIiKTtzY3JpcHQuc3JjID0gImh0dHBzOi8vZGFzaGJvYXJkLnNlYXJjaGF0bGFzLmNvbS9zY3JpcHRzL2R5bmFtaWNfb3B0aW1pemF0aW9uLmpzIjtzY3JpcHQuZGF0YXNldC51dWlkID0gIjdmOWNlYWU1LWU2NTktNDNjOC05OWVlLTMzYjk3MGQyYjkyZCI7c2NyaXB0LmlkID0gInNhLWR5bmFtaWMtb3B0aW1pemF0aW9uLWxvYWRlciI7ZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpOw==';
+                document.head.appendChild(script);
+              })();
+            `,
+          }}
+        />
         <LayoutContent>
           <NavBar />
           <Providers>{children}</Providers>
