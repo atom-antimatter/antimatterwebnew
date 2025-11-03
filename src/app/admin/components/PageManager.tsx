@@ -1,20 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineEye, HiOutlineHome } from "react-icons/hi2";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import PageEditor from "./PageEditor";
-
-const getSupabase = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase configuration missing");
-  }
-  
-  return createClient(supabaseUrl, supabaseKey);
-};
 
 interface Page {
   id: string;
@@ -48,7 +37,7 @@ export default function PageManager() {
     const initializePages = async () => {
       await fetchPages();
       // Auto-sync pages if database is empty (check after fetch)
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
       const { data: existingPages } = await supabase
         .from("pages")
         .select("slug")
@@ -89,7 +78,7 @@ export default function PageManager() {
 
   const fetchPages = async () => {
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
       // Fetch pages - don't order by category to avoid schema cache issues
       const { data, error } = await supabase
         .from("pages")
@@ -116,7 +105,7 @@ export default function PageManager() {
             throw retryError;
           }
           
-          setPages(retryData || []);
+          setPages((retryData || []) as Page[]);
           return;
         }
         
@@ -126,7 +115,7 @@ export default function PageManager() {
       }
       
       // Sort by category in JavaScript if category column exists
-      const sortedData = data ? [...data].sort((a, b) => {
+      const sortedData = data ? [...(data as any[])].sort((a: any, b: any) => {
         // Homepage first
         if (a.is_homepage && !b.is_homepage) return -1;
         if (!a.is_homepage && b.is_homepage) return 1;
@@ -142,7 +131,7 @@ export default function PageManager() {
         return a.slug.localeCompare(b.slug);
       }) : [];
       
-      setPages(sortedData);
+      setPages(sortedData as Page[]);
     } catch (error: any) {
       console.error("Error fetching pages:", error);
       // Log full error for debugging
@@ -217,7 +206,7 @@ export default function PageManager() {
 
   const handleSave = async (pageData: Partial<Page>) => {
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
       
       // Convert empty strings to null for optional fields
       const cleanedData: any = {
@@ -281,7 +270,7 @@ export default function PageManager() {
     if (!confirm("Are you sure you want to delete this page?")) return;
 
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
       const { error } = await supabase
         .from("pages")
         .delete()

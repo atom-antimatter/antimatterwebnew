@@ -2,21 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { createClient } from "@supabase/supabase-js";
 import { HiOutlinePencil, HiOutlineTrash, HiOutlinePlus, HiOutlineCalendar } from "react-icons/hi2";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import RichTextEditor from "./RichTextEditor";
 import CustomSelect from "@/components/ui/CustomSelect";
-
-const getSupabase = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase configuration missing");
-  }
-  
-  return createClient(supabaseUrl, supabaseKey);
-};
 
 interface BlogPost {
   id: string;
@@ -52,7 +41,7 @@ export default function BlogManager() {
 
   const fetchPosts = async () => {
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
       const { data, error } = await supabase
         .from("blog_posts")
         .select("*")
@@ -69,18 +58,20 @@ export default function BlogManager() {
 
   const handleSave = async (postData: Partial<BlogPost>) => {
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
       if (editingPost) {
+        const updatePayload: Record<string, any> = { ...postData, updated_at: new Date().toISOString() };
         const { error } = await supabase
           .from("blog_posts")
-          .update({ ...postData, updated_at: new Date().toISOString() })
+          .update(updatePayload)
           .eq("id", editingPost.id);
 
         if (error) throw error;
       } else {
+        const insertPayload: Record<string, any> = { ...postData, created_at: new Date().toISOString() };
         const { error } = await supabase
           .from("blog_posts")
-          .insert([{ ...postData, created_at: new Date().toISOString() }]);
+          .insert([insertPayload]);
 
         if (error) throw error;
       }
@@ -97,7 +88,7 @@ export default function BlogManager() {
     if (!confirm("Are you sure you want to delete this blog post?")) return;
 
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
       const { error } = await supabase
         .from("blog_posts")
         .delete()
@@ -112,14 +103,15 @@ export default function BlogManager() {
 
   const handlePublish = async (id: string, published: boolean) => {
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
+      const updatePayload: Record<string, any> = { 
+        published,
+        published_at: published ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      };
       const { error } = await supabase
         .from("blog_posts")
-        .update({ 
-          published,
-          published_at: published ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq("id", id);
 
       if (error) throw error;

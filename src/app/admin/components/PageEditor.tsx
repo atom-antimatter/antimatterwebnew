@@ -3,18 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { HiOutlineXMark, HiOutlineCloudArrowUp } from "react-icons/hi2";
-import { createClient } from "@supabase/supabase-js";
-
-const getSupabase = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase configuration missing");
-  }
-  
-  return createClient(supabaseUrl, supabaseKey);
-};
+import { getSupabaseClient } from "@/lib/supabaseClient";
 
 // Parent Page Selector Component
 interface ParentPageSelectorProps {
@@ -28,9 +17,9 @@ function ParentPageSelector({ value, onChange, currentSlug }: ParentPageSelector
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPages = async () => {
+      const fetchPages = async () => {
       try {
-        const supabase = getSupabase();
+        const supabase = getSupabaseClient() as any;
         const { data, error } = await supabase
           .from("pages")
           .select("slug, title")
@@ -39,7 +28,7 @@ function ParentPageSelector({ value, onChange, currentSlug }: ParentPageSelector
         if (error) throw error;
         
         // Filter out current page to prevent circular references
-        const availablePages = (data || []).filter(p => p.slug !== currentSlug);
+        const availablePages = (data || []).filter((p: any) => p.slug !== currentSlug);
         setPages(availablePages);
       } catch (error) {
         console.error("Error fetching pages for parent selector:", error);
@@ -82,7 +71,7 @@ function InternalLinksSelector({ value, onChange, currentSlug }: InternalLinksSe
   useEffect(() => {
     const fetchPages = async () => {
       try {
-        const supabase = getSupabase();
+        const supabase = getSupabaseClient() as any;
         const { data, error } = await supabase
           .from("pages")
           .select("slug, title")
@@ -91,7 +80,7 @@ function InternalLinksSelector({ value, onChange, currentSlug }: InternalLinksSe
         if (error) throw error;
         
         // Filter out current page
-        const availablePages = (data || []).filter(p => p.slug !== currentSlug);
+        const availablePages = (data || []).filter((p: any) => p.slug !== currentSlug);
         setPages(availablePages);
       } catch (error) {
         console.error("Error fetching pages for internal links:", error);

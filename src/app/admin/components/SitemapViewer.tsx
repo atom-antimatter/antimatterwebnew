@@ -1,20 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { HiOutlineGlobeAlt, HiOutlineEye, HiEyeSlash } from "react-icons/hi2";
+import { getSupabaseClient } from "@/lib/supabaseClient";
 import SitemapMindMap from "./SitemapMindMap";
-
-const getSupabase = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase configuration missing");
-  }
-  
-  return createClient(supabaseUrl, supabaseKey);
-};
 
 interface SitemapItem {
   id: string;
@@ -39,7 +28,7 @@ export default function SitemapViewer() {
 
   const fetchSitemapData = async () => {
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseClient() as any;
       
       // Fetch pages
       const { data: pages, error: pagesError } = await supabase
@@ -58,14 +47,14 @@ export default function SitemapViewer() {
 
       // Combine all items
       const allItems: SitemapItem[] = [
-        ...(pages || []).map(page => ({
+        ...(pages || []).map((page: any) => ({
           ...page,
           type: 'page' as const,
           is_homepage: page.is_homepage || false,
           internal_links: page.internal_links || [],
           parent_slug: page.parent_slug || null
         })),
-        ...(blogPosts || []).map(post => ({
+        ...(blogPosts || []).map((post: any) => ({
           id: post.id,
           slug: `/blog/${post.slug}`,
           title: post.title,
