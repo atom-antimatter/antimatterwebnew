@@ -1,8 +1,97 @@
-import { getPayload } from 'payload'
-import config from '../payload.config'
+import * as dotenv from 'dotenv'
+import { resolve } from 'path'
 
-// Import static data
-import { ServicesData } from '../src/data/services'
+// Load .env.local FIRST before any imports that use env vars
+dotenv.config({ path: resolve(process.cwd(), '.env.local') })
+
+console.log('DATABASE_URL loaded:', process.env.DATABASE_URL?.substring(0, 50) + '...')
+console.log('PAYLOAD_SECRET loaded:', !!process.env.PAYLOAD_SECRET)
+
+// NOW import config after env vars are loaded
+import { getPayload } from 'payload'
+import config from '../payload.config.js'
+
+// Services data (extracted from static files, without JSX)
+const servicesData = [
+  {
+    title: 'Product Design',
+    link: '/design-agency',
+    description: 'End-to-end product design—from research and UX flows to polished UI systems and developer-ready handoff.',
+    tagline: ['Human creativity.', 'AI-enhanced speed.', 'Designs that think ahead.'],
+    items: [
+      { title: 'User Research & Strategy' },
+      { title: 'UX Flows & Wireframes' },
+      { title: 'UI Systems & Prototypes' },
+      { title: 'Design Ops & Dev Handoff' },
+    ],
+    tools: ['Figma', 'Sketch', 'Adobe XD', 'Blender', 'Three.js', 'Abstract'],
+  },
+  {
+    title: 'Development',
+    link: '/development-agency',
+    description: 'Robust, scalable products across web and mobile—from elegant UIs to reliable APIs and automated DevOps.',
+    tagline: ['We make tech that', 'just makes sense.'],
+    items: [
+      { title: 'Frontend Platforms (React / Next)' },
+      { title: 'Backend APIs & Microservices (Node)' },
+      { title: 'Mobile & Cross-platform (Flutter)' },
+      { title: 'CI/CD & Cloud Ops (Docker)' },
+    ],
+    tools: ['React', 'Flutter', 'Next.js', 'Node.js', 'Docker', 'TypeScript'],
+  },
+  {
+    title: 'GTM Strategy',
+    link: '/gtm-strategy',
+    description: 'Data-driven go-to-market for SaaS and AI—clear positioning, smart pricing, and repeatable growth loops.',
+    tagline: ['Build market fit.', 'Not just product fit.'],
+    items: [
+      { title: 'ICP & Segmentation' },
+      { title: 'Positioning, Narrative & Messaging' },
+      { title: 'Pricing & Packaging' },
+      { title: 'Demand Gen & Content Engine' },
+    ],
+    tools: ['HubSpot', 'Salesforce', 'Google Analytics', 'Mixpanel', 'Intercom', 'Zapier'],
+  },
+  {
+    title: 'AI Development',
+    link: '/ai-development',
+    description: 'Production-ready AI—from LLM apps and fine-tuning to vision, NLP, and speech pipelines.',
+    tagline: ['Intelligence at scale.', 'Built for real-world use.'],
+    items: [
+      { title: 'LLM Apps & Fine-tuning' },
+      { title: 'Computer Vision' },
+      { title: 'NLP & Speech' },
+      { title: 'AI Ops & Monitoring' },
+    ],
+    tools: ['PyTorch', 'TensorFlow', 'LangChain', 'Hugging Face', 'scikit-learn', 'Keras'],
+  },
+  {
+    title: 'Healthcare Apps',
+    link: '/healthcare-apps',
+    description: 'Secure, compliant healthcare software—from telehealth to EHR integrations—built for HIPAA and auditability.',
+    tagline: ['Trusted tech for', 'trusted care.'],
+    items: [
+      { title: 'HIPAA & PHI Compliance' },
+      { title: 'Telehealth & Patient Portals' },
+      { title: 'EHR Integrations (FHIR / HL7)' },
+      { title: 'Audit Logging & Access Controls' },
+    ],
+    tools: ['AWS', 'Google Cloud', 'Okta', 'Auth0', 'Twilio', 'Stripe'],
+  },
+  {
+    title: 'IoT Development',
+    link: '/iot-development',
+    description: 'End-to-end IoT—embedded firmware, connectivity (MQTT, CoAP), edge AI, and OTA updates.',
+    tagline: ['Connect devices.', 'Unlock data.'],
+    items: [
+      { title: 'Embedded Firmware & Drivers' },
+      { title: 'Connectivity (MQTT, CoAP)' },
+      { title: 'Edge Computing & AI' },
+      { title: 'OTA Updates & Device Management' },
+    ],
+    tools: ['Arduino', 'Raspberry Pi', 'Nordic', 'Zigbee', 'MQTT', 'Node-RED'],
+  },
+]
 
 // Hardcoded pages data from populate-pages route
 const pagesData = [
@@ -18,7 +107,7 @@ const pagesData = [
       canonicalUrl: 'https://www.antimatterai.com/',
       ogTitle: 'Antimatter AI — Digital Solutions That Matter',
       ogDescription: 'We empower organizations with AI that turns complex challenges into real-world outcomes.',
-      og Image: '/images/HeroOpenGraph.png',
+      ogImage: '/images/HeroOpenGraph.png',
     },
   },
   {
@@ -103,7 +192,7 @@ async function seed() {
 
     try {
       await payload.create({
-        collection: 'users',
+        collection: 'payload-users',
         data: {
           email: adminEmail,
           password: adminPassword,
@@ -124,7 +213,7 @@ async function seed() {
     for (const page of pagesData) {
       try {
         await payload.create({
-          collection: 'pages',
+          collection: 'payload-pages',
           data: {
             title: page.title,
             slug: page.slug,
@@ -147,23 +236,21 @@ async function seed() {
 
     // 3. Seed services
     console.log('🔧 Seeding services...')
-    for (const service of ServicesData) {
+    for (const service of servicesData) {
       try {
         await payload.create({
-          collection: 'services',
+          collection: 'payload-services',
           data: {
             title: service.title,
             link: service.link,
-            icon: service.icon?.name || '',
-            description: service.description || '',
-            tagline: service.tagline?.map((line: string) => ({ line })) || [],
-            items: service.items?.map((item: any) => ({
+            description: service.description,
+            tagline: service.tagline.map((line) => ({ line })),
+            items: service.items.map((item) => ({
               title: item.title,
-              images: item.images || [],
-            })) || [],
-            tools: service.tools?.map((tool: string) => ({ tool })) || [],
-            hidden: service.hidden || false,
-            customCTA: service.customCTA,
+              images: [],
+            })),
+            tools: service.tools.map((tool) => ({ tool })),
+            hidden: false,
           },
         })
         console.log(`  ✅ Created service: ${service.title}`)
@@ -175,13 +262,13 @@ async function seed() {
         }
       }
     }
-    console.log(`✅ Services seeded: ${ServicesData.length}\n`)
+    console.log(`✅ Services seeded: ${servicesData.length}\n`)
 
     console.log('🎉 Seed process complete!\n')
     console.log('📋 Summary:')
     console.log(`  - Admin user: ${adminEmail}`)
     console.log(`  - Pages: ${pagesData.length}`)
-    console.log(`  - Services: ${ServicesData.length}`)
+    console.log(`  - Services: ${servicesData.length}`)
     console.log('\n🚀 You can now access the admin at: http://localhost:3000/admin')
     console.log(`   Email: ${adminEmail}`)
     console.log(`   Password: ${adminPassword}\n`)

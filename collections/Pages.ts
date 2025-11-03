@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 export const Pages: CollectionConfig = {
-  slug: 'pages',
+  slug: 'payload-pages',
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'category', 'updatedAt'],
@@ -68,7 +68,7 @@ export const Pages: CollectionConfig = {
     {
       name: 'parentPage',
       type: 'relationship',
-      relationTo: 'pages',
+      relationTo: 'payload-pages',
       admin: {
         description: 'Create hierarchical page structure',
       },
@@ -76,7 +76,7 @@ export const Pages: CollectionConfig = {
     {
       name: 'internalLinks',
       type: 'relationship',
-      relationTo: 'pages',
+      relationTo: 'payload-pages',
       hasMany: true,
       admin: {
         description: 'Pages this page links to (for SEO and sitemap)',
@@ -116,7 +116,7 @@ export const Pages: CollectionConfig = {
         {
           name: 'ogImage',
           type: 'upload',
-          relationTo: 'media',
+          relationTo: 'payload-media',
         },
         {
           name: 'twitterTitle',
@@ -129,7 +129,7 @@ export const Pages: CollectionConfig = {
         {
           name: 'twitterImage',
           type: 'upload',
-          relationTo: 'media',
+          relationTo: 'payload-media',
         },
         {
           name: 'noIndex',

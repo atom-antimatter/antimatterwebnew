@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 export const Services: CollectionConfig = {
-  slug: 'services',
+  slug: 'payload-services',
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'link', 'hidden', 'updatedAt'],
@@ -71,7 +71,7 @@ export const Services: CollectionConfig = {
             {
               name: 'image',
               type: 'upload',
-              relationTo: 'media',
+              relationTo: 'payload-media',
             },
           ],
         },

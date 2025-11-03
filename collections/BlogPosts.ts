@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 export const BlogPosts: CollectionConfig = {
-  slug: 'blog-posts',
+  slug: 'payload-blog-posts',
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'category', '_status', 'publishedAt'],
@@ -67,7 +67,7 @@ export const BlogPosts: CollectionConfig = {
     {
       name: 'featuredImage',
       type: 'upload',
-      relationTo: 'media',
+      relationTo: 'payload-media',
       admin: {
         description: 'Main header image for the blog post',
       },
@@ -130,7 +130,7 @@ export const BlogPosts: CollectionConfig = {
     {
       name: 'internalLinks',
       type: 'relationship',
-      relationTo: ['pages', 'blog-posts'],
+      relationTo: ['payload-pages', 'payload-blog-posts'],
       hasMany: true,
       admin: {
         description: 'Link to related pages and blog posts',

@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 export const Users: CollectionConfig = {
-  slug: 'users',
+  slug: 'payload-users',
   auth: true,
   admin: {
     useAsTitle: 'email',

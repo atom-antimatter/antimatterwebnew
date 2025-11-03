@@ -4,11 +4,11 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { Users } from './collections/Users'
-import { Pages } from './collections/Pages'
-import { BlogPosts } from './collections/BlogPosts'
-import { Media } from './collections/Media'
-import { Services } from './collections/Services'
+import { Users } from './collections/Users.ts'
+import { Pages } from './collections/Pages.ts'
+import { BlogPosts } from './collections/BlogPosts.ts'
+import { Media } from './collections/Media.ts'
+import { Services } from './collections/Services.ts'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -17,7 +17,7 @@ export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   
   admin: {
-    user: 'users',
+    user: 'payload-users',
     meta: {
       titleSuffix: '- Antimatter AI CMS',
       favicon: '/favicon.ico',
@@ -29,7 +29,9 @@ export default buildConfig({
   
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL!,
+      connectionString: process.env.DATABASE_URL || (() => {
+        throw new Error('DATABASE_URL environment variable is required')
+      })(),
     },
     push: false, // Don't auto-push schema changes (safer for production)
   }),
@@ -38,9 +40,9 @@ export default buildConfig({
   
   plugins: [
     seoPlugin({
-      collections: ['pages', 'blog-posts'],
-      generateTitle: ({ doc }: any) => `${doc?.title?.value || doc?.title} | Antimatter AI`,
-      generateDescription: ({ doc }: any) => doc?.excerpt?.value || doc?.excerpt,
+      collections: ['payload-pages', 'payload-blog-posts'],
+      generateTitle: (args) => `${args.doc?.title?.value || args.doc?.title} | Antimatter AI`,
+      generateDescription: (args) => args.doc?.excerpt?.value || args.doc?.excerpt,
     }),
   ],
   
