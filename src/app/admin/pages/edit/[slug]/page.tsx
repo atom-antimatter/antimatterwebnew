@@ -169,19 +169,21 @@ export default function EditPage() {
           throw updateError;
         }
         
-        // Try to update extended fields separately (may fail if PostgREST doesn't know about them)
+        // Update extended fields using RPC function (bypasses PostgREST schema cache)
         try {
-          const { error: extendedError } = await supabase
-            .from("pages")
-            .update(extendedFields)
-            .eq("id", page.id);
+          const { error: rpcError } = await supabase.rpc('update_page_extended_fields', {
+            p_id: page.id,
+            p_category: extendedFields.category,
+            p_parent_slug: extendedFields.parent_slug,
+            p_internal_links: extendedFields.internal_links,
+          });
           
-          if (extendedError) {
-            console.warn("Could not update extended fields (PostgREST schema cache issue):", extendedError);
+          if (rpcError) {
+            console.warn("Could not update extended fields via RPC:", rpcError);
             // Non-critical - the main fields were updated successfully
           }
         } catch (extendedErr) {
-          console.warn("Extended fields update failed (non-critical):", extendedErr);
+          console.warn("Extended fields RPC update failed (non-critical):", extendedErr);
         }
         
         // Navigate back to pages list if slug changed
