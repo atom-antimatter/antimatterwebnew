@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import NavBar from "@/components/NavBar";
+import OttoPixel from "@/components/OttoPixel";
 import Providers from "@/components/Providers";
 import StartProjectModal from "@/components/ui/StartProjectModal";
 import type { Metadata } from "next";
@@ -79,6 +80,8 @@ export default function RootLayout({
             gtag('config', 'G-6FPMJ6P9VB');
           `}
         </Script>
+        {/* Otto Pixel - only on non-admin pages */}
+        <OttoPixel />
         <LayoutContent>
           <NavBar />
           <Providers>{children}</Providers>
