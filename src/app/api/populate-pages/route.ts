@@ -454,6 +454,11 @@ export async function POST() {
       
       // Always update pages to ensure categories and internal_links are set
       // We'll use upsert which will update existing pages
+      // Skip if this slug was already processed in this run
+      if (insertedPages.includes(page.slug) || skippedPages.includes(page.slug)) {
+        console.warn(`Skipping duplicate processing of ${page.slug} - already processed in this run`);
+        continue;
+      }
       
       try {
         // Auto-generate internal links based on category and relationships
