@@ -447,6 +447,7 @@ export async function POST() {
     const insertedPages: string[] = [];
     const errors: any[] = [];
     const skippedPages: string[] = [];
+    const extendedFieldsUpdates: Array<{ id: string; slug: string; category: string | null; parent_slug: string | null; internal_links: string[] | null }> = [];
     
     for (const page of pagesToInsert) {
       const isExisting = existingSlugs.has(page.slug);
@@ -549,24 +550,14 @@ export async function POST() {
           insertedPages.push(page.slug);
         }
         
-        // Try to update extended fields separately (may fail if PostgREST doesn't know about them yet)
-        try {
-          const { error: extendedError } = await supabase
-            .from("pages")
-            .update(extendedFields)
-            .eq("id", insertResult.id);
-          
-          if (extendedError) {
-            console.warn(`Could not update extended fields for ${page.slug} (PostgREST schema cache issue - non-critical):`, extendedError.message);
-            // Non-critical - the main fields were updated successfully
-            // Extended fields can be updated via admin panel later once PostgREST cache refreshes
-          } else {
-            console.log(`Successfully updated extended fields for ${page.slug}: category=${rpcParams.p_category}, parent=${rpcParams.p_parent_slug}, internal_links=${autoInternalLinks.length}`);
-          }
-        } catch (extendedErr: any) {
-          console.warn(`Extended fields update failed for ${page.slug} (non-critical):`, extendedErr.message);
-          // Non-critical error - main page data was saved successfully
-        }
+        // Store extended field updates to apply via raw SQL batch update after all upserts
+        extendedFieldsUpdates.push({
+          id: insertResult.id,
+          slug: page.slug,
+          category: rpcParams.p_category,
+          parent_slug: rpcParams.p_parent_slug,
+          internal_links: rpcParams.p_internal_links,
+        });
         
         console.log(`Successfully ${isExisting ? 'updated' : 'inserted'} page: ${page.slug} (ID: ${insertResult.id})`);
       } catch (err: any) {
@@ -574,6 +565,53 @@ export async function POST() {
         console.error(`Page data attempted:`, JSON.stringify(page, null, 2));
         errors.push({ slug: page.slug, error: err.message || "Unknown error", stack: err.stack });
       }
+    }
+    
+    // Batch update extended fields using PostgREST REST API directly
+    // This bypasses the JS client's schema cache by going straight to the API
+    if (extendedFieldsUpdates.length > 0) {
+      console.log(`\n=== Batch updating ${extendedFieldsUpdates.length} pages with categories and internal links ===`);
+      
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpbGNtZHBua3pnd3Z3c254bGF2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODY4NjMxMCwiZXhwIjoyMDc0MjYyMzEwfQ.zeVKENE9mXTdUjv51UwTid2GCLPA3cQZj5h8B9mLqHo";
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (const update of extendedFieldsUpdates) {
+        try {
+          // Use PostgREST REST API directly - this should work even if JS client cache doesn't
+          const response = await fetch(`${supabaseUrl}/rest/v1/pages?id=eq.${update.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': serviceRoleKey,
+              'Authorization': `Bearer ${serviceRoleKey}`,
+              'Prefer': 'return=minimal',
+            },
+            body: JSON.stringify({
+              category: update.category,
+              parent_slug: update.parent_slug,
+              internal_links: update.internal_links,
+              updated_at: new Date().toISOString(),
+            }),
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Failed to update ${update.slug}: ${response.status} ${errorText}`);
+            failCount++;
+          } else {
+            console.log(`✓ Updated ${update.slug}: category=${update.category || 'null'}, parent=${update.parent_slug || 'null'}, links=${update.internal_links?.length || 0}`);
+            successCount++;
+          }
+        } catch (sqlErr: any) {
+          console.error(`Update exception for ${update.slug}:`, sqlErr.message);
+          failCount++;
+        }
+      }
+      
+      console.log(`=== Batch update complete: ${successCount} succeeded, ${failCount} failed ===\n`);
     }
     
     if (insertedPages.length === 0 && skippedPages.length === 0 && errors.length > 0) {
