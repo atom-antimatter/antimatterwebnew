@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
  */
 export async function GET() {
   try {
-    const diagnostics = {
+    const diagnostics: any = {
       timestamp: new Date().toISOString(),
       environment: {
         NODE_ENV: process.env.NODE_ENV,
@@ -19,11 +19,11 @@ export async function GET() {
 
     // Try to load config
     try {
-      const config = await import('@payload-config')
+      const configModule = await import('@payload-config')
       diagnostics.config = {
         loaded: true,
-        hasCollections: !!config.default.collections,
-        collectionCount: config.default.collections?.length || 0,
+        hasCollections: !!configModule.default.collections,
+        collectionCount: configModule.default.collections?.length || 0,
       }
     } catch (configError: any) {
       diagnostics.config = {
@@ -35,9 +35,9 @@ export async function GET() {
     // Try to initialize Payload
     try {
       const { getPayload } = await import('payload')
-      const config = (await import('@payload-config')).default
+      const configModule = (await import('@payload-config')).default
       
-      await getPayload({ config })
+      await getPayload({ config: configModule })
       
       diagnostics.payload = {
         initialized: true,
