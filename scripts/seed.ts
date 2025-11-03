@@ -217,10 +217,10 @@ async function seed() {
           data: {
             title: page.title,
             slug: page.slug,
-            category: page.category,
+            category: page.category as 'main' | 'services' | 'solutions' | 'case-study' | 'demo' | undefined,
             isHomepage: page.is_homepage || false,
             seo: page.seo,
-            _status: 'published',
+            _status: 'published' as const,
           },
         })
         console.log(`  ✅ Created page: ${page.slug}`)
