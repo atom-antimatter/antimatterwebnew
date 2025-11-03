@@ -1,24 +1,37 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { getPayload } from "payload";
+import config from "@payload-config";
 import { generateRSSItem } from "@/lib/blogHelpers";
 
 export async function GET() {
   try {
-    const supabase = getSupabaseAdmin();
-    const { data: posts, error } = await supabase
-      .from("blog_posts")
-      .select("title, slug, excerpt, content, published_at, author, category")
-      .eq("published", true)
-      .order("published_at", { ascending: false })
-      .limit(20);
-
-    if (error) {
-      console.error("Error fetching blog posts for RSS:", error);
-      return new NextResponse("Error generating RSS feed", { status: 500 });
-    }
+    const payload = await getPayload({ config });
+    const { docs: posts } = await payload.find({
+      collection: "payload-blog-posts",
+      where: {
+        _status: {
+          equals: "published",
+        },
+      },
+      sort: "-publishedAt",
+      limit: 20,
+    });
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.antimatterai.com";
-    const rssItems = (posts || []).map((post) => generateRSSItem(post, baseUrl));
+    const rssItems = posts.map((post: any) =>
+      generateRSSItem(
+        {
+          title: post.title,
+          slug: post.slug,
+          excerpt: post.excerpt,
+          content: JSON.stringify(post.content),
+          published_at: post.publishedAt,
+          author: post.author,
+          category: post.category,
+        },
+        baseUrl
+      )
+    );
 
     const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -57,4 +70,7 @@ export async function GET() {
     return new NextResponse("Error generating RSS feed", { status: 500 });
   }
 }
+
+
+
 

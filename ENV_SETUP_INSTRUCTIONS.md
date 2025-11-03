@@ -72,3 +72,6 @@ When you run `npm run seed`, it will populate:
 
 After these steps, you'll have a fully functional Payload CMS with all your content!
 
+
+
+

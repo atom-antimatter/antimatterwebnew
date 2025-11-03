@@ -21,3 +21,6 @@ const Page = ({ params, searchParams }: Args) =>
 
 export default Page
 
+
+
+

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { getPayload } from "payload";
+import config from "@payload-config";
 import type { Metadata } from "next";
 import BlogPostClient from "./BlogPostClient";
 
@@ -13,33 +14,47 @@ interface BlogPost {
   featured_image_alt: string | null;
   author: string;
   category: string | null;
-  published: boolean;
   published_at: string | null;
-  created_at: string;
-  updated_at: string;
-  seo_keywords: string[] | null;
   reading_time: number | null;
   chapters: Array<{ id: string; title: string; level: number }> | null;
-  internal_links: string[] | null;
-  external_sources: any[] | null;
 }
 
 async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select("*")
-      .eq("slug", slug)
-      .eq("published", true)
-      .single();
+    const payload = await getPayload({ config });
+    const { docs } = await payload.find({
+      collection: "payload-blog-posts",
+      where: {
+        slug: {
+          equals: slug,
+        },
+        _status: {
+          equals: "published",
+        },
+      },
+      limit: 1,
+    });
 
-    if (error) {
-      console.error("Error fetching blog post:", error);
+    if (!docs || docs.length === 0) {
       return null;
     }
 
-    return data;
+    const doc = docs[0] as any;
+    
+    return {
+      id: doc.id.toString(),
+      title: doc.title,
+      slug: doc.slug,
+      excerpt: doc.excerpt,
+      content: JSON.stringify(doc.content), // Lexical content as JSON string
+      featured_image: typeof doc.featuredImage === 'object' ? doc.featuredImage?.url : null,
+      featured_image_alt: doc.featuredImageAlt,
+      author: doc.author,
+      category: doc.category,
+      published_at: doc.publishedAt,
+      reading_time: doc.readingTime,
+      chapters: doc.chapters,
+    };
   } catch (error) {
     console.error("Exception fetching blog post:", error);
     return null;
@@ -60,27 +75,41 @@ interface RelatedPost {
 
 async function getRelatedPosts(category: string | null, currentId: string): Promise<RelatedPost[]> {
   try {
-    const supabase = getSupabaseAdmin();
-    let query = supabase
-      .from("blog_posts")
-      .select("id, title, slug, excerpt, featured_image, featured_image_alt, category, reading_time, published_at")
-      .eq("published", true)
-      .neq("id", currentId)
-      .order("published_at", { ascending: false })
-      .limit(3);
+    const payload = await getPayload({ config });
+    
+    const where: any = {
+      _status: {
+        equals: "published",
+      },
+      id: {
+        not_equals: currentId,
+      },
+    };
 
     if (category) {
-      query = query.eq("category", category);
+      where.category = {
+        equals: category,
+      };
     }
 
-    const { data, error } = await query;
+    const { docs } = await payload.find({
+      collection: "payload-blog-posts",
+      where,
+      sort: "-publishedAt",
+      limit: 3,
+    });
 
-    if (error) {
-      console.error("Error fetching related posts:", error);
-      return [];
-    }
-
-    return data || [];
+    return docs.map((doc: any) => ({
+      id: doc.id.toString(),
+      title: doc.title,
+      slug: doc.slug,
+      excerpt: doc.excerpt,
+      featured_image: typeof doc.featuredImage === 'object' ? doc.featuredImage?.url : null,
+      featured_image_alt: doc.featuredImageAlt,
+      category: doc.category,
+      reading_time: doc.readingTime,
+      published_at: doc.publishedAt,
+    }));
   } catch (error) {
     console.error("Exception fetching related posts:", error);
     return [];

@@ -1,4 +1,5 @@
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { getPayload } from "payload";
+import config from "@payload-config";
 import type { Metadata } from "next";
 import BlogListingClient from "./BlogListingClient";
 
@@ -29,21 +30,30 @@ interface BlogPost {
 
 async function getBlogPosts(): Promise<BlogPost[]> {
   try {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select(
-        "id, title, slug, excerpt, featured_image, featured_image_alt, author, category, reading_time, published_at"
-      )
-      .eq("published", true)
-      .order("published_at", { ascending: false });
+    const payload = await getPayload({ config });
+    const { docs } = await payload.find({
+      collection: "payload-blog-posts",
+      where: {
+        _status: {
+          equals: "published",
+        },
+      },
+      sort: "-publishedAt",
+      limit: 100,
+    });
 
-    if (error) {
-      console.error("Error fetching blog posts:", error);
-      return [];
-    }
-
-    return data || [];
+    return docs.map((doc: any) => ({
+      id: doc.id.toString(),
+      title: doc.title,
+      slug: doc.slug,
+      excerpt: doc.excerpt,
+      featured_image: typeof doc.featuredImage === 'object' ? doc.featuredImage?.url : null,
+      featured_image_alt: doc.featuredImageAlt,
+      author: doc.author,
+      category: doc.category,
+      reading_time: doc.readingTime,
+      published_at: doc.publishedAt,
+    }));
   } catch (error) {
     console.error("Exception fetching blog posts:", error);
     return [];
@@ -52,19 +62,20 @@ async function getBlogPosts(): Promise<BlogPost[]> {
 
 async function getCategories(): Promise<string[]> {
   try {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select("category")
-      .eq("published", true)
-      .not("category", "is", null);
+    const payload = await getPayload({ config });
+    const { docs } = await payload.find({
+      collection: "payload-blog-posts",
+      where: {
+        _status: {
+          equals: "published",
+        },
+        category: {
+          exists: true,
+        },
+      },
+    });
 
-    if (error) {
-      console.error("Error fetching categories:", error);
-      return [];
-    }
-
-    const uniqueCategories = [...new Set(data.map((item: any) => item.category))].filter(Boolean);
+    const uniqueCategories = [...new Set(docs.map((doc: any) => doc.category))].filter(Boolean);
     return uniqueCategories as string[];
   } catch (error) {
     console.error("Exception fetching categories:", error);
@@ -78,4 +89,7 @@ export default async function BlogPage() {
 
   return <BlogListingClient posts={posts} categories={categories} />;
 }
+
+
+
 
