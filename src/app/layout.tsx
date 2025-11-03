@@ -1,6 +1,5 @@
 import Footer from "@/components/Footer";
 import NavBar from "@/components/NavBar";
-import OttoPixel from "@/components/OttoPixel";
 import Providers from "@/components/Providers";
 import StartProjectModal from "@/components/ui/StartProjectModal";
 import type { Metadata } from "next";
@@ -80,25 +79,33 @@ export default function RootLayout({
             gtag('config', 'G-6FPMJ6P9VB');
           `}
         </Script>
-        {/* Otto Pixel - only on non-admin pages */}
-        <OttoPixel />
-        {/* OTTO Pixel Script - loads early for SearchAtlas detection */}
+        {/* OTTO Pixel Script - exact format required by SearchAtlas */}
         <Script
-          id="sa-dynamic-optimization-loader"
+          id="sa-dynamic-optimization"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                if (window.location.pathname.startsWith('/admin')) return;
+                if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) return;
                 if (document.getElementById('sa-dynamic-optimization')) return;
                 var script = document.createElement('script');
                 script.setAttribute('nowprocket', '');
                 script.setAttribute('nitro-exclude', '');
                 script.type = 'text/javascript';
                 script.id = 'sa-dynamic-optimization';
-                script.setAttribute('data-uuid', '7f9ceae5-e659-43c8-99ee-33b970d2b92d');
-                script.src = 'data:text/javascript;base64,dmFyIHNjcmlwdCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoInNjcmlwdCIpO3NjcmlwdC5zZXRBdHRyaWJ1dGUoIm5vd3Byb2NrZXQiLCAiIik7c2NyaXB0LnNldEF0dHJpYnV0ZSgibml0cm8tZXhjbHVkZSIsICIiKTtzY3JpcHQuc3JjID0gImh0dHBzOi8vZGFzaGJvYXJkLnNlYXJjaGF0bGFzLmNvbS9zY3JpcHRzL2R5bmFtaWNfb3B0aW1pemF0aW9uLmpzIjtzY3JpcHQuZGF0YXNldC51dWlkID0gIjdmOWNlYWU1LWU2NTktNDNjOC05OWVlLTMzYjk3MGQyYjkyZCI7c2NyaXB0LmlkID0gInNhLWR5bmFtaWMtb3B0aW1pemF0aW9uLWxvYWRlciI7ZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpOw==';
-                document.head.appendChild(script);
+                script.setAttribute('data-uuid', 'e3f40bc6-a9b5-40a1-b221-3bb88c2ef83a');
+                script.src = 'data:text/javascript;base64,dmFyIHNjcmlwdCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoInNjcmlwdCIpO3NjcmlwdC5zZXRBdHRyaWJ1dGUoIm5vd3Byb2NrZXQiLCAiIik7c2NyaXB0LnNldEF0dHJpYnV0ZSgibml0cm8tZXhjbHVkZSIsICIiKTtzY3JpcHQuc3JjID0gImh0dHBzOi8vZGFzaGJvYXJkLnNlYXJjaGF0bGFzLmNvbS9zY3JpcHRzL2R5bmFtaWNfb3B0aW1pemF0aW9uLmpzIjtzY3JpcHQuZGF0YXNldC51dWlkID0gImUzZjQwYmM2LWE5YjUtNDBhMS1iMjIxLTNiYjg4YzJlZjgzYSI7c2NyaXB0LmlkID0gInNhLWR5bmFtaWMtb3B0aW1pemF0aW9uLWxvYWRlciI7ZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpOw==';
+                if (document.head) {
+                  document.head.appendChild(script);
+                } else {
+                  var observer = new MutationObserver(function() {
+                    if (document.head && !document.getElementById('sa-dynamic-optimization')) {
+                      document.head.appendChild(script);
+                      observer.disconnect();
+                    }
+                  });
+                  observer.observe(document.documentElement, { childList: true });
+                }
               })();
             `,
           }}
