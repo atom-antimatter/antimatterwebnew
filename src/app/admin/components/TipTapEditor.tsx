@@ -37,7 +37,6 @@ interface TipTapEditorProps {
   onChange: (content: string) => void;
   onChaptersChange?: (chapters: { id: string; title: string; level: number }[]) => void;
   placeholder?: string;
-  blogTitle?: string;
 }
 
 export default function TipTapEditor({
@@ -45,7 +44,6 @@ export default function TipTapEditor({
   onChange,
   onChaptersChange,
   placeholder = "Start writing your blog post...",
-  blogTitle,
 }: TipTapEditorProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -110,7 +108,7 @@ export default function TipTapEditor({
       attributes: {
         class: "prose prose-invert max-w-none focus:outline-none min-h-[400px] px-6 py-4",
       },
-      handleDrop: (view, event, slice, moved) => {
+      handleDrop: (view, event, _slice, moved) => {
         if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
           const file = event.dataTransfer.files[0];
           if (file.type.startsWith("image/")) {

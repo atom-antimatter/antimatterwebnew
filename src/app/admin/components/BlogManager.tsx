@@ -224,7 +224,6 @@ export default function BlogManager() {
             setShowForm(false);
             setEditingPost(null);
           }}
-          existingPages={existingPages}
         />
       )}
 
@@ -316,10 +315,9 @@ interface BlogFormProps {
   post: BlogPost | null;
   onSave: (data: Partial<BlogPost>) => void;
   onCancel: () => void;
-  existingPages: string[];
 }
 
-function BlogForm({ post, onSave, onCancel, existingPages }: BlogFormProps) {
+function BlogForm({ post, onSave, onCancel }: BlogFormProps) {
   const [formData, setFormData] = useState({
     title: post?.title || "",
     slug: post?.slug || "",
@@ -480,7 +478,6 @@ function BlogForm({ post, onSave, onCancel, existingPages }: BlogFormProps) {
             onChange={(content) => setFormData({ ...formData, content })}
             onChaptersChange={(chapters) => setFormData({ ...formData, chapters })}
             placeholder="Write your blog post content..."
-            blogTitle={formData.title}
           />
         </div>
 

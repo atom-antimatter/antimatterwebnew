@@ -46,7 +46,19 @@ async function getBlogPost(slug: string): Promise<BlogPost | null> {
   }
 }
 
-async function getRelatedPosts(category: string | null, currentId: string): Promise<BlogPost[]> {
+interface RelatedPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  featured_image: string | null;
+  featured_image_alt: string | null;
+  category: string | null;
+  reading_time: number | null;
+  published_at: string | null;
+}
+
+async function getRelatedPosts(category: string | null, currentId: string): Promise<RelatedPost[]> {
   try {
     const supabase = getSupabaseAdmin();
     let query = supabase
@@ -120,7 +132,7 @@ export default async function BlogPostPage({
     notFound();
   }
 
-  const relatedPosts = await getRelatedPosts(post.category, post.id);
+  const relatedPosts: RelatedPost[] = await getRelatedPosts(post.category, post.id);
 
   return <BlogPostClient post={post} relatedPosts={relatedPosts} />;
 }
