@@ -4,6 +4,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import sharp from 'sharp'
 import { Users } from './collections/Users'
 import { Pages } from './collections/Pages'
 import { BlogPosts } from './collections/BlogPosts'
@@ -15,6 +16,7 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+  sharp,
   
   admin: {
     user: 'payload-users',
