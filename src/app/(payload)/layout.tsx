@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import '@payloadcms/next/css'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export const metadata: Metadata = {
   title: 'Antimatter AI CMS',

@@ -6,6 +6,7 @@ import { RootPage, generatePageMetadata } from '@payloadcms/next/views'
 import { importMap } from '../importMap'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 type Params = { segments: string[] }
 type Search = { [key: string]: string | string[] }
