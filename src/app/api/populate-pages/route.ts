@@ -382,7 +382,16 @@ export async function POST() {
     }
     
     // Always update all pages to ensure categories and internal_links are set
-    const pagesToInsert = allPages;
+    // Remove duplicates by slug to prevent ON CONFLICT errors
+    const uniquePagesMap = new Map<string, PageData>();
+    for (const page of allPages) {
+      if (!uniquePagesMap.has(page.slug)) {
+        uniquePagesMap.set(page.slug, page);
+      } else {
+        console.warn(`Duplicate page slug found: ${page.slug}, skipping duplicate`);
+      }
+    }
+    const pagesToInsert = Array.from(uniquePagesMap.values());
     const existingPagesCount = existingPages.length;
     
     // Generate internal links based on categories and relationships for SERP sitelinks
