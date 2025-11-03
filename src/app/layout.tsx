@@ -82,7 +82,6 @@ export default function RootLayout({
         </Script>
         {/* Otto Pixel - only on non-admin pages */}
         <OttoPixel />
-        />
         <LayoutContent>
           <NavBar />
           <Providers>{children}</Providers>
