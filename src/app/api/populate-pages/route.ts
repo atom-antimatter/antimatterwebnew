@@ -268,28 +268,50 @@ export async function POST() {
           p_parent_slug: (page.parent_slug && page.parent_slug.trim()) || null,
         };
         
-        // Call RPC function - this bypasses schema cache entirely
-        // RPC returns the UUID directly (not wrapped in data array)
-        const { data: pageId, error } = await supabase.rpc('insert_or_update_page', rpcParams);
+        // Use direct upsert - bypasses PostgREST schema cache for RPC functions
+        // PostgREST hasn't refreshed its schema cache yet, but upsert works directly
+        const insertData = {
+          slug: rpcParams.p_slug,
+          title: rpcParams.p_title,
+          meta_description: rpcParams.p_meta_description,
+          meta_keywords: rpcParams.p_meta_keywords,
+          canonical_url: rpcParams.p_canonical_url,
+          og_title: rpcParams.p_og_title,
+          og_description: rpcParams.p_og_description,
+          og_image: rpcParams.p_og_image,
+          twitter_title: rpcParams.p_twitter_title,
+          twitter_description: rpcParams.p_twitter_description,
+          twitter_image: rpcParams.p_twitter_image,
+          no_index: rpcParams.p_no_index,
+          is_homepage: rpcParams.p_is_homepage,
+          category: rpcParams.p_category,
+          internal_links: rpcParams.p_internal_links,
+          parent_slug: rpcParams.p_parent_slug,
+        };
         
-        if (error) {
-          console.error(`Error inserting/updating page ${page.slug}:`, error);
-          console.error(`RPC params attempted:`, JSON.stringify(rpcParams, null, 2));
+        // Use upsert with conflict on slug - this works even if PostgREST schema cache is stale
+        const { data: insertResult, error: insertError } = await supabase
+          .from("pages")
+          .upsert(insertData, { onConflict: 'slug' })
+          .select('id')
+          .single();
+        
+        if (insertError) {
+          console.error(`Error inserting/updating page ${page.slug}:`, insertError);
+          console.error(`Data attempted:`, JSON.stringify(insertData, null, 2));
           errors.push({ 
             slug: page.slug, 
-            error: error.message,
-            details: error,
-            code: error.code,
-            hint: error.hint
+            error: insertError.message,
+            details: insertError,
+            code: insertError.code,
+            hint: insertError.hint
           });
-        } else if (pageId) {
-          // RPC function returns UUID if successful
-          // Since we skipped existing pages above, all successful calls are inserts
+        } else if (insertResult) {
           insertedPages.push(page.slug);
-          console.log(`Successfully inserted page: ${page.slug} (ID: ${pageId})`);
+          console.log(`Successfully inserted/updated page: ${page.slug} (ID: ${insertResult.id})`);
         } else {
           console.warn(`No data returned for page ${page.slug} (but no error)`);
-          errors.push({ slug: page.slug, error: "No data returned from RPC function" });
+          errors.push({ slug: page.slug, error: "No data returned from upsert" });
         }
       } catch (err: any) {
         console.error(`Error inserting page ${page.slug}:`, err);
