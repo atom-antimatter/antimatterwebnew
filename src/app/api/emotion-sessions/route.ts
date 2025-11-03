@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,8 +12,8 @@ export async function POST(request: NextRequest) {
 
     const duration = endTime ? Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000) : null;
 
-    const { data, error } = await supabase
-      .from('emotion_analysis_sessions')
+    const { data, error } = await (getSupabaseAdmin()
+      .from('emotion_analysis_sessions') as any)
       .insert({
         session_id: sessionId,
         start_time: startTime,
@@ -54,8 +50,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from('emotion_analysis_sessions')
+    const { data, error } = await (getSupabaseAdmin()
+      .from('emotion_analysis_sessions') as any)
       .select('*')
       .eq('session_id', sessionId)
       .single();

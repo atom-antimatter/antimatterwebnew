@@ -1,6 +1,9 @@
 import { MetadataRoute } from "next";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.antimatterai.com";
 
@@ -40,13 +43,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch dynamic pages from database
   const supabase = getSupabaseAdmin();
-  const { data: pages } = await supabase
-    .from("pages")
+  const { data: pages } = await (supabase
+    .from("pages") as any)
     .select("slug, updated_at")
     .eq("no_index", false);
 
   const dynamicPages: MetadataRoute.Sitemap =
-    pages?.map((page) => ({
+    pages?.map((page: any) => ({
       url: `${baseUrl}${page.slug}`,
       lastModified: new Date(page.updated_at),
       changeFrequency: "weekly" as const,
@@ -54,13 +57,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })) || [];
 
   // Fetch blog posts
-  const { data: posts } = await supabase
-    .from("blog_posts")
+  const { data: posts } = await (supabase
+    .from("blog_posts") as any)
     .select("slug, published_at, updated_at")
     .eq("published", true);
 
   const blogPosts: MetadataRoute.Sitemap =
-    posts?.map((post) => ({
+    posts?.map((post: any) => ({
       url: `${baseUrl}/blog/${post.slug}`,
       lastModified: new Date(post.updated_at || post.published_at),
       changeFrequency: "monthly" as const,

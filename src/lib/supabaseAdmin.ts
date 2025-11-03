@@ -1,23 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
 
+let supabaseAdminInstance: ReturnType<typeof createClient> | null = null;
+
 /**
  * Server-side Supabase client with service role key for admin operations
  * ONLY use this on the server side (API routes, server components)
  */
 export const getSupabaseAdmin = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseAdminInstance) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase admin configuration missing");
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error("Supabase admin configuration missing");
+    }
+
+    supabaseAdminInstance = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  return supabaseAdminInstance;
 };
 
 /**

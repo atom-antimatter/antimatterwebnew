@@ -37,6 +37,7 @@ interface TipTapEditorProps {
   onChange: (content: string) => void;
   onChaptersChange?: (chapters: { id: string; title: string; level: number }[]) => void;
   placeholder?: string;
+  blogTitle?: string;
 }
 
 export default function TipTapEditor({
@@ -44,6 +45,7 @@ export default function TipTapEditor({
   onChange,
   onChaptersChange,
   placeholder = "Start writing your blog post...",
+  blogTitle: _blogTitle,
 }: TipTapEditorProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -119,7 +121,7 @@ export default function TipTapEditor({
         }
         return false;
       },
-      handlePaste: (view, event, slice) => {
+      handlePaste: (view, event, _slice) => {
         const items = event.clipboardData?.items;
         if (items) {
           for (let i = 0; i < items.length; i++) {

@@ -1,8 +1,15 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openaiInstance: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openaiInstance) {
+    openaiInstance = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiInstance;
+}
 
 export interface BlogResearchResult {
   topic: string;
@@ -58,7 +65,7 @@ Guidelines:
 
 Available internal pages for linking: ${existingPages.join(", ")}`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: "gpt-4-turbo-preview",
     messages: [
       { role: "system", content: systemPrompt },
@@ -139,7 +146,7 @@ Guidelines:
     )
     .join("\n\n");
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: "gpt-4-turbo-preview",
     messages: [
       { role: "system", content: systemPrompt },
@@ -198,7 +205,7 @@ Guidelines:
   const wordCount = content.split(/\s+/).length;
   const readingTime = Math.ceil(wordCount / 200); // Average reading speed
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: "gpt-4-turbo-preview",
     messages: [
       { role: "system", content: systemPrompt },
@@ -243,7 +250,7 @@ export async function generateBlogHeaderImage(
   try {
     const prompt = `Create a professional blog header image for an article about "${topic}". Style: ${style}. High quality, modern design, suitable for a tech blog. No text in image.`;
 
-    const response = await openai.images.generate({
+    const response = await getOpenAI().images.generate({
       model: "dall-e-3",
       prompt,
       n: 1,
@@ -252,7 +259,7 @@ export async function generateBlogHeaderImage(
     });
 
     return {
-      url: response.data[0].url || "",
+      url: response.data?.[0]?.url || "",
       prompt,
     };
   } catch (error: any) {
