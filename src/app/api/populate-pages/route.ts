@@ -395,6 +395,55 @@ export async function POST() {
       });
     }
     
+    // Generate internal links based on categories and relationships for SERP sitelinks
+    const generateInternalLinks = (currentPage: PageData): string[] => {
+      const links: string[] = [];
+      
+      if (currentPage.is_homepage) {
+        // Homepage should link to key pages for sitelinks
+        links.push("/work", "/company", "/contact");
+        // Add top services
+        links.push("/design-agency", "/development-agency", "/ai-development");
+        // Add solutions
+        links.push("/voice-agents", "/emotion-ai");
+      } else if (currentPage.category === "services") {
+        // Services link to related services and homepage
+        links.push("/");
+        const servicePages = pagesToInsert.filter(p => p.category === "services" && p.slug !== currentPage.slug);
+        // Link to top 3 related services
+        links.push(...servicePages.slice(0, 3).map(p => p.slug));
+        links.push("/work"); // Link to portfolio
+      } else if (currentPage.category === "solutions") {
+        // Solutions link to related solutions and homepage
+        links.push("/");
+        const solutionPages = pagesToInsert.filter(p => p.category === "solutions" && p.slug !== currentPage.slug);
+        links.push(...solutionPages.map(p => p.slug));
+        links.push("/contact"); // Link to contact for inquiries
+      } else if (currentPage.category === "case-study") {
+        // Case studies link to work page and other case studies
+        links.push("/work");
+        const caseStudyPages = pagesToInsert.filter(p => p.category === "case-study" && p.slug !== currentPage.slug);
+        // Link to 2-3 related case studies
+        links.push(...caseStudyPages.slice(0, 3).map(p => p.slug));
+        links.push("/"); // Link to homepage
+      } else if (currentPage.slug === "/work") {
+        // Work page links to all case studies
+        const caseStudyPages = pagesToInsert.filter(p => p.category === "case-study");
+        links.push(...caseStudyPages.map(p => p.slug));
+        links.push("/", "/company", "/contact");
+      } else if (currentPage.slug === "/company") {
+        // Company page links to key pages
+        links.push("/", "/work", "/contact");
+        links.push("/design-agency", "/development-agency");
+      } else if (currentPage.slug === "/contact") {
+        // Contact page links to key pages
+        links.push("/", "/company", "/work");
+        links.push("/design-agency", "/development-agency");
+      }
+      
+      return links.filter((link, index) => links.indexOf(link) === index); // Remove duplicates
+    };
+    
     // Insert all pages using RPC function - bypasses schema cache issues
     const insertedPages: string[] = [];
     const errors: any[] = [];
@@ -410,6 +459,9 @@ export async function POST() {
       }
       
       try {
+        // Auto-generate internal links based on category and relationships
+        const autoInternalLinks = generateInternalLinks(page);
+        
         // Build RPC parameters object - explicitly map all fields
         const rpcParams = {
           p_slug: page.slug,
@@ -426,7 +478,7 @@ export async function POST() {
           p_no_index: page.no_index ?? false,
           p_is_homepage: page.is_homepage ?? false,
           p_category: (page.category && page.category.trim()) || null,
-          p_internal_links: null, // Will be populated later via CMS or auto-analysis
+          p_internal_links: autoInternalLinks.length > 0 ? autoInternalLinks : null,
           p_parent_slug: (page.parent_slug && page.parent_slug.trim()) || null,
         };
         
@@ -447,6 +499,7 @@ export async function POST() {
           is_homepage: rpcParams.p_is_homepage,
           category: rpcParams.p_category,
           parent_slug: rpcParams.p_parent_slug,
+          internal_links: rpcParams.p_internal_links,
         };
         let insertResult: { id: string } | null = null;
         const { data: resultData, error: insertError } = await supabase
