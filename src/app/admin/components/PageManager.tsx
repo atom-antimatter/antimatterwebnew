@@ -460,7 +460,13 @@ export default function PageManager() {
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => router.push(`/admin/pages/edit/${encodeURIComponent(page.slug)}`)}
+                        onClick={() => {
+                          // Remove leading / from slug for the route, encode it
+                          const slugForRoute = page.slug.startsWith("/") 
+                            ? page.slug.slice(1) 
+                            : page.slug;
+                          router.push(`/admin/pages/edit/${encodeURIComponent(slugForRoute)}`);
+                        }}
                         className="text-secondary hover:text-secondary/80 p-1"
                       >
                         <HiOutlinePencil className="w-4 h-4" />

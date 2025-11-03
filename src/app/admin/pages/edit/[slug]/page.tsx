@@ -40,10 +40,20 @@ export default function EditPage() {
     const fetchPage = async () => {
       try {
         const supabase = getSupabaseClient() as any;
+        
+        // Decode the slug parameter and ensure it starts with /
+        // Next.js dynamic routes decode the parameter, but we need to handle leading slashes
+        let decodedSlug = decodeURIComponent(slug);
+        
+        // Ensure slug starts with / if it's not "new"
+        if (decodedSlug !== "new" && !decodedSlug.startsWith("/")) {
+          decodedSlug = "/" + decodedSlug;
+        }
+        
         const { data, error: fetchError } = await supabase
           .from("pages")
           .select("*")
-          .eq("slug", slug === "new" ? "" : slug)
+          .eq("slug", decodedSlug === "new" ? "" : decodedSlug)
           .maybeSingle();
 
         if (fetchError) {
@@ -51,8 +61,9 @@ export default function EditPage() {
           return;
         }
 
-        if (!data && slug !== "new") {
-          setError("Page not found");
+        // Check if page was found (only if not "new")
+        if (!data && decodedSlug !== "new") {
+          setError(`Page not found: ${decodedSlug}`);
           return;
         }
 
@@ -102,7 +113,10 @@ export default function EditPage() {
         
         // Navigate back to pages list if slug changed
         if (cleanedData.slug !== page.slug) {
-          router.push(`/admin/pages/edit/${encodeURIComponent(cleanedData.slug || "")}`);
+          const newSlugForRoute = cleanedData.slug?.startsWith("/") 
+            ? cleanedData.slug.slice(1) 
+            : cleanedData.slug || "";
+          router.push(`/admin/pages/edit/${encodeURIComponent(newSlugForRoute)}`);
         } else {
           router.push("/admin?tab=pages");
         }
@@ -114,7 +128,10 @@ export default function EditPage() {
 
         if (insertError) throw insertError;
         
-        router.push(`/admin/pages/edit/${encodeURIComponent(cleanedData.slug || "")}`);
+        const newSlugForRoute = cleanedData.slug?.startsWith("/") 
+          ? cleanedData.slug.slice(1) 
+          : cleanedData.slug || "";
+        router.push(`/admin/pages/edit/${encodeURIComponent(newSlugForRoute)}`);
       }
     } catch (err: any) {
       console.error("Error saving page:", err);
