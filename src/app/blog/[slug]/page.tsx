@@ -133,7 +133,6 @@ export async function generateMetadata({
   return {
     title: post.title,
     description: post.excerpt || undefined,
-    keywords: post.seo_keywords || undefined,
     openGraph: {
       title: post.title,
       description: post.excerpt || undefined,
