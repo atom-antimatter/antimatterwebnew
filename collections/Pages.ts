@@ -44,11 +44,92 @@ export const Pages: CollectionConfig = {
       },
     },
     {
-      name: 'content',
-      type: 'richText',
-      required: false,
+      name: 'template',
+      type: 'select',
+      options: [
+        { label: 'Custom (Flexible Layout)', value: 'custom' },
+        { label: 'Landing Page (Homepage Style)', value: 'landing' },
+        { label: 'Service Page', value: 'service' },
+        { label: 'Blog Post', value: 'blog' },
+        { label: 'Case Study', value: 'case-study' },
+        { label: 'Simple Content', value: 'simple' },
+      ],
+      defaultValue: 'custom',
+      required: true,
       admin: {
-        description: 'Optional - some pages use React components instead',
+        description: 'Choose a template for this page',
+      },
+    },
+    {
+      name: 'layout',
+      type: 'blocks',
+      blocks: [
+        {
+          slug: 'hero',
+          labels: { singular: 'Hero Section', plural: 'Hero Sections' },
+          fields: [
+            { name: 'heading', type: 'text', required: true },
+            { name: 'subheading', type: 'textarea' },
+            { name: 'ctaText', type: 'text' },
+            { name: 'ctaLink', type: 'text' },
+            { name: 'backgroundVideo', type: 'upload', relationTo: 'payload-media' },
+            { name: 'showParticles', type: 'checkbox', defaultValue: true },
+          ],
+        },
+        {
+          slug: 'richText',
+          labels: { singular: 'Rich Text', plural: 'Rich Text Blocks' },
+          fields: [
+            { name: 'content', type: 'richText', required: true },
+          ],
+        },
+        {
+          slug: 'services',
+          labels: { singular: 'Services Grid', plural: 'Services Grids' },
+          fields: [
+            { name: 'heading', type: 'text' },
+            { name: 'services', type: 'relationship', relationTo: 'payload-services', hasMany: true },
+            { name: 'columns', type: 'select', options: ['2', '3', '4'], defaultValue: '3' },
+          ],
+        },
+        {
+          slug: 'testimonials',
+          labels: { singular: 'Testimonials', plural: 'Testimonials' },
+          fields: [
+            { name: 'heading', type: 'text' },
+            { name: 'style', type: 'select', options: ['grid', 'carousel', 'bento'], defaultValue: 'bento' },
+          ],
+        },
+        {
+          slug: 'cta',
+          labels: { singular: 'Call to Action', plural: 'CTAs' },
+          fields: [
+            { name: 'heading', type: 'text', required: true },
+            { name: 'description', type: 'textarea' },
+            { name: 'primaryButton', type: 'text' },
+            { name: 'primaryLink', type: 'text' },
+            { name: 'secondaryButton', type: 'text' },
+            { name: 'secondaryLink', type: 'text' },
+          ],
+        },
+        {
+          slug: 'workShowcase',
+          labels: { singular: 'Work Showcase', plural: 'Work Showcases' },
+          fields: [
+            { name: 'heading', type: 'text' },
+            { name: 'showAllWork', type: 'checkbox', defaultValue: true },
+          ],
+        },
+        {
+          slug: 'clients',
+          labels: { singular: 'Clients Section', plural: 'Clients Sections' },
+          fields: [
+            { name: 'heading', type: 'text', defaultValue: 'Trusted by Industry Leaders' },
+          ],
+        },
+      ],
+      admin: {
+        description: 'Build your page with flexible sections',
       },
     },
     {
