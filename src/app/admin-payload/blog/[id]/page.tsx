@@ -16,28 +16,34 @@ type BlogPost = {
   publishedAt?: string
 }
 
-export default function BlogEditPage({ params }: { params: { id: string } }) {
+export default function BlogEditPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [post, setPost] = useState<BlogPost>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [postId, setPostId] = useState<string>('')
 
-  const isNew = params.id === 'new'
+  const isNew = postId === 'new'
 
   useEffect(() => {
+    params.then((p) => setPostId(p.id))
+  }, [params])
+
+  useEffect(() => {
+    if (!postId) return
     if (!isNew) {
       fetchPost()
     } else {
       setPost({ _status: 'draft', author: 'Antimatter AI' })
       setLoading(false)
     }
-  }, [params.id])
+  }, [postId, isNew])
 
   const fetchPost = async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/payload-blog-posts/${params.id}`)
+      const res = await fetch(`/api/payload-blog-posts/${postId}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       setPost(data)
@@ -54,7 +60,7 @@ export default function BlogEditPage({ params }: { params: { id: string } }) {
       setError(null)
 
       const method = isNew ? 'POST' : 'PATCH'
-      const url = isNew ? '/api/payload-blog-posts' : `/api/payload-blog-posts/${params.id}`
+      const url = isNew ? '/api/payload-blog-posts' : `/api/payload-blog-posts/${postId}`
 
       const res = await fetch(url, {
         method,
