@@ -2,8 +2,6 @@ import type { Plugin } from 'payload'
 import { createClient } from '@supabase/supabase-js'
 
 export const supabaseStoragePlugin = (): Plugin => ({
-  name: 'supabase-storage',
-  
   hooks: {
     afterRead: [
       {
