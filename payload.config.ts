@@ -34,7 +34,6 @@ export default buildConfig({
       connectionTimeoutMillis: 30000,
     },
     migrationDir: './src/migrations',
-    push: false,
   }),
   
   collections: [Users, Pages, BlogPosts, Media, Services],
