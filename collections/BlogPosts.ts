@@ -6,6 +6,20 @@ export const BlogPosts: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'category', '_status', 'publishedAt'],
     description: 'Manage blog posts with AI-powered content generation',
+    preview: (doc) => {
+      if (doc?.slug) {
+        return `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.antimatterai.com'}/blog/${doc.slug}`
+      }
+      return null
+    },
+    livePreview: {
+      url: ({ data }) => {
+        if (data?.slug) {
+          return `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.antimatterai.com'}/blog/${data.slug}?preview=true`
+        }
+        return ''
+      },
+    },
   },
   versions: {
     drafts: true,
@@ -109,6 +123,22 @@ export const BlogPosts: CollectionConfig = {
       ],
       admin: {
         description: 'Target keywords for SEO (5-8 recommended)',
+      },
+    },
+    {
+      name: 'metaTitle',
+      type: 'text',
+      maxLength: 60,
+      admin: {
+        description: 'SEO title (leave empty to use post title). 50-60 characters recommended.',
+      },
+    },
+    {
+      name: 'metaDescription',
+      type: 'textarea',
+      maxLength: 160,
+      admin: {
+        description: 'SEO meta description. 150-160 characters recommended.',
       },
     },
     {
