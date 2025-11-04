@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { createSupabaseStorageAdapter } from '../src/lib/supabaseStorageAdapter'
 
 export const Media: CollectionConfig = {
   slug: 'payload-media',
@@ -13,6 +14,8 @@ export const Media: CollectionConfig = {
       { name: 'card', width: 768, height: 576, position: 'centre' },
       { name: 'hero', width: 1920, height: 1080, position: 'centre' },
     ],
+    adapter: createSupabaseStorageAdapter({ bucket: process.env.SUPABASE_STORAGE_BUCKET || 'media', public: true }),
+    disableLocalStorage: true,
   },
   fields: [
     {
