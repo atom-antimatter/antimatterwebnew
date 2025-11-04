@@ -10,7 +10,6 @@ import { Pages } from './collections/Pages'
 import { BlogPosts } from './collections/BlogPosts'
 import { Media } from './collections/Media'
 import { Services } from './collections/Services'
-import { supabaseStoragePlugin } from './src/payload-plugins/supabaseStorage'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -48,7 +47,6 @@ export default buildConfig({
       generateTitle: (args) => `${args.doc?.title?.value || args.doc?.title} | Antimatter AI`,
       generateDescription: (args) => args.doc?.excerpt?.value || args.doc?.excerpt,
     }),
-    supabaseStoragePlugin(),
   ],
   
   typescript: {
