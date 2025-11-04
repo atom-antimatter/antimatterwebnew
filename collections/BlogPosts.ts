@@ -103,11 +103,11 @@ export const BlogPosts: CollectionConfig = {
       name: 'category',
       type: 'select',
       options: [
-        { label: 'AI & Machine Learning', value: 'ai-ml' },
-        { label: 'Product Development', value: 'product-dev' },
-        { label: 'Case Studies', value: 'case-studies' },
+        { label: 'AI Trends & News', value: 'ai-trends' },
         { label: 'Company News', value: 'company-news' },
+        { label: 'Guides & Insights', value: 'guides-insights' },
       ],
+      required: true,
       admin: {
         description: 'Categorize your blog post',
       },
