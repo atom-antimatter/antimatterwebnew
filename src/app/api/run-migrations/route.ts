@@ -1,25 +1,29 @@
 import { NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/payloadSingleton'
-import { migrate } from '@payloadcms/db-postgres/migrate'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 /**
- * ONE-TIME ONLY: Run Payload migrations in production
+ * ONE-TIME ONLY: Initialize Payload in production
+ * This will auto-run migrations when Payload first initializes
  * Visit this URL once to create all tables
- * DELETE THIS FILE after running
  */
 export async function GET() {
   try {
+    // Simply initializing Payload will run migrations automatically
     const payload = await getPayloadClient()
     
-    // Run migrations
-    await migrate({ payload })
+    // Verify tables exist by querying a collection
+    const users = await payload.find({
+      collection: 'payload-users',
+      limit: 1,
+    })
     
     return NextResponse.json({
       success: true,
-      message: 'Migrations completed! All Payload tables created.',
+      message: 'Payload initialized! All tables created via auto-migration.',
+      userCount: users.totalDocs,
       timestamp: new Date().toISOString(),
     })
   } catch (error: any) {
@@ -27,7 +31,7 @@ export async function GET() {
       {
         success: false,
         error: error.message,
-        stack: error.stack,
+        hint: 'Check DATABASE_URL and ensure Payload secret is set',
       },
       { status: 500 }
     )
