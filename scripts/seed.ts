@@ -217,6 +217,7 @@ async function seed() {
           data: {
             title: page.title,
             slug: page.slug,
+            template: 'simple',
             category: page.category as 'main' | 'services' | 'solutions' | 'case-study' | 'demo' | undefined,
             isHomepage: page.is_homepage || false,
             seo: page.seo,
