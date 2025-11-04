@@ -30,8 +30,11 @@ export default buildConfig({
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
+      max: 2,
+      connectionTimeoutMillis: 30000,
     },
     migrationDir: './src/migrations',
+    push: false,
   }),
   
   collections: [Users, Pages, BlogPosts, Media, Services],
