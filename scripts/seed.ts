@@ -213,6 +213,7 @@ async function seed() {
       try {
         await payload.create({
           collection: 'payload-pages',
+          draft: false,
           data: {
             title: page.title,
             slug: page.slug,
