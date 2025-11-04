@@ -1,3 +1,4 @@
+import { getPayloadClient } from "@/lib/payloadSingleton"
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -78,7 +79,7 @@ export async function GET(request: Request) {
         const { getPayload } = await import('payload')
         const config = (await import('@payload-config')).default
         const t1 = Date.now()
-        await getPayload({ config })
+        await getPayloadClient()
         result.payload = { initialized: true, latencyMs: Date.now() - t1 }
       } catch (e: any) {
         result.payload = { initialized: false, error: e?.message, code: e?.code }

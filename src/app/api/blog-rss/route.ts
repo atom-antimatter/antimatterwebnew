@@ -1,6 +1,5 @@
+import { getPayloadClient } from "@/lib/payloadSingleton"
 import { NextResponse } from "next/server";
-import { getPayload } from "payload";
-import config from "@payload-config";
 import { generateRSSItem } from "@/lib/blogHelpers";
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +7,7 @@ export const revalidate = 3600; // Cache for 1 hour
 
 export async function GET() {
   try {
-    const payload = await getPayload({ config });
+    const payload = await getPayloadClient();
     const { docs: posts } = await payload.find({
       collection: "payload-blog-posts",
       where: {

@@ -69,7 +69,9 @@ export interface PayloadUserAuthOperations {
  */
 export interface PayloadUser {
   id: number;
+  name?: string | null;
   role: 'admin' | 'editor';
+  avatar?: (number | null) | PayloadMedia;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -80,53 +82,6 @@ export interface PayloadUser {
   loginAttempts?: number | null;
   lockUntil?: string | null;
   password?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-pages".
- */
-export interface PayloadPage {
-  id: number;
-  title: string;
-  slug: string;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: string;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  category?: ('main' | 'services' | 'solutions' | 'case-study' | 'demo') | null;
-  parentPage?: (number | null) | PayloadPage;
-  internalLinks?: (number | PayloadPage)[] | null;
-  seo?: {
-    metaDescription?: string | null;
-    metaKeywords?: string | null;
-    canonicalUrl?: string | null;
-    ogTitle?: string | null;
-    ogDescription?: string | null;
-    ogImage?: (number | null) | PayloadMedia;
-    twitterTitle?: string | null;
-    twitterDescription?: string | null;
-    twitterImage?: (number | null) | PayloadMedia;
-    noIndex?: boolean | null;
-  };
-  isHomepage?: boolean | null;
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -176,69 +131,103 @@ export interface PayloadMedia {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-blog-posts".
+ * via the `definition` "payload-pages".
  */
-export interface PayloadBlogPost {
+export interface PayloadPage {
   id: number;
   title: string;
   slug: string;
-  excerpt?: string | null;
-  content: {
-    root: {
-      type: string;
-      children: {
-        type: string;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  featuredImage?: (number | null) | PayloadMedia;
-  featuredImageAlt?: string | null;
-  author: string;
-  category?: ('ai-ml' | 'product-dev' | 'case-studies' | 'company-news') | null;
-  seoKeywords?:
-    | {
-        keyword?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  readingTime?: number | null;
-  chapters?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  internalLinks?:
+  template: 'custom' | 'landing' | 'service' | 'blog' | 'case-study' | 'simple';
+  layout?:
     | (
         | {
-            relationTo: 'payload-pages';
-            value: number | PayloadPage;
+            heading: string;
+            subheading?: string | null;
+            ctaText?: string | null;
+            ctaLink?: string | null;
+            backgroundVideo?: (number | null) | PayloadMedia;
+            showParticles?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'hero';
           }
         | {
-            relationTo: 'payload-blog-posts';
-            value: number | PayloadBlogPost;
+            content: {
+              root: {
+                type: string;
+                children: {
+                  type: string;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'richText';
+          }
+        | {
+            heading?: string | null;
+            services?: (number | PayloadService)[] | null;
+            columns?: ('2' | '3' | '4') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'services';
+          }
+        | {
+            heading?: string | null;
+            style?: ('grid' | 'carousel' | 'bento') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'testimonials';
+          }
+        | {
+            heading: string;
+            description?: string | null;
+            primaryButton?: string | null;
+            primaryLink?: string | null;
+            secondaryButton?: string | null;
+            secondaryLink?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'cta';
+          }
+        | {
+            heading?: string | null;
+            showAllWork?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'workShowcase';
+          }
+        | {
+            heading?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'clients';
           }
       )[]
     | null;
-  externalSources?:
-    | {
-        title?: string | null;
-        url?: string | null;
-        type?: ('article' | 'video' | 'documentation' | 'research') | null;
-        id?: string | null;
-      }[]
-    | null;
-  publishedAt?: string | null;
+  category?: ('main' | 'services' | 'solutions' | 'case-study' | 'demo') | null;
+  parentPage?: (number | null) | PayloadPage;
+  internalLinks?: (number | PayloadPage)[] | null;
+  seo?: {
+    metaDescription?: string | null;
+    metaKeywords?: string | null;
+    canonicalUrl?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    ogImage?: (number | null) | PayloadMedia;
+    twitterTitle?: string | null;
+    twitterDescription?: string | null;
+    twitterImage?: (number | null) | PayloadMedia;
+    noIndex?: boolean | null;
+  };
+  isHomepage?: boolean | null;
   meta?: {
     title?: string | null;
     description?: string | null;
@@ -316,6 +305,79 @@ export interface PayloadService {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-blog-posts".
+ */
+export interface PayloadBlogPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string | null;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  featuredImage?: (number | null) | PayloadMedia;
+  featuredImageAlt?: string | null;
+  author: string;
+  category?: ('ai-ml' | 'product-dev' | 'case-studies' | 'company-news') | null;
+  seoKeywords?:
+    | {
+        keyword?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  readingTime?: number | null;
+  chapters?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  internalLinks?:
+    | (
+        | {
+            relationTo: 'payload-pages';
+            value: number | PayloadPage;
+          }
+        | {
+            relationTo: 'payload-blog-posts';
+            value: number | PayloadBlogPost;
+          }
+      )[]
+    | null;
+  externalSources?:
+    | {
+        title?: string | null;
+        url?: string | null;
+        type?: ('article' | 'video' | 'documentation' | 'research') | null;
+        id?: string | null;
+      }[]
+    | null;
+  publishedAt?: string | null;
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -388,7 +450,9 @@ export interface PayloadMigration {
  * via the `definition` "payload-users_select".
  */
 export interface PayloadUsersSelect<T extends boolean = true> {
+  name?: T;
   role?: T;
+  avatar?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -406,7 +470,74 @@ export interface PayloadUsersSelect<T extends boolean = true> {
 export interface PayloadPagesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
-  content?: T;
+  template?: T;
+  layout?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              heading?: T;
+              subheading?: T;
+              ctaText?: T;
+              ctaLink?: T;
+              backgroundVideo?: T;
+              showParticles?: T;
+              id?: T;
+              blockName?: T;
+            };
+        richText?:
+          | T
+          | {
+              content?: T;
+              id?: T;
+              blockName?: T;
+            };
+        services?:
+          | T
+          | {
+              heading?: T;
+              services?: T;
+              columns?: T;
+              id?: T;
+              blockName?: T;
+            };
+        testimonials?:
+          | T
+          | {
+              heading?: T;
+              style?: T;
+              id?: T;
+              blockName?: T;
+            };
+        cta?:
+          | T
+          | {
+              heading?: T;
+              description?: T;
+              primaryButton?: T;
+              primaryLink?: T;
+              secondaryButton?: T;
+              secondaryLink?: T;
+              id?: T;
+              blockName?: T;
+            };
+        workShowcase?:
+          | T
+          | {
+              heading?: T;
+              showAllWork?: T;
+              id?: T;
+              blockName?: T;
+            };
+        clients?:
+          | T
+          | {
+              heading?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
   category?: T;
   parentPage?: T;
   internalLinks?: T;

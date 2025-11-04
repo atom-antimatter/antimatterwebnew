@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPayload } from "payload";
-import config from "@payload-config";
+import { getPayloadClient } from "@/lib/payloadSingleton";
 import type { Metadata } from "next";
 import BlogPostClient from "./BlogPostClient";
 
@@ -24,7 +23,7 @@ interface BlogPost {
 
 async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
-    const payload = await getPayload({ config });
+    const payload = await getPayloadClient();
     const { docs } = await payload.find({
       collection: "payload-blog-posts",
       where: {
@@ -78,7 +77,7 @@ interface RelatedPost {
 
 async function getRelatedPosts(category: string | null, currentId: string): Promise<RelatedPost[]> {
   try {
-    const payload = await getPayload({ config });
+    const payload = await getPayloadClient();
     
     const where: any = {
       _status: {

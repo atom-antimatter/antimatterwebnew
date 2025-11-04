@@ -1,6 +1,5 @@
+import { getPayloadClient } from "@/lib/payloadSingleton"
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import config from '@payload-config'
 import { sql } from '@payloadcms/db-postgres'
 
 export const runtime = 'nodejs'
@@ -12,7 +11,7 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET() {
   try {
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
 
     // Create table and constraints if they don't exist
     await payload.db.drizzle.execute(sql`

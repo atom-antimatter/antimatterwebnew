@@ -1,6 +1,5 @@
+import { getPayloadClient } from "@/lib/payloadSingleton"
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import config from '@payload-config'
 
 /**
  * Manual migration endpoint
@@ -9,7 +8,7 @@ import config from '@payload-config'
  */
 export async function GET() {
   try {
-    await getPayload({ config })
+    await getPayloadClient()
     
     // Migrations are automatically run when Payload initializes
     // This endpoint just ensures Payload is initialized

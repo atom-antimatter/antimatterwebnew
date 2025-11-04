@@ -1,5 +1,4 @@
-import { getPayload } from "payload";
-import config from "@payload-config";
+import { getPayloadClient } from "@/lib/payloadSingleton";
 import type { Metadata } from "next";
 import BlogListingClient from "./BlogListingClient";
 
@@ -33,7 +32,7 @@ interface BlogPost {
 
 async function getBlogPosts(): Promise<BlogPost[]> {
   try {
-    const payload = await getPayload({ config });
+    const payload = await getPayloadClient();
     const { docs } = await payload.find({
       collection: "payload-blog-posts",
       where: {
@@ -65,7 +64,7 @@ async function getBlogPosts(): Promise<BlogPost[]> {
 
 async function getCategories(): Promise<string[]> {
   try {
-    const payload = await getPayload({ config });
+    const payload = await getPayloadClient();
     const { docs } = await payload.find({
       collection: "payload-blog-posts",
       where: {
