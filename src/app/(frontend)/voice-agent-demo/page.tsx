@@ -9,11 +9,10 @@ export const metadata: Metadata = {
 
 const VoiceAgentDemoPage = () => {
   return (
-    <div className="pt-40 lg:pt-54 xl:pt-72 min-h-screen">
+    <div className="pt-40 lg:pt-54 xl:pt-58 min-h-screen">
       <VoiceAgentDemo />
     </div>
   );
 };
 
 export default VoiceAgentDemoPage;
-

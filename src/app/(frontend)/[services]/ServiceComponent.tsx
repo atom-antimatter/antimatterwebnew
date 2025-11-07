@@ -15,7 +15,7 @@ const ServiceComponent = () => {
   if (!service) notFound();
   return (
     <TransitionContainer>
-      <MainLayout className="pt-40">
+      <MainLayout className="pt-32 mobile:pt-52 md:pt-60">
         <div className="overflow-x-hidden">
           <TitleH1Anim
             className="text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-semibold uppercase"
@@ -28,13 +28,17 @@ const ServiceComponent = () => {
               <>
                 <Link href={service.customCTA.href}>
                   <Button variant="primary">
-                    <span className="px-8 lg:px-12">{service.customCTA.text}</span>
+                    <span className="px-8 lg:px-12">
+                      {service.customCTA.text}
+                    </span>
                   </Button>
                 </Link>
                 {service.customCTA.secondary && (
                   <Link href={service.customCTA.secondary.href}>
                     <Button variant="inverted">
-                      <span className="px-8 lg:px-12">{service.customCTA.secondary.text}</span>
+                      <span className="px-8 lg:px-12">
+                        {service.customCTA.secondary.text}
+                      </span>
                     </Button>
                   </Link>
                 )}

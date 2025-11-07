@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const DesignAgencyPage = () => {
   return (
-    <div className="pt-40 lg:pt-54 xl:pt-72">
+    <div className="">
       <ServiceComponent />
     </div>
   );
