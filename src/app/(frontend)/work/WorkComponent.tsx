@@ -78,7 +78,7 @@ const WorkComponent = ({ WorkData }: { WorkData: WorkCardProps[] }) => {
             WORK
           </TitleH1Anim>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-5 gap-y-20 mt-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-5 gap-y-10 md:gap-y-20 mt-10">
           {WorkData.map(({ id, image, tags, title, link }) => (
             <Reveal
               delay={id % 2 === 0 ? 0.3 : 0}
@@ -86,8 +86,8 @@ const WorkComponent = ({ WorkData }: { WorkData: WorkCardProps[] }) => {
                 id === 1
                   ? "col-span-1 md:col-span-6 lg:col-span-7 xl:col-span-7"
                   : id === 2
-                  ? "col-span-1 md:col-span-6 lg:col-span-5 xl:col-span-5"
-                  : "col-span-1 md:col-span-6"
+                    ? "col-span-1 md:col-span-6 lg:col-span-5 xl:col-span-5"
+                    : "col-span-1 md:col-span-6"
               } relative group`}
               initialAnim={id < 3}
               key={id}
@@ -105,13 +105,13 @@ const WorkComponent = ({ WorkData }: { WorkData: WorkCardProps[] }) => {
                   onMouseLeave={handleMouseLeave}
                   onClick={handleClick}
                 />
-                <div className="flex justify-between mt-3">
+                <div className="flex justify-between mt-3 gap-3 sm:flex-row flex-col">
                   <h3 className="text-xl lg:text-2xl xl:text-3xl">{title}</h3>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap sm:justify-end">
                     {tags.map((tag) => (
                       <div
                         key={tag}
-                        className="border py-[1px] xl:py-0.5 px-1 xl:px-2 border-foreground/20 rounded-full text-sm leading-7"
+                        className="border py-[1px] xl:py-0.5 px-2 border-foreground/20 rounded-full text-sm leading-7"
                       >
                         {tag}
                       </div>
