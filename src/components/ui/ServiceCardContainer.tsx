@@ -178,7 +178,7 @@ const ServiceCardContainer = () => {
         .custom-bullet.neighbor {
           transform: scaleY(0.8);
         }
-        
+
         /* Improve touch interaction on mobile */
         @media (max-width: 1023px) {
           #service-cards .swiper {

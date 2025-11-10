@@ -1,14 +1,6 @@
+import { ServiceCardProps } from "@/data/servicesHome";
 import { GoArrowUpRight } from "react-icons/go";
-
-export interface ServiceCardProps {
-  title: string;
-  number: string;
-  active?: boolean;
-  description?: string;
-  services?: string[];
-  tools?: string[];
-  toolIcons?: React.ReactNode[];
-}
+import TransitionLink from "./TransitionLink";
 
 const ServiceCard = (props: ServiceCardProps) => {
   const bgcolor = props.active
@@ -16,7 +8,7 @@ const ServiceCard = (props: ServiceCardProps) => {
     : "bg-[url('/images/service-card-bg.png')] bg-cover bg-bottom-right bg-no-repeat";
 
   return (
-    <div className="w-full">
+    <TransitionLink href={props.link || ""} className="w-full">
       <div
         className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-white/20 ring-inset shadow-none overflow-hidden rounded-3xl w-full h-[560px] ${bgcolor} duration-500 ${
           props.active ? "scale-100" : "scale-90"
@@ -96,7 +88,7 @@ const ServiceCard = (props: ServiceCardProps) => {
         </div>
         <div className="block absolute inset-0 -translate-1/2 size-[500px] bg-radial from-[#B4B5ED] via-[696AAC] to-transparent"></div>
       </div>
-    </div>
+    </TransitionLink>
   );
 };
 

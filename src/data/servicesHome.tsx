@@ -1,4 +1,14 @@
-import { ServiceCardProps } from "@/components/ui/ServiceCard";
+export interface ServiceCardProps {
+  title: string;
+  number: string;
+  active?: boolean;
+  description?: string;
+  services?: string[];
+  tools?: string[];
+  link?: string;
+  toolIcons?: React.ReactNode[];
+}
+
 import {
   SiAbstract,
   SiAdobexd,
@@ -42,6 +52,7 @@ export const serviceCardData: ServiceCardProps[] = [
   {
     number: "01",
     title: "Product Design",
+    link: "/design-agency",
     description:
       "End-to-end product design—from research and UX flows to polished UI systems and developer-ready handoff.",
     services: [
@@ -63,6 +74,7 @@ export const serviceCardData: ServiceCardProps[] = [
   {
     number: "02",
     title: "Development",
+    link: "/development-agency",
     description:
       "Robust, scalable products across web and mobile—from elegant UIs to reliable APIs and automated DevOps.",
     services: [
@@ -84,6 +96,7 @@ export const serviceCardData: ServiceCardProps[] = [
   {
     number: "03",
     title: "GTM Strategy",
+    link: "/gtm-strategy",
     description:
       "Data-driven go-to-market for SaaS and AI—clear positioning, smart pricing, and repeatable growth loops from ICP to post-launch analytics.",
     services: [
@@ -112,6 +125,7 @@ export const serviceCardData: ServiceCardProps[] = [
   {
     number: "04",
     title: "Healthcare Apps",
+    link: "/healthcare-apps",
     description:
       "Secure, compliant healthcare software—from telehealth to EHR integrations—built for HIPAA and auditability.",
     services: [
@@ -132,6 +146,7 @@ export const serviceCardData: ServiceCardProps[] = [
   {
     number: "05",
     title: "AI Development",
+    link: "/ai-development",
     description:
       "Build production‑ready AI—rapid prototyping to deployed models with solid evals, observability, and safety.",
     services: [
@@ -153,6 +168,7 @@ export const serviceCardData: ServiceCardProps[] = [
   {
     number: "06",
     title: "IoT Development",
+    link: "/iot-development",
     description:
       "From device firmware to cloud ingestion—secure, reliable IoT systems with OTA updates and real‑time telemetry.",
     services: [

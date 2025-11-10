@@ -129,8 +129,10 @@ export const ServicesData: ServiceProps[] = [
       <>
         Healthcare Apps
         <br />
-        built for
-        <span className="text-secondary font-bold italic mr-3">Care & Compliance</span>
+        built for <br />
+        <span className="text-secondary font-bold italic">
+          Care & Compliance
+        </span>
       </>
     ),
     description:
@@ -151,7 +153,9 @@ export const ServicesData: ServiceProps[] = [
       <>
         Build, connect, update
         <br />
-        <span className="text-secondary font-bold italic mr-3">at the edge</span>
+        <span className="text-secondary font-bold italic mr-3">
+          at the edge
+        </span>
       </>
     ),
     description:
@@ -178,21 +182,21 @@ export const ServicesData: ServiceProps[] = [
       "From concept to conversational AI, we build voice agents powered by OpenAI's Realtime API, Hume EVI, and other leading providers. Trained on your content, seamlessly integrated, and ready to engage your customers 24/7. Here, every conversation matters.",
     tagline: ["Natural conversations,", "powered by AI."],
     items: [
-      { 
+      {
         title: "AI Call Centers & Receptionists",
-        desc: "Intelligent phone systems powered by OpenAI, Hume, and ElevenLabs. Handle customer calls, schedule appointments, answer FAQs, and route inquiries 24/7 with human-like empathy."
+        desc: "Intelligent phone systems powered by OpenAI, Hume, and ElevenLabs. Handle customer calls, schedule appointments, answer FAQs, and route inquiries 24/7 with human-like empathy.",
       },
-      { 
+      {
         title: "Multi-Provider Integration",
-        desc: "Flexible implementation across OpenAI Realtime API, Hume EVI, Vapi, Bland AI, and more. We select the best provider for your use case—whether it's emotional intelligence, latency, or cost."
+        desc: "Flexible implementation across OpenAI Realtime API, Hume EVI, Vapi, Bland AI, and more. We select the best provider for your use case—whether it's emotional intelligence, latency, or cost.",
       },
-      { 
+      {
         title: "Custom Training & Knowledge Base",
-        desc: "Train your voice agent on your company's content, documentation, and workflows. From website scraping to CRM integration, your agent becomes an expert on your business."
+        desc: "Train your voice agent on your company's content, documentation, and workflows. From website scraping to CRM integration, your agent becomes an expert on your business.",
       },
-      { 
+      {
         title: "Appointment Scheduling & Automation",
-        desc: "Seamless calendar integration with Google Calendar, Calendly, and booking systems. Your AI agent can schedule, reschedule, and send reminders—no human intervention needed."
+        desc: "Seamless calendar integration with Google Calendar, Calendly, and booking systems. Your AI agent can schedule, reschedule, and send reminders—no human intervention needed.",
       },
     ],
     customCTA: {
@@ -211,28 +215,30 @@ export const ServicesData: ServiceProps[] = [
     pageTitle: (
       <>
         Sentiment AI for <br />
-        <span className="text-secondary font-bold italic mr-3">data-driven decisions</span>
+        <span className="text-secondary font-bold italic mr-3">
+          data-driven decisions
+        </span>
       </>
     ),
     description:
       "Transform emotional data into business intelligence. Analyze customer calls, employee feedback, and user interactions to make informed decisions that drive growth and retention.",
     tagline: ["Emotion as a business metric."],
     items: [
-      { 
+      {
         title: "Customer Sentiment Dashboards",
-        desc: "Real-time sentiment analysis of customer calls, support tickets, and feedback. Track satisfaction trends, identify at-risk accounts, and optimize customer experience with actionable insights."
+        desc: "Real-time sentiment analysis of customer calls, support tickets, and feedback. Track satisfaction trends, identify at-risk accounts, and optimize customer experience with actionable insights.",
       },
-      { 
+      {
         title: "Employee Engagement Metrics",
-        desc: "Monitor team sentiment through meeting analysis, feedback surveys, and communication patterns. Detect burnout risks, measure engagement levels, and improve workplace culture with data-driven insights."
+        desc: "Monitor team sentiment through meeting analysis, feedback surveys, and communication patterns. Detect burnout risks, measure engagement levels, and improve workplace culture with data-driven insights.",
       },
-      { 
+      {
         title: "Predictive Analytics",
-        desc: "Leverage emotional data to predict customer churn, employee turnover, and business outcomes. Our AI models identify patterns and trends before they become problems, enabling proactive decision-making."
+        desc: "Leverage emotional data to predict customer churn, employee turnover, and business outcomes. Our AI models identify patterns and trends before they become problems, enabling proactive decision-making.",
       },
-      { 
+      {
         title: "ROI Measurement & Reporting",
-        desc: "Quantify the impact of emotional intelligence on your business. Track conversion rates, retention metrics, and revenue impact with comprehensive reporting and analytics dashboards."
+        desc: "Quantify the impact of emotional intelligence on your business. Track conversion rates, retention metrics, and revenue impact with comprehensive reporting and analytics dashboards.",
       },
     ],
     customCTA: {
