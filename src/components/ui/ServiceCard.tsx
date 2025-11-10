@@ -1,5 +1,5 @@
 import { ServiceCardProps } from "@/data/servicesHome";
-import { GoArrowUpRight } from "react-icons/go";
+import { GoArrowRight, GoArrowUpRight } from "react-icons/go";
 import TransitionLink from "./TransitionLink";
 
 const ServiceCard = (props: ServiceCardProps) => {
@@ -8,7 +8,10 @@ const ServiceCard = (props: ServiceCardProps) => {
     : "bg-[url('/images/service-card-bg.png')] bg-cover bg-bottom-right bg-no-repeat";
 
   return (
-    <TransitionLink href={props.link || ""} className="w-full">
+    <TransitionLink
+      href={props.link || ""}
+      className="w-full hover:scale-102 block duration-500 transition-transform ease-out  group"
+    >
       <div
         className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-white/20 ring-inset shadow-none overflow-hidden rounded-3xl w-full h-[560px] ${bgcolor} duration-500 ${
           props.active ? "scale-100" : "scale-90"
@@ -18,8 +21,13 @@ const ServiceCard = (props: ServiceCardProps) => {
           <div
             className={`w-full h-full duration-200 ${bgcolor} absolute inset-0 rounded-3xl`}
           ></div>
-          <div className="h-full relative">
-            <GoArrowUpRight className="size-8 sm:size-9 lg:size-10 absolute right-0 top-0" />
+          <div className="h-full relative ">
+            <div className="-rotate-45 absolute right-0 top-0 overflow-hidden size-8 sm:size-9 lg:size-10 ">
+              <div className="relative group-hover:translate-x-full transition-transform duration-300 ease-[cubic-bezier(.15,-0.26,.43,1.41)]">
+                <GoArrowRight className="size-full" />
+                <GoArrowRight className="size-full absolute right-full top-0" />
+              </div>
+            </div>
             <div
               className={`relative h-full z-10 duration-500 ${
                 props.active && "-translate-y-full"

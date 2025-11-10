@@ -150,7 +150,7 @@ const ServiceCardContainer = () => {
             <div
               className={`
                 transition-all duration-500 ease-in-out
-                service-card w-full lg:w-[340px] xl:w-[380px] 2xl:w-[460px] shrink-0
+                service-card w-full lg:w-[340px] xl:w-[380px] 2xl:w-[460px] shrink-0 
               `}
             >
               <ServiceCard active={activeIndex === index} {...card} />
