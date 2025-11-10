@@ -72,7 +72,7 @@ const WorkComponent = ({ WorkData }: { WorkData: WorkCardProps[] }) => {
           View Work
         </motion.div>
       )}
-      <TransitionContainer>
+      <TransitionContainer exit={-400}>
         <div className="border-b border-foreground/30 pb-3">
           <TitleH1Anim className="text-5xl md:text-6xl lg:text-7xl xl:text-9xl font-semibold">
             WORK
