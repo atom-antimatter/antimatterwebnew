@@ -19,7 +19,8 @@ const ServiceComponent = () => {
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ailcmdpnkzgwvwsnxlav.supabase.co";
   const supabaseBucket = process.env.SUPABASE_STORAGE_BUCKET || "media";
-  const supabaseFile = process.env.NEXT_PUBLIC_DESIGN_VIDEO || "videobg2.mp4";
+  const supabaseFile =
+    process.env.NEXT_PUBLIC_DESIGN_VIDEO || "website_background_loop.mp4";
   const supabaseVideoUrl = `${supabaseUrl}/storage/v1/object/public/${supabaseBucket}/${supabaseFile}`;
   const fallbackVideoUrl = "/Antimatter-astronaut-loop-1.mp4";
   const initialSource = envVideoUrl && envVideoUrl.length > 0 ? envVideoUrl : supabaseVideoUrl;
