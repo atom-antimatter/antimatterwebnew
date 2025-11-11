@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const videoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/videobg2`;
 
   useEffect(() => {
     if (videoRef.current) {
@@ -33,7 +32,7 @@ const HeroSection = () => {
           }`}
           poster="/images/HeroOpenGraph.png"
         >
-          <source src={videoUrl} type="video/mp4" />
+          <source src="/videobg2.mp4" type="video/mp4" />
         </video>
 
         {/* Gradient Overlay for Text Readability */}
