@@ -14,7 +14,6 @@ const ServiceComponent = () => {
   const data = ServicesData;
   const service = data.find((value) => value.link === pathname);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
   const envVideoUrl = process.env.NEXT_PUBLIC_DESIGN_VIDEO_URL;
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ailcmdpnkzgwvwsnxlav.supabase.co";
@@ -47,23 +46,19 @@ const ServiceComponent = () => {
             muted
             playsInline
             preload="metadata"
-            onLoadedData={() => setVideoLoaded(true)}
             onError={() => {
               if (videoSource === fallbackVideoUrl) {
                 return;
               }
               setVideoSource(fallbackVideoUrl);
-              setVideoLoaded(true);
             }}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-              videoLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
+            className="absolute inset-0 w-full h-full object-cover"
             poster="/Antimatter-astronaut-fallback.webp"
           >
             <source key={videoSource} src={videoSource} type="video/mp4" />
           </video>
-          {/* Dark overlay + gradient fade out (starts at 80% down the page, fully faded by 90%) */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/50 via-80% to-background to-90%" />
+          {/* Dark overlay + gradient fade out earlier to reveal footer */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 via-65% to-background to-80%" />
         </div>
       )}
       
