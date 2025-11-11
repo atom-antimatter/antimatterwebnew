@@ -25,14 +25,6 @@ const ServiceComponent = () => {
   const initialSource = envVideoUrl && envVideoUrl.length > 0 ? envVideoUrl : supabaseVideoUrl;
   const [videoSource, setVideoSource] = useState(initialSource);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {
-        // Autoplay blocked - fallback to poster
-      });
-    }
-  }, []);
-
   if (!service) notFound();
   return (
     <TransitionContainer>
@@ -45,14 +37,14 @@ const ServiceComponent = () => {
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             onError={() => {
               if (videoSource === fallbackVideoUrl) {
                 return;
               }
               setVideoSource(fallbackVideoUrl);
             }}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover opacity-100"
             poster="/Antimatter-astronaut-fallback.webp"
           >
             <source key={videoSource} src={videoSource} type="video/mp4" />
@@ -62,7 +54,14 @@ const ServiceComponent = () => {
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.1) 70%, hsl(var(--background)) 78%, hsl(var(--background)) 100%)",
+                "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.5) 50%, rgba(2,2,2,0.7) 70%, rgba(2,2,2,0.9) 85%, #020202 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 h-[50vh] pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(2,2,2,0) 0%, rgba(2,2,2,0.5) 40%, rgba(2,2,2,0.85) 70%, #020202 100%)",
             }}
           />
         </div>
