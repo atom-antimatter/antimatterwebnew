@@ -57,8 +57,14 @@ const ServiceComponent = () => {
           >
             <source key={videoSource} src={videoSource} type="video/mp4" />
           </video>
-          {/* Dark overlay + gradient fade out earlier to reveal footer */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 via-65% to-background to-80%" />
+          {/* Dark overlay + gradient fade out well before footer */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.1) 70%, hsl(var(--background)) 78%, hsl(var(--background)) 100%)",
+            }}
+          />
         </div>
       )}
       
