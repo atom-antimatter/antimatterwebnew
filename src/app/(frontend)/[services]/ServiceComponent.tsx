@@ -30,10 +30,10 @@ const ServiceComponent = () => {
 
   if (!service) notFound();
   return (
-    <TransitionContainer>
-      {/* Hero video background with fade-out - only for design-agency */}
+    <>
+      {/* Hero video background with fade-out - only for design-agency - Outside TransitionContainer to prevent animation */}
       {pathname === '/design-agency' && (
-        <div className="absolute top-0 left-0 right-0 h-screen z-0 overflow-hidden">
+        <div className="fixed top-0 left-0 right-0 h-screen z-0 overflow-hidden">
           <video
             ref={videoRef}
             autoPlay
@@ -51,11 +51,12 @@ const ServiceComponent = () => {
           {/* Dark overlay for readability */}
           <div className="absolute inset-0 bg-black/50" />
           {/* Bottom fade-out gradient */}
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-black" />
+          <div className="absolute bottom-0 left-0 right-0 h-40 md:h-48 bg-gradient-to-b from-transparent to-black" />
         </div>
       )}
       
-      <MainLayout className="pt-32 mobile:pt-52 md:pt-60 relative z-10">
+      <TransitionContainer>
+        <MainLayout className="pt-32 mobile:pt-52 md:pt-60 relative z-10">
         <div className="overflow-x-hidden">
           <TitleH1Anim
             className="text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-semibold uppercase"
@@ -149,7 +150,8 @@ const ServiceComponent = () => {
           </div>
         </div>
       </MainLayout>
-    </TransitionContainer>
+      </TransitionContainer>
+    </>
   );
 };
 
