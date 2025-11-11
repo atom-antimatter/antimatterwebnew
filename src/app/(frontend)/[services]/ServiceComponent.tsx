@@ -15,10 +15,14 @@ const ServiceComponent = () => {
   const service = data.find((value) => value.link === pathname);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
-  
-  // Supabase CDN video URL
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ailcmdpnkzgwvwsnxlav.supabase.co';
-  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/videobg2_compressed.mp4`;
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ailcmdpnkzgwvwsnxlav.supabase.co";
+  const supabaseBucket = process.env.SUPABASE_STORAGE_BUCKET || "media";
+  const supabaseFile =
+    process.env.NEXT_PUBLIC_DESIGN_VIDEO || "videobg2.mp4";
+  const supabaseVideoUrl = `${supabaseUrl}/storage/v1/object/public/${supabaseBucket}/${supabaseFile}`;
+  const fallbackVideoUrl = "/Antimatter-astronaut-loop-1.mp4";
+  const [videoSource, setVideoSource] = useState(supabaseVideoUrl);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -42,11 +46,17 @@ const ServiceComponent = () => {
             playsInline
             preload="metadata"
             onLoadedData={() => setVideoLoaded(true)}
+            onError={() => {
+              if (videoSource !== fallbackVideoUrl) {
+                setVideoSource(fallbackVideoUrl);
+                setVideoLoaded(true);
+              }
+            }}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
               videoLoaded ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            <source src={videoUrl} type="video/mp4" />
+            <source src={videoSource} type="video/mp4" />
           </video>
           {/* Dark overlay + gradient fade out (starts at 80% down the page, fully faded by 90%) */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/50 via-80% to-background to-90%" />
