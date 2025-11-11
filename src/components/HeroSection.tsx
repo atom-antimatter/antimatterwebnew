@@ -6,11 +6,15 @@ import { useEffect, useRef, useState } from "react";
 const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  
+  // Supabase CDN video URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ailcmdpnkzgwvwsnxlav.supabase.co';
+  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/videobg2`;
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.play().catch(() => {
-        // Autoplay blocked - that's okay, video will show as poster
+        // Autoplay blocked - fallback to poster
       });
     }
   }, []);
@@ -18,21 +22,22 @@ const HeroSection = () => {
   return (
     <div className="relative w-full h-screen z-40 overflow-hidden px-4 md:px-8 pt-24 md:pt-32" id="hero-section">
       {/* Video Container with Rounded Corners */}
-      <div className="relative w-full h-[calc(100vh-8rem)] md:h-[calc(100vh-10rem)] rounded-[24px] md:rounded-[32px] overflow-hidden">
-        {/* Video Background */}
+      <div className="relative w-full h-[calc(100vh-8rem)] md:h-[calc(100vh-10rem)] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-2xl">
+        {/* Video Background with CDN delivery */}
         <video
           ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
+          preload="auto"
           onLoadedData={() => setVideoLoaded(true)}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
             videoLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           poster="/images/HeroOpenGraph.png"
         >
-          <source src="/videobg2.mp4" type="video/mp4" />
+          <source src={videoUrl} type="video/mp4" />
         </video>
 
         {/* Gradient Overlay for Text Readability */}
