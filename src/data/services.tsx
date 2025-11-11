@@ -39,7 +39,7 @@ export const ServicesData: ServiceProps[] = [
     pageTitle: (
       <>
         You think it. <br /> We{" "}
-        <span className="text-secondary font-bold italic pr-2">DESIGN</span> it.
+        <span className="text-secondary font-bold italic pr-6">DESIGN</span> it.
       </>
     ),
     description:
