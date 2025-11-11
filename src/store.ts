@@ -8,8 +8,8 @@ interface LoadingProps {
 }
 
 export const useLoading = create<LoadingProps>((set) => ({
-  isLoading: true,
-  finished: false,
+  isLoading: false,
+  finished: true,
   setisLoading: (state: boolean) => set({ isLoading: state }),
   setFinished: (state: boolean) => set({ finished: state }),
 }));
