@@ -9,7 +9,7 @@ const HeroSection = () => {
   
   // Supabase CDN video URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ailcmdpnkzgwvwsnxlav.supabase.co';
-  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/videobg2`;
+  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/videobg2_compressed.mp4`;
 
   useEffect(() => {
     if (videoRef.current) {
