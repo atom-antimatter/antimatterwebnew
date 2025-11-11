@@ -7,15 +7,53 @@ import { ServicesData } from "@/data/services";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { notFound, usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const ServiceComponent = () => {
   const pathname = usePathname();
   const data = ServicesData;
   const service = data.find((value) => value.link === pathname);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  
+  // Supabase CDN video URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ailcmdpnkzgwvwsnxlav.supabase.co';
+  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/videobg2_compressed.mp4`;
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {
+        // Autoplay blocked - fallback to poster
+      });
+    }
+  }, []);
+
   if (!service) notFound();
   return (
     <TransitionContainer>
-      <MainLayout className="pt-32 mobile:pt-52 md:pt-60">
+      {/* Full-page video background - only for design-agency */}
+      {pathname === '/design-agency' && (
+        <div className="fixed inset-0 z-0">
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            onLoadedData={() => setVideoLoaded(true)}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+              videoLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <source src={videoUrl} type="video/mp4" />
+          </video>
+          {/* Dark overlay for readability */}
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+      )}
+      
+      <MainLayout className="pt-32 mobile:pt-52 md:pt-60 relative z-10">
         <div className="overflow-x-hidden">
           <TitleH1Anim
             className="text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-semibold uppercase"
