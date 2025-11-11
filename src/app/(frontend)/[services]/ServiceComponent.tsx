@@ -44,24 +44,25 @@ const ServiceComponent = () => {
               }
               setVideoSource(fallbackVideoUrl);
             }}
-            className="absolute inset-0 w-full h-full object-cover opacity-100"
+            style={{ objectFit: 'cover', objectPosition: 'center' }}
+            className="absolute inset-0 w-full h-full opacity-100"
             poster="/Antimatter-astronaut-fallback.webp"
           >
             <source key={videoSource} src={videoSource} type="video/mp4" />
           </video>
-          {/* Dark overlay + gradient fade out well before footer */}
+          {/* Dark overlay + gradient fade out starting earlier */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.5) 50%, rgba(2,2,2,0.7) 70%, rgba(2,2,2,0.9) 85%, #020202 100%)",
+                "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.6) 25%, rgba(2,2,2,0.65) 45%, rgba(2,2,2,0.85) 60%, rgba(2,2,2,0.95) 75%, #020202 85%)",
             }}
           />
           <div
-            className="absolute inset-x-0 bottom-0 h-[50vh] pointer-events-none"
+            className="absolute inset-x-0 bottom-0 h-[60vh] pointer-events-none"
             style={{
               background:
-                "linear-gradient(180deg, rgba(2,2,2,0) 0%, rgba(2,2,2,0.5) 40%, rgba(2,2,2,0.85) 70%, #020202 100%)",
+                "linear-gradient(180deg, rgba(2,2,2,0) 0%, rgba(2,2,2,0.6) 30%, rgba(2,2,2,0.9) 60%, #020202 90%)",
             }}
           />
         </div>
