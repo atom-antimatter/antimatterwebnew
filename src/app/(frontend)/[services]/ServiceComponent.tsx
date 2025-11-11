@@ -50,19 +50,19 @@ const ServiceComponent = () => {
           >
             <source key={videoSource} src={videoSource} type="video/mp4" />
           </video>
-          {/* Dark overlay + gradient fade out starting earlier */}
+          {/* Dark overlay + gradient fade out starting much earlier */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.6) 25%, rgba(2,2,2,0.65) 45%, rgba(2,2,2,0.85) 60%, rgba(2,2,2,0.95) 75%, #020202 85%)",
+                "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.6) 20%, rgba(2,2,2,0.7) 35%, rgba(2,2,2,0.9) 50%, rgba(2,2,2,0.98) 60%, #020202 65%)",
             }}
           />
           <div
-            className="absolute inset-x-0 bottom-0 h-[60vh] pointer-events-none"
+            className="absolute inset-x-0 bottom-0 h-[70vh] pointer-events-none"
             style={{
               background:
-                "linear-gradient(180deg, rgba(2,2,2,0) 0%, rgba(2,2,2,0.6) 30%, rgba(2,2,2,0.9) 60%, #020202 90%)",
+                "linear-gradient(180deg, rgba(2,2,2,0) 0%, rgba(2,2,2,0.7) 25%, rgba(2,2,2,0.95) 50%, #020202 75%)",
             }}
           />
         </div>
