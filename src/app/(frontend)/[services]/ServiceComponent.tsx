@@ -50,8 +50,8 @@ const ServiceComponent = () => {
           </video>
           {/* Dark overlay for readability */}
           <div className="absolute inset-0 bg-black/50" />
-          {/* Bottom fade-out gradient */}
-          <div className="absolute bottom-0 left-0 right-0 h-40 md:h-48 bg-gradient-to-b from-transparent to-black" />
+          {/* Extended bottom fade-out gradient for smooth transition */}
+          <div className="absolute bottom-0 left-0 right-0 h-96 md:h-[32rem] bg-gradient-to-b from-transparent via-black/60 to-black" />
         </div>
       )}
       
