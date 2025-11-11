@@ -16,9 +16,9 @@ const ServiceComponent = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
   
-  // Supabase CDN video URL
+  // Supabase CDN video URL - using new perfectly looped background
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ailcmdpnkzgwvwsnxlav.supabase.co';
-  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/videobg2_compressed.mp4`;
+  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/website%20background%20loop.mp4`;
 
   useEffect(() => {
     if (videoRef.current) {
