@@ -16,9 +16,9 @@ const ServiceComponent = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
   
-  // Supabase CDN video URL - using new perfectly looped background
+  // Supabase CDN video URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ailcmdpnkzgwvwsnxlav.supabase.co';
-  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/website_background_loop.mp4`;
+  const videoUrl = `${supabaseUrl}/storage/v1/object/public/media/videobg2_compressed.mp4`;
 
   useEffect(() => {
     if (videoRef.current) {
@@ -30,17 +30,17 @@ const ServiceComponent = () => {
 
   if (!service) notFound();
   return (
-    <>
-      {/* Hero video background with fade-out - only for design-agency - Outside TransitionContainer to prevent animation */}
+    <TransitionContainer>
+      {/* Full-page video background - only for design-agency */}
       {pathname === '/design-agency' && (
-        <div className="fixed top-0 left-0 right-0 h-screen z-0 overflow-hidden">
+        <div className="fixed inset-0 z-0">
           <video
             ref={videoRef}
             autoPlay
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             onLoadedData={() => setVideoLoaded(true)}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
               videoLoaded ? 'opacity-100' : 'opacity-0'
@@ -48,15 +48,12 @@ const ServiceComponent = () => {
           >
             <source src={videoUrl} type="video/mp4" />
           </video>
-          {/* Dark overlay for readability */}
-          <div className="absolute inset-0 bg-black/50" />
-          {/* Extended bottom fade-out gradient for smooth transition - starts 35% earlier */}
-          <div className="absolute bottom-0 left-0 right-0 h-[34rem] md:h-[50rem] bg-gradient-to-b from-transparent via-black/70 to-black" />
+          {/* Dark overlay + gradient fade out (starts at 80% down the page, fully faded by 90%) */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/50 via-80% to-background to-90%" />
         </div>
       )}
       
-      <TransitionContainer>
-        <MainLayout className="pt-32 mobile:pt-52 md:pt-60 relative z-10">
+      <MainLayout className="pt-32 mobile:pt-52 md:pt-60 relative z-10">
         <div className="overflow-x-hidden">
           <TitleH1Anim
             className="text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-semibold uppercase"
@@ -150,8 +147,7 @@ const ServiceComponent = () => {
           </div>
         </div>
       </MainLayout>
-      </TransitionContainer>
-    </>
+    </TransitionContainer>
   );
 };
 
