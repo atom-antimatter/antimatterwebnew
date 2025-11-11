@@ -31,16 +31,16 @@ const ServiceComponent = () => {
   if (!service) notFound();
   return (
     <TransitionContainer>
-      {/* Full-page video background - only for design-agency */}
+      {/* Hero video background with fade-out - only for design-agency */}
       {pathname === '/design-agency' && (
-        <div className="fixed inset-0 z-0">
+        <div className="absolute top-0 left-0 right-0 h-screen z-0 overflow-hidden">
           <video
             ref={videoRef}
             autoPlay
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             onLoadedData={() => setVideoLoaded(true)}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
               videoLoaded ? 'opacity-100' : 'opacity-0'
@@ -50,6 +50,8 @@ const ServiceComponent = () => {
           </video>
           {/* Dark overlay for readability */}
           <div className="absolute inset-0 bg-black/50" />
+          {/* Bottom fade-out gradient */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-black" />
         </div>
       )}
       
