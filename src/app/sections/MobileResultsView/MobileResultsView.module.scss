@@ -6,6 +6,8 @@
   display: flex;
   flex-direction: row;
   overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
   height: 100%;
   max-width: 1080px;
   margin-left: auto;
@@ -23,6 +25,8 @@
 .searchResultsContainer {
   border-radius: 16px;
   background-color: var(--background-fill);
+  min-height: 0;
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {

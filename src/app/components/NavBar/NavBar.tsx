@@ -33,7 +33,7 @@ export const NavBar = () => {
             href="/atom/search"
             className="flex items-center gap-2"
           >
-            <div className="w-9 h-9 rounded-lg bg-black/5 border border-black/10 overflow-hidden flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-[#1a1a1a] border border-white/10 overflow-hidden flex items-center justify-center">
               {canUseWebGL ? (
                 <VoiceAgent3DSphere
                   isActive={false}

@@ -19,7 +19,7 @@ export const MobileResultsView = () => {
   };
 
   return (
-    <div className="flex flex-col fixed top-12 left-0 bottom-0 right-0 bg-container">
+    <div className="flex flex-col fixed top-12 left-0 bottom-0 right-0 bg-container overflow-hidden">
       <div className="flex flex-col items-center w-full p-4">
         <SearchInput
           value={state.query}
@@ -29,27 +29,25 @@ export const MobileResultsView = () => {
         />
       </div>
       <div className={styles.mainContainer}>
-        <div className="flex flex-col w-full h-full px-4">
+        <div className="flex flex-col w-full h-full px-4 min-h-0">
           <Tabs
             value={activeTab}
             onValueChange={handleTabChange}
-            className="mb-4 h-full"
+            className="mb-4 flex-1 min-h-0"
           >
             <TabsList>
               <TabsTrigger value="ai" text="AI Mode" />
               <TabsTrigger value="search" text="Search" />
             </TabsList>
-            <TabsContent value="search" className="w-full h-full relative">
+            <TabsContent value="search" className="w-full flex-1 min-h-0">
               <div
-                className={`${styles.searchResultsContainer} flex flex-col w-full mt-0 mb-4 rounded-lg shadow-md overflow-hidden absolute inset-0 w-full h-full`}
+                className={`${styles.searchResultsContainer} flex flex-col w-full mt-0 mb-4 rounded-lg shadow-md overflow-hidden`}
               >
                 <LegacySearch query={state.query} />
               </div>
             </TabsContent>
-            <TabsContent value="ai" className="w-full h-full relative">
-              <div className="absolute inset-0 w-full h-full">
-                <C1Response className="w-full" />
-              </div>
+            <TabsContent value="ai" className="w-full flex-1 min-h-0">
+              <C1Response className="w-full" />
             </TabsContent>
           </Tabs>
         </div>
