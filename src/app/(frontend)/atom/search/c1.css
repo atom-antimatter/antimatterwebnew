@@ -7,3 +7,17 @@ html,
 body {
   background: #fff;
 }
+
+/* Background: grid + subtle vignette (white center, light-grey corners) */
+html,
+body {
+  background: #f2f2f2;
+}
+
+.atom-search-bg {
+  background-color: #f2f2f2;
+  background-image: url("/atom-search/background.svg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

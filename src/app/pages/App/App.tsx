@@ -7,7 +7,6 @@ import { DesktopResultsView } from "@/app/sections/DesktopResultsView";
 import { MobileResultsView } from "@/app/sections/MobileResultsView";
 
 import { NavBar } from "../../components/NavBar/NavBar";
-import FloatingLines from "../../components/FloatingLines/FloatingLines";
 import { UIStateProvider, useSharedUIState } from "../../context/UIStateContext";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { LandingView } from "../../sections/LandingView";
@@ -21,13 +20,11 @@ const AppContent = () => {
 
   return (
     <div
-      className="flex flex-col justify-center h-screen w-screen relative bg-white"
+      className="flex flex-col justify-center h-screen w-screen relative"
       key={`home-${hasSearched}`}
     >
-      <div className="fixed inset-0 z-0 bg-white">
-        <FloatingLines className="opacity-70" />
-      </div>
-            {/* Light mode (matches the original working Thesys sample) */}
+      <div className="fixed inset-0 z-0 atom-search-bg" />
+      {/* Light mode (matches the original working Thesys sample) */}
       <ThemeProvider mode="light" theme={{ ...themePresets.default.theme }}>
         <NavBar />
 
