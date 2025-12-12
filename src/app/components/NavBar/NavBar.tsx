@@ -1,16 +1,28 @@
 "use client";
 
 import { Button } from "@crayonai/react-ui";
-import { ArrowRight, Github, Wrench } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { useSharedUIState } from "@/app/context/UIStateContext";
 import { useIsMobile } from "@/app/hooks/useIsMobile";
+import VoiceAgent3DSphere from "@/components/VoiceAgent3DSphere";
 
 export const NavBar = () => {
   const isMobile = useIsMobile();
   const { actions } = useSharedUIState();
+  const [canUseWebGL, setCanUseWebGL] = useState(true);
+
+  useEffect(() => {
+    try {
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      setCanUseWebGL(!!gl);
+    } catch {
+      setCanUseWebGL(false);
+    }
+  }, []);
 
   return (
     <div className="fixed top-0 left-0 w-full z-10 bg-container">
@@ -18,43 +30,44 @@ export const NavBar = () => {
         <div className="flex items-center gap-m">
           <Link
             onClick={() => actions.resetState()}
-            href="/"
+            href="/atom/search"
             className="flex items-center gap-2"
           >
-            <Image
-              src="/chat-logo.png"
-              alt="Search"
-              width={36}
-              height={36}
-              className="rounded-lg"
-              priority
-            />
+            <div className="w-9 h-9 rounded-lg bg-black/5 border border-black/10 overflow-hidden flex items-center justify-center">
+              {canUseWebGL ? (
+                <VoiceAgent3DSphere
+                  isActive={false}
+                  isSpeaking={false}
+                  minHeight={36}
+                  className="w-9 h-9"
+                />
+              ) : (
+                <Image
+                  src="/images/glowingCircle2.png"
+                  alt="Antimatter orb"
+                  width={36}
+                  height={36}
+                  className="object-cover"
+                  priority
+                />
+              )}
+            </div>
             <div className="flex items-center gap-1">
-              <h1 className="text-primary">Search</h1>
-              <p className="text-secondary">by thesys</p>
+              <h1 className="text-primary">Atom</h1>
+              <p className="text-secondary">Search</p>
             </div>
           </Link>
         </div>
+
         <div className="flex items-center gap-2">
           <Button
-            variant="secondary"
+            variant="primary"
             size="medium"
-            onClick={() =>
-              window.open("https://github.com/thesysdev/search-with-c1", "_blank")
-            }
+            onClick={() => window.open("/contact?source=atom-search", "_self")}
           >
-            <Github className="h-4 w-4" />
-            {!isMobile && "Github"}
+            Join Waitlist
           </Button>
-          <Button
-            variant="secondary"
-            size="medium"
-            onClick={() => window.open("https://docs.thesys.dev/welcome", "_blank")}
-          >
-            <Wrench className="h-4 w-4 mr-1" />
-            {isMobile ? "Build" : "Build with Thesys"}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          {!isMobile && null}
         </div>
       </div>
     </div>
