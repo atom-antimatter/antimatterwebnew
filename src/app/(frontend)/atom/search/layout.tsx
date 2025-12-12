@@ -5,6 +5,11 @@ export default function AtomSearchLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Light mode (default). We do NOT set data-theme here.
-  return <>{children}</>;
+  // Ensure the route always has its background even while the client-only app bundle loads.
+  return (
+    <>
+      <div className="fixed inset-0 z-0 atom-search-bg" />
+      <div className="relative z-10">{children}</div>
+    </>
+  );
 }
