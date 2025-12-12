@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import Image from "next/image";
 import React from "react";
 
 import { useSharedUIState } from "@/app/context/UIStateContext";
@@ -14,7 +15,15 @@ export const LandingView = () => {
 
   return (
     <>
-      <div className="fixed inset-0 w-full h-full z-0 bg-black" />
+      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden">
+        <Image
+          src="/atom-search/background.svg"
+          alt="background"
+          fill
+          priority
+          className="object-cover"
+        />
+      </div>
       <div
         className={clsx(
           "flex flex-col items-center justify-center -mt-[60px] relative z-10",
@@ -22,26 +31,13 @@ export const LandingView = () => {
         )}
       >
         <div className="flex mb-xl">
-          <h1
-            className={clsx(
-              "text-size-heading",
-              "font-medium select-none",
-              isMobile ? "text-[34px]" : "text-[44px]",
-            )}
-          >
-            <span className="text-primary">Search</span>
-            <span className="text-secondary"> + </span>
-            <span
-              style={{
-                background: "linear-gradient(180deg, #7E6AFF 0%, #AA9DFF 100%)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              Atom
-            </span>
-          </h1>
+          <Image
+            src="/atom-search/page-title.svg"
+            alt="Search + Atom"
+            width={isMobile ? 260 : 340}
+            height={52}
+            priority
+          />
         </div>
         <SearchInput
           value={state.query}
@@ -49,9 +45,13 @@ export const LandingView = () => {
           className={styles.centeredSearchContainer}
         />
         <p className={styles.poweredByContainer}>
-          <span className="text-secondary">
-            Powered by Gemini + Thesys
-          </span>
+          <Image
+            src="/atom-search/page-subtitle.svg"
+            alt="Powered by"
+            width={isMobile ? 250 : 300}
+            height={23}
+            priority
+          />
         </p>
       </div>
     </>

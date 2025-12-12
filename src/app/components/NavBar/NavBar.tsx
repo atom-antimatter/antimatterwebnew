@@ -2,9 +2,9 @@
 
 import { Button } from "@crayonai/react-ui";
 import { ArrowRight, Github, Wrench } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
-import VoiceAgent3DSphere from "@/components/VoiceAgent3DSphere";
 import { useSharedUIState } from "@/app/context/UIStateContext";
 import { useIsMobile } from "@/app/hooks/useIsMobile";
 
@@ -21,15 +21,14 @@ export const NavBar = () => {
             href="/"
             className="flex items-center gap-2"
           >
-            {/* Replace Thesys logo with Antimatter 3D particle orb */}
-            <div className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center">
-              <VoiceAgent3DSphere
-                isActive={false}
-                isSpeaking={false}
-                minHeight={36}
-                className="w-9 h-9"
-              />
-            </div>
+            <Image
+              src="/chat-logo.png"
+              alt="Search"
+              width={36}
+              height={36}
+              className="rounded-lg"
+              priority
+            />
             <div className="flex items-center gap-1">
               <h1 className="text-primary">Search</h1>
               <p className="text-secondary">by thesys</p>

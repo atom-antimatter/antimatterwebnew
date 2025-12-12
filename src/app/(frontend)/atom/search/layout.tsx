@@ -5,11 +5,6 @@ export default function AtomSearchLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Apply dark theme server-side so the page renders correctly on first paint (no reload needed).
-  // Our token file uses [data-theme="dark"] selectors, so wrapping is sufficient.
-  return (
-    <div data-theme="dark" className="min-h-screen">
-      {children}
-    </div>
-  );
+  // Light mode (default). We do NOT set data-theme here.
+  return <>{children}</>;
 }
