@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import Image from "next/image";
 import React from "react";
 
 import { useSharedUIState } from "@/app/context/UIStateContext";
@@ -15,15 +14,7 @@ export const LandingView = () => {
 
   return (
     <>
-      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden">
-        <Image
-          src="/background.svg"
-          alt="background"
-          fill
-          priority
-          className="object-cover"
-        />
-      </div>
+      <div className="fixed inset-0 w-full h-full z-0 bg-black" />
       <div
         className={clsx(
           "flex flex-col items-center justify-center -mt-[60px] relative z-10",

@@ -6,11 +6,15 @@ import * as THREE from "three";
 interface VoiceAgent3DSphereProps {
   isActive: boolean;
   isSpeaking: boolean;
+  className?: string;
+  minHeight?: number;
 }
 
 export default function VoiceAgent3DSphere({
   isActive,
   isSpeaking,
+  className,
+  minHeight = 300,
 }: VoiceAgent3DSphereProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const sceneRef = useRef<{
@@ -213,8 +217,8 @@ export default function VoiceAgent3DSphere({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full"
-      style={{ minHeight: "300px" }}
+      className={className ?? "w-full h-full"}
+      style={{ minHeight }}
     />
   );
 }

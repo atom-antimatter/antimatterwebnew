@@ -2,9 +2,9 @@
 
 import { Button } from "@crayonai/react-ui";
 import { ArrowRight, Github, Wrench } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
+import VoiceAgent3DSphere from "@/components/VoiceAgent3DSphere";
 import { useSharedUIState } from "@/app/context/UIStateContext";
 import { useIsMobile } from "@/app/hooks/useIsMobile";
 
@@ -21,13 +21,15 @@ export const NavBar = () => {
             href="/"
             className="flex items-center gap-2"
           >
-            <Image
-              src="/chat-logo.png"
-              alt="Chat with C1"
-              width={36}
-              height={36}
-              className="rounded-lg"
-            />
+            {/* Replace Thesys logo with Antimatter 3D particle orb */}
+            <div className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center">
+              <VoiceAgent3DSphere
+                isActive={false}
+                isSpeaking={false}
+                minHeight={36}
+                className="w-9 h-9"
+              />
+            </div>
             <div className="flex items-center gap-1">
               <h1 className="text-primary">Search</h1>
               <p className="text-secondary">by thesys</p>
@@ -39,10 +41,7 @@ export const NavBar = () => {
             variant="secondary"
             size="medium"
             onClick={() =>
-              window.open(
-                "https://github.com/thesysdev/search-with-c1",
-                "_blank",
-              )
+              window.open("https://github.com/thesysdev/search-with-c1", "_blank")
             }
           >
             <Github className="h-4 w-4" />
@@ -51,9 +50,7 @@ export const NavBar = () => {
           <Button
             variant="secondary"
             size="medium"
-            onClick={() =>
-              window.open("https://docs.thesys.dev/welcome", "_blank")
-            }
+            onClick={() => window.open("https://docs.thesys.dev/welcome", "_blank")}
           >
             <Wrench className="h-4 w-4 mr-1" />
             {isMobile ? "Build" : "Build with Thesys"}

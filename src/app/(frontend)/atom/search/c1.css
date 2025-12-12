@@ -1,3 +1,9 @@
 @import "tailwindcss";
 @import "../../../../app/atom-search-variables.css";
 @import "@crayonai/react-ui/styles/index.css";
+
+/* Force a black page backdrop for Atom Search */
+html,
+body {
+  background: #000;
+}
