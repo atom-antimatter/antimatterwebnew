@@ -1,10 +1,4 @@
 "use client";
-<<<<<<< HEAD
-import { useState } from "react";
-import { motion } from "motion/react";
-import TransitionLink from "@/components/ui/TransitionLink";
-import { HiSearch, HiArrowLeft } from "react-icons/hi2";
-=======
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import TransitionLink from "@/components/ui/TransitionLink";
@@ -23,7 +17,6 @@ interface ImageResult {
   title: string;
   source: string;
 }
->>>>>>> 367532d (fix: replace HiSearch imports and escape apostrophes)
 
 export default function AtomSearchPage() {
   const [query, setQuery] = useState("");
@@ -57,13 +50,8 @@ export default function AtomSearchPage() {
           transition={{ duration: 0.6 }}
           className="flex flex-col items-center gap-8 mt-12"
         >
-<<<<<<< HEAD
-          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-            <HiSearch className="size-8 text-primary" />
-=======
           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
             <HiMagnifyingGlass className="size-7 text-white" />
->>>>>>> 367532d (fix: replace HiSearch imports and escape apostrophes)
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold text-center">
