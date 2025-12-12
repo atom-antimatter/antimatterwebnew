@@ -46,7 +46,7 @@ export const useUIState = (): { state: UIState; actions: UIActions } => {
   const initialSearch = useRef(true);
   // State for the selected search provider
   const [searchProvider, setSearchProvider] = useState<SearchProvider>(
-    SearchProvider.EXA,
+    SearchProvider.GEMINI,
   );
 
   /**
@@ -62,7 +62,7 @@ export const useUIState = (): { state: UIState; actions: UIActions } => {
       searchQuery,
       threadId,
       searchProvider,
-      numResults: searchProvider === SearchProvider.EXA ? 5 : undefined,
+      numResults: undefined,
       setC1Response,
       setIsLoading,
       abortController,
@@ -78,7 +78,7 @@ export const useUIState = (): { state: UIState; actions: UIActions } => {
     setIsLoading(false);
     initialSearch.current = true;
     setAbortController(null);
-    setSearchProvider(SearchProvider.EXA);
+    setSearchProvider(SearchProvider.GEMINI);
   };
 
   return {

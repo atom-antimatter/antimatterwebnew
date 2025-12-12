@@ -51,7 +51,7 @@ const AppContent = () => {
       className="flex flex-col justify-center h-screen w-screen relative"
       key={`home-${hasSearched}`}
     >
-      <ThemeProvider mode="light" theme={{ ...themePresets.default.theme }}>
+      <ThemeProvider mode="dark" theme={{ ...themePresets.default.theme }}>
         <NavBar />
 
         {!hasSearched ? (

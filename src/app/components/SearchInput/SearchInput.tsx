@@ -1,13 +1,9 @@
 import { IconButton } from "@crayonai/react-ui";
 import clsx from "clsx";
 import { SearchIcon, StopCircleIcon } from "lucide-react";
-import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
-import { SearchProvider } from "@/app/api/types/searchProvider";
 import { useSharedUIState } from "@/app/context/UIStateContext";
-
-import { Select } from "../Select";
 
 import styles from "./SearchInput.module.scss";
 
@@ -18,6 +14,7 @@ interface SearchInputProps {
   className?: string;
 }
 
+// Gemini-only: provider selector removed
 export const SearchInput = ({
   value,
   disabled,
@@ -35,12 +32,8 @@ export const SearchInput = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && searchText.length > 0) {
       setIsSearching(true);
-
       onSearch(searchText);
-
-      setTimeout(() => {
-        setIsSearching(false);
-      }, 1000);
+      setTimeout(() => setIsSearching(false), 1000);
     }
   };
 
@@ -49,9 +42,7 @@ export const SearchInput = ({
       className={clsx(
         "flex items-center gap-xs",
         styles.searchContainer,
-        {
-          [styles.searchGlow]: isSearching,
-        },
+        { [styles.searchGlow]: isSearching },
         className,
       )}
     >
@@ -60,44 +51,17 @@ export const SearchInput = ({
         disabled={disabled}
         value={searchText}
         placeholder="Ask anything..."
-        onChange={({ target: { value } }) => {
-          setSearchText(value);
-        }}
+        onChange={({ target: { value } }) => setSearchText(value)}
         onKeyDown={handleKeyDown}
         autoFocus
       />
-      {!state.isLoading && (
-        <Select
-          label="Search Providers"
-          options={[
-            {
-              label: "Gemini",
-              value: SearchProvider.GEMINI,
-              icon: (
-                <Image src="/gemini.svg" width={10} height={10} alt="Gemini" />
-              ),
-            },
-            {
-              label: "Exa",
-              value: SearchProvider.EXA,
-              icon: <Image src="/exa.svg" width={10} height={10} alt="Exa" />,
-            },
-          ]}
-          placeholder="Select search provider"
-          value={state.searchProvider}
-          onChange={(value) => {
-            actions.setSearchProvider(value as SearchProvider);
-          }}
-        />
-      )}
+
       {state.isLoading && (
         <IconButton
           icon={<StopCircleIcon />}
           variant="tertiary"
           className="ml-1"
-          onClick={() => {
-            actions.abortController?.abort();
-          }}
+          onClick={() => actions.abortController?.abort()}
         />
       )}
     </div>
