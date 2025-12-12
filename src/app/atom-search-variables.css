@@ -1,4 +1,4 @@
-body {
+.atom-search-scope {
   /* All Border Semantic Variables */
   /* -------------------------------- */
 
@@ -55,7 +55,7 @@ body {
 }
 
 /* these are derived variable from physical variables for dark theme */
-[data-theme="dark"] {
+.atom-search-scope[data-theme="dark"] {
   color-scheme: dark;
 
   /* All Border Semantic Variables */

@@ -2,18 +2,7 @@
 @import "../../../../app/atom-search-variables.css";
 @import "@crayonai/react-ui/styles/index.css";
 
-/* Atom Search page background */
-html,
-body {
-  background: #fff;
-}
-
 /* Background: grid + subtle vignette (white center, light-grey corners) */
-html,
-body {
-  background: #f2f2f2;
-}
-
 .atom-search-bg {
   background-color: #f2f2f2;
   background-image: url("/atom-search/background.svg");
