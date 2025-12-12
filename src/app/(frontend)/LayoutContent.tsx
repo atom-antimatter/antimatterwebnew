@@ -10,8 +10,9 @@ interface LayoutContentProps {
 export default function LayoutContent({ children }: LayoutContentProps) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith("/admin");
+  const isAtomSearchRoute = pathname?.startsWith("/atom/search");
 
-  if (isAdminRoute) {
+  if (isAdminRoute || isAtomSearchRoute) {
     // For admin routes, only render the main content (Providers and children)
     return <div className="relative">{children[1]}</div>;
   }

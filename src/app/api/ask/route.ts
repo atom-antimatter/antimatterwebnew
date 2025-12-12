@@ -1,0 +1,156 @@
+"use server";
+
+import { makeC1Response } from "@thesysai/genui-sdk/server";
+import { NextRequest } from "next/server";
+
+import { getThread } from "../cache/threadCache";
+import type { SearchProvider } from "../types/searchProvider";
+
+import { findCachedTurn } from "./lib/findCachedTurn";
+import { generateAndStreamC1Response } from "./lib/generateAndStreamC1Response";
+
+interface AskRequest {
+  prompt: string;
+  threadId: string;
+  searchProvider: SearchProvider;
+}
+
+/**
+ * API route handler for the ask endpoint.
+ * This function orchestrates the process of receiving a user's prompt,
+ * fetching search results, generating a C1 response, and streaming it back to the client.
+ * @param req The NextRequest object.
+ * @returns A streaming response with the C1 content.
+ */
+export async function POST(req: NextRequest) {
+  const c1Response = makeC1Response();
+  let threadId: string | null = null;
+  let isNewThread = false;
+
+  c1Response.writeThinkItem({
+    title: "Initializing",
+    description: "Setting up your request and preparing the response pipeline",
+  });
+
+  // Add error handling for the response stream
+  const originalResponseStream = c1Response.responseStream;
+  const responseStreamWithErrorHandling = new ReadableStream({
+    start(controller) {
+      const reader = originalResponseStream.getReader();
+      const pump = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              controller.close();
+              break;
+            }
+            controller.enqueue(value);
+          }
+        } catch (error) {
+          if (
+            req.signal.aborted ||
+            (error instanceof Error && error.message.includes("aborted"))
+          ) {
+            console.log("Response stream aborted");
+          } else {
+            console.error("Response stream error:", error);
+          }
+          try {
+            controller.error(error);
+          } catch {
+            // Ignore controller errors
+          }
+        }
+      };
+      pump().catch(() => {
+        // Catch any unhandled errors from pump
+      });
+    },
+  });
+
+  if (req.signal.aborted) {
+    return new Response("Request aborted", { status: 499 });
+  }
+
+  const {
+    prompt,
+    threadId: reqThreadId,
+    searchProvider,
+  } = (await req.json()) as AskRequest;
+  threadId = reqThreadId;
+
+  const generateResponse = async () => {
+    try {
+      const threadHistory = (await getThread(threadId as string)) || [];
+
+      // Check if we got an empty thread history for a provided threadId
+      // This indicates the thread might have expired
+      if (threadHistory.length === 0 && threadId) {
+        isNewThread = true;
+        console.log(
+          `Thread ${threadId} appears to be new or expired, starting fresh`
+        );
+      }
+
+      const cachedTurn = findCachedTurn(prompt, threadHistory);
+
+      if (cachedTurn?.assistant.c1Response) {
+        try {
+          // Check if request was aborted before writing cached content
+          if (req.signal.aborted) {
+            return;
+          }
+          c1Response.writeContent(cachedTurn.assistant.c1Response);
+          c1Response.end();
+        } catch (error) {
+          // Ignore errors if stream is already closed (e.g., client disconnected)
+          if (!req.signal.aborted) {
+            console.error("Error writing cached response:", error);
+          }
+        }
+        return;
+      }
+
+      // Call generateAndStreamC1Response directly - it will handle search via tools
+      await generateAndStreamC1Response({
+        threadId: threadId as string,
+        prompt,
+        threadHistory,
+        searchProvider,
+        c1Response,
+        signal: req.signal,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      console.error(`Error generating response: ${message}`);
+
+      // For errors, we still need to generate some response
+      // Since the function signature changed, we'll create a simple error response
+      c1Response.writeThinkItem({
+        title: "Error",
+        description: "An error occurred while processing your request",
+      });
+      c1Response.writeContent(
+        `I encountered an error: ${message}. Please try again.`
+      );
+      c1Response.end();
+    }
+  };
+
+  generateResponse();
+
+  const responseHeaders = {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "X-Thread-Id": threadId || "",
+    "X-Thread-Status": isNewThread ? "new" : "existing",
+  };
+
+  return new Response(responseStreamWithErrorHandling, {
+    status: 200,
+    headers: responseHeaders,
+  });
+}

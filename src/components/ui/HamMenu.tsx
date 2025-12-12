@@ -13,7 +13,7 @@ const atomAIProducts = [
   {
     icon: HiMicrophone,
     title: "Atom Voice",
-    href: "/atom/voice",
+    href: "/voice-agent-demo",
   },
   {
     icon: HiMagnifyingGlass,

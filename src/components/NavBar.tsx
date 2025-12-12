@@ -268,7 +268,7 @@ const atomAIProducts = [
     icon: HiMicrophone,
     title: "Atom Voice",
     desc: "AI-powered voice agent and assistant",
-    href: "/atom/voice",
+    href: "/voice-agent-demo",
   },
   {
     icon: HiMagnifyingGlass,
