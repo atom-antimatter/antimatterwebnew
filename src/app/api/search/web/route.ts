@@ -1,5 +1,6 @@
 "use server";
 
+import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
 import { googleWebSearch } from "../../services/googleWebSearch";
@@ -15,7 +16,8 @@ export async function POST(req: NextRequest) {
     // Validate the request body
     const searchRequest: GoogleWebSearchRequest = {
       query: body.query,
-      num: body.num || 10,
+      // Lower default to reduce quota pressure; still allow caller to request up to 10.
+      num: Math.min(Number(body.num ?? 5) || 5, 10),
       cr: body.cr,
       gl: body.gl,
       siteSearch: body.siteSearch,
@@ -34,9 +36,30 @@ export async function POST(req: NextRequest) {
     // Call the Google Web Search service
     const response = await googleWebSearch(searchRequest);
 
-    return NextResponse.json(response);
+    // CDN cache to reduce quota pressure; safe since results are public and query-based.
+    return NextResponse.json(response, {
+      headers: {
+        "Cache-Control": "public, s-maxage=600, stale-while-revalidate=86400",
+      },
+    });
   } catch (error) {
     console.error("Error in web search endpoint:", error);
+
+    // Preserve rate limit status so the UI can show a helpful message (instead of "no results").
+    if (axios.isAxiosError(error) && error.response?.status === 429) {
+      return NextResponse.json(
+        {
+          error:
+            "Google search is temporarily rate-limited (429). Please retry in a minute.",
+        },
+        {
+          status: 429,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        },
+      );
+    }
 
     const message =
       error instanceof Error ? error.message : "Internal server error";

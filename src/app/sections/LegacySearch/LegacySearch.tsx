@@ -16,19 +16,24 @@ export default function LegacySearch({ query }: SearchPageProps) {
   const [results, setResults] = useState<GoogleCustomSearchResponseItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchedQuery, setSearchedQuery] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
 
     setIsLoading(true);
     setSearchedQuery(query);
+    setErrorMessage(null);
 
     try {
       const response = await webSearch({ query });
 
       setResults(response.items ?? []);
+      setErrorMessage(null);
     } catch (error) {
       console.error("Error searching:", error);
+      setResults([]);
+      setErrorMessage(error instanceof Error ? error.message : "Search failed");
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +60,7 @@ export default function LegacySearch({ query }: SearchPageProps) {
         results={results}
         isLoading={isLoading}
         query={searchedQuery}
+        errorMessage={errorMessage}
       />
     </div>
   );

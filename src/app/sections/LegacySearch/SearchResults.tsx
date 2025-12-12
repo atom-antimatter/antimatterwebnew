@@ -10,12 +10,14 @@ interface SearchResultsProps {
   results: GoogleCustomSearchResponseItem[];
   isLoading?: boolean;
   query?: string;
+  errorMessage?: string | null;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
   results,
   isLoading = false,
   query = "",
+  errorMessage = null,
 }) => {
   if (isLoading) {
     return (
@@ -25,7 +27,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     );
   }
 
-  if (results.length === 0) {
+  if (errorMessage) {
+    return (
+      <div className={styles.noResults}>
+        <p>{errorMessage}</p>
+      </div>
+    );
+  }
+
+    if (results.length === 0) {
     return (
       <div className={styles.noResults}>
         <p>
