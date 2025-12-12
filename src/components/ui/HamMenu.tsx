@@ -4,9 +4,33 @@ import { AnimatePresence, motion, Variants } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
+import { HiMicrophone, HiSearch, HiCurrencyDollar, HiChatBubbleLeftRight } from "react-icons/hi2";
 import HamButton from "./HamButton";
 import NavButton from "./NavButton";
 import TransitionLink from "./TransitionLink";
+
+const atomAIProducts = [
+  {
+    icon: HiMicrophone,
+    title: "Atom Voice",
+    href: "/atom/voice",
+  },
+  {
+    icon: HiSearch,
+    title: "Atom Search",
+    href: "/atom/search",
+  },
+  {
+    icon: HiCurrencyDollar,
+    title: "Atom Finance",
+    href: "/atom/finance",
+  },
+  {
+    icon: HiChatBubbleLeftRight,
+    title: "Atom Chat",
+    href: "/atom/chat",
+  },
+];
 
 interface NavData {
   href?: string;
@@ -40,9 +64,13 @@ const itemVariants: Variants = {
 const HamMenu = ({ navData }: Props) => {
   const [active, setActive] = useState(false);
   const [serviceNav, setServiceNav] = useState(false);
+  const [atomAINav, setAtomAINav] = useState(false);
   const pathname = usePathname();
   useEffect(() => {
-    if (!active) setServiceNav(false);
+    if (!active) {
+      setServiceNav(false);
+      setAtomAINav(false);
+    }
   }, [active]);
   useEffect(() => {
     setActive(false);
@@ -125,7 +153,7 @@ const HamMenu = ({ navData }: Props) => {
                 <div className="relative w-full ">
                   <div className="overflow-hidden">
                     <motion.nav
-                      animate={{ x: serviceNav ? "-100%" : 0 }}
+                      animate={{ x: serviceNav || atomAINav ? "-100%" : 0 }}
                       transition={{ duration: 0.3 }}
                       className="text-4xl font-semibold py-10"
                     >
@@ -154,7 +182,10 @@ const HamMenu = ({ navData }: Props) => {
                             ) : (
                               <div
                                 className="flex w-full justify-between items-center pr-10"
-                                onClick={() => setServiceNav(true)}
+                                onClick={() => {
+                                  if (nav.text === "Services") setServiceNav(true);
+                                  if (nav.text === "Atom AI") setAtomAINav(true);
+                                }}
                               >
                                 <span className="opacity-30 absolute left-0 bottom-0 text-2xl">
                                   0{index + 1}
@@ -190,6 +221,36 @@ const HamMenu = ({ navData }: Props) => {
                                   0{index + 1}
                                 </span>
                                 {service.title}
+                              </TransitionLink>
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                      <motion.div
+                        animate={{ opacity: atomAINav ? 1 : 0 }}
+                        className="absolute top-1/2 -translate-y-1/2 left-full"
+                      >
+                        <ul className="text-2xl sm:text-3xl leading-tight flex flex-col gap-1">
+                          <div
+                            className="py-3 pr-3"
+                            onClick={() => setAtomAINav(false)}
+                          >
+                            <FaArrowLeft className="size-6 " />
+                          </div>
+                          {atomAIProducts.map((product, index) => (
+                            <li
+                              key={product.title}
+                              className="relative pl-10 whitespace-nowrap"
+                            >
+                              <TransitionLink
+                                href={product.href}
+                                className="block pr-4"
+                                onClick={() => setActive(false)}
+                              >
+                                <span className="opacity-30 absolute left-0 bottom-0 text-xl sm:text-2xl">
+                                  0{index + 1}
+                                </span>
+                                {product.title}
                               </TransitionLink>
                             </li>
                           ))}

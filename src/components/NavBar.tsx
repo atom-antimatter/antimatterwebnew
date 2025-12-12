@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { HiMicrophone, HiSearch, HiCurrencyDollar, HiChatBubbleLeftRight } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
 import NavLinksBg from "./ui/NavLinksBg";
@@ -16,6 +17,7 @@ const NavData: NavItem[] = [
   { href: "/work", text: "Work" },
   { href: "/company", text: "Company" },
   { text: "Services" },
+  { text: "Atom AI" },
   { href: "/contact", text: "Contact" },
 ];
 
@@ -148,6 +150,20 @@ const NavItemWithDropdown = ({
     );
   }
 
+  if (text === "Atom AI") {
+    return (
+      <li
+        ref={ref}
+        className="relative group"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+      >
+        <span className="px-4 lg:px-7 py-1.5 flex cursor-pointer">{text}</span>
+        <AtomAIDropdown open={open} />
+      </li>
+    );
+  }
+
   return (
     <li className="relative group">
       {href ? (
@@ -239,6 +255,73 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  </div>
+);
+
+/* -----------------------------
+   Atom AI Dropdown
+-------------------------------- */
+const atomAIProducts = [
+  {
+    icon: HiMicrophone,
+    title: "Atom Voice",
+    desc: "AI-powered voice agent and assistant",
+    href: "/atom/voice",
+  },
+  {
+    icon: HiSearch,
+    title: "Atom Search",
+    desc: "Next-generation AI search with generative UI",
+    href: "/atom/search",
+  },
+  {
+    icon: HiCurrencyDollar,
+    title: "Atom Finance",
+    desc: "Intelligent financial analysis and insights",
+    href: "/atom/finance",
+  },
+  {
+    icon: HiChatBubbleLeftRight,
+    title: "Atom Chat",
+    desc: "Advanced conversational AI interface",
+    href: "/atom/chat",
+  },
+];
+
+const AtomAIDropdown = ({ open }: { open: boolean }) => (
+  <div
+    className={`
+      absolute top-full left-1/2 -translate-x-1/2 pt-4
+      opacity-0
+      transition-[opacity,max-width,max-height,transform] duration-200
+      ${open ? "opacity-100 pointer-events-auto" : "pointer-events-none"}
+    `}
+  >
+    <div
+      className={`
+        w-[380px] bg-zinc-950 border border-foreground/20 rounded-xl
+        transition-all ease-in-out duration-300 overflow-hidden
+        ${open ? "max-h-[600px]" : "max-h-0"}
+      `}
+    >
+      <div className="p-5">
+        {atomAIProducts.map((product) => (
+          <TransitionLink
+            key={product.title}
+            href={product.href}
+            className="flex items-start gap-4 p-4 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/5 transition"
+          >
+            <div className="text-white/90 mt-0.5">
+              <product.icon className="size-6" />
+            </div>
+            <div className="flex flex-col">
+              <h3 className="text-base font-semibold mb-1">{product.title}</h3>
+              <p className="text-sm opacity-70 text-pretty leading-snug">{product.desc}</p>
+            </div>
+          </TransitionLink>
+        ))}
       </div>
     </div>
   </div>
