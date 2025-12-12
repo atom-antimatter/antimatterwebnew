@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import Image from "next/image";
 import React from "react";
 
 import { useSharedUIState } from "@/app/context/UIStateContext";
@@ -49,13 +48,9 @@ export const LandingView = () => {
           className={styles.centeredSearchContainer}
         />
         <p className={styles.poweredByContainer}>
-          <Image
-            src="/atom-search/page-subtitle.svg"
-            alt="Powered by"
-            width={isMobile ? 250 : 300}
-            height={23}
-            priority
-          />
+          <span className="text-secondary">
+            This is an experimental release built with Gemini and Thesys
+          </span>
         </p>
       </div>
     </>
