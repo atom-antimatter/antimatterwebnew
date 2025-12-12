@@ -4,7 +4,7 @@ import { AnimatePresence, motion, Variants } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
-import { HiMicrophone, HiSearch, HiCurrencyDollar, HiChatBubbleLeftRight } from "react-icons/hi2";
+import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight } from "react-icons/hi2";
 import HamButton from "./HamButton";
 import NavButton from "./NavButton";
 import TransitionLink from "./TransitionLink";
@@ -16,7 +16,7 @@ const atomAIProducts = [
     href: "/atom/voice",
   },
   {
-    icon: HiSearch,
+    icon: HiMagnifyingGlass,
     title: "Atom Search",
     href: "/atom/search",
   },

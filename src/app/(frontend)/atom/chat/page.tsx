@@ -75,7 +75,7 @@ export default function AtomChatPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-primary font-semibold"
               >
-                ✓ Thank you! We'll be in touch soon.
+                ✓ Thank you! We&apos;ll be in touch soon.
               </motion.div>
             )}
           </div>
