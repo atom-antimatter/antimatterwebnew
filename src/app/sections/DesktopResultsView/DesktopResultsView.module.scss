@@ -5,10 +5,9 @@
 .mainContainer {
   display: flex;
   flex-direction: row;
-  overflow: hidden;
+  overflow: visible;
   flex: 1 1 auto;
   min-height: 0;
-  height: 100%;
   max-width: 1080px;
   margin-left: auto;
   margin-right: auto;

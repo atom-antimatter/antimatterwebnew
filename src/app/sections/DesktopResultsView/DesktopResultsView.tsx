@@ -13,7 +13,7 @@ export const DesktopResultsView = () => {
   const { state, handleSearch } = useSharedUIState();
 
   return (
-    <div className="flex flex-col fixed top-12 left-0 bottom-0 right-0 bg-container overflow-hidden">
+    <div className="flex flex-col fixed top-12 left-0 bottom-0 right-0 bg-container overflow-y-auto">
       <div className="flex flex-col items-center w-full p-4">
         <SearchInput
           disabled={state.isLoading}
