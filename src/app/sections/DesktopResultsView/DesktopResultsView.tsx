@@ -13,7 +13,7 @@ export const DesktopResultsView = () => {
   const { state, handleSearch } = useSharedUIState();
 
   return (
-    <div className="flex flex-col fixed top-12 left-0 bottom-0 right-0 bg-container">
+    <div className="flex flex-col fixed top-12 left-0 bottom-0 right-0 bg-container overflow-hidden">
       <div className="flex flex-col items-center w-full p-4">
         <SearchInput
           disabled={state.isLoading}
@@ -24,7 +24,7 @@ export const DesktopResultsView = () => {
       </div>
       <div className={styles.mainContainer}>
         <div
-          className={`${styles.searchResultsContainer} flex flex-col w-[450px] mt-0 mb-4 rounded-3xl overflow-hidden`}
+          className={`${styles.searchResultsContainer} flex flex-col w-[450px] mt-0 mb-4 rounded-3xl`}
         >
           <LegacySearch query={state.query} />
         </div>
