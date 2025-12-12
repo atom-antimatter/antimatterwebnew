@@ -58,13 +58,9 @@ export const LandingView = () => {
           className={styles.centeredSearchContainer}
         />
         <p className={styles.poweredByContainer}>
-          <Image
-            src="/page-subtitle.svg"
-            alt="Thesys Logo"
-            width={isMobile ? 250 : 300}
-            height={23}
-            priority
-          />
+          <span className="text-secondary">
+            Powered by Gemini + Thesys
+          </span>
         </p>
       </div>
     </>
