@@ -31,13 +31,26 @@ export const LandingView = () => {
         )}
       >
         <div className="flex mb-xl">
-          <Image
-            src="/page-title.svg"
-            alt="Thesys Logo"
-            width={isMobile ? 200 : 300}
-            height={isMobile ? 100 : 100}
-            priority
-          />
+          <h1
+            className={clsx(
+              "text-size-heading",
+              "font-medium select-none",
+              isMobile ? "text-[34px]" : "text-[44px]",
+            )}
+          >
+            <span className="text-primary">Search</span>
+            <span className="text-secondary"> + </span>
+            <span
+              style={{
+                background: "linear-gradient(180deg, #7E6AFF 0%, #AA9DFF 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              Atom
+            </span>
+          </h1>
         </div>
         <SearchInput
           value={state.query}

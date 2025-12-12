@@ -2,8 +2,13 @@ import axios from "axios";
 
 import { GoogleImageSearchResponse } from "../types/search";
 
-const apiKey = process.env.GOOGLE_API_KEY;
-const cx = process.env.GOOGLE_CX_KEY;
+const getGoogleKeys = () => {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  const cx = process.env.GOOGLE_CX || process.env.GOOGLE_CX_KEY;
+  if (!apiKey) throw new Error("Missing GOOGLE_API_KEY");
+  if (!cx) throw new Error("Missing GOOGLE_CX (Custom Search Engine ID)");
+  return { apiKey, cx };
+};
 
 /**
  * Searches for an image using the Google Custom Search API.
@@ -12,6 +17,7 @@ const cx = process.env.GOOGLE_CX_KEY;
  * or a placeholder if an error occurs or no image is found.
  */
 export const searchImage = async (query: string) => {
+  const { apiKey, cx } = getGoogleKeys();
   const axiosInstance = axios.create({
     baseURL: "https://www.googleapis.com/customsearch/v1",
   });
