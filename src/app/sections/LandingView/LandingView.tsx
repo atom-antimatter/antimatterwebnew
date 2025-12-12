@@ -15,15 +15,6 @@ export const LandingView = () => {
 
   return (
     <>
-      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden">
-        <Image
-          src="/atom-search/background.svg"
-          alt="background"
-          fill
-          priority
-          className="object-cover"
-        />
-      </div>
       <div
         className={clsx(
           "flex flex-col items-center justify-center -mt-[60px] relative z-10",
