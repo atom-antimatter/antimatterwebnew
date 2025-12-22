@@ -18,10 +18,11 @@ function VendorLogo({ vendor }: { vendor: Vendor }) {
     <Image
       src={vendor.logoUrl}
       alt={vendor.name}
-      width={100}
-      height={32}
-      className="max-h-8 w-auto object-contain"
+      width={120}
+      height={40}
+      className={`w-auto object-contain ${vendor.id === "zendesk" ? "max-h-16" : "max-h-10"}`}
       onError={() => setHasError(true)}
+      unoptimized={vendor.logoUrl.endsWith('.svg')}
     />
   );
 }
