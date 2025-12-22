@@ -237,9 +237,9 @@ export default function AtomChatWidget({
               </button>
             </div>
 
-            {/* Messages */}
+            {/* Messages - Prompt-kit inspired layout */}
             <div 
-              className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain"
+              className="flex-1 overflow-y-auto px-4 py-6 space-y-6 overscroll-contain"
               onWheel={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
               style={{ maxHeight: "calc(100% - 200px)" }}
@@ -250,10 +250,10 @@ export default function AtomChatWidget({
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] px-4 py-3 rounded-2xl break-words overflow-wrap-anywhere ${
+                    className={`max-w-[85%] px-4 py-3 rounded-2xl break-words overflow-wrap-anywhere shadow-sm ${
                       msg.role === "user"
-                        ? "bg-secondary text-white"
-                        : "bg-zinc-800 text-foreground"
+                        ? "bg-secondary/90 text-white"
+                        : "bg-white/5 backdrop-blur-sm border border-white/10 text-foreground"
                     }`}
                   >
                     {msg.role === "assistant" ? (
