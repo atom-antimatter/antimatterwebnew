@@ -29,18 +29,98 @@ export default function AtomChatWidget({
 }: AtomChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   
-  // Handle initial prompt
-  useEffect(() => {
-    if (initialPrompt && isOpen) {
-      setInput(initialPrompt);
-      // Auto-send after a brief delay to let UI settle
-      setTimeout(() => {
-        if (textareaRef.current) {
-          handleSend();
+  // Send message programmatically (for suggested prompts)
+  const sendPrompt = async (promptText: string) => {
+    if (isLoading) return; // Prevent double-send
+    
+    const trimmedPrompt = promptText.trim();
+    if (!trimmedPrompt) return;
+
+    setMessages((prev) => [...prev, { role: "user", type: "text", content: trimmedPrompt }]);
+    setIsLoading(true);
+
+    // Add empty assistant message for streaming
+    setMessages((prev) => [...prev, { role: "assistant", type: "text", content: "" }]);
+    const assistantMessageIndex = messages.length + 1;
+
+    try {
+      const response = await fetch("/api/atom-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, { role: "user", content: trimmedPrompt }],
+          selectedVendors: selectedVendors.map((v) => ({
+            id: v.id,
+            name: v.name,
+            deployment: v.typicalDeployment,
+            ipOwnership: v.ipOwnership,
+            bestFit: v.bestFit,
+            differentiatorVsAtom: v.differentiatorVsAtom,
+            capabilities: v.capabilities,
+          })),
+          selectedFilters,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get response");
+      }
+
+      // Read Server-Sent Events stream
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.done) {
+                break;
+              }
+              
+              if (data.content) {
+                // Throttle UI updates slightly for smoother streaming feel (20ms)
+                await new Promise(resolve => setTimeout(resolve, 20));
+                
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  if (updated[assistantMessageIndex]) {
+                    updated[assistantMessageIndex].content += data.content;
+                  }
+                  return updated;
+                });
+              }
+            } catch {
+              // Ignore parse errors
+            }
+          }
         }
-      }, 300);
+      }
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages((prev) => {
+        const updated = [...prev];
+        if (updated[assistantMessageIndex]) {
+          updated[assistantMessageIndex].content = "Sorry, I encountered an error. Please try again.";
+        }
+        return updated;
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [initialPrompt, isOpen]);
+  };
   
   // Prevent background scrolling when chat is open
   useEffect(() => {
@@ -298,14 +378,11 @@ export default function AtomChatWidget({
               {/* Suggested prompts when chat is empty */}
               {messages.length === 1 && !isLoading && (
                 <div className="mt-4">
-                  <p className="text-xs text-foreground/50 mb-2">Suggested questions:</p>
+                  <p className="text-xs text-foreground/50 mb-2.5">Quick actions</p>
                   <SuggestedPrompts 
                     vendors={selectedVendors} 
                     onPromptClick={(prompt) => {
-                      setInput(prompt);
-                      if (textareaRef.current) {
-                        textareaRef.current.focus();
-                      }
+                      sendPrompt(prompt);
                     }} 
                   />
                 </div>
