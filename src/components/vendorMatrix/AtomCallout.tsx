@@ -1,10 +1,15 @@
+"use client";
+
 import { HiChatBubbleLeftRight } from "react-icons/hi2";
+import { useAtomChatStore } from "@/stores/atomChatStore";
 
-interface AtomCalloutProps {
-  onOpenChat: () => void;
-}
-
-export default function AtomCallout({ onOpenChat }: AtomCalloutProps) {
+export default function AtomCallout() {
+  const openChat = useAtomChatStore((state) => state.open);
+  
+  const handleClick = () => {
+    console.log("[Ask Atom] Button clicked");
+    openChat();
+  };
   return (
     <div className="my-8 p-5 md:p-6 rounded-xl bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/50 shadow-lg">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
@@ -25,7 +30,7 @@ export default function AtomCallout({ onOpenChat }: AtomCalloutProps) {
         
         {/* Right: CTA */}
         <button
-          onClick={onOpenChat}
+          onClick={handleClick}
           className="w-full md:w-auto flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-all hover:shadow-lg hover:shadow-secondary/20 text-sm font-semibold"
         >
           Ask Atom

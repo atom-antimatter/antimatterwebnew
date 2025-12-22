@@ -6,8 +6,8 @@ import { HiXMark, HiChatBubbleLeftRight, HiPaperAirplane } from "react-icons/hi2
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import ThinkingLoader from "./ThinkingLoader";
 import SuggestedPrompts from "./SuggestedPrompts";
+import { useAtomChatStore } from "@/stores/atomChatStore";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -25,9 +25,10 @@ interface AtomChatWidgetProps {
 export default function AtomChatWidget({
   selectedVendors,
   selectedFilters,
-  initialPrompt,
 }: AtomChatWidgetProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, close, prefill, autoSend } = useAtomChatStore();
+  
+  console.log("[AtomChatWidget] Render - isOpen:", isOpen);
   
   // Send message programmatically (for suggested prompts)
   const sendPrompt = async (promptText: string) => {
@@ -125,18 +126,30 @@ export default function AtomChatWidget({
   // Prevent background scrolling when chat is open
   useEffect(() => {
     if (isOpen) {
+      console.log("[AtomChatWidget] Opening - focusing input");
       document.body.style.overflow = "hidden";
+      
       // Auto-focus input when chat opens
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         textareaRef.current?.focus();
-      }, 100);
+      });
+      
+      // Handle prefill
+      if (prefill) {
+        setInput(prefill);
+        if (autoSend) {
+          setTimeout(() => sendPrompt(prefill), 200);
+        }
+        // Clear prefill after using it
+        useAtomChatStore.setState({ prefill: null, autoSend: false });
+      }
     } else {
       document.body.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen]);
+  }, [isOpen, prefill, autoSend]);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -285,7 +298,10 @@ export default function AtomChatWidget({
         <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            console.log("[AtomChat] Floating button clicked");
+            useAtomChatStore.getState().open();
+          }}
           className="fixed bottom-6 right-6 w-14 h-14 bg-secondary text-white rounded-full shadow-lg hover:bg-secondary/90 transition-colors z-50 flex items-center justify-center"
         >
           <HiChatBubbleLeftRight className="w-6 h-6" />
@@ -311,7 +327,10 @@ export default function AtomChatWidget({
                 </div>
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  console.log("[AtomChat] Close button clicked");
+                  close();
+                }}
                 className="text-foreground/60 hover:text-foreground transition-colors"
                 aria-label="Close chat"
               >
