@@ -8,9 +8,6 @@ import FilterSidebar from "@/components/vendorMatrix/FilterSidebar";
 import VendorGrid from "@/components/vendorMatrix/VendorGrid";
 import CompareBar from "@/components/vendorMatrix/CompareBar";
 import ComparisonTable from "@/components/vendorMatrix/ComparisonTable";
-import TransitionContainer from "@/components/ui/TransitionContainer";
-import MainLayout from "@/components/ui/MainLayout";
-
 export default function VendorMatrixClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -113,70 +110,66 @@ export default function VendorMatrixClient() {
   };
 
   return (
-    <TransitionContainer>
-      <MainLayout>
-        <div className="min-h-screen py-20">
-          <div className="w-main mx-auto">
-            {/* Page Header */}
-            <div className="mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Enterprise AI Vendor Matrix
-              </h1>
-              <p className="text-lg text-foreground/70 mb-6">
-                Select capabilities, choose vendors, generate a side-by-side comparison.
-              </p>
+    <div className="min-h-screen py-12 px-6">
+      <div className="max-w-[1500px] mx-auto">
+        {/* Page Header */}
+        <div className="mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Enterprise AI Vendor Matrix
+          </h1>
+          <p className="text-lg text-foreground/70 mb-6">
+            Select capabilities, choose vendors, generate a side-by-side comparison.
+          </p>
 
-              {/* Mobile filter toggle */}
-              {view === "grid" && (
-                <button
-                  onClick={() => setFilterSidebarOpen(true)}
-                  className="lg:hidden flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg mb-6"
-                >
-                  <HiAdjustmentsHorizontal className="w-5 h-5" />
-                  Filters {selectedFilters.length > 0 && `(${selectedFilters.length})`}
-                </button>
-              )}
-            </div>
-
-            {/* Main content */}
-            <div className="flex gap-8">
-              {view === "grid" && (
-                <FilterSidebar
-                  selectedFilters={selectedFilters}
-                  onFilterToggle={handleFilterToggle}
-                  onClearAll={handleClearFilters}
-                  isOpen={filterSidebarOpen}
-                  onClose={() => setFilterSidebarOpen(false)}
-                />
-              )}
-
-              {view === "grid" ? (
-                <VendorGrid
-                  selectedFilters={selectedFilters}
-                  selectedVendors={selectedVendors}
-                  onVendorToggle={handleVendorToggle}
-                />
-              ) : (
-                <ComparisonTable
-                  selectedVendors={selectedVendors}
-                  selectedFilters={selectedFilters}
-                  onBack={handleBackToGrid}
-                  onShare={handleShare}
-                />
-              )}
-            </div>
-
-            {view === "grid" && (
-              <CompareBar
-                selectedVendors={selectedVendors}
-                onRemove={handleRemoveVendor}
-                onCompare={handleCompare}
-              />
-            )}
-          </div>
+          {/* Mobile filter toggle */}
+          {view === "grid" && (
+            <button
+              onClick={() => setFilterSidebarOpen(true)}
+              className="lg:hidden flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg mb-6"
+            >
+              <HiAdjustmentsHorizontal className="w-5 h-5" />
+              Filters {selectedFilters.length > 0 && `(${selectedFilters.length})`}
+            </button>
+          )}
         </div>
-      </MainLayout>
-    </TransitionContainer>
+
+        {/* Main content */}
+        <div className="flex gap-8">
+          {view === "grid" && (
+            <FilterSidebar
+              selectedFilters={selectedFilters}
+              onFilterToggle={handleFilterToggle}
+              onClearAll={handleClearFilters}
+              isOpen={filterSidebarOpen}
+              onClose={() => setFilterSidebarOpen(false)}
+            />
+          )}
+
+          {view === "grid" ? (
+            <VendorGrid
+              selectedFilters={selectedFilters}
+              selectedVendors={selectedVendors}
+              onVendorToggle={handleVendorToggle}
+            />
+          ) : (
+            <ComparisonTable
+              selectedVendors={selectedVendors}
+              selectedFilters={selectedFilters}
+              onBack={handleBackToGrid}
+              onShare={handleShare}
+            />
+          )}
+        </div>
+
+        {view === "grid" && (
+          <CompareBar
+            selectedVendors={selectedVendors}
+            onRemove={handleRemoveVendor}
+            onCompare={handleCompare}
+          />
+        )}
+      </div>
+    </div>
   );
 }
 

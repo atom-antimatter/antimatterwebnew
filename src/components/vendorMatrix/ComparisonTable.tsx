@@ -162,8 +162,8 @@ export default function ComparisonTable({
 
             {/* Capability categories */}
             {capabilityCategories.map((category) => (
-              <tbody key={category.id}>
-                <tr>
+              <>
+                <tr key={`${category.id}-header`}>
                   <td className="p-4 bg-zinc-900/50 font-semibold text-sm uppercase tracking-wide text-foreground/90 border-y border-zinc-800">
                     {category.title}
                   </td>
@@ -181,7 +181,7 @@ export default function ComparisonTable({
                     ))}
                   </tr>
                 ))}
-              </tbody>
+              </>
             ))}
 
             {/* Differentiator row */}
