@@ -121,8 +121,9 @@ const HeroComponent = () => {
                       gap={2}
                       fontSize={fontSize}
                       fontWeight={600}
+                      padding={isMobile ? 6 : 0}
                       gradientFrom={isMobile ? "#020202" : "transparent"}
-                      gradientHeight={isMobile ? 12 : 16}
+                      gradientHeight={isMobile ? Math.floor(fontSize * 0.6) : 16}
                     />
                     <span className="text-tertiary">+</span>
                   </h3>
@@ -137,8 +138,9 @@ const HeroComponent = () => {
                       gap={2}
                       fontSize={fontSize}
                       fontWeight={600}
+                      padding={isMobile ? 6 : 0}
                       gradientFrom={isMobile ? "#020202" : "transparent"}
-                      gradientHeight={isMobile ? 12 : 16}
+                      gradientHeight={isMobile ? Math.floor(fontSize * 0.6) : 16}
                     />
                     <span className="text-tertiary">%</span>
                   </h3>
