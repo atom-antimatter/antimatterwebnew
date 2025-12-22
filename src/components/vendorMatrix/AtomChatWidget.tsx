@@ -64,7 +64,7 @@ export default function AtomChatWidget({
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentModel, setCurrentModel] = useState<string>("GPT-5.2");
+  const currentModel = "GPT-5.2"; // Locked to GPT-5.2 Responses API
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -161,6 +161,9 @@ export default function AtomChatWidget({
               }
               
               if (data.content) {
+                // Throttle UI updates slightly for smoother streaming feel (20ms)
+                await new Promise(resolve => setTimeout(resolve, 20));
+                
                 setMessages((prev) => {
                   const updated = [...prev];
                   if (updated[assistantMessageIndex]) {
@@ -168,10 +171,6 @@ export default function AtomChatWidget({
                   }
                   return updated;
                 });
-              }
-              
-              if (data.model) {
-                setCurrentModel(data.model);
               }
             } catch (parseError) {
               console.warn("Failed to parse SSE data:", line);
