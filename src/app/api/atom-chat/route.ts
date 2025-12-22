@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { createStreamingResponse, getResponsesClient } from "@/lib/ai/responsesClient";
+import { ATOM_MODEL } from "@/lib/ai/model";
 
 /**
  * Runtime: Node.js (required for OpenAI SDK)
@@ -8,39 +9,12 @@ import OpenAI from "openai";
  */
 export const runtime = "nodejs";
 
-let _openai: OpenAI | null = null;
-
-function getOpenAI() {
-  if (!_openai) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    
-    // Validation: Fail fast with clear error
-    if (!apiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is not set. Configure in Vercel dashboard.");
-    }
-    
-    // Validate key format - OpenAI keys start with "sk-" (not "sk-th-" which is Thesys)
-    if (apiKey.startsWith("sk-th-")) {
-      throw new Error("Invalid API key: OPENAI_API_KEY should not start with 'sk-th-'. You may be using THESYS_API_KEY by mistake.");
-    }
-    
-    if (!apiKey.startsWith("sk-")) {
-      throw new Error("Invalid OPENAI_API_KEY format. OpenAI keys should start with 'sk-'.");
-    }
-    
-    _openai = new OpenAI({
-      apiKey,
-    });
-  }
-  return _openai;
-}
-
 const SYSTEM_PROMPT = `You are Atom Chat, an enterprise AI deployment advisor for Antimatter AI's Atom.
 
 IMPORTANT: You represent Antimatter AI directly and can facilitate connections.
 
 LEAD CAPTURE TRIGGER:
-When the user expresses interest in contacting Antimatter, requesting a demo, pricing information, or next steps (e.g., "how can I get in touch", "talk to sales", "schedule a call", "get started", "pricing", "request demo"), you must NOT provide generic instructions or URLs.
+When the user expresses interest in contacting Antimatter, requesting a demo, pricing information, or next steps (e.g., "how can I get in touch", "talk to sales", "schedule a call", "get started", "pricing", "request demo", "contact", "get in touch", "speak to someone"), you must NOT provide generic instructions or URLs.
 
 Instead, respond ONLY with:
 "LEAD_CAPTURE_TRIGGER"
@@ -50,10 +24,6 @@ This will initiate an in-chat lead capture experience. Do not add any other text
 Do NOT say "visit our website" or "contact us page" or provide email addresses.
 Do NOT hallucinate contact information.
 
-
-
-Your job is to help users understand the comparison they are viewing on the Enterprise AI Vendor Matrix page.
-
 ATOM POSITIONING:
 Atom is a client-owned deployment model: customers own the IP (agent logic, workflows, integrations, UI), and Atom can be deployed in the customer environment (VPC, on-prem containers, hybrid) with predictable managed service pricing.
 
@@ -62,26 +32,22 @@ Most competitors are SaaS platforms the customer rents; they may offer integrati
 YOUR GUIDELINES:
 - Always anchor your answer to the CURRENTLY SELECTED vendors and CURRENTLY SELECTED capabilities in the comparison
 - Answer using the vendor facts provided in 'Vendor Context'
-- Do NOT include a "Sources:" section unless you actually cite sources with URLs
-- Never output empty section headers or "No live browsing used" statements
-- Only add **Sources:** if you provide actual clickable links [Title](URL)
+- Respond organically and conversationally to the user's question
+- Use structure (bullets, headers) ONLY when it genuinely helps clarity
+- Maintain an enterprise tone: factual, concise, neutral
+- NO forced templates or rigid "Recommendation / Why" format
 - Be explicit about trade-offs relevant to the selected capabilities
-- Focus on the TOOLS selected: if user selected "on-prem", prioritize on-prem/container/Kubernetes/VPC
+- Focus on the capabilities selected: if user selected "on-prem", prioritize on-prem/container/Kubernetes/VPC
 - If user selected "voice", focus on voice capabilities; if "RAG", focus on RAG/search/grounding
-- Keep it concise and actionable
-
-RESPONSE STRUCTURE (use this format):
-1. **Recommendation** (1-2 sentences direct answer)
-2. **Why** (2-4 bullets based on selected capabilities)
-3. **What to validate** (2-3 procurement checkpoints)
-4. **Sources** (only if browsing used)
+- Keep responses concise and actionable (2-4 paragraphs typical)
+- Only include sources if you have actual URLs to cite
 
 FORMATTING (chat-optimized markdown):
-- Use **bold** for emphasis and section labels (NOT ### headers)
-- Use bullet lists (- item) for Why/Validate sections
+- Use **bold** for emphasis (sparingly)
+- Use bullet lists when comparing multiple items
 - Keep paragraphs short (2-3 sentences max)
-- Sources: **Sources:** with markdown links [Title](URL)
-- No raw ### headers; use **Label:** instead
+- Sources: **Sources:** with markdown links [Title](URL) - ONLY if you have real URLs
+- No empty section headers
 
 FOCUS ON SELECTED CAPABILITIES:
 - If "onPrem" or "customerOwnsIP" selected: emphasize ownership, data residency, audit logs, air-gapped deployments
@@ -136,37 +102,63 @@ Comparing: ${vendorNames}`;
         role: m.role as "user" | "assistant",
         content: m.content,
       })),
+      {
+        role: "user" as const,
+        content: currentUserMessage,
+      },
     ];
 
-    // Use streaming for faster perceived performance
-    const stream = await getOpenAI().chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        ...inputMessages,
-        {
-          role: "user",
-          content: currentUserMessage,
-        },
-      ],
-      stream: true,
+    // Use Responses API with GPT-5.2 (enforced in createStreamingResponse)
+    const stream = await createStreamingResponse({
+      messages: inputMessages,
       temperature: 0.7,
-      max_tokens: 600,
+      maxTokens: 800,
     });
 
-    // Return Server-Sent Events stream
+    // Return Server-Sent Events stream with semantic buffering
     return new Response(
       new ReadableStream({
         async start(controller) {
           const encoder = new TextEncoder();
+          let buffer = "";
+          let lastFlush = Date.now();
+          
+          // Flush buffer function with semantic chunking
+          const flushBuffer = () => {
+            if (buffer) {
+              const data = JSON.stringify({ 
+                content: buffer, 
+                model: ATOM_MODEL 
+              });
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+              buffer = "";
+              lastFlush = Date.now();
+            }
+          };
           
           try {
             for await (const chunk of stream) {
               const content = chunk.choices[0]?.delta?.content || "";
               if (content) {
-                const data = JSON.stringify({ content, model: "GPT-4o" });
-                controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+                buffer += content;
+                
+                // Flush on semantic boundaries (sentences, phrases) or time threshold
+                const shouldFlush = 
+                  buffer.match(/[.!?]\s$/) ||  // End of sentence
+                  buffer.match(/[,;:]\s$/) ||  // Punctuation pause
+                  buffer.length > 40 ||        // Length threshold
+                  (Date.now() - lastFlush) > 60; // Time threshold (60ms)
+                
+                if (shouldFlush) {
+                  flushBuffer();
+                  // Small delay for smooth streaming (matches ChatGPT feel)
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                }
               }
             }
+            
+            // Flush any remaining content
+            flushBuffer();
             
             // Send done signal
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
@@ -207,4 +199,3 @@ interface Message {
   role: "user" | "assistant";
   content: string;
 }
-

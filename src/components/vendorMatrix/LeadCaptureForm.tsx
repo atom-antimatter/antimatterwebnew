@@ -2,14 +2,30 @@
 
 import { useState } from "react";
 import { Vendor } from "@/data/vendorMatrix";
+import CustomSelect from "@/components/ui/CustomSelect";
+import Button from "@/components/ui/Button";
 
 interface LeadCaptureFormProps {
   selectedVendors: Vendor[];
+  userMessage?: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export default function LeadCaptureForm({ selectedVendors, onSuccess, onCancel }: LeadCaptureFormProps) {
+const DEPLOYMENT_OPTIONS = [
+  { value: "ai-agents", label: "AI Agents" },
+  { value: "voice-agents", label: "Voice Agents" },
+  { value: "genui-rag", label: "GenUI / RAG" },
+  { value: "secure-onprem", label: "Secure / On-Prem AI" },
+  { value: "not-sure", label: "Not sure yet" },
+];
+
+export default function LeadCaptureForm({ 
+  selectedVendors, 
+  userMessage,
+  onSuccess, 
+  onCancel 
+}: LeadCaptureFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -45,6 +61,7 @@ export default function LeadCaptureForm({ selectedVendors, onSuccess, onCancel }
         body: JSON.stringify({
           ...formData,
           comparingVendors: selectedVendors.map((v) => v.name),
+          userMessage,
           context: {
             vendors: selectedVendors.map((v) => v.id),
             url: window.location.href,
@@ -67,8 +84,8 @@ export default function LeadCaptureForm({ selectedVendors, onSuccess, onCancel }
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 shadow-sm">
-      <div className="mb-4">
+    <div className="w-full">
+      <div className="mb-6">
         <h3 className="text-base font-semibold text-foreground mb-1">
           Let&apos;s connect
         </h3>
@@ -77,76 +94,98 @@ export default function LeadCaptureForm({ selectedVendors, onSuccess, onCancel }
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <input
-          type="text"
-          placeholder="Full name *"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-foreground text-sm placeholder:text-foreground/40 focus:outline-none focus:border-secondary transition-colors"
-          required
-        />
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        {/* Full Name */}
+        <div className="w-full flex flex-col">
+          <label htmlFor="lead-name" className="font-light text-sm sm:text-base mb-1">
+            Full name <span className="text-secondary">*</span>
+          </label>
+          <input
+            type="text"
+            id="lead-name"
+            placeholder="John Doe"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="outline-none border-b-2 border-foreground/20 focus:border-secondary transition-all duration-300 bg-transparent py-3 px-1"
+            required
+          />
+        </div>
 
-        <input
-          type="email"
-          placeholder="Work email *"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-foreground text-sm placeholder:text-foreground/40 focus:outline-none focus:border-secondary transition-colors"
-          required
-        />
+        {/* Work Email */}
+        <div className="w-full flex flex-col">
+          <label htmlFor="lead-email" className="font-light text-sm sm:text-base mb-1">
+            Work email <span className="text-secondary">*</span>
+          </label>
+          <input
+            type="email"
+            id="lead-email"
+            placeholder="john@company.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="outline-none border-b-2 border-foreground/20 focus:border-secondary transition-all duration-300 bg-transparent py-3 px-1"
+            required
+          />
+        </div>
 
-        <input
-          type="text"
-          placeholder="Company"
-          value={formData.company}
-          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-          className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-foreground text-sm placeholder:text-foreground/40 focus:outline-none focus:border-secondary transition-colors"
-        />
+        {/* Company */}
+        <div className="w-full flex flex-col">
+          <label htmlFor="lead-company" className="font-light text-sm sm:text-base mb-1">
+            Company
+          </label>
+          <input
+            type="text"
+            id="lead-company"
+            placeholder="Acme Corp"
+            value={formData.company}
+            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+            className="outline-none border-b-2 border-foreground/20 focus:border-secondary transition-all duration-300 bg-transparent py-3 px-1"
+          />
+        </div>
 
-        <select
-          value={formData.interest}
-          onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
-          className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-foreground text-sm focus:outline-none focus:border-secondary transition-colors"
-        >
-          <option value="">What are you looking to deploy?</option>
-          <option value="ai-agents">AI Agents</option>
-          <option value="voice-agents">Voice Agents</option>
-          <option value="genui-rag">GenUI / RAG</option>
-          <option value="secure-onprem">Secure / On-Prem AI</option>
-          <option value="not-sure">Not sure yet</option>
-        </select>
+        {/* What are you looking for? - Custom Dropdown (matches Contact page) */}
+        <div className="w-full flex flex-col">
+          <label htmlFor="lead-interest" className="font-light text-sm sm:text-base mb-1">
+            What are you looking for?
+          </label>
+          <CustomSelect
+            name="interest"
+            id="lead-interest"
+            placeholder="Select an option..."
+            options={DEPLOYMENT_OPTIONS}
+            value={formData.interest}
+            onChange={(value) => setFormData({ ...formData, interest: value })}
+          />
+        </div>
 
-        <textarea
-          placeholder="Anything we should know?"
-          value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          rows={2}
-          className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-lg text-foreground text-sm placeholder:text-foreground/40 focus:outline-none focus:border-secondary transition-colors resize-none"
-        />
+        {/* Optional Message */}
+        <div className="w-full flex flex-col">
+          <label htmlFor="lead-notes" className="font-light text-sm sm:text-base mb-1">
+            Anything we should know?
+          </label>
+          <textarea
+            id="lead-notes"
+            placeholder="Tell us more..."
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            rows={3}
+            className="w-full outline-none border-b-2 border-foreground/20 focus:border-secondary transition-all duration-300 bg-transparent py-3 px-1 resize-none"
+          />
+        </div>
 
+        {/* Error Message */}
         {error && (
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+            {error}
+          </p>
         )}
 
-        <div className="flex gap-2 pt-2">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex-1 px-4 py-2.5 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
-          >
-            {isSubmitting ? "Sending..." : "Talk to Antimatter"}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2.5 text-foreground/60 hover:text-foreground text-sm transition-colors"
-          >
-            Not ready yet
-          </button>
+        {/* Submit Button - Using Contact Page Button Component */}
+        <div className="flex">
+          <Button type="submit" disabled={isSubmitting}>
+            <span className="px-5">{isSubmitting ? "Sending..." : "Send Message"}</span>
+          </Button>
         </div>
       </form>
     </div>
   );
 }
-

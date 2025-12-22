@@ -9,6 +9,7 @@ import remarkGfm from "remark-gfm";
 import SuggestedPrompts from "./SuggestedPrompts";
 import { useAtomChatStore } from "@/stores/atomChatStore";
 import LeadCaptureForm from "./LeadCaptureForm";
+import { ATOM_MODEL } from "@/lib/ai/model";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -29,28 +30,103 @@ export default function AtomChatWidget({
 }: AtomChatWidgetProps) {
   const { isOpen, close, prefill, autoSend } = useAtomChatStore();
   
-  console.log("[AtomChatWidget] Render - isOpen:", isOpen);
-  
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      type: "text",
+      content:
+        "Hi — I'm Atom Chat. What do you want to compare: deployment, IP ownership, security, voice, RAG, GenUI, or tool calling?",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUserMessage, setLastUserMessage] = useState<string>("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Auto-focus and handle prefill when chat opens
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      
+      // Auto-focus input when chat opens
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+      });
+      
+      // Handle prefill and auto-send
+      if (prefill) {
+        setInput(prefill);
+        if (autoSend) {
+          setTimeout(() => sendPrompt(prefill), 200);
+        }
+        // Clear prefill after using it
+        useAtomChatStore.setState({ prefill: null, autoSend: false });
+      }
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, prefill, autoSend]);
+
+  // Auto-resize textarea
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    
+    // Auto-grow up to 4 lines (~96px)
+    const textarea = e.target;
+    textarea.style.height = "auto";
+    const maxHeight = 96; // ~4 lines with line-height 1.5
+    textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  };
+
   // Send message programmatically (for suggested prompts)
   const sendPrompt = async (promptText: string) => {
-    if (isLoading) return; // Prevent double-send
+    if (isLoading) return;
     
     const trimmedPrompt = promptText.trim();
     if (!trimmedPrompt) return;
 
+    // Store user message for potential lead form
+    setLastUserMessage(trimmedPrompt);
+    
     setMessages((prev) => [...prev, { role: "user", type: "text", content: trimmedPrompt }]);
     setIsLoading(true);
 
     // Add empty assistant message for streaming
+    const newMessages = [...messages, { role: "user", content: trimmedPrompt }];
     setMessages((prev) => [...prev, { role: "assistant", type: "text", content: "" }]);
-    const assistantMessageIndex = messages.length + 1;
+    const assistantMessageIndex = newMessages.length;
 
     try {
       const response = await fetch("/api/atom-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, { role: "user", content: trimmedPrompt }],
+          messages: newMessages,
           selectedVendors: selectedVendors.map((v) => ({
             id: v.id,
             name: v.name,
@@ -68,7 +144,7 @@ export default function AtomChatWidget({
         throw new Error("Failed to get response");
       }
 
-      // Read Server-Sent Events stream
+      // Read Server-Sent Events stream (no artificial delays - server handles timing)
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No response body");
 
@@ -93,9 +169,6 @@ export default function AtomChatWidget({
               }
               
               if (data.content) {
-                // Throttle UI updates slightly for smoother streaming feel (20ms)
-                await new Promise(resolve => setTimeout(resolve, 20));
-                
                 setMessages((prev) => {
                   const updated = [...prev];
                   if (updated[assistantMessageIndex]) {
@@ -123,102 +196,31 @@ export default function AtomChatWidget({
       setIsLoading(false);
     }
   };
-  
-  // Prevent background scrolling when chat is open
-  useEffect(() => {
-    if (isOpen) {
-      console.log("[AtomChatWidget] Opening - focusing input");
-      document.body.style.overflow = "hidden";
-      
-      // Auto-focus input when chat opens
-      requestAnimationFrame(() => {
-        textareaRef.current?.focus();
-      });
-      
-      // Handle prefill
-      if (prefill) {
-        setInput(prefill);
-        if (autoSend) {
-          setTimeout(() => sendPrompt(prefill), 200);
-        }
-        // Clear prefill after using it
-        useAtomChatStore.setState({ prefill: null, autoSend: false });
-      }
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen, prefill, autoSend]);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      type: "text",
-      content:
-        "Hi — I'm Atom Chat. What do you want to compare: deployment, IP ownership, security, voice, RAG, GenUI, or tool calling?",
-    },
-  ]);
-  const [showLeadForm, setShowLeadForm] = useState(false);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const currentModel = "GPT-5.2"; // Locked to GPT-5.2 Responses API
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const streamBufferRef = useRef<string>("");
-  const flushIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Auto-resize textarea
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    
-    // Auto-grow up to 4 lines (~96px)
-    const textarea = e.target;
-    textarea.style.height = "auto";
-    const maxHeight = 96; // ~4 lines with line-height 1.5
-    textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const resetTextareaHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
+    
+    // Store user message for potential lead form
+    setLastUserMessage(userMessage);
+    
     setInput("");
     resetTextareaHeight();
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
     // Add empty assistant message for streaming
+    const newMessages = [...messages, { role: "user", content: userMessage }];
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
-    const assistantMessageIndex = messages.length + 1;
+    const assistantMessageIndex = newMessages.length;
 
     try {
       const response = await fetch("/api/atom-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, { role: "user", content: userMessage }],
+          messages: newMessages,
           selectedVendors: selectedVendors.map((v) => ({
             id: v.id,
             name: v.name,
@@ -236,7 +238,7 @@ export default function AtomChatWidget({
         throw new Error("Failed to get response");
       }
 
-      // Read Server-Sent Events stream
+      // Read Server-Sent Events stream (no artificial delays - server handles timing)
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No response body");
 
@@ -261,9 +263,6 @@ export default function AtomChatWidget({
               }
               
               if (data.content) {
-                // Throttle UI updates slightly for smoother streaming feel (20ms)
-                await new Promise(resolve => setTimeout(resolve, 20));
-                
                 setMessages((prev) => {
                   const updated = [...prev];
                   if (updated[assistantMessageIndex]) {
@@ -300,10 +299,10 @@ export default function AtomChatWidget({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           onClick={() => {
-            console.log("[AtomChat] Floating button clicked");
             useAtomChatStore.getState().open();
           }}
           className="fixed bottom-6 right-6 w-14 h-14 bg-secondary text-white rounded-full shadow-lg hover:bg-secondary/90 transition-colors z-50 flex items-center justify-center"
+          aria-label="Open Atom Chat"
         >
           <HiChatBubbleLeftRight className="w-6 h-6" />
         </motion.button>
@@ -328,10 +327,7 @@ export default function AtomChatWidget({
                 </div>
               </div>
               <button
-                onClick={() => {
-                  console.log("[AtomChat] Close button clicked");
-                  close();
-                }}
+                onClick={close}
                 className="text-foreground/60 hover:text-foreground transition-colors"
                 aria-label="Close chat"
               >
@@ -339,9 +335,9 @@ export default function AtomChatWidget({
               </button>
             </div>
 
-            {/* Messages - Prompt-kit inspired layout */}
+            {/* Messages */}
             <div 
-              className="flex-1 overflow-y-auto px-4 py-4 pb-2 space-y-6 overscroll-contain"
+              className="flex-1 overflow-y-auto px-4 py-4 space-y-6 overscroll-contain"
               onWheel={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
             >
@@ -361,13 +357,14 @@ export default function AtomChatWidget({
                       msg.content === "LEAD_CAPTURE_TRIGGER" ? (
                         <LeadCaptureForm
                           selectedVendors={selectedVendors}
+                          userMessage={lastUserMessage}
                           onSuccess={() => {
                             setMessages((prev) => {
                               const updated = [...prev];
                               updated[idx] = {
                                 role: "assistant",
                                 type: "text",
-                                content: "Thanks — someone from Antimatter will be in touch shortly. Want to keep comparing vendors in the meantime?",
+                                content: "Thanks — someone from Antimatter will follow up shortly.",
                               };
                               return updated;
                             });
@@ -416,7 +413,7 @@ export default function AtomChatWidget({
                 </div>
               ))}
               
-              {/* Suggested prompts when chat is empty */}
+              {/* Suggested prompts when chat is empty (NO Thinking/Loader UI) */}
               {messages.length === 1 && !isLoading && (
                 <div className="mt-4">
                   <p className="text-xs text-foreground/50 mb-2.5">Quick actions</p>
@@ -432,7 +429,7 @@ export default function AtomChatWidget({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
+            {/* Input Footer - Compact with left-aligned "Powered by GPT-5.2" */}
             <div className="px-4 py-3 border-t border-zinc-800">
               <div className="flex gap-2 items-end">
                 <textarea
@@ -458,15 +455,11 @@ export default function AtomChatWidget({
                   <HiPaperAirplane className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex items-center justify-start mt-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-foreground/40">Powered by</span>
-                  <img 
-                    src="/images/openai-logo.svg" 
-                    alt="OpenAI" 
-                    className="h-3 w-auto opacity-40"
-                  />
-                </div>
+              {/* Compact footer - left aligned */}
+              <div className="flex items-center justify-start mt-1.5">
+                <span className="text-[10px] text-foreground/30">
+                  Powered by {ATOM_MODEL}
+                </span>
               </div>
             </div>
           </motion.div>
@@ -475,4 +468,3 @@ export default function AtomChatWidget({
     </>
   );
 }
-
