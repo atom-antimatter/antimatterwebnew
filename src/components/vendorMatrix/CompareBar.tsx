@@ -50,7 +50,7 @@ export default function CompareBar({
                     <span>{vendor.name}</span>
                     <button
                       onClick={() => onRemove(vendorId)}
-                      className="hover:text-accent transition-colors"
+                      className="hover:text-secondary transition-colors"
                     >
                       <HiXMark className="w-4 h-4" />
                     </button>

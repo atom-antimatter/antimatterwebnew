@@ -59,7 +59,7 @@ export default function VendorCard({
         className={`
           relative w-full p-6 rounded-xl border-2 transition-all
           bg-zinc-900/50 hover:bg-zinc-900/70
-          ${isSelected ? "border-accent" : "border-zinc-800 hover:border-zinc-700"}
+          ${isSelected ? "border-secondary" : "border-zinc-800 hover:border-zinc-700"}
         `}
       >
         {/* Selection checkmark */}
@@ -69,13 +69,13 @@ export default function VendorCard({
             animate={{ scale: 1 }}
             className="absolute top-2 right-2"
           >
-            <HiCheckCircle className="w-6 h-6 text-accent" />
+            <HiCheckCircle className="w-6 h-6 text-secondary" />
           </motion.div>
         )}
 
         {/* Atom badge */}
         {vendor.id === "atom" && (
-          <div className="absolute top-2 left-2 bg-accent/20 border border-accent/50 px-2 py-0.5 rounded text-xs text-accent font-medium">
+          <div className="absolute top-2 left-2 bg-secondary/20 border border-secondary/50 px-2 py-0.5 rounded text-xs text-secondary font-medium">
             Client-Owned
           </div>
         )}
@@ -108,7 +108,7 @@ export default function VendorCard({
           <div className="mt-3 pt-3 border-t border-zinc-800">
             <div className="flex items-center justify-center gap-2">
               <span className="text-xs text-foreground/60">Match:</span>
-              <span className="text-sm font-semibold text-accent">{matchScore}%</span>
+              <span className="text-sm font-semibold text-secondary">{matchScore}%</span>
             </div>
           </div>
         )}

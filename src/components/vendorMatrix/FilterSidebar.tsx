@@ -52,7 +52,7 @@ export default function FilterSidebar({
           {selectedFilters.length > 0 && (
             <button
               onClick={onClearAll}
-              className="w-full text-sm px-4 py-2 bg-transparent border-2 border-accent text-accent rounded-full hover:bg-accent/10 transition-colors"
+              className="w-full text-sm px-4 py-2 bg-transparent border-2 border-secondary text-secondary rounded-full hover:bg-secondary/10 transition-colors"
             >
               Clear All Filters
             </button>
@@ -76,7 +76,7 @@ export default function FilterSidebar({
                       type="checkbox"
                       checked={selectedFilters.includes(item.id)}
                       onChange={() => onFilterToggle(item.id)}
-                      className="mt-0.5 w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-accent focus:ring-accent focus:ring-offset-0"
+                      className="mt-0.5 w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-secondary focus:ring-secondary focus:ring-offset-0"
                     />
                     <span className="text-sm text-foreground/80 group-hover:text-foreground transition-colors">
                       {item.label}

@@ -125,7 +125,7 @@ export default function VendorMatrixClient() {
           {view === "grid" && (
             <button
               onClick={() => setFilterSidebarOpen(true)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg mb-6"
+                  className="lg:hidden flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg mb-6"
             >
               <HiAdjustmentsHorizontal className="w-5 h-5" />
               Filters {selectedFilters.length > 0 && `(${selectedFilters.length})`}

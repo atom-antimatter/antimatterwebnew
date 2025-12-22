@@ -71,7 +71,7 @@ export default function ComparisonTable({
       </div>
 
       {copiedToast && (
-        <div className="fixed top-4 right-4 bg-accent text-white px-4 py-2 rounded-lg shadow-lg z-50">
+        <div className="fixed top-4 right-4 bg-secondary text-white px-4 py-2 rounded-lg shadow-lg z-50">
           Link copied to clipboard!
         </div>
       )}
@@ -113,7 +113,7 @@ export default function ComparisonTable({
                     {selectedFilters.length > 0 && (
                       <div className="text-sm">
                         <span className="text-foreground/60">Match: </span>
-                        <span className="font-semibold text-accent">
+                        <span className="font-semibold text-secondary">
                           {calculateMatchScore(vendor, selectedFilters)}%
                         </span>
                       </div>
@@ -185,8 +185,8 @@ export default function ComparisonTable({
             ))}
 
             {/* Differentiator row */}
-            <tr className="border-b border-zinc-800 bg-accent/5">
-              <td className="p-4 font-semibold text-sm text-accent">Key Differentiator</td>
+            <tr className="border-b border-zinc-800 bg-secondary/5">
+              <td className="p-4 font-semibold text-sm text-secondary">Key Differentiator</td>
               {comparedVendors.map((vendor) => (
                 <td key={vendor.id} className="p-4 text-xs text-foreground/80 leading-relaxed">
                   {vendor.atomDifferentiator}

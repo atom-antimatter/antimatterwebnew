@@ -1,7 +1,7 @@
 export default function AtomCallout() {
   return (
-    <div className="my-8 p-6 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/30">
-      <h3 className="text-lg font-semibold text-accent mb-2">
+    <div className="my-8 p-6 rounded-xl bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/30">
+      <h3 className="text-lg font-semibold text-secondary mb-2">
         Why Atom is Different
       </h3>
       <p className="text-foreground/90 leading-relaxed">

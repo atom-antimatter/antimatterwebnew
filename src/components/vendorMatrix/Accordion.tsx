@@ -17,7 +17,7 @@ export default function Accordion({ title, children, defaultOpen = false }: Acco
     <div className="border-b border-zinc-800">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-4 text-left hover:text-accent transition-colors"
+        className="w-full flex items-center justify-between py-4 text-left hover:text-secondary transition-colors"
       >
         <span className="font-medium text-sm uppercase tracking-wide">{title}</span>
         <motion.div

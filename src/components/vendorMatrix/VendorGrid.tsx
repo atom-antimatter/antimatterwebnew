@@ -94,7 +94,7 @@ export default function VendorGrid({
               placeholder="Search vendors by name, use case, or tags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-accent transition-colors"
+              className="w-full pl-12 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-secondary transition-colors"
             />
           </div>
 
@@ -104,12 +104,12 @@ export default function VendorGrid({
               <button
                 key={filter.id}
                 onClick={() => toggleQuickFilter(filter.id)}
-                className={`
+                  className={`
                   px-4 py-2 rounded-full text-sm font-medium transition-colors
                   ${
                     activeQuickFilters.includes(filter.id)
-                      ? "bg-accent text-white"
-                      : "bg-zinc-900/50 border border-zinc-800 text-foreground/80 hover:border-accent"
+                      ? "bg-secondary text-white"
+                      : "bg-zinc-900/50 border border-zinc-800 text-foreground/80 hover:border-secondary"
                   }
                 `}
               >
