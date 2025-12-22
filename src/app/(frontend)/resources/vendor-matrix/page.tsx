@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import VendorMatrixClient from "./VendorMatrixClient";
+import ClientWrapper from "./ClientWrapper";
 
 export default function VendorMatrixPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen w-full bg-background" />}>
-      <VendorMatrixClient />
-    </Suspense>
-  );
+  return <ClientWrapper />;
 }
