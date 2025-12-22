@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import SuggestedPrompts from "./SuggestedPrompts";
 import { useAtomChatStore } from "@/stores/atomChatStore";
+import LeadCaptureForm from "./LeadCaptureForm";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -357,8 +358,35 @@ export default function AtomChatWidget({
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none overflow-hidden">
-                        <ReactMarkdown
+                      msg.content === "LEAD_CAPTURE_TRIGGER" ? (
+                        <LeadCaptureForm
+                          selectedVendors={selectedVendors}
+                          onSuccess={() => {
+                            setMessages((prev) => {
+                              const updated = [...prev];
+                              updated[idx] = {
+                                role: "assistant",
+                                type: "text",
+                                content: "Thanks — someone from Antimatter will be in touch shortly. Want to keep comparing vendors in the meantime?",
+                              };
+                              return updated;
+                            });
+                          }}
+                          onCancel={() => {
+                            setMessages((prev) => {
+                              const updated = [...prev];
+                              updated[idx] = {
+                                role: "assistant",
+                                type: "text",
+                                content: "No problem. What else would you like to know about the vendor comparison?",
+                              };
+                              return updated;
+                            });
+                          }}
+                        />
+                      ) : (
+                        <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none overflow-hidden">
+                          <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
                             a: ({ node, ...props }) => (
@@ -378,8 +406,9 @@ export default function AtomChatWidget({
                           }}
                         >
                           {msg.content}
-                        </ReactMarkdown>
-                      </div>
+                          </ReactMarkdown>
+                        </div>
+                      )
                     ) : (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                     )}
