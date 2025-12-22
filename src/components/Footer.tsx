@@ -67,6 +67,9 @@ const Footer = () => {
             <div>
               <h2 className="text-foreground/50 mb-2">Resources</h2>
               <div className="flex flex-col gap-2">
+                <TransitionLink href={"/resources/vendor-matrix"}>
+                  AI Vendor Matrix
+                </TransitionLink>
                 <Link href={"/case-study/clinixAI"}>Clinix AI</Link>
                 <Link href={"/case-study/synergies4"}>Synergies4</Link>
                 <Link href={"/case-study/curehire"}>Curehire</Link>
