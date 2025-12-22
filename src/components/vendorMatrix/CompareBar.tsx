@@ -3,7 +3,6 @@
 import { vendors } from "@/data/vendorMatrix";
 import { motion, AnimatePresence } from "motion/react";
 import { HiXMark } from "react-icons/hi2";
-import Button from "../ui/Button";
 
 interface CompareBarProps {
   selectedVendors: string[];
@@ -71,13 +70,13 @@ export default function CompareBar({
                   Select at least 2 vendors to compare
                 </span>
               )}
-              <Button
+              <button
                 onClick={onCompare}
                 disabled={tooMany || tooFew}
-                className="whitespace-nowrap"
+                className="whitespace-nowrap px-6 py-2 bg-transparent border-2 border-secondary text-secondary rounded-full hover:bg-secondary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Compare ({selectedVendors.length})
-              </Button>
+              </button>
             </div>
           </div>
         </div>
