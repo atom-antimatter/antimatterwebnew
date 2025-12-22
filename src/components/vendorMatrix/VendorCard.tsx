@@ -56,10 +56,12 @@ export default function VendorCard({
       {/* Card */}
       <button
         onClick={onToggle}
+        disabled={vendor.id === "atom"}
         className={`
           relative w-full p-6 rounded-xl border-2 transition-all
           bg-zinc-900/50 hover:bg-zinc-900/70
           ${isSelected ? "border-secondary" : "border-zinc-800 hover:border-zinc-700"}
+          ${vendor.id === "atom" ? "cursor-default" : "cursor-pointer"}
         `}
       >
         {/* Selection checkmark */}

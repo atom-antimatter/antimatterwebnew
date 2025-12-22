@@ -44,6 +44,7 @@ export interface Vendor {
   tags: string[];
   bestFit: string;
   atomDifferentiator: string;
+  differentiatorVsAtom?: string; // How this vendor differs from Atom (null/empty for Atom itself)
   notes?: string;
 }
 
@@ -154,6 +155,7 @@ export const vendors: Vendor[] = [
     // Emphasizes private deployment and ownership as key differentiators.
     bestFit: "Enterprises and regulated teams needing private AI deployments with ownership",
     atomDifferentiator: "Atom is a deployment model: you own the IP + infra; predictable managed service like SaaS.",
+    differentiatorVsAtom: "", // Atom is the baseline
     notes: "Client-Owned Deployment",
   },
   {
@@ -193,6 +195,7 @@ export const vendors: Vendor[] = [
     tags: ["Enterprise", "Platform", "Multi-function"],
     bestFit: "Enterprises wanting a standardized platform + marketplace across multiple business functions",
     atomDifferentiator: "Atom is client-owned runtime + custom-built UX (GenUI/voice) without platform lock-in; deploy exactly to security requirements.",
+    differentiatorVsAtom: "Kore.ai is a unified platform; Atom is custom-deployed in your environment with full IP ownership and no platform fees.",
   },
   {
     id: "intercom-fin",
@@ -231,6 +234,7 @@ export const vendors: Vendor[] = [
     tags: ["CX", "Support", "SaaS"],
     bestFit: "Intercom-first support orgs",
     atomDifferentiator: "Atom sits above the stack; deploy in your environment + deeper custom tools/UI.",
+    differentiatorVsAtom: "SaaS-only within Intercom ecosystem; Atom deploys in your VPC/on-prem with full customization.",
   },
   {
     id: "zendesk",
@@ -269,6 +273,7 @@ export const vendors: Vendor[] = [
     tags: ["CX", "Support", "SaaS"],
     bestFit: "Zendesk-first support orgs",
     atomDifferentiator: "Atom deploys in your environment with custom UI/UX; not locked to Zendesk ecosystem.",
+    differentiatorVsAtom: "SaaS platform within Zendesk; Atom is client-owned with GenUI and multi-channel flexibility.",
   },
   {
     id: "servicenow",
@@ -307,6 +312,7 @@ export const vendors: Vendor[] = [
     tags: ["ITSM", "Workflow", "Enterprise"],
     bestFit: "ServiceNow-centered enterprises",
     atomDifferentiator: "Atom operates outside ServiceNow; deploy to any environment with full customization.",
+    differentiatorVsAtom: "Platform-centric; Atom deploys standalone in your infrastructure with deeper workflow control.",
   },
   {
     id: "microsoft-copilot",
@@ -345,6 +351,7 @@ export const vendors: Vendor[] = [
     tags: ["Microsoft", "Enterprise", "Productivity"],
     bestFit: "Microsoft-first orgs",
     atomDifferentiator: "Atom is cloud-agnostic; not tied to Microsoft tenant or licensing.",
+    differentiatorVsAtom: "Microsoft tenant-bound; Atom is cloud-agnostic with no licensing lock-in.",
   },
   {
     id: "google-vertex",
@@ -383,6 +390,7 @@ export const vendors: Vendor[] = [
     tags: ["GCP", "Cloud", "Developer"],
     bestFit: "GCP-first orgs",
     atomDifferentiator: "Atom supports multi-cloud + on-prem; not locked to GCP infrastructure.",
+    differentiatorVsAtom: "GCP-dependent; Atom is cloud-agnostic and supports on-prem deployments.",
   },
   {
     id: "amazon-q",
@@ -421,6 +429,7 @@ export const vendors: Vendor[] = [
     tags: ["AWS", "Cloud", "Enterprise"],
     bestFit: "AWS-first orgs",
     atomDifferentiator: "Atom is cloud-agnostic with voice/GenUI capabilities; not AWS-locked.",
+    differentiatorVsAtom: "AWS-locked; Atom supports any cloud + on-prem with voice and GenUI capabilities.",
   },
   {
     id: "ibm-watsonx",
@@ -459,6 +468,7 @@ export const vendors: Vendor[] = [
     tags: ["Enterprise", "Regulated", "On-prem"],
     bestFit: "Regulated orgs needing on-prem options",
     atomDifferentiator: "Atom offers full IP ownership + custom GenUI/voice; IBM is still platform-centric.",
+    differentiatorVsAtom: "Platform product with partial IP ownership; Atom provides complete ownership and custom UX.",
   },
   {
     id: "cognigy",
@@ -497,6 +507,7 @@ export const vendors: Vendor[] = [
     tags: ["CX", "Kubernetes", "Advanced"],
     bestFit: "Advanced CX automation teams",
     atomDifferentiator: "Atom provides full IP ownership + GenUI capabilities; Cognigy is still a packaged platform.",
+    differentiatorVsAtom: "Packaged platform; Atom offers full IP ownership and custom GenUI beyond CX.",
   },
   {
     id: "moveworks",
@@ -535,6 +546,7 @@ export const vendors: Vendor[] = [
     tags: ["IT", "HR", "Helpdesk", "SaaS"],
     bestFit: "IT/HR helpdesk deflection at scale",
     atomDifferentiator: "Atom deploys in your environment with full customization; Moveworks is SaaS-only with limited extensibility.",
+    differentiatorVsAtom: "SaaS-only with limited extensibility; Atom deploys privately with full customization.",
   },
   {
     id: "sierra",
@@ -573,6 +585,7 @@ export const vendors: Vendor[] = [
     tags: ["CX", "Premium", "SaaS"],
     bestFit: "High-end CX teams wanting white-glove service agent",
     atomDifferentiator: "Atom provides client-owned deployment + GenUI; Sierra is SaaS-only with no infrastructure control.",
+    differentiatorVsAtom: "Premium SaaS-only CX agent; Atom is client-owned with GenUI and cross-functional deployment.",
   },
 ];
 

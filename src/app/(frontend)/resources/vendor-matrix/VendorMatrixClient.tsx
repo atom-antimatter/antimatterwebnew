@@ -9,6 +9,8 @@ import FilterSidebar from "@/components/vendorMatrix/FilterSidebar";
 import VendorGrid from "@/components/vendorMatrix/VendorGrid";
 import CompareBar from "@/components/vendorMatrix/CompareBar";
 import ComparisonTable from "@/components/vendorMatrix/ComparisonTable";
+import AtomChatWidget from "@/components/vendorMatrix/AtomChatWidget";
+import { vendors } from "@/data/vendorMatrix";
 export default function VendorMatrixClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -16,7 +18,8 @@ export default function VendorMatrixClient() {
   const [view, setView] = useState<"grid" | "comparison">("grid");
   const [filterSidebarOpen, setFilterSidebarOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<(keyof Vendor['capabilities'])[]>([]);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
+  const [selectedVendors, setSelectedVendors] = useState<string[]>(["atom"]); // Atom preselected by default
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Initialize state from URL params
   useEffect(() => {
@@ -24,13 +27,27 @@ export default function VendorMatrixClient() {
     const filtersParam = searchParams.get("filters");
     const viewParam = searchParams.get("view");
 
+    let vendorsList: string[] = [];
     if (vendorsParam) {
-      setSelectedVendors(vendorsParam.split(",").filter(Boolean));
+      vendorsList = vendorsParam.split(",").filter(Boolean);
     }
+    
+    // Ensure Atom is always included and first
+    if (!vendorsList.includes("atom")) {
+      vendorsList = ["atom", ...vendorsList];
+      // Update URL to include atom
+      updateURL(vendorsList, selectedFilters, viewParam === "comparison" ? "comparison" : view);
+    } else {
+      // Move atom to first position if not already
+      vendorsList = ["atom", ...vendorsList.filter(v => v !== "atom")];
+    }
+    
+    setSelectedVendors(vendorsList);
+    
     if (filtersParam) {
       setSelectedFilters(filtersParam.split(",").filter(Boolean) as (keyof Vendor['capabilities'])[]);
     }
-    if (viewParam === "comparison" && vendorsParam) {
+    if (viewParam === "comparison" && vendorsList.length >= 2) {
       setView("comparison");
     }
   }, [searchParams]);
@@ -65,6 +82,12 @@ export default function VendorMatrixClient() {
   };
 
   const handleVendorToggle = (vendorId: string) => {
+    // Atom is always required - prevent deselection
+    if (vendorId === "atom" && selectedVendors.includes("atom")) {
+      alert("Atom is required for comparisons as the baseline reference point.");
+      return;
+    }
+    
     const newVendors = selectedVendors.includes(vendorId)
       ? selectedVendors.filter((v) => v !== vendorId)
       : [...selectedVendors, vendorId];
@@ -164,12 +187,19 @@ export default function VendorMatrixClient() {
               onVendorToggle={handleVendorToggle}
             />
           ) : (
-            <ComparisonTable
-              selectedVendors={selectedVendors}
-              selectedFilters={selectedFilters}
-              onBack={handleBackToGrid}
-              onShare={handleShare}
-            />
+            <>
+              <ComparisonTable
+                selectedVendors={selectedVendors}
+                selectedFilters={selectedFilters}
+                onBack={handleBackToGrid}
+                onShare={handleShare}
+                onOpenChat={() => setChatOpen(true)}
+              />
+              <AtomChatWidget
+                selectedVendors={vendors.filter((v) => selectedVendors.includes(v.id))}
+                selectedFilters={selectedFilters}
+              />
+            </>
           )}
         </div>
 

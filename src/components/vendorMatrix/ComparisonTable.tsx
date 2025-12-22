@@ -11,6 +11,7 @@ interface ComparisonTableProps {
   selectedFilters: (keyof Vendor['capabilities'])[];
   onBack: () => void;
   onShare: () => void;
+  onOpenChat: () => void;
 }
 
 function calculateMatchScore(
@@ -44,6 +45,7 @@ export default function ComparisonTable({
   selectedFilters,
   onBack,
   onShare,
+  onOpenChat,
 }: ComparisonTableProps) {
   const [copiedToast, setCopiedToast] = useState(false);
 
@@ -81,7 +83,7 @@ export default function ComparisonTable({
         </div>
       )}
 
-      <AtomCallout />
+      <AtomCallout onOpenChat={onOpenChat} />
 
       {/* Table */}
       <div className="overflow-x-auto -webkit-overflow-scrolling-touch max-w-full">
@@ -177,10 +179,10 @@ export default function ComparisonTable({
 
             {/* Differentiator row */}
             <tr className="border-b border-zinc-800 bg-background">
-              <td className="sticky left-0 bg-background p-3 md:p-4 font-semibold text-xs md:text-sm text-secondary">Key Differentiator</td>
+              <td className="sticky left-0 bg-background p-3 md:p-4 font-semibold text-xs md:text-sm text-secondary">How it differs vs Atom</td>
               {comparedVendors.map((vendor) => (
-                <td key={vendor.id} className="p-4 text-xs text-foreground/80 leading-relaxed">
-                  {vendor.atomDifferentiator}
+                <td key={vendor.id} className="p-3 md:p-4 text-xs text-foreground/80 leading-relaxed">
+                  {vendor.id === "atom" ? "—" : vendor.differentiatorVsAtom || vendor.atomDifferentiator}
                 </td>
               ))}
             </tr>
