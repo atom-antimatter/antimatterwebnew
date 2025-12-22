@@ -46,19 +46,24 @@ Most competitors are SaaS platforms the customer rents; they may offer integrati
 
 YOUR GUIDELINES:
 - Answer using ONLY the vendor facts provided in the 'Vendor Context' you receive
-- If a user asks for something not in context, use web search to find current information from vendor websites
+- If vendor details are not in context, use web browsing to find current information from official vendor websites
+- When browsing is used:
+  - Cite sources explicitly with markdown links
+  - Never fabricate citations
+  - Format: **Sources:** followed by [Vendor Name](URL) bullets
+- If browsing fails or is unavailable, state clearly: "No live browsing used for this response"
 - Be explicit about trade-offs (platform lock-in vs ownership; speed vs control; ecosystem fit)
 - Provide structured comparisons using markdown formatting
 - Keep it concise unless the user asks for depth
 - Never reveal secrets, API keys, or internal implementation details
 - Maintain an enterprise, confident, helpful tone — not salesy fluff
 
-FORMATTING:
-- Use **bold** for emphasis instead of headers
+FORMATTING (chat-optimized markdown):
+- Use **bold** for emphasis and section labels (NOT ### headers)
 - Use bullet lists (- item) for comparisons
-- Keep paragraphs short and scannable
-- If citing sources, include them at the end in a **Sources:** section with markdown links: [Title](URL)
-- Avoid using ### headers; use **Section Label:** instead for cleaner chat display
+- Keep paragraphs short and scannable (2-3 sentences max)
+- If citing sources, include them at the end: **Sources:** with markdown links [Title](URL)
+- Avoid raw ### headers; use **Section Label:** instead for cleaner chat display
 
 FOCUS AREAS:
 - Deployment models (SaaS, VPC, on-prem, hybrid)
@@ -74,7 +79,7 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, selectedVendors, selectedFilters } = await req.json();
 
-    // Build vendor context
+    // Build vendor context for system instructions
     const vendorContext = selectedVendors
       .map((v: any) => {
         return `${v.name}:
@@ -99,26 +104,72 @@ ${vendorContext}
 Selected Capabilities: ${capabilitiesText}
 Comparing: ${vendorNames}`;
 
-    // Note: Web search would require OpenAI's experimental API or external search integration
-    // For now, using standard chat completions with expanded context
-    const completion = await getOpenAI().chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "system", content: contextMessage },
-        ...messages.map((m: Message) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      ],
-      temperature: 0.7,
-      max_tokens: 800,
-    });
+    // Get conversation history (excluding current user message)
+    const conversationHistory = messages.slice(0, -1);
+    const currentUserMessage = messages[messages.length - 1]?.content || "";
 
-    return NextResponse.json({
-      message: completion.choices[0]?.message?.content || "Sorry, I couldn't generate a response.",
-      request_id: requestId,
-    });
+    // Build input messages for Responses API
+    const inputMessages = [
+      {
+        role: "system" as const,
+        content: `${SYSTEM_PROMPT}\n\n${contextMessage}`,
+      },
+      ...conversationHistory.map((m: Message) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
+    ];
+
+    // Use Responses API with GPT-5.2
+    // Note: If GPT-5.2 is not available, will fallback gracefully
+    try {
+      const response = await (getOpenAI() as any).responses.create({
+        model: "gpt-5.2",
+        input: [
+          ...inputMessages,
+          {
+            role: "user" as const,
+            content: currentUserMessage,
+          },
+        ],
+        tools: [
+          {
+            type: "web_search" as any,
+          },
+        ],
+        temperature: 0.7,
+        max_output_tokens: 800,
+      });
+
+      return NextResponse.json({
+        message: response.output_text || response.output?.[0]?.text || "Sorry, I couldn't generate a response.",
+        request_id: requestId,
+        model_used: "gpt-5.2-responses",
+      });
+    } catch (responsesError: any) {
+      // Fallback to chat.completions if Responses API not available
+      console.warn(`[Atom Chat] Responses API failed (${responsesError.message}), falling back to chat.completions`);
+      
+      const completion = await getOpenAI().chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          ...inputMessages,
+          {
+            role: "user",
+            content: currentUserMessage,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 800,
+      });
+
+      return NextResponse.json({
+        message: completion.choices[0]?.message?.content || "Sorry, I couldn't generate a response.",
+        request_id: requestId,
+        model_used: "gpt-4o-fallback",
+        browsing_enabled: false,
+      });
+    }
   } catch (error: any) {
     console.error(`[Atom Chat] Error (request_id: ${requestId}):`, error);
     

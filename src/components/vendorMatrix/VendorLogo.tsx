@@ -46,3 +46,4 @@ export default function VendorLogo({ vendor, size = "md", className = "" }: Vend
   );
 }
 
+
