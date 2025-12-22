@@ -30,6 +30,7 @@ export default function AtomChatWidget({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -39,11 +40,36 @@ export default function AtomChatWidget({
     scrollToBottom();
   }, [messages]);
 
+  // Auto-resize textarea
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    
+    // Auto-grow up to 4 lines (~96px)
+    const textarea = e.target;
+    textarea.style.height = "auto";
+    const maxHeight = 96; // ~4 lines with line-height 1.5
+    textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
     setInput("");
+    resetTextareaHeight();
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
@@ -111,13 +137,17 @@ export default function AtomChatWidget({
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-              <div>
-                <h3 className="font-semibold text-foreground">Atom Chat</h3>
-                <p className="text-xs text-foreground/60">Ask about this comparison</p>
+              <div className="flex items-center gap-2">
+                <HiChatBubbleLeftRight className="w-5 h-5 text-secondary" aria-hidden="true" />
+                <div>
+                  <h3 className="font-semibold text-foreground">Atom Chat</h3>
+                  <p className="text-xs text-foreground/60">Ask about this comparison</p>
+                </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-foreground/60 hover:text-foreground transition-colors"
+                aria-label="Close chat"
               >
                 <HiXMark className="w-5 h-5" />
               </button>
@@ -153,20 +183,26 @@ export default function AtomChatWidget({
 
             {/* Input */}
             <div className="p-4 border-t border-zinc-800">
-              <div className="flex gap-2">
-                <input
-                  type="text"
+              <div className="flex gap-2 items-end">
+                <textarea
+                  ref={textareaRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                  placeholder="Ask about these vendors..."
-                  className="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-full text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-secondary transition-colors text-sm"
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask about this comparison..."
+                  rows={1}
                   disabled={isLoading}
+                  className="flex-1 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-2xl text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-colors text-sm resize-none overflow-y-auto leading-6"
+                  style={{ 
+                    minHeight: "40px",
+                    maxHeight: "96px"
+                  }}
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
                   className="w-10 h-10 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
+                  aria-label="Send message"
                 >
                   <HiPaperAirplane className="w-4 h-4" />
                 </button>
