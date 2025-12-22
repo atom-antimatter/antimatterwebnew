@@ -309,7 +309,7 @@ export const vendors: Vendor[] = [
   {
     id: "microsoft-copilot",
     name: "Microsoft Copilot Studio",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
+    logoUrl: "/images/vendors/microsoft.svg",
     primaryUseCase: "Conversational AI within Microsoft ecosystem",
     typicalDeployment: "Microsoft tenant / cloud",
     ipOwnership: "no",

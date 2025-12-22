@@ -7,6 +7,25 @@ import Button from "../ui/Button";
 import AtomCallout from "./AtomCallout";
 import Image from "next/image";
 
+function VendorLogo({ vendor }: { vendor: Vendor }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return <span className="text-sm font-semibold">{vendor.name}</span>;
+  }
+
+  return (
+    <Image
+      src={vendor.logoUrl}
+      alt={vendor.name}
+      width={100}
+      height={32}
+      className="max-h-8 w-auto object-contain"
+      onError={() => setHasError(true)}
+    />
+  );
+}
+
 interface ComparisonTableProps {
   selectedVendors: string[];
   selectedFilters: (keyof Vendor['capabilities'])[];
@@ -93,21 +112,7 @@ export default function ComparisonTable({
                 >
                   <div className="flex flex-col items-center gap-3">
                     <div className="h-12 flex items-center justify-center">
-                      <Image
-                        src={vendor.logoUrl}
-                        alt={vendor.name}
-                        width={100}
-                        height={32}
-                        className="max-h-8 w-auto object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          const parent = target.parentElement;
-                          if (parent) {
-                            parent.innerHTML = `<span class="text-sm font-semibold">${vendor.name}</span>`;
-                          }
-                        }}
-                      />
+                      <VendorLogo vendor={vendor} />
                     </div>
                     <div className="text-xs font-medium">{vendor.name}</div>
                     {selectedFilters.length > 0 && (
