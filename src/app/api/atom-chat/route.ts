@@ -46,12 +46,19 @@ Most competitors are SaaS platforms the customer rents; they may offer integrati
 
 YOUR GUIDELINES:
 - Answer using ONLY the vendor facts provided in the 'Vendor Context' you receive
-- If a user asks for something not in context, ask a short follow-up or say you don't have that detail and suggest verifying with vendor documentation
+- If a user asks for something not in context, use web search to find current information from vendor websites
 - Be explicit about trade-offs (platform lock-in vs ownership; speed vs control; ecosystem fit)
-- Provide structured comparisons (bullets, small tables) when helpful
+- Provide structured comparisons using markdown formatting
 - Keep it concise unless the user asks for depth
 - Never reveal secrets, API keys, or internal implementation details
 - Maintain an enterprise, confident, helpful tone — not salesy fluff
+
+FORMATTING:
+- Use **bold** for emphasis instead of headers
+- Use bullet lists (- item) for comparisons
+- Keep paragraphs short and scannable
+- If citing sources, include them at the end in a **Sources:** section with markdown links: [Title](URL)
+- Avoid using ### headers; use **Section Label:** instead for cleaner chat display
 
 FOCUS AREAS:
 - Deployment models (SaaS, VPC, on-prem, hybrid)
@@ -92,6 +99,8 @@ ${vendorContext}
 Selected Capabilities: ${capabilitiesText}
 Comparing: ${vendorNames}`;
 
+    // Note: Web search would require OpenAI's experimental API or external search integration
+    // For now, using standard chat completions with expanded context
     const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -103,7 +112,7 @@ Comparing: ${vendorNames}`;
         })),
       ],
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 800,
     });
 
     return NextResponse.json({
