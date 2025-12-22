@@ -150,7 +150,9 @@ export const vendors: Vendor[] = [
       proactiveOutreach: true,
     },
     tags: ["CX", "Ops", "RevOps", "On-prem", "Hybrid", "Custom"],
-    bestFit: "$100M+ companies needing secure, customized AI deployment with ownership",
+    // Copy approved: Targets enterprises + regulated teams without revenue threshold.
+    // Emphasizes private deployment and ownership as key differentiators.
+    bestFit: "Enterprises and regulated teams needing private AI deployments with ownership",
     atomDifferentiator: "Atom is a deployment model: you own the IP + infra; predictable managed service like SaaS.",
     notes: "Client-Owned Deployment",
   },
