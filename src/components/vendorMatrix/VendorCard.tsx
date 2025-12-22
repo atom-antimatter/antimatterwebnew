@@ -87,7 +87,7 @@ export default function VendorCard({
             alt={vendor.name}
             width={120}
             height={48}
-            className="max-h-12 w-auto object-contain"
+            className={`w-auto object-contain ${vendor.id === "zendesk" ? "max-h-24" : "max-h-12"}`}
             onError={(e) => {
               // Fallback to text if logo fails to load
               const target = e.target as HTMLImageElement;
