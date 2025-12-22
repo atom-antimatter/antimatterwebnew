@@ -6,6 +6,7 @@ import { HiXMark, HiChatBubbleLeftRight, HiPaperAirplane } from "react-icons/hi2
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import ThinkingLoader from "./ThinkingLoader";
 
 interface Message {
   role: "user" | "assistant";
@@ -43,6 +44,7 @@ export default function AtomChatWidget({
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [currentModel, setCurrentModel] = useState<string>("GPT-5.2");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -112,6 +114,9 @@ export default function AtomChatWidget({
 
       const data = await response.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
+      if (data.model) {
+        setCurrentModel(data.model);
+      }
     } catch (error) {
       console.error("Chat error:", error);
       setMessages((prev) => [
@@ -218,8 +223,9 @@ export default function AtomChatWidget({
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-zinc-800 text-foreground px-4 py-2 rounded-2xl">
-                    <p className="text-sm">Typing...</p>
+                  <div className="bg-zinc-800 text-foreground px-4 py-3 rounded-2xl flex items-center gap-3">
+                    <ThinkingLoader />
+                    <p className="text-sm text-foreground/70">Thinking</p>
                   </div>
                 </div>
               )}
@@ -252,9 +258,14 @@ export default function AtomChatWidget({
                   <HiPaperAirplane className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-xs text-foreground/40 mt-2">
-                Comparisons are directional; confirm during procurement.
-              </p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-xs text-foreground/40">
+                  Comparisons are directional; confirm during procurement.
+                </p>
+                <p className="text-xs text-foreground/30">
+                  Powered by {currentModel}
+                </p>
+              </div>
             </div>
           </motion.div>
         )}
