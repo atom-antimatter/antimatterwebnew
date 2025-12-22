@@ -164,12 +164,12 @@ export default function ComparisonTable({
             {capabilityCategories.map((category) => (
               <tbody key={category.id}>
                 <tr>
-                  <td
-                    colSpan={comparedVendors.length + 1}
-                    className="p-4 bg-zinc-900/50 font-semibold text-sm uppercase tracking-wide text-foreground/90 border-y border-zinc-800"
-                  >
+                  <td className="p-4 bg-zinc-900/50 font-semibold text-sm uppercase tracking-wide text-foreground/90 border-y border-zinc-800">
                     {category.title}
                   </td>
+                  {comparedVendors.map((vendor) => (
+                    <td key={vendor.id} className="bg-zinc-900/50 border-y border-zinc-800" />
+                  ))}
                 </tr>
                 {category.items.map((item) => (
                   <tr key={item.id} className="border-b border-zinc-800 hover:bg-zinc-900/30">
