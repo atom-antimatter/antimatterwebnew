@@ -53,6 +53,7 @@ function Digit({ place, value, height, digitStyle }: DigitProps) {
     position: "relative",
     width: "1ch",
     margin: "0px -2px",
+    overflow: "hidden", // Hide parts of numbers above/below during animation
   };
 
   return (
