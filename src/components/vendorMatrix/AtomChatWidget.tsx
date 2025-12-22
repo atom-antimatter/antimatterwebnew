@@ -417,13 +417,15 @@ export default function AtomChatWidget({
                   <HiPaperAirplane className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-xs text-foreground/40">
-                  Comparisons are directional; confirm during procurement.
-                </p>
-                <p className="text-xs text-foreground/30">
-                  Powered by {currentModel}
-                </p>
+              <div className="flex items-center justify-end mt-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-foreground/40">Powered by</span>
+                  <img 
+                    src="/images/openai-logo.svg" 
+                    alt="OpenAI" 
+                    className="h-3 w-auto opacity-40"
+                  />
+                </div>
               </div>
             </div>
           </motion.div>
