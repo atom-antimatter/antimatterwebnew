@@ -321,10 +321,9 @@ export default function AtomChatWidget({
 
             {/* Messages - Prompt-kit inspired layout */}
             <div 
-              className="flex-1 overflow-y-auto px-4 py-6 space-y-6 overscroll-contain"
+              className="flex-1 overflow-y-auto px-4 py-4 pb-2 space-y-6 overscroll-contain"
               onWheel={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
-              style={{ maxHeight: "calc(100% - 200px)" }}
             >
               {messages.map((msg, idx) => (
                 <div
@@ -386,7 +385,7 @@ export default function AtomChatWidget({
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-zinc-800">
+            <div className="px-4 py-3 border-t border-zinc-800">
               <div className="flex gap-2 items-end">
                 <textarea
                   ref={textareaRef}
@@ -411,7 +410,7 @@ export default function AtomChatWidget({
                   <HiPaperAirplane className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex items-center justify-end mt-2">
+              <div className="flex items-center justify-start mt-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-foreground/40">Powered by</span>
                   <img 
