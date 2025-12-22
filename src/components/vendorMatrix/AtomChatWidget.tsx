@@ -151,6 +151,8 @@ export default function AtomChatWidget({
   const currentModel = "GPT-5.2"; // Locked to GPT-5.2 Responses API
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const streamBufferRef = useRef<string>("");
+  const flushIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -366,14 +368,6 @@ export default function AtomChatWidget({
                   </div>
                 </div>
               ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-zinc-800 text-foreground px-4 py-3 rounded-2xl flex items-center gap-3">
-                    <ThinkingLoader />
-                    <p className="text-sm text-foreground/70">Thinking</p>
-                  </div>
-                </div>
-              )}
               
               {/* Suggested prompts when chat is empty */}
               {messages.length === 1 && !isLoading && (
