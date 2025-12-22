@@ -151,7 +151,14 @@ const HeroComponent = () => {
                   </h3>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-nowrap">
+                  <h3 
+                    className="text-xl sm:text-2xl lg:text-3xl flex items-center font-semibold text-nowrap -ml-5 sm:-ml-0"
+                    style={{ 
+                      height: isMobile ? `${fontSize + 12}px` : 'auto',
+                      paddingTop: isMobile ? '6px' : '0',
+                      paddingBottom: isMobile ? '6px' : '0'
+                    }}
+                  >
                     24<span className="text-tertiary">/</span>7
                   </h3>
                   <h3 className="text-xs sm:text-sm leading-tight">
