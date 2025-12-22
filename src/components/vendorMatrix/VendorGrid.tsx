@@ -136,7 +136,7 @@ export default function VendorGrid({
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-32">
         {filteredVendors.map((vendor) => (
           <VendorCard
             key={vendor.id}
@@ -149,7 +149,7 @@ export default function VendorGrid({
       </div>
 
       {filteredVendors.length === 0 && (
-        <div className="text-center py-12 text-foreground/60">
+        <div className="text-center py-12 text-foreground/60 mb-32">
           No vendors match your search criteria. Try adjusting your filters or search query.
         </div>
       )}

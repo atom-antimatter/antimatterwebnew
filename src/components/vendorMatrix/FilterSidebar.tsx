@@ -1,7 +1,6 @@
 "use client";
 
 import { capabilityCategories, Vendor } from "@/data/vendorMatrix";
-import Button from "../ui/Button";
 import Accordion from "./Accordion";
 
 interface FilterSidebarProps {
@@ -51,13 +50,12 @@ export default function FilterSidebar({
             </button>
           </div>
           {selectedFilters.length > 0 && (
-            <Button
-              variant="inverted"
+            <button
               onClick={onClearAll}
-              className="w-full text-sm"
+              className="w-full text-sm px-4 py-2 bg-transparent border-2 border-accent text-accent rounded-full hover:bg-accent/10 transition-colors"
             >
               Clear All Filters
-            </Button>
+            </button>
           )}
         </div>
 
