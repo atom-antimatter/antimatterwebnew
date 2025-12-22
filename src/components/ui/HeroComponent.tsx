@@ -13,8 +13,12 @@ const HeroComponent = () => {
 
   const [fontSize, setFontSize] = useState(() => {
     if (typeof window === "undefined") return 30;
-    if (window.innerWidth >= 640) return 22;
-    return 18;
+    if (window.innerWidth >= 1024) return 30;
+    return 22;
+  });
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < 640;
   });
   const setIsTransition = usePageTransition((s) => s.setIsTransition);
   useEffect(() => {
@@ -24,8 +28,8 @@ const HeroComponent = () => {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) setFontSize(30);
-      else if (window.innerWidth >= 640) setFontSize(22);
-      else setFontSize(18);
+      else setFontSize(22);
+      setIsMobile(window.innerWidth < 640);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -117,9 +121,8 @@ const HeroComponent = () => {
                       gap={2}
                       fontSize={fontSize}
                       fontWeight={600}
-                      padding={4}
-                      gradientHeight={Math.max(12, fontSize * 0.4)}
-                      gradientFrom="#020202"
+                      gradientFrom={isMobile ? "#020202" : "transparent"}
+                      gradientHeight={isMobile ? 12 : 16}
                     />
                     <span className="text-tertiary">+</span>
                   </h3>
@@ -134,9 +137,8 @@ const HeroComponent = () => {
                       gap={2}
                       fontSize={fontSize}
                       fontWeight={600}
-                      padding={4}
-                      gradientHeight={Math.max(12, fontSize * 0.4)}
-                      gradientFrom="#020202"
+                      gradientFrom={isMobile ? "#020202" : "transparent"}
+                      gradientHeight={isMobile ? 12 : 16}
                     />
                     <span className="text-tertiary">%</span>
                   </h3>
