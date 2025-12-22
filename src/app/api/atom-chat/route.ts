@@ -1,16 +1,33 @@
-"use server";
-
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+
+/**
+ * Runtime: Node.js (required for OpenAI SDK)
+ * Note: Environment variable changes require redeployment.
+ * Ensure OPENAI_API_KEY is set in Production and Preview environments.
+ */
+export const runtime = "nodejs";
 
 let _openai: OpenAI | null = null;
 
 function getOpenAI() {
   if (!_openai) {
-    const apiKey = process.env.THESYS_API_KEY || process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
+    
+    // Validation: Fail fast with clear error
     if (!apiKey) {
-      throw new Error("THESYS_API_KEY or OPENAI_API_KEY must be set for Atom Chat");
+      throw new Error("OPENAI_API_KEY environment variable is not set. Configure in Vercel dashboard.");
     }
+    
+    // Validate key format - OpenAI keys start with "sk-" (not "sk-th-" which is Thesys)
+    if (apiKey.startsWith("sk-th-")) {
+      throw new Error("Invalid API key: OPENAI_API_KEY should not start with 'sk-th-'. You may be using THESYS_API_KEY by mistake.");
+    }
+    
+    if (!apiKey.startsWith("sk-")) {
+      throw new Error("Invalid OPENAI_API_KEY format. OpenAI keys should start with 'sk-'.");
+    }
+    
     _openai = new OpenAI({
       apiKey,
     });
@@ -45,6 +62,8 @@ FOCUS AREAS:
 - Total cost of ownership (licensing, platform fees, managed service)`;
 
 export async function POST(req: NextRequest) {
+  const requestId = req.headers.get("x-vercel-id") || `local-${Date.now()}`;
+  
   try {
     const { messages, selectedVendors, selectedFilters } = await req.json();
 
@@ -55,7 +74,7 @@ export async function POST(req: NextRequest) {
 - Deployment: ${v.deployment}
 - IP Ownership: ${v.ipOwnership}
 - Best Fit: ${v.bestFit}
-- Key Capabilities: ${Object.entries(v.capabilities)
+- Key Capabilities: ${Object.entries(v.capabilities || {})
           .filter(([_, value]) => value === true || value === "partial")
           .map(([key]) => key)
           .join(", ")}
@@ -63,13 +82,15 @@ export async function POST(req: NextRequest) {
       })
       .join("\n\n");
 
+    const capabilitiesText = selectedFilters.join(", ") || "None";
+    const vendorNames = selectedVendors.map((v: any) => v.name).join(", ");
+
     const contextMessage = `Vendor Context (directional, for comparison):
 
 ${vendorContext}
 
-Selected Capabilities the user is filtering by: ${selectedFilters.join(", ") || "None"}
-
-The user is comparing: ${selectedVendors.map((v: any) => v.name).join(", ")}`;
+Selected Capabilities: ${capabilitiesText}
+Comparing: ${vendorNames}`;
 
     const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o",
@@ -87,12 +108,21 @@ The user is comparing: ${selectedVendors.map((v: any) => v.name).join(", ")}`;
 
     return NextResponse.json({
       message: completion.choices[0]?.message?.content || "Sorry, I couldn't generate a response.",
+      request_id: requestId,
     });
-  } catch (error) {
-    console.error("Atom Chat error:", error);
+  } catch (error: any) {
+    console.error(`[Atom Chat] Error (request_id: ${requestId}):`, error);
+    
+    // Return specific error messages for debugging
+    const errorMessage = error.message || "Failed to process chat request";
+    const statusCode = error.status || 500;
+    
     return NextResponse.json(
-      { error: "Failed to process chat request" },
-      { status: 500 }
+      { 
+        error: errorMessage,
+        request_id: requestId,
+      },
+      { status: statusCode }
     );
   }
 }
