@@ -46,6 +46,10 @@ export default function AtomChatWidget({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      // Auto-focus input when chat opens
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
     } else {
       document.body.style.overflow = "";
     }
