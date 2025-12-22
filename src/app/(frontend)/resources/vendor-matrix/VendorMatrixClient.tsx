@@ -195,10 +195,6 @@ export default function VendorMatrixClient() {
                 onBack={handleBackToGrid}
                 onShare={handleShare}
                 onOpenChat={() => setChatOpen(true)}
-                onPromptClick={(prompt) => {
-                  setChatPrompt(prompt);
-                  setChatOpen(true);
-                }}
               />
               <AtomChatWidget
                 selectedVendors={vendors.filter((v) => selectedVendors.includes(v.id))}

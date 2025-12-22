@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import ThinkingLoader from "./ThinkingLoader";
+import SuggestedPrompts from "./SuggestedPrompts";
 
 interface Message {
   role: "user" | "assistant";
@@ -286,6 +287,23 @@ export default function AtomChatWidget({
                   </div>
                 </div>
               )}
+              
+              {/* Suggested prompts when chat is empty */}
+              {messages.length === 1 && !isLoading && (
+                <div className="mt-4">
+                  <p className="text-xs text-foreground/50 mb-2">Suggested questions:</p>
+                  <SuggestedPrompts 
+                    vendors={selectedVendors} 
+                    onPromptClick={(prompt) => {
+                      setInput(prompt);
+                      if (textareaRef.current) {
+                        textareaRef.current.focus();
+                      }
+                    }} 
+                  />
+                </div>
+              )}
+              
               <div ref={messagesEndRef} />
             </div>
 

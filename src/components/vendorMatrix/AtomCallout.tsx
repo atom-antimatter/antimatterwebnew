@@ -1,26 +1,24 @@
 import { HiChatBubbleLeftRight } from "react-icons/hi2";
-import { Vendor } from "@/data/vendorMatrix";
-import SuggestedPrompts from "./SuggestedPrompts";
 
 interface AtomCalloutProps {
-  vendors: Vendor[];
   onOpenChat: () => void;
-  onPromptClick: (prompt: string) => void;
 }
 
-export default function AtomCallout({ vendors, onOpenChat, onPromptClick }: AtomCalloutProps) {
+export default function AtomCallout({ onOpenChat }: AtomCalloutProps) {
   return (
-    <div className="my-8 p-5 md:p-6 rounded-xl bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/30">
+    <div className="my-8 p-5 md:p-6 rounded-xl bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/50 shadow-lg">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
         {/* Left: Icon + Content */}
-        <div className="flex items-start gap-3 flex-1">
-          <HiChatBubbleLeftRight className="w-6 h-6 text-secondary flex-shrink-0 mt-1" />
+        <div className="flex items-start gap-4 flex-1">
+          <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+            <HiChatBubbleLeftRight className="w-5 h-5 text-secondary" />
+          </div>
           <div>
-            <h3 className="text-lg font-semibold text-secondary mb-1.5">
-              Chat with Atom to dive deeper
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              Chat with Atom
             </h3>
-            <p className="text-sm text-foreground/70 leading-relaxed">
-              Compare deployment models, IP ownership, and capabilities
+            <p className="text-sm text-foreground/60 leading-relaxed">
+              Ask about deployment, IP ownership, security, RAG, voice, GenUI, and tool calling.
             </p>
           </div>
         </div>
@@ -28,18 +26,14 @@ export default function AtomCallout({ vendors, onOpenChat, onPromptClick }: Atom
         {/* Right: CTA */}
         <button
           onClick={onOpenChat}
-          className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-colors text-sm font-medium"
+          className="w-full md:w-auto flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-all hover:shadow-lg hover:shadow-secondary/20 text-sm font-semibold"
         >
-          <HiChatBubbleLeftRight className="w-4 h-4" />
           Open Chat
         </button>
       </div>
       
-      {/* Suggested prompts */}
-      <SuggestedPrompts vendors={vendors} onPromptClick={onPromptClick} />
-      
       {/* Disclaimer */}
-      <p className="text-xs text-foreground/40 mt-3">
+      <p className="text-xs text-foreground/30 mt-4">
         Directional comparison — confirm during procurement.
       </p>
     </div>

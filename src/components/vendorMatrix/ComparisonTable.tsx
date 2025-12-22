@@ -12,7 +12,6 @@ interface ComparisonTableProps {
   onBack: () => void;
   onShare: () => void;
   onOpenChat: () => void;
-  onPromptClick: (prompt: string) => void;
 }
 
 function calculateMatchScore(
@@ -47,7 +46,6 @@ export default function ComparisonTable({
   onBack,
   onShare,
   onOpenChat,
-  onPromptClick,
 }: ComparisonTableProps) {
   const [copiedToast, setCopiedToast] = useState(false);
 
@@ -85,11 +83,7 @@ export default function ComparisonTable({
         </div>
       )}
 
-      <AtomCallout 
-        vendors={comparedVendors} 
-        onOpenChat={onOpenChat} 
-        onPromptClick={onPromptClick}
-      />
+      <AtomCallout onOpenChat={onOpenChat} />
 
       {/* Table */}
       <div className="overflow-x-auto -webkit-overflow-scrolling-touch max-w-full">
