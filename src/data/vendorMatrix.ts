@@ -157,7 +157,7 @@ export const vendors: Vendor[] = [
   {
     id: "kore-ai",
     name: "Kore.ai",
-    logoUrl: "https://kore.ai/wp-content/themes/kore-rebrand/images/kore-logo.svg",
+    logoUrl: "/images/vendors/kore-ai.svg",
     primaryUseCase: "Enterprise AI platform: AI for Work, Service, Process + agent platform",
     typicalDeployment: "Cloud + on-prem/private options; enterprise integrations",
     ipOwnership: "partial",
@@ -195,7 +195,7 @@ export const vendors: Vendor[] = [
   {
     id: "intercom-fin",
     name: "Intercom Fin",
-    logoUrl: "https://static.intercomassets.com/assets/logo-intercom-bf350474a9e7c80a25d9db7e399c21d26a8c8bd0ec3308d7b17c1e9067d19cc9.svg",
+    logoUrl: "/images/vendors/intercom.svg",
     primaryUseCase: "AI-powered customer support within Intercom",
     typicalDeployment: "SaaS in Intercom",
     ipOwnership: "no",
@@ -233,7 +233,7 @@ export const vendors: Vendor[] = [
   {
     id: "zendesk",
     name: "Zendesk AI Agents",
-    logoUrl: "https://d1eipm3vz40hy0.cloudfront.net/images/AMER/Zendesk_logo.svg",
+    logoUrl: "/images/vendors/zendesk.svg",
     primaryUseCase: "AI agents within Zendesk support platform",
     typicalDeployment: "SaaS in Zendesk",
     ipOwnership: "no",
@@ -271,7 +271,7 @@ export const vendors: Vendor[] = [
   {
     id: "servicenow",
     name: "ServiceNow Now Assist",
-    logoUrl: "https://www.servicenow.com/content/dam/servicenow-assets/images/meganav/servicenow-header-logo.svg",
+    logoUrl: "/images/vendors/servicenow.svg",
     primaryUseCase: "AI within ServiceNow platform (ITSM, workflows)",
     typicalDeployment: "ServiceNow platform (primarily cloud)",
     ipOwnership: "no",
@@ -347,7 +347,7 @@ export const vendors: Vendor[] = [
   {
     id: "google-vertex",
     name: "Google Vertex AI Agent Builder",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg",
+    logoUrl: "/images/vendors/google-cloud.svg",
     primaryUseCase: "AI agents on Google Cloud",
     typicalDeployment: "Google Cloud",
     ipOwnership: "no",
@@ -385,7 +385,7 @@ export const vendors: Vendor[] = [
   {
     id: "amazon-q",
     name: "Amazon Q Business",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg",
+    logoUrl: "/images/vendors/aws.svg",
     primaryUseCase: "Enterprise AI assistant on AWS",
     typicalDeployment: "AWS",
     ipOwnership: "no",
@@ -423,7 +423,7 @@ export const vendors: Vendor[] = [
   {
     id: "ibm-watsonx",
     name: "IBM watsonx Assistant",
-    logoUrl: "https://www.ibm.com/brand/experience-guides/developer/b1db1ae501d522a1a4b49613fe07c9f1/01_8-bar-positive.svg",
+    logoUrl: "/images/vendors/ibm.svg",
     primaryUseCase: "Enterprise conversational AI with on-prem options",
     typicalDeployment: "Cloud or on-prem",
     ipOwnership: "partial",
@@ -461,7 +461,7 @@ export const vendors: Vendor[] = [
   {
     id: "cognigy",
     name: "Cognigy.AI",
-    logoUrl: "https://www.cognigy.com/hs-fs/hubfs/Cognigy_April2020/Images/cognigy-logo.svg",
+    logoUrl: "/images/vendors/cognigy.svg",
     primaryUseCase: "Advanced CX automation platform",
     typicalDeployment: "Deployable on Kubernetes",
     ipOwnership: "partial",
@@ -499,7 +499,7 @@ export const vendors: Vendor[] = [
   {
     id: "moveworks",
     name: "Moveworks",
-    logoUrl: "https://www.moveworks.com/hs-fs/hubfs/Moveworks_December2020/Image/moveworks-logo-purple.svg",
+    logoUrl: "/images/vendors/moveworks.svg",
     primaryUseCase: "IT/HR helpdesk deflection at scale",
     typicalDeployment: "SaaS platform",
     ipOwnership: "no",
@@ -537,7 +537,7 @@ export const vendors: Vendor[] = [
   {
     id: "sierra",
     name: "Sierra",
-    logoUrl: "https://cdn.prod.website-files.com/66fc0fdc68696e5b72665e96/66fc0fdc68696e5b7266602a_Sierra_Logo_TM.svg",
+    logoUrl: "/images/vendors/sierra.svg",
     primaryUseCase: "High-end CX agent platform",
     typicalDeployment: "SaaS platform",
     ipOwnership: "no",
