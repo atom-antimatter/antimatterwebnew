@@ -117,7 +117,9 @@ const HeroComponent = () => {
                       gap={2}
                       fontSize={fontSize}
                       fontWeight={600}
-                      gradientFrom="transparent"
+                      padding={4}
+                      gradientHeight={Math.max(12, fontSize * 0.4)}
+                      gradientFrom="#020202"
                     />
                     <span className="text-tertiary">+</span>
                   </h3>
@@ -132,7 +134,9 @@ const HeroComponent = () => {
                       gap={2}
                       fontSize={fontSize}
                       fontWeight={600}
-                      gradientFrom="transparent"
+                      padding={4}
+                      gradientHeight={Math.max(12, fontSize * 0.4)}
+                      gradientFrom="#020202"
                     />
                     <span className="text-tertiary">%</span>
                   </h3>
