@@ -99,17 +99,17 @@ export default function ComparisonTable({
       <AtomCallout />
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      <div className="overflow-x-auto -webkit-overflow-scrolling-touch max-w-full">
+        <table className="w-full border-collapse min-w-full">
           <thead>
             <tr className="sticky top-0 bg-background z-10">
-              <th className="text-left p-4 border-b border-zinc-800 font-medium text-sm uppercase tracking-wide text-foreground/60 w-64">
+              <th className="sticky left-0 bg-background text-left p-3 md:p-4 border-b border-zinc-800 font-medium text-xs md:text-sm uppercase tracking-wide text-foreground/60 min-w-[140px] md:w-64">
                 Capability
               </th>
               {comparedVendors.map((vendor) => (
                 <th
                   key={vendor.id}
-                  className="p-4 border-b border-zinc-800 text-center min-w-[180px]"
+                  className="p-3 md:p-4 border-b border-zinc-800 text-center min-w-[140px] md:min-w-[180px]"
                 >
                   <div className="flex flex-col items-center gap-3">
                     <div className="h-12 flex items-center justify-center">
@@ -132,7 +132,7 @@ export default function ComparisonTable({
           <tbody>
             {/* Key info rows */}
             <tr className="border-b border-zinc-800">
-              <td className="p-4 font-medium text-sm text-foreground/80">Deployment</td>
+              <td className="sticky left-0 bg-background p-3 md:p-4 font-medium text-xs md:text-sm text-foreground/80">Deployment</td>
               {comparedVendors.map((vendor) => (
                 <td key={vendor.id} className="p-4 text-center text-sm text-foreground/70">
                   {vendor.typicalDeployment}
@@ -140,7 +140,7 @@ export default function ComparisonTable({
               ))}
             </tr>
             <tr className="border-b border-zinc-800">
-              <td className="p-4 font-medium text-sm text-foreground/80">IP Ownership</td>
+              <td className="sticky left-0 bg-background p-3 md:p-4 font-medium text-xs md:text-sm text-foreground/80">IP Ownership</td>
               {comparedVendors.map((vendor) => (
                 <td key={vendor.id} className="p-4 text-center text-sm">
                   <span
@@ -158,7 +158,7 @@ export default function ComparisonTable({
               ))}
             </tr>
             <tr className="border-b border-zinc-800 bg-zinc-900/30">
-              <td className="p-4 font-medium text-sm text-foreground/80">Best Fit</td>
+              <td className="sticky left-0 bg-zinc-900/30 p-3 md:p-4 font-medium text-xs md:text-sm text-foreground/80">Best Fit</td>
               {comparedVendors.map((vendor) => (
                 <td key={vendor.id} className="p-4 text-center text-xs text-foreground/70 leading-relaxed">
                   {vendor.bestFit}
@@ -170,7 +170,7 @@ export default function ComparisonTable({
             {capabilityCategories.map((category) => (
               <>
                 <tr key={`${category.id}-header`}>
-                  <td className="p-4 bg-zinc-900/50 font-semibold text-sm uppercase tracking-wide text-foreground/90 border-y border-zinc-800">
+                  <td className="sticky left-0 p-3 md:p-4 bg-zinc-900/50 font-semibold text-xs md:text-sm uppercase tracking-wide text-foreground/90 border-y border-zinc-800">
                     {category.title}
                   </td>
                   {comparedVendors.map((vendor) => (
@@ -179,7 +179,7 @@ export default function ComparisonTable({
                 </tr>
                 {category.items.map((item) => (
                   <tr key={item.id} className="border-b border-zinc-800 hover:bg-zinc-900/30">
-                    <td className="p-4 text-sm text-foreground/70">{item.label}</td>
+                    <td className="sticky left-0 bg-background p-3 md:p-4 text-xs md:text-sm text-foreground/70">{item.label}</td>
                     {comparedVendors.map((vendor) => (
                       <td key={vendor.id} className="p-4">
                         <CapabilityIcon value={vendor.capabilities[item.id]} />
@@ -191,8 +191,8 @@ export default function ComparisonTable({
             ))}
 
             {/* Differentiator row */}
-            <tr className="border-b border-zinc-800 bg-secondary/5">
-              <td className="p-4 font-semibold text-sm text-secondary">Key Differentiator</td>
+            <tr className="border-b border-zinc-800 bg-background">
+              <td className="sticky left-0 bg-background p-3 md:p-4 font-semibold text-xs md:text-sm text-secondary">Key Differentiator</td>
               {comparedVendors.map((vendor) => (
                 <td key={vendor.id} className="p-4 text-xs text-foreground/80 leading-relaxed">
                   {vendor.atomDifferentiator}
