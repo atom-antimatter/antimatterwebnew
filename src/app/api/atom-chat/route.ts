@@ -47,12 +47,9 @@ Most competitors are SaaS platforms the customer rents; they may offer integrati
 YOUR GUIDELINES:
 - Always anchor your answer to the CURRENTLY SELECTED vendors and CURRENTLY SELECTED capabilities in the comparison
 - Answer using the vendor facts provided in 'Vendor Context'
-- If details missing, use web browsing to find current information from official vendor websites
-- When browsing is used:
-  - Cite sources explicitly with markdown links
-  - Never fabricate citations
-  - Format: **Sources:** followed by [Vendor Name](URL) bullets
-- If browsing unavailable, state: "No live browsing used"
+- Do NOT include a "Sources:" section unless you actually cite sources with URLs
+- Never output empty section headers or "No live browsing used" statements
+- Only add **Sources:** if you provide actual clickable links [Title](URL)
 - Be explicit about trade-offs relevant to the selected capabilities
 - Focus on the TOOLS selected: if user selected "on-prem", prioritize on-prem/container/Kubernetes/VPC
 - If user selected "voice", focus on voice capabilities; if "RAG", focus on RAG/search/grounding
@@ -126,55 +123,54 @@ Comparing: ${vendorNames}`;
       })),
     ];
 
-    // Use Responses API with GPT-5.2
-    // Note: If GPT-5.2 is not available, will fallback gracefully
-    try {
-      const response = await (getOpenAI() as any).responses.create({
-        model: "gpt-5.2",
-        input: [
-          ...inputMessages,
-          {
-            role: "user" as const,
-            content: currentUserMessage,
-          },
-        ],
-        tools: [
-          {
-            type: "web_search" as any,
-          },
-        ],
-        temperature: 0.7,
-        max_output_tokens: 800,
-      });
+    // Use streaming for faster perceived performance
+    const stream = await getOpenAI().chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        ...inputMessages,
+        {
+          role: "user",
+          content: currentUserMessage,
+        },
+      ],
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 600,
+    });
 
-      return NextResponse.json({
-        message: response.output_text || response.output?.[0]?.text || "Sorry, I couldn't generate a response.",
-        request_id: requestId,
-        model: "GPT-5.2",
-      });
-    } catch (responsesError: any) {
-      // Fallback to chat.completions if Responses API not available
-      console.warn(`[Atom Chat] Responses API failed (${responsesError.message}), falling back to chat.completions`);
-      
-      const completion = await getOpenAI().chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          ...inputMessages,
-          {
-            role: "user",
-            content: currentUserMessage,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 800,
-      });
-
-      return NextResponse.json({
-        message: completion.choices[0]?.message?.content || "Sorry, I couldn't generate a response.",
-        request_id: requestId,
-        model: "GPT-4o",
-      });
-    }
+    // Return Server-Sent Events stream
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          
+          try {
+            for await (const chunk of stream) {
+              const content = chunk.choices[0]?.delta?.content || "";
+              if (content) {
+                const data = JSON.stringify({ content, model: "GPT-4o" });
+                controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+              }
+            }
+            
+            // Send done signal
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
+            controller.close();
+          } catch (streamError) {
+            console.error(`[Atom Chat] Stream error (request_id: ${requestId}):`, streamError);
+            controller.error(streamError);
+          }
+        },
+      }),
+      {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+          "X-Request-Id": requestId,
+        },
+      }
+    );
   } catch (error: any) {
     console.error(`[Atom Chat] Error (request_id: ${requestId}):`, error);
     

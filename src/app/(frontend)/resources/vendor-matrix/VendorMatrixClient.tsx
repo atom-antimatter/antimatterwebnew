@@ -20,6 +20,7 @@ export default function VendorMatrixClient() {
   const [selectedFilters, setSelectedFilters] = useState<(keyof Vendor['capabilities'])[]>([]);
   const [selectedVendors, setSelectedVendors] = useState<string[]>(["atom"]); // Atom preselected by default
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatPrompt, setChatPrompt] = useState<string>("");
 
   // Initialize state from URL params
   useEffect(() => {
@@ -194,10 +195,15 @@ export default function VendorMatrixClient() {
                 onBack={handleBackToGrid}
                 onShare={handleShare}
                 onOpenChat={() => setChatOpen(true)}
+                onPromptClick={(prompt) => {
+                  setChatPrompt(prompt);
+                  setChatOpen(true);
+                }}
               />
               <AtomChatWidget
                 selectedVendors={vendors.filter((v) => selectedVendors.includes(v.id))}
                 selectedFilters={selectedFilters}
+                initialPrompt={chatPrompt}
               />
             </>
           )}

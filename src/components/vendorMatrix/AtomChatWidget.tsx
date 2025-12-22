@@ -16,13 +16,28 @@ interface Message {
 interface AtomChatWidgetProps {
   selectedVendors: Vendor[];
   selectedFilters: (keyof Vendor['capabilities'])[];
+  initialPrompt?: string;
 }
 
 export default function AtomChatWidget({
   selectedVendors,
   selectedFilters,
+  initialPrompt,
 }: AtomChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Handle initial prompt
+  useEffect(() => {
+    if (initialPrompt && isOpen) {
+      setInput(initialPrompt);
+      // Auto-send after a brief delay to let UI settle
+      setTimeout(() => {
+        if (textareaRef.current) {
+          handleSend();
+        }
+      }, 300);
+    }
+  }, [initialPrompt, isOpen]);
   
   // Prevent background scrolling when chat is open
   useEffect(() => {
@@ -89,6 +104,10 @@ export default function AtomChatWidget({
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
+    // Add empty assistant message for streaming
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+    const assistantMessageIndex = messages.length + 1;
+
     try {
       const response = await fetch("/api/atom-chat", {
         method: "POST",
@@ -112,20 +131,58 @@ export default function AtomChatWidget({
         throw new Error("Failed to get response");
       }
 
-      const data = await response.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
-      if (data.model) {
-        setCurrentModel(data.model);
+      // Read Server-Sent Events stream
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.done) {
+                break;
+              }
+              
+              if (data.content) {
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  if (updated[assistantMessageIndex]) {
+                    updated[assistantMessageIndex].content += data.content;
+                  }
+                  return updated;
+                });
+              }
+              
+              if (data.model) {
+                setCurrentModel(data.model);
+              }
+            } catch (parseError) {
+              console.warn("Failed to parse SSE data:", line);
+            }
+          }
+        }
       }
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, I encountered an error. Please try again.",
-        },
-      ]);
+      setMessages((prev) => {
+        const updated = [...prev];
+        if (updated[assistantMessageIndex]) {
+          updated[assistantMessageIndex].content = "Sorry, I encountered an error. Please try again.";
+        }
+        return updated;
+      });
     } finally {
       setIsLoading(false);
     }
@@ -185,14 +242,14 @@ export default function AtomChatWidget({
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+                    className={`max-w-[80%] px-4 py-3 rounded-2xl break-words overflow-wrap-anywhere ${
                       msg.role === "user"
                         ? "bg-secondary text-white"
                         : "bg-zinc-800 text-foreground"
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none">
+                      <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none overflow-hidden">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
