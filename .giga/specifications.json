@@ -1,0 +1,22 @@
+[
+  {
+    "fileName": "main-overview.mdc",
+    "description": "Complete system overview including architecture, key components, and high-level integration patterns between emotion analysis, voice agent, and content management systems"
+  },
+  {
+    "fileName": "emotion-analysis-system.mdc",
+    "description": "Detailed documentation of the 53-dimensional emotion detection system, including facial analysis algorithms, text sentiment analysis, real-time processing queue, and visualization components"
+  },
+  {
+    "fileName": "voice-agent-architecture.mdc",
+    "description": "Comprehensive documentation of the bi-directional voice communication system, including audio queue management, WebSocket streaming, transcription handling, and interruption management"
+  },
+  {
+    "fileName": "content-generation-pipeline.mdc",
+    "description": "Documentation of the multi-phase blog content generation system, including SEO optimization workflow, content structuring algorithms, and metadata generation processes"
+  },
+  {
+    "fileName": "seo-analysis-engine.mdc",
+    "description": "Technical documentation of the SEO scoring algorithms, hierarchical page relationship analysis, internal link density calculations, and page importance scoring systems"
+  }
+]

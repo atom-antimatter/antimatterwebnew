@@ -1,4 +1,3 @@
-import { transformStream } from "@crayonai/stream";
 import { makeC1Response } from "@thesysai/genui-sdk/server";
 import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
@@ -125,6 +124,10 @@ export const generateAndStreamC1Response = async ({
       "Understanding your query and preparing to search for relevant information",
   });
 
+  // Safety net: never leave the UI stuck in a "streaming" state forever.
+  // If upstream streaming/tooling hangs, we terminate with a user-visible error.
+  const STREAM_TIMEOUT_MS = 90_000;
+
   // Cache the user message and create assistant message placeholder
   await addUserMessage(threadId, prompt);
 
@@ -160,51 +163,99 @@ export const generateAndStreamC1Response = async ({
   // Create executable tool based on search provider
   const tools = createWebSearchTool(searchProvider, c1Response, signal);
 
-  // Use runTools for automatic tool execution
-  const llmStream = await getThesysClient().beta.chat.completions.runTools({
-    model: "c1/anthropic/claude-sonnet-4/v-20250915",
-    messages,
-    tools,
-    stream: true,
-  });
-
   let finalC1Response = "";
 
-  transformStream(
-    llmStream,
-    (chunk) => {
-      if (signal.aborted) return "";
-      const contentDelta = chunk.choices[0]?.delta?.content || "";
-      if (contentDelta) {
+  const streamAndWrite = async () => {
+    // Use runTools for automatic tool execution
+    const runner: any = await getThesysClient().beta.chat.completions.runTools({
+      model: "c1/anthropic/claude-sonnet-4/v-20250915",
+      messages,
+      tools,
+      stream: true,
+    });
+
+    // Preferred: stream chunks (works when runner is async-iterable).
+    if (runner && typeof runner[Symbol.asyncIterator] === "function") {
+      for await (const chunk of runner as AsyncIterable<any>) {
+        if (signal.aborted) break;
+        const contentDelta = chunk?.choices?.[0]?.delta?.content || "";
+        if (!contentDelta) continue;
+
         finalC1Response += contentDelta;
         try {
           c1Response.writeContent(contentDelta);
         } catch (error) {
-          if (!signal.aborted) {
-            console.error("Error writing content:", error);
-          }
+          if (!signal.aborted) console.error("Error writing content:", error);
         }
       }
-      return contentDelta;
-    },
-    {
-      onEnd: async () => {
-        try {
-          if (!signal.aborted) {
-            // Add assistant message to cache
-            await addAssistantMessage(threadId, {
-              c1Response: finalC1Response,
-            });
-
-            c1Response.end();
-          }
-        } catch (error) {
-          console.error(
-            "Stream already closed or error updating cache:",
-            error
-          );
-        }
-      },
+      return;
     }
-  );
+
+    // Fallback: runner APIs (depends on SDK version).
+    if (runner && typeof runner.finalChatCompletion === "function") {
+      const final = await runner.finalChatCompletion();
+      const content = final?.choices?.[0]?.message?.content || "";
+      if (content) {
+        finalC1Response += content;
+        c1Response.writeContent(content);
+      }
+      return;
+    }
+
+    if (runner && typeof runner.finalContent === "function") {
+      const content = await runner.finalContent();
+      if (content) {
+        finalC1Response += content;
+        c1Response.writeContent(content);
+      }
+      return;
+    }
+
+    throw new Error(
+      "Thesys streaming runner is not iterable and does not support finalization methods",
+    );
+  };
+
+  try {
+    await Promise.race([
+      streamAndWrite(),
+      new Promise<void>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                "Response timed out while generating. Please try again in a moment.",
+              ),
+            ),
+          STREAM_TIMEOUT_MS,
+        ),
+      ),
+    ]);
+
+    if (!signal.aborted) {
+      await addAssistantMessage(threadId, {
+        c1Response: finalC1Response,
+      });
+    }
+  } catch (error) {
+    if (!signal.aborted) {
+      const message =
+        error instanceof Error ? error.message : "Unknown error generating answer";
+      console.error("Error streaming C1 response:", error);
+
+      c1Response.writeThinkItem({
+        title: "Error",
+        description: "An error occurred while generating the answer",
+      });
+      c1Response.writeContent(
+        `I ran into an issue while generating a response: ${message}`,
+      );
+    }
+  } finally {
+    try {
+      if (!signal.aborted) c1Response.end();
+    } catch {
+      // ignore end errors if already closed
+    }
+  }
 };

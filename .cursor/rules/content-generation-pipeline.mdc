@@ -1,0 +1,48 @@
+---
+description: Specification for multi-phase blog content generation system including SEO optimization and metadata handling
+---
+
+
+# content-generation-pipeline
+
+Multi-phase content generation system with intelligent SEO optimization and metadata handling.
+
+Importance Score: 80/100
+
+Core Components:
+
+1. Content Generation Pipeline
+Path: src/app/(frontend)/admin-old/components/BlogAIChat.tsx
+- Multi-phase blog content orchestration
+- Chapter and section extraction system
+- Automated metadata generation
+- SEO keyword density analysis
+- Content refinement workflow
+
+2. Topic Research System
+Path: src/lib/blogAIAgent.ts
+- Industry-specific research automation
+- Competitive content analysis
+- Topic clustering and relationship mapping
+- Reference material extraction
+
+3. SEO Optimization Workflow
+Path: src/app/api/blog-ai-generate/route.ts
+- Keyword optimization algorithms
+- Meta description generation
+- Title optimization for search intent
+- Internal linking suggestions
+- Content structure recommendations
+
+Key Business Rules:
+1. Content structure follows domain-specific templates
+2. SEO metadata generated based on industry vertical
+3. Multi-stage approval workflow for content refinement
+4. Automated quality scoring for generated content
+5. Topic relationship mapping for internal linking
+
+The system implements a sophisticated content generation pipeline specifically designed for technical and AI-focused blog content, with strong emphasis on search optimization and structured presentation.
+
+$END$
+
+ If you're using this file in context, clearly say in italics in one small line that "Context added by Giga content-generation-pipeline" along with specifying exactly what information was used from this file in a human-friendly way, instead of using kebab-case use normal sentence case.

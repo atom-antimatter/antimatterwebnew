@@ -117,6 +117,13 @@ export const makeApiCall = async ({
       signal: newAbortController.signal,
     });
 
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(
+        errorText || `Ask request failed with status ${response.status}`,
+      );
+    }
+
     // Extract thread information from headers
     const responseThreadId = response.headers.get("X-Thread-Id") || undefined;
     const threadStatus = response.headers.get("X-Thread-Status") as
@@ -139,7 +146,7 @@ export const makeApiCall = async ({
     while (true) {
       const { done, value } = await stream.read();
       // Decode the chunk, considering if it's the final chunk
-      const chunk = decoder.decode(value, { stream: !done });
+      const chunk = value ? decoder.decode(value, { stream: !done }) : "";
 
       // Accumulate response and update state
       streamResponse += chunk;
@@ -149,6 +156,11 @@ export const makeApiCall = async ({
       if (done) {
         break;
       }
+    }
+
+    // If the server ended the stream without yielding content, surface a helpful error.
+    if (!streamResponse.trim()) {
+      throw new Error("No response received. Please try again.");
     }
 
     // Return successful response
