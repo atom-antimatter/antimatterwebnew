@@ -10,8 +10,10 @@ import ThinkingLoader from "./ThinkingLoader";
 import SuggestedPrompts from "./SuggestedPrompts";
 
 interface Message {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
+  type?: "text" | "lead_form" | "lead_success";
   content: string;
+  formData?: any;
 }
 
 interface AtomChatWidgetProps {
@@ -54,10 +56,12 @@ export default function AtomChatWidget({
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
+      type: "text",
       content:
         "Hi — I'm Atom Chat. What do you want to compare: deployment, IP ownership, security, voice, RAG, GenUI, or tool calling?",
     },
   ]);
+  const [showLeadForm, setShowLeadForm] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentModel, setCurrentModel] = useState<string>("GPT-5.2");
