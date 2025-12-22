@@ -99,8 +99,8 @@ export default function ComparisonTable({
                   className="p-3 md:p-4 border-b border-zinc-800 text-center min-w-[140px] md:min-w-[180px]"
                 >
                   <div className="flex flex-col items-center gap-3">
-                    <div className="h-12 flex items-center justify-center">
-                      <VendorLogo vendor={vendor} />
+                    <div className="h-14 flex items-center justify-center w-full px-2">
+                      <VendorLogo vendor={vendor} size="lg" className="max-w-[140px]" />
                     </div>
                     <div className="text-xs font-medium">{vendor.name}</div>
                     {selectedFilters.length > 0 && (
