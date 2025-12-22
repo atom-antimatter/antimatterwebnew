@@ -50,11 +50,12 @@ export function getResponsesClient(): OpenAI {
  * - GPT-5.2 is always used
  * - Streaming is enabled
  * - Proper error handling
+ * - Uses max_completion_tokens (required for GPT-5.x)
  */
 export async function createStreamingResponse(params: {
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
   temperature?: number;
-  maxTokens?: number;
+  maxCompletionTokens?: number;
 }) {
   const client = getResponsesClient();
   
@@ -63,7 +64,8 @@ export async function createStreamingResponse(params: {
   
   console.log(`[Atom Chat] Creating streaming response with ${ATOM_MODEL}`);
   
-  // Create streaming chat completion with locked model
+  // GPT-5.x requires max_completion_tokens, NOT max_tokens
+  // Using max_tokens will cause: 400 Unsupported parameter error
   const stream = await client.chat.completions.create({
     model: ATOM_MODEL,
     messages: params.messages.map(m => ({
@@ -72,7 +74,7 @@ export async function createStreamingResponse(params: {
     })),
     stream: true,
     temperature: params.temperature ?? 0.7,
-    max_tokens: params.maxTokens ?? 800,
+    max_completion_tokens: params.maxCompletionTokens ?? 800,
   });
   
   return stream;

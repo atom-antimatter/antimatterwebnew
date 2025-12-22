@@ -3,6 +3,8 @@
  * 
  * DO NOT modify this without updating all dependent systems.
  * All Atom Chat AI requests MUST use this exact model string.
+ * 
+ * IMPORTANT: GPT-5.x models require max_completion_tokens, NOT max_tokens
  */
 
 export const ATOM_MODEL = "gpt-5.2" as const;
@@ -17,6 +19,13 @@ export function validateAtomModel(model: string): void {
       `❌ Atom Chat violation: Only ${ATOM_MODEL} is allowed. Attempted to use: ${model}`
     );
   }
+}
+
+/**
+ * Check if model is GPT-5.x family (requires max_completion_tokens)
+ */
+export function isGPT5Model(model: string): boolean {
+  return model.startsWith("gpt-5");
 }
 
 /**

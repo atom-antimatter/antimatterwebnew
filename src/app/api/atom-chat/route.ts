@@ -112,7 +112,7 @@ Comparing: ${vendorNames}`;
     const stream = await createStreamingResponse({
       messages: inputMessages,
       temperature: 0.7,
-      maxTokens: 800,
+      maxCompletionTokens: 800, // GPT-5.x requires max_completion_tokens
     });
 
     // Return Server-Sent Events stream with semantic buffering
