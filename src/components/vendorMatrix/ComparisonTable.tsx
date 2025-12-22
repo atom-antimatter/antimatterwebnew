@@ -3,29 +3,8 @@
 import { capabilityCategories, Vendor, vendors } from "@/data/vendorMatrix";
 import { useState } from "react";
 import { HiCheckCircle, HiMinusCircle, HiXCircle, HiArrowLeft, HiShare } from "react-icons/hi2";
-import Button from "../ui/Button";
 import AtomCallout from "./AtomCallout";
-import Image from "next/image";
-
-function VendorLogo({ vendor }: { vendor: Vendor }) {
-  const [hasError, setHasError] = useState(false);
-
-  if (hasError) {
-    return <span className="text-sm font-semibold">{vendor.name}</span>;
-  }
-
-  return (
-    <Image
-      src={vendor.logoUrl}
-      alt={vendor.name}
-      width={120}
-      height={40}
-      className={`w-auto object-contain ${vendor.id === "zendesk" ? "max-h-16" : "max-h-10"}`}
-      onError={() => setHasError(true)}
-      unoptimized={vendor.logoUrl.endsWith('.svg')}
-    />
-  );
-}
+import VendorLogo from "./VendorLogo";
 
 interface ComparisonTableProps {
   selectedVendors: string[];
@@ -80,14 +59,20 @@ export default function ComparisonTable({
     <div className="flex-1 pb-20">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-        <Button variant="inverted" onClick={onBack} className="gap-2">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-transparent border-2 border-secondary text-secondary rounded-full hover:bg-secondary/10 transition-colors text-sm font-medium"
+        >
           <HiArrowLeft className="w-4 h-4" />
           Back to Selection
-        </Button>
-        <Button onClick={handleShare} className="gap-2">
+        </button>
+        <button
+          onClick={handleShare}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-transparent border-2 border-secondary text-secondary rounded-full hover:bg-secondary/10 transition-colors text-sm font-medium"
+        >
           <HiShare className="w-4 h-4" />
           Share Comparison
-        </Button>
+        </button>
       </div>
 
       {copiedToast && (

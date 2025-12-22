@@ -2,9 +2,9 @@
 
 import { Vendor } from "@/data/vendorMatrix";
 import { motion } from "motion/react";
-import Image from "next/image";
 import { useState } from "react";
 import { HiCheckCircle } from "react-icons/hi2";
+import VendorLogo from "./VendorLogo";
 
 interface VendorCardProps {
   vendor: Vendor;
@@ -82,22 +82,7 @@ export default function VendorCard({
 
         {/* Logo */}
         <div className="flex items-center justify-center h-16 mb-4">
-          <Image
-            src={vendor.logoUrl}
-            alt={vendor.name}
-            width={120}
-            height={48}
-            className={`w-auto object-contain ${vendor.id === "zendesk" ? "max-h-24" : "max-h-12"}`}
-            onError={(e) => {
-              // Fallback to text if logo fails to load
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-              const parent = target.parentElement;
-              if (parent) {
-                parent.innerHTML = `<span class="text-lg font-semibold text-foreground">${vendor.name}</span>`;
-              }
-            }}
-          />
+          <VendorLogo vendor={vendor} size="lg" />
         </div>
 
         {/* Vendor name */}
