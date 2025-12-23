@@ -12,15 +12,15 @@
   border-radius: 9999px;
   pointer-events: none;
   z-index: -1;
-  opacity: 0.9;
+  opacity: 0.99;
   background: radial-gradient(
     circle at center,
-    rgba(104, 91, 255, 0.18) 0%,
-    rgba(104, 91, 255, 0.10) 28%,
-    rgba(104, 91, 255, 0.04) 55%,
+    rgba(104, 91, 255, 0.20) 0%,
+    rgba(104, 91, 255, 0.11) 28%,
+    rgba(104, 91, 255, 0.044) 55%,
     rgba(0, 0, 0, 0) 75%
   );
-  filter: blur(30px);
+  filter: blur(32px);
 }
 
 .container :global(canvas) {
@@ -123,8 +123,8 @@
 @media (max-width: 768px) {
   .container::before {
     inset: -8%;
-    opacity: 0.75;
-    filter: blur(22px);
+    opacity: 0.83;
+    filter: blur(23px);
   }
 }
 
