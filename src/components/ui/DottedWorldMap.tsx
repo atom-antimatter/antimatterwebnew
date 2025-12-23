@@ -138,7 +138,7 @@ const DottedWorldMap = ({
 
     const r = activeRadiusPx;
     const r2 = r * r;
-    const duration = prefersReducedMotion ? "0ms" : "650ms";
+    const duration = prefersReducedMotion ? "0ms" : "700ms";
 
     for (let i = 0; i < paths.length; i++) {
       const el = paths[i];
@@ -171,12 +171,13 @@ const DottedWorldMap = ({
       const isActive = minDist2 <= r2;
       if (isActive) {
         el.style.opacity = "1";
-        el.style.transform = prefersReducedMotion ? "scale(1)" : "scale(1.18)";
+        el.style.transform = prefersReducedMotion ? "scale(1)" : "scale(1.22)";
         el.setAttribute("fill", PURPLE_HEX);
         el.style.filter = "drop-shadow(0 0 6px rgba(105,106,172,0.8))";
       } else {
-        el.style.opacity = "0";
-        el.style.transform = "scale(0.9)";
+        // Keep a faint presence to avoid a jarring "blank map" flash.
+        el.style.opacity = "0.06";
+        el.style.transform = "scale(0.92)";
         el.style.filter = "none";
       }
     }

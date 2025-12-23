@@ -6,10 +6,12 @@ import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
 import { EDGE_LOCATIONS } from "@/data/edgeLocations";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 const EdgeDeploymentSection = () => {
   const sectionRef = useRef<HTMLDivElement | null>(null);
   const [mapMode, setMapMode] = useState<"full" | "edge">("full");
+  const pathname = usePathname();
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -17,17 +19,20 @@ const EdgeDeploymentSection = () => {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setMapMode(entry.isIntersecting ? "edge" : "full");
+        // More reliable than isIntersecting alone on fast scroll.
+        const ratio = entry.intersectionRatio ?? 0;
+        if (ratio >= 0.3) setMapMode("edge");
+        else setMapMode("full");
       },
       {
-        threshold: 0.45,
-        rootMargin: "0px 0px -20% 0px",
+        threshold: [0, 0.15, 0.3, 0.45],
+        rootMargin: "0px 0px -25% 0px",
       }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [pathname]);
 
   return (
     <div ref={sectionRef} className="py-32 sm:py-40" id="edge-deployment-section">

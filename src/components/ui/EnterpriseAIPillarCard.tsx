@@ -1,5 +1,4 @@
 import { EnterpriseAIPillarCardProps } from "@/data/enterpriseAIPillars";
-import { GoArrowRight } from "react-icons/go";
 
 const EnterpriseAIPillarCard = (props: EnterpriseAIPillarCardProps) => {
   const bgcolor = props.active
@@ -22,12 +21,6 @@ const EnterpriseAIPillarCard = (props: EnterpriseAIPillarCardProps) => {
             className={`w-full h-full duration-200 ${bgcolor} absolute inset-0 rounded-3xl`}
           ></div>
           <div className="h-full relative">
-            <div className="-rotate-45 absolute right-0 top-0 overflow-hidden size-8 sm:size-9 lg:size-10">
-              <div className="relative group-hover:translate-x-full transition-transform duration-300 ease-[cubic-bezier(.15,-0.26,.43,1.41)]">
-                <GoArrowRight className="size-full" />
-                <GoArrowRight className="size-full absolute right-full top-0" />
-              </div>
-            </div>
             <div className="relative h-full z-10 flex flex-col">
               <div className="flex flex-col gap-3">
                 <h4 className="block text-3xl sm:text-4xl font-semibold">
