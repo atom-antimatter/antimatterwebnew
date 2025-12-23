@@ -231,14 +231,7 @@ export default function EdgeGlobe() {
             "radial-gradient(circle at 50% 55%, rgba(123,124,255,0.22) 0%, rgba(123,124,255,0.08) 28%, rgba(0,0,0,0) 60%)",
         }}
       />
-      <div
-        className="pointer-events-none absolute inset-0 rounded-full"
-        style={{
-          // Thin rim highlight only (avoid “glass dome” / thick donut look)
-          boxShadow:
-            "inset 0 0 0 1px rgba(255,255,255,0.12), inset 0 0 36px rgba(255,255,255,0.04), 0 0 70px rgba(123,124,255,0.16)",
-        }}
-      />
+      {/* NOTE: Removed container rim/outline overlay (it created an outer “ring” around the sphere). */}
 
       <Globe
         ref={globeRef}
