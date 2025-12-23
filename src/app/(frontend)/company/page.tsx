@@ -5,6 +5,7 @@ import Reveal from "@/components/ui/Reveal";
 import ScrollToSection from "@/components/ui/ScrollToSection";
 import TransitionContainer from "@/components/ui/TransitionContainer";
 import TransitionLink from "@/components/ui/TransitionLink";
+import DottedWorldMap from "@/components/ui/DottedWorldMap";
 import Image from "next/image";
 import { HiMiniArrowLongRight } from "react-icons/hi2";
 import { IoLogoLinkedin } from "react-icons/io5";
@@ -68,32 +69,7 @@ const CompanyPage = () => {
               </p>
             </div>
             <div className="flex flex-col md:flex-row justify-between mt-32 sm:mt-40 items-center gap-10 md:gap-0">
-              <div className="relative">
-                <Image
-                  src={"/images/dotted-world-map-atlanta.svg"}
-                  alt="map"
-                  width={639}
-                  height={470}
-                  quality={100}
-                  className="max-w-[500px] xl:max-w-[639px] w-full"
-                />
-                <MotionDiv
-                  initial={{ clipPath: "circle(100% at 50% 50%)" }}
-                  whileInView={{ clipPath: "circle(0% at 48% 73%)" }}
-                  transition={{ duration: 1.2, ease: "easeInOut" }}
-                  viewport={{ once: true, amount: 0.8, margin: "30px" }}
-                  className="absolute top-0 left-0 w-full h-full"
-                >
-                  <Image
-                    src={"/images/dotted-world-map-atlanta_accent.svg"}
-                    alt="map"
-                    width={639}
-                    height={470}
-                    quality={100}
-                    className="max-w-[500px] xl:max-w-[639px] w-full"
-                  />
-                </MotionDiv>
-              </div>
+              <DottedWorldMap variant="company" />
               <p
                 className="text-2xl xl:text-3xl font-semibold max-w-md xl:max-w-xl"
                 id="story-paragraph"
