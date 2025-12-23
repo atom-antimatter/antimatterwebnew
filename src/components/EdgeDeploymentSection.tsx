@@ -1,17 +1,23 @@
 "use client";
 
 import Reveal from "./ui/Reveal";
-import DottedWorldMap from "./ui/DottedWorldMap";
 import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
-import { EDGE_LOCATIONS } from "@/data/edgeLocations";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Gauge, ShieldCheck, Network } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const EdgeGlobe = dynamic(() => import("./enterprise/EdgeGlobe"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full max-w-[520px] xl:max-w-[600px] mx-auto aspect-square rounded-full border border-foreground/10 bg-foreground/[0.02]" />
+  ),
+});
 
 const EdgeDeploymentSection = () => {
   const sectionRef = useRef<HTMLDivElement | null>(null);
-  const [mapMode, setMapMode] = useState<"full" | "edge">("full");
+  const [shouldLoadGlobe, setShouldLoadGlobe] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -20,14 +26,14 @@ const EdgeDeploymentSection = () => {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // More reliable than isIntersecting alone on fast scroll.
         const ratio = entry.intersectionRatio ?? 0;
-        if (ratio >= 0.3) setMapMode("edge");
-        else setMapMode("full");
+        if (ratio >= 0.15) {
+          setShouldLoadGlobe(true);
+        }
       },
       {
-        threshold: [0, 0.15, 0.3, 0.45],
-        rootMargin: "0px 0px -25% 0px",
+        threshold: [0, 0.1, 0.2],
+        rootMargin: "150px 0px 150px 0px",
       }
     );
 
@@ -38,15 +44,9 @@ const EdgeDeploymentSection = () => {
   return (
     <div ref={sectionRef} className="py-32 sm:py-40" id="edge-deployment-section">
       <div className="flex flex-col md:flex-row justify-between items-center gap-10 md:gap-16 lg:gap-20">
-        {/* Left: Animated map */}
+        {/* Left: 3D globe (lazy-loaded) */}
         <div className="relative w-full md:w-1/2 order-2 md:order-1">
-          <DottedWorldMap
-            variant="enterpriseEdge"
-            mode={mapMode}
-            edgeLocations={EDGE_LOCATIONS}
-            edgeLocationsLimit={8}
-            activeRadiusPx={24}
-          />
+          {shouldLoadGlobe ? <EdgeGlobe /> : <div className="w-full max-w-[520px] xl:max-w-[600px] mx-auto aspect-square rounded-full border border-foreground/10 bg-foreground/[0.02]" />}
         </div>
         
         {/* Right: Content */}
