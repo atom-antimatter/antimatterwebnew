@@ -6,7 +6,8 @@ import gsap from "gsap";
 
 /**
  * Static particles component for pages without scroll-driven animations
- * Always visible, centered, no scroll triggers
+ * Always visible, centered in hero section, does not follow scroll
+ * Uses absolute positioning to stay within hero container
  */
 const ParticelsStatic = () => {
   useEffect(() => {
@@ -18,20 +19,20 @@ const ParticelsStatic = () => {
         x: 0,
         y: 0,
         scale: 1,
-        clearProps: "all" // Clear any inherited transforms
+        clearProps: "transform" // Clear any inherited transforms but keep position
       });
     }
   }, []);
 
   return (
     <div
-      className="absolute lg:fixed pointer-events-none -mt-30 sm:-mt-0 top-1/2 left-1/2 -translate-1/2 size-[500px] sm:size-[700px] 2xl:size-[900px] z-10"
+      className="absolute pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] sm:size-[700px] 2xl:size-[900px] z-10"
       id="particles3d-static"
       style={{ opacity: 1 }} // Always visible
     >
-      <div className="relative w-full h-full 2xl:translate-x-0">
+      <div className="relative w-full h-full">
         <Particles3D />
-        <div className="size-1/2 top-1/2 left-1/2 -translate-1/2 absolute bg-primary rounded-full blur-[100px]"></div>
+        <div className="size-1/2 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 absolute bg-primary rounded-full blur-[100px]"></div>
       </div>
     </div>
   );
