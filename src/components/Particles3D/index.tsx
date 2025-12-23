@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import * as THREE from "three";
 import { createSceneSetup } from "./lib/initialSetup";
 import { createParticleSystem, ParticleSystem } from "./lib/particlesSetup";
@@ -15,6 +16,7 @@ export default function Particles3D() {
   const setisLoading = useLoading((s) => s.setisLoading);
   const setActiveIndex = useActiveIndex((s) => s.setActiveIndex);
   const mountedRef = useRef(false);
+  const pathname = usePathname(); // Re-init animation on route changes
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -139,7 +141,7 @@ export default function Particles3D() {
       // abort any inflight model loads
       loaders.forEach((l) => l.abort());
     };
-  }, [setActiveIndex, setisLoading]);
+  }, [setActiveIndex, setisLoading, pathname]); // Re-init on pathname change for reliable navigation
 
   return (
     <div
