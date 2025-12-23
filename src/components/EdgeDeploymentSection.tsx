@@ -5,7 +5,7 @@ import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Gauge, ShieldCheck, Network } from "lucide-react";
+import { Gauge, ShieldCheck, Network, type LucideIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const EdgeGlobe = dynamic(() => import("./enterprise/EdgeGlobe"), {
@@ -14,6 +14,36 @@ const EdgeGlobe = dynamic(() => import("./enterprise/EdgeGlobe"), {
     <div className="w-full max-w-[520px] xl:max-w-[600px] mx-auto aspect-square rounded-full border border-foreground/10 bg-foreground/[0.02]" />
   ),
 });
+
+type EdgePointRowProps = {
+  icon: LucideIcon;
+  text: string;
+};
+
+const EdgePointRow = ({ icon: Icon, text }: EdgePointRowProps) => {
+  return (
+    <div
+      className={[
+        "w-full flex items-center gap-4",
+        "rounded-2xl px-6 py-4",
+        // Keep border always to prevent layout shift on hover
+        "border border-foreground/10 bg-transparent",
+        "transition-colors transition-shadow",
+        "md:hover:bg-foreground/[0.03] md:hover:border-foreground/15 md:hover:shadow-[0_0_0_1px_rgba(123,124,255,.22)]",
+        "cursor-default",
+      ].join(" ")}
+    >
+      <div className="w-12 h-12 shrink-0 flex items-center justify-center rounded-full border border-foreground/10 bg-foreground/[0.03]">
+        <Icon className="w-5 h-5 text-secondary/80" strokeWidth={1.8} aria-hidden="true" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm sm:text-base text-foreground/85 leading-snug">
+          {text}
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const EdgeDeploymentSection = () => {
   const sectionRef = useRef<HTMLDivElement | null>(null);
@@ -63,36 +93,13 @@ const EdgeDeploymentSection = () => {
             </p>
             
             {/* Key points */}
-            <div className="flex flex-col gap-6 mb-10">
+            <div className="flex flex-col gap-4 mb-10">
               {[
-                {
-                  icon: Gauge,
-                  text: "Lower round‑trip latency for voice and real‑time UX",
-                },
-                {
-                  icon: ShieldCheck,
-                  text: "Regional execution with data‑residency boundaries",
-                },
-                {
-                  icon: Network,
-                  text: "Hybrid routing: edge inference + VPC/on‑prem orchestration",
-                },
-              ].map(({ icon: Icon, text }) => (
-                <div
-                  key={text}
-                  className="flex items-start gap-4 rounded-xl border border-transparent px-2 py-2 -mx-2 transition-colors md:hover:border-foreground/10 md:hover:bg-foreground/[0.03]"
-                >
-                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/10 bg-background/20">
-                    <Icon
-                      className="h-5 w-5 text-secondary/80"
-                      strokeWidth={1.8}
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <p className="text-sm sm:text-base text-foreground/85 leading-relaxed">
-                    {text}
-                  </p>
-                </div>
+                { icon: Gauge, text: "Lower round‑trip latency for voice and real‑time UX" },
+                { icon: ShieldCheck, text: "Regional execution with data‑residency boundaries" },
+                { icon: Network, text: "Hybrid routing: edge inference + VPC/on‑prem orchestration" },
+              ].map((item) => (
+                <EdgePointRow key={item.text} icon={item.icon} text={item.text} />
               ))}
             </div>
             
