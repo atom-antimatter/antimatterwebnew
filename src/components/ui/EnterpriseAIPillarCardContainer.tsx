@@ -9,11 +9,8 @@ const EnterpriseAIPillarCardContainer = () => {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const stepPxRef = useRef<number>(420);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-
-  const total = enterpriseAIPillarData.length;
 
   const measureStep = useCallback(() => {
     const el = scrollerRef.current;
@@ -33,10 +30,7 @@ const EnterpriseAIPillarCardContainer = () => {
     const left = el.scrollLeft;
     setCanScrollLeft(left > 2);
     setCanScrollRight(left < max - 2);
-    const step = stepPxRef.current || 1;
-    const idx = Math.max(0, Math.min(total - 1, Math.round(left / step)));
-    setCurrentIndex(idx);
-  }, [total]);
+  }, []);
 
   useEffect(() => {
     measureStep();
@@ -81,9 +75,6 @@ const EnterpriseAIPillarCardContainer = () => {
     <div id="enterprise-pillars-cards">
       {/* Controls row (outside cards) */}
       <div className="flex items-center justify-end gap-3 mb-6">
-        <span className="text-xs text-foreground/60 tabular-nums">
-          {String(currentIndex + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </span>
         <button
           type="button"
           aria-label="Previous card"
