@@ -9,10 +9,30 @@ import gsap from "gsap";
  * Always visible, centered in hero section, does not follow scroll
  * Uses absolute positioning to stay within hero container
  */
-const ParticelsStatic = () => {
+type Props = {
+  /**
+   * Use a custom DOM id to avoid collisions if rendered more than once
+   * (e.g. desktop absolute + mobile inline).
+   */
+  id?: string;
+  /**
+   * Additional Tailwind classes for sizing/positioning.
+   */
+  className?: string;
+  /**
+   * When true, renders as a normal flow element (not absolute-centered).
+   */
+  inline?: boolean;
+};
+
+const ParticelsStatic = ({
+  id = "particles3d-static",
+  className = "",
+  inline = false,
+}: Props) => {
   useEffect(() => {
     // Ensure particles are visible and centered (no scroll animation)
-    const particles = document.querySelector("#particles3d-static");
+    const particles = document.querySelector(`#${id}`);
     if (particles) {
       gsap.set(particles, {
         opacity: 1,
@@ -22,12 +42,17 @@ const ParticelsStatic = () => {
         clearProps: "transform" // Clear any inherited transforms but keep position
       });
     }
-  }, []);
+  }, [id]);
 
   return (
     <div
-      className="absolute pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] sm:size-[700px] 2xl:size-[900px] z-10"
-      id="particles3d-static"
+      className={[
+        inline
+          ? "relative pointer-events-none z-10"
+          : "absolute pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10",
+        className,
+      ].join(" ")}
+      id={id}
       style={{ opacity: 1 }} // Always visible
     >
       <div className="relative w-full h-full">

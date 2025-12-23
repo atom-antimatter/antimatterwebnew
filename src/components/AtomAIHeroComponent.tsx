@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
+import ParticelsStatic from "./ParticelsStatic";
 
 const AtomAIHeroComponent = () => {
   const finished = useLoading((s) => s.finished);
@@ -15,7 +16,7 @@ const AtomAIHeroComponent = () => {
   });
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.innerWidth < 640;
+    return window.innerWidth < 768;
   });
   const setIsTransition = usePageTransition((s) => s.setIsTransition);
   useEffect(() => {
@@ -26,7 +27,7 @@ const AtomAIHeroComponent = () => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) setFontSize(30);
       else setFontSize(22);
-      setIsMobile(window.innerWidth < 640);
+      setIsMobile(window.innerWidth < 768);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -36,6 +37,86 @@ const AtomAIHeroComponent = () => {
   return (
     <AnimatePresence>
       <>
+        {/* Mobile hero: intentional vertical stack (no overlap with orb/value props) */}
+        {isMobile ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="h-full w-full flex flex-col items-center text-center px-6 pt-[calc(env(safe-area-inset-top)+84px)] pb-12"
+          >
+            <div className="w-full max-w-[420px] mx-auto flex flex-col items-center gap-6">
+              <h1 className="text-4xl leading-tight font-light tracking-normal">
+                <span className="block">
+                  Building <span className="italic font-bold">Enterprise AI</span>
+                </span>
+                <span className="block">
+                  <span className="italic font-bold">Systems</span> That Matter
+                </span>
+              </h1>
+
+              {/* Orb lives in-flow on mobile so it never collides with text */}
+              <div className="w-full flex justify-center pt-2 pb-1">
+                <ParticelsStatic
+                  id="particles3d-static-mobile"
+                  inline
+                  className="size-[340px] mobile:size-[380px]"
+                />
+              </div>
+
+              <p className="text-sm text-foreground/80 max-w-[36ch] leading-relaxed">
+                Atom AI is a framework for teams deploying voice, search, and workflow agents in controlled environments. Run it in your VPC, on‑prem, or at the edge—with governance and zero‑training guarantees.
+              </p>
+
+              <div className="pt-2">
+                <TransitionLink href="/contact">
+                  <Button>
+                    <span className="px-10 py-3 block min-h-[48px]">
+                      Talk to Our Team
+                    </span>
+                  </Button>
+                </TransitionLink>
+              </div>
+
+              <div className="w-full pt-8 border-t border-foreground/10">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-6 text-xs text-foreground/80">
+                  <div className="flex items-center gap-3 justify-start">
+                    <span className="text-tertiary text-lg" aria-hidden="true">
+                      ✓
+                    </span>
+                    <span className="leading-tight">
+                      VPC / On‑Prem
+                      <br />
+                      Deploy
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 justify-start">
+                    <span className="text-tertiary text-lg" aria-hidden="true">
+                      ↔
+                    </span>
+                    <span className="leading-tight">
+                      RBAC + Audit
+                      <br />
+                      Controls
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 justify-center col-span-2">
+                    <span className="text-tertiary text-lg" aria-hidden="true">
+                      ⚡
+                    </span>
+                    <span className="leading-tight">
+                      Provider Swap
+                      <br />
+                      Built‑In
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+
+        {/* Desktop/tablet hero: keep existing layout */}
+        {!isMobile ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -146,6 +227,7 @@ const AtomAIHeroComponent = () => {
             </div>
           </motion.div>
         </motion.div>
+        ) : null}
       </>
     </AnimatePresence>
   );
