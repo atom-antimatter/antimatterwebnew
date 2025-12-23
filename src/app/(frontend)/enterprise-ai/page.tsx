@@ -12,14 +12,81 @@ import Interactions from "@/utils/interactions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Atom AI - Enterprise AI Platform",
+  title: "Enterprise AI Deployment Framework (Atom)",
   description:
-    "Enterprise-grade agentic AI platform for deploying secure AI across voice, search, workflows, and decision systems — built for real-world production environments.",
+    "Deploy agentic AI in VPC, hybrid, on-prem, or edge—secure by default, model-agnostic, with IP ownership and audit-ready controls.",
+  alternates: {
+    canonical: "https://www.antimatterai.com/enterprise-ai",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "Enterprise AI Deployment Framework (Atom)",
+    description:
+      "Deploy agentic AI in VPC, hybrid, on-prem, or edge—secure by default, model-agnostic, with IP ownership and audit-ready controls.",
+    url: "https://www.antimatterai.com/enterprise-ai",
+    siteName: "Antimatter AI",
+    type: "website",
+    images: [
+      {
+        url: "/images/HeroOpenGraph.png",
+        width: 1200,
+        height: 630,
+        alt: "Antimatter AI — Digital Solutions That Matter",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Enterprise AI Deployment Framework (Atom)",
+    description:
+      "Deploy agentic AI in VPC, hybrid, on-prem, or edge—secure by default, model-agnostic, with IP ownership and audit-ready controls.",
+    images: [{ url: "/images/HeroOpenGraph.png" }],
+  },
 };
 
 export default function EnterpriseAIPage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.antimatterai.com/#organization",
+        name: "Antimatter AI",
+        url: "https://www.antimatterai.com",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://www.antimatterai.com/icon.svg",
+        },
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.antimatterai.com/enterprise-ai#webpage",
+        url: "https://www.antimatterai.com/enterprise-ai",
+        name: "Enterprise AI Deployment Framework (Atom) | Antimatter AI",
+        description:
+          "Deploy agentic AI in VPC, hybrid, on-prem, or edge—secure by default, model-agnostic, with IP ownership and audit-ready controls.",
+        isPartOf: { "@id": "https://www.antimatterai.com/#website" },
+        about: { "@id": "https://www.antimatterai.com/#organization" },
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.antimatterai.com/#website",
+        url: "https://www.antimatterai.com",
+        name: "Antimatter AI",
+        publisher: { "@id": "https://www.antimatterai.com/#organization" },
+      },
+    ],
+  } as const;
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <LightRays />
       <TransitionContainer initial={100} exit={-600}>
         <AtomAIHeroSection />
