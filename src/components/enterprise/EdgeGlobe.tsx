@@ -3,36 +3,24 @@
 import Globe from "react-globe.gl";
 import { feature } from "topojson-client";
 import { geoContains } from "d3-geo";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import styles from "./EdgeGlobe.module.css";
+import { EDGE_GLOBE_LOCATIONS, type EdgeLocation } from "@/data/edgeGlobeLocations";
 
 type LatLng = { lat: number; lng: number };
 
 type GlobePoint = LatLng & {
-  kind: "land" | "marker";
+  kind: "land";
   size: number;
   color: string;
-  label?: string;
 };
 
-const ACCENT = "#7B7CFF";
-const LAND_DOT = "rgba(255,255,255,0.28)";
+const LAND_DOT = "rgba(255,255,255,0.34)";
 
 // Tiny 1x1 black PNG so we don't need a texture asset or external fetch.
 const BLACK_TEXTURE_1PX =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
-
-const EDGE_REGIONS: Array<{ name: string; lat: number; lng: number; color?: string }> = [
-  { name: "US East", lat: 39.0, lng: -77.5 },
-  { name: "US Central", lat: 41.9, lng: -87.6 },
-  { name: "US West", lat: 34.0, lng: -118.2 },
-  { name: "London", lat: 51.5, lng: -0.1 },
-  { name: "Frankfurt", lat: 50.1, lng: 8.7 },
-  { name: "Singapore", lat: 1.35, lng: 103.8 },
-  { name: "Tokyo", lat: 35.7, lng: 139.7 },
-  { name: "Sydney", lat: -33.9, lng: 151.2 },
-  { name: "São Paulo", lat: -23.5, lng: -46.6 },
-];
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -54,21 +42,23 @@ async function loadLandGeoJson() {
   return feature(topo, topo.objects.land);
 }
 
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
 function generateLandDots(
   landGeo: any,
-  opts: { stepDeg: number; probability: number; maxDots: number }
+  opts: { stepDeg: number; maxDots: number }
 ): Array<LatLng> {
-  const { stepDeg, probability, maxDots } = opts;
+  const { stepDeg, maxDots } = opts;
   const pts: Array<LatLng> = [];
 
-  // Avoid polar regions for a nicer “template-like” look.
-  for (let lat = -58; lat <= 78; lat += stepDeg) {
+  // Avoid extreme polar regions for a cleaner “template-like” look.
+  for (let lat = -60; lat <= 80; lat += stepDeg) {
     for (let lng = -180; lng <= 180; lng += stepDeg) {
-      if (Math.random() > probability) continue;
-      const jLat = lat + (Math.random() - 0.5) * stepDeg * 0.6;
-      const jLng = lng + (Math.random() - 0.5) * stepDeg * 0.6;
-      if (geoContains(landGeo, [jLng, jLat])) {
-        pts.push({ lat: jLat, lng: jLng });
+      // Deterministic grid (no jitter) makes the land read like a dot-matrix.
+      if (geoContains(landGeo, [lng, lat])) {
+        pts.push({ lat, lng });
         if (pts.length >= maxDots) return pts;
       }
     }
@@ -83,8 +73,9 @@ export default function EdgeGlobe() {
 
   const [landDots, setLandDots] = useState<Array<LatLng> | null>(null);
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 420, h: 420 });
+  const [activeHotspotId, setActiveHotspotId] = useState<string | null>(null);
 
-  const isMobile = useMemo(() => (typeof window === "undefined" ? false : window.innerWidth < 768), []);
+  const isMobile = size.w < 420;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -106,9 +97,8 @@ export default function EdgeGlobe() {
         if (cancelled) return;
 
         const dots = generateLandDots(landGeo, {
-          stepDeg: isMobile ? 3.6 : 2.8,
-          probability: isMobile ? 0.18 : 0.28,
-          maxDots: isMobile ? 1400 : 2400,
+          stepDeg: isMobile ? 3.2 : 2.2,
+          maxDots: isMobile ? 2200 : 5600,
         });
         if (!cancelled) setLandDots(dots);
       } catch {
@@ -122,38 +112,26 @@ export default function EdgeGlobe() {
   }, [isMobile]);
 
   const pointsData: GlobePoint[] = useMemo(() => {
-    const markersCount = isMobile ? 7 : EDGE_REGIONS.length;
-    const markers = EDGE_REGIONS.slice(0, markersCount).map((r) => ({
-      kind: "marker" as const,
-      lat: r.lat,
-      lng: r.lng,
-      size: isMobile ? 0.58 : 0.7,
-      color: r.color ?? "rgba(220, 214, 255, 0.92)",
-      label: r.name,
-    }));
-
     const land = (landDots ?? []).map((p) => ({
       kind: "land" as const,
       lat: p.lat,
       lng: p.lng,
-      size: 0.18,
+      size: isMobile ? 0.14 : 0.16,
       color: LAND_DOT,
     }));
 
-    return [...land, ...markers];
+    return land;
   }, [isMobile, landDots]);
 
-  const ringsData = useMemo(() => {
-    if (reducedMotion) return [];
-    const markersCount = isMobile ? 6 : EDGE_REGIONS.length;
-    return EDGE_REGIONS.slice(0, markersCount).map((r) => ({
-      lat: r.lat,
-      lng: r.lng,
-      maxR: isMobile ? 1.6 : 2.1,
-      propagationSpeed: isMobile ? 1.3 : 1.6,
-      repeatPeriod: isMobile ? 2400 : 2000,
+  const hotspots: Array<EdgeLocation & { tooltip: string; active: boolean; reduced: boolean }> = useMemo(() => {
+    const count = isMobile ? 7 : EDGE_GLOBE_LOCATIONS.length;
+    return EDGE_GLOBE_LOCATIONS.slice(0, count).map((l) => ({
+      ...l,
+      tooltip: `${l.provider} \u2022 ${l.city}`,
+      active: l.id === activeHotspotId,
+      reduced: reducedMotion,
     }));
-  }, [isMobile, reducedMotion]);
+  }, [activeHotspotId, isMobile, reducedMotion]);
 
   useEffect(() => {
     const globe = globeRef.current;
@@ -165,8 +143,13 @@ export default function EdgeGlobe() {
       controls.enableZoom = false;
       controls.enablePan = false;
       controls.autoRotate = !reducedMotion;
-      controls.autoRotateSpeed = 0.35;
-      controls.rotateSpeed = 0.35;
+      controls.autoRotateSpeed = 0.18;
+      controls.rotateSpeed = 0.28;
+      // Prevent upside-down flips (keep a premium “guided” feel)
+      controls.minPolarAngle = Math.PI * 0.22;
+      controls.maxPolarAngle = Math.PI * 0.82;
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
     }
 
     // Pixel ratio tuning (mobile-friendly)
@@ -179,32 +162,82 @@ export default function EdgeGlobe() {
     // Globe material: near-black with a faint emissive tint.
     const mat = globe.globeMaterial?.() as THREE.MeshPhongMaterial | undefined;
     if (mat) {
-      mat.color = new THREE.Color("#05060A");
-      mat.emissive = new THREE.Color("#090A12");
-      mat.emissiveIntensity = 0.6;
-      mat.shininess = 0.2;
+      mat.color = new THREE.Color("#04050A");
+      mat.emissive = new THREE.Color("#0A0B14");
+      mat.emissiveIntensity = 0.85;
+      mat.shininess = 0.35;
       mat.needsUpdate = true;
     }
+
+    // Initial framing (slight tilt, Framer-like)
+    const initialAlt = isMobile ? 2.25 : 2.05;
+    globe.pointOfView?.({ lat: 18, lng: -30, altitude: initialAlt }, reducedMotion ? 0 : 900);
   }, [isMobile, reducedMotion]);
+
+  const focusHotspot = useCallback(
+    (loc: EdgeLocation) => {
+      setActiveHotspotId(loc.id);
+      const globe = globeRef.current;
+      if (!globe?.pointOfView) return;
+      const alt = isMobile ? 1.95 : 1.65;
+      globe.pointOfView({ lat: clamp(loc.lat, -75, 75), lng: loc.lng, altitude: alt }, reducedMotion ? 0 : 900);
+    },
+    [isMobile, reducedMotion]
+  );
+
+  const stars = useMemo(() => {
+    // Lightweight starfield: deterministic positions so it doesn’t “jump”.
+    const count = isMobile ? 22 : 34;
+    const items: Array<{ x: number; y: number; s: number; o: number }> = [];
+    for (let i = 0; i < count; i++) {
+      const t = i + 1;
+      const x = (Math.sin(t * 12.9898) * 43758.5453) % 1;
+      const y = (Math.sin(t * 78.233) * 12345.6789) % 1;
+      const s = 1 + ((Math.abs(Math.sin(t * 3.13)) * 100) % 2); // 1–3px
+      const o = 0.10 + ((Math.abs(Math.sin(t * 9.21)) * 100) % 10) / 100; // 0.10–0.20
+      items.push({ x: Math.abs(x) * 100, y: Math.abs(y) * 100, s, o });
+    }
+    return items;
+  }, [isMobile]);
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full max-w-[520px] xl:max-w-[600px] mx-auto aspect-square"
+      className={`relative w-full max-w-[520px] xl:max-w-[600px] mx-auto aspect-square ${styles.container}`}
     >
-      {/* Subtle vignette / halo overlay (cheap + matches Framer vibe) */}
+      {/* Starfield (subtle, behind everything) */}
+      <div className="pointer-events-none absolute inset-0 rounded-full overflow-hidden">
+        {stars.map((s, idx) => (
+          <span
+            key={idx}
+            className="absolute rounded-full bg-white"
+            style={{
+              left: `${s.x}%`,
+              top: `${s.y}%`,
+              width: `${s.s}px`,
+              height: `${s.s}px`,
+              opacity: s.o,
+              filter: "blur(0.2px)",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Rim + glow overlays (gives immediate “sphere read”) */}
       <div
         className="pointer-events-none absolute inset-0 rounded-full"
         style={{
           background:
-            "radial-gradient(circle at 50% 55%, rgba(123,124,255,0.18) 0%, rgba(123,124,255,0.06) 28%, rgba(0,0,0,0) 60%)",
-          filter: "blur(0px)",
+            "radial-gradient(circle at 50% 55%, rgba(123,124,255,0.22) 0%, rgba(123,124,255,0.08) 28%, rgba(0,0,0,0) 60%)",
         }}
       />
       <div
         className="pointer-events-none absolute inset-0 rounded-full"
         style={{
-          boxShadow: "0 0 120px rgba(123,124,255,0.18)",
+          background:
+            "radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 58%, rgba(255,255,255,0.16) 66%, rgba(123,124,255,0.14) 70%, rgba(0,0,0,0) 76%)",
+          boxShadow:
+            "inset 0 0 0 1px rgba(255,255,255,0.14), 0 0 26px rgba(255,255,255,0.07), 0 0 90px rgba(123,124,255,0.18)",
         }}
       />
 
@@ -217,23 +250,56 @@ export default function EdgeGlobe() {
         globeImageUrl={BLACK_TEXTURE_1PX}
         bumpImageUrl={BLACK_TEXTURE_1PX}
         showAtmosphere={true}
-        atmosphereColor={ACCENT}
-        atmosphereAltitude={0.22}
-        // Base dotted land + marker points
+        atmosphereColor="rgba(255,255,255,0.35)"
+        atmosphereAltitude={0.32}
+        // Dotted continents (land only)
         pointsData={pointsData}
         pointLat="lat"
         pointLng="lng"
-        pointAltitude={0.002}
+        pointAltitude={0.008}
         pointColor={(d: any) => d.color}
         pointRadius={(d: any) => d.size}
-        // Glow rings on markers (subtle)
-        ringsData={ringsData as any}
-        ringLat="lat"
-        ringLng="lng"
-        ringColor={() => [`rgba(123,124,255,0.45)`, "rgba(123,124,255,0)"]}
-        ringMaxRadius={(d: any) => d.maxR}
-        ringPropagationSpeed={(d: any) => d.propagationSpeed}
-        ringRepeatPeriod={(d: any) => d.repeatPeriod}
+        // Interactive hotspots
+        htmlElementsData={hotspots as any}
+        htmlLat="lat"
+        htmlLng="lng"
+        htmlAltitude={0.012}
+        htmlElement={(d: any) => {
+          const loc = d as EdgeLocation & { tooltip: string; active: boolean; reduced: boolean };
+          const el = document.createElement("div");
+          el.className = styles.hotspot;
+          el.setAttribute("data-active", loc.active ? "true" : "false");
+          el.setAttribute("data-reduced", loc.reduced ? "true" : "false");
+          el.setAttribute("role", "button");
+          el.setAttribute("tabindex", "0");
+          el.setAttribute("aria-label", loc.tooltip);
+
+          const pulse = document.createElement("div");
+          pulse.className = styles.pulse;
+
+          const core = document.createElement("div");
+          core.className = styles.core;
+
+          const tip = document.createElement("div");
+          tip.className = styles.tooltip;
+          tip.innerHTML = `<span class="${styles.tooltipDot}"></span>${loc.tooltip}`;
+
+          el.appendChild(pulse);
+          el.appendChild(core);
+          el.appendChild(tip);
+
+          const onClick = () => focusHotspot(loc);
+          const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              focusHotspot(loc);
+            }
+          };
+          el.addEventListener("click", onClick);
+          el.addEventListener("keydown", onKeyDown as any);
+
+          return el;
+        }}
         // Keep UX tight
         animateIn={true}
       />

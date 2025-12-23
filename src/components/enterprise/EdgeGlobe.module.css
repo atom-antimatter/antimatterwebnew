@@ -1,0 +1,96 @@
+.container :global(canvas) {
+  border-radius: 9999px;
+}
+
+.hotspot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.core {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 244, 210, 0.95), rgba(123, 124, 255, 0.85) 55%, rgba(123, 124, 255, 0.25) 80%);
+  box-shadow:
+    0 0 10px rgba(123, 124, 255, 0.55),
+    0 0 18px rgba(255, 244, 210, 0.25);
+}
+
+.pulse {
+  position: absolute;
+  inset: -18px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(123, 124, 255, 0.18) 0%, rgba(123, 124, 255, 0.02) 55%, rgba(123, 124, 255, 0) 70%);
+  animation: edgePulse 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hotspot:hover .core,
+.hotspot[data-active="true"] .core {
+  box-shadow:
+    0 0 12px rgba(123, 124, 255, 0.75),
+    0 0 22px rgba(255, 244, 210, 0.35);
+  filter: saturate(1.15);
+}
+
+.tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 18, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 1.1;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.hotspot:hover .tooltip,
+.hotspot[data-active="true"] .tooltip {
+  opacity: 1;
+}
+
+.hotspot[data-reduced="true"] .pulse {
+  animation: none;
+  opacity: 0.25;
+}
+
+.tooltipDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  margin-right: 8px;
+  background: rgba(123, 124, 255, 0.95);
+  box-shadow: 0 0 10px rgba(123, 124, 255, 0.55);
+}
+
+@keyframes edgePulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.45;
+  }
+  55% {
+    transform: scale(1.06);
+    opacity: 0.22;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.45;
+  }
+}
+
+
