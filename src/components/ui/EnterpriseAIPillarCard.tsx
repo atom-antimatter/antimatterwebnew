@@ -14,7 +14,7 @@ const EnterpriseAIPillarCard = (props: EnterpriseAIPillarCardProps) => {
     >
       <div
         className={`p-[1px] grow shrink-0 relative border border-zinc-600 lg:border-zinc-700 ring-1 lg:ring-0 ring-white/20 ring-inset shadow-none overflow-hidden rounded-3xl w-full h-[560px] ${bgcolor} duration-500 ${
-          props.active ? "scale-100" : "scale-95"
+          "scale-100"
         }`}
       >
         <div className={`px-5 py-8 sm:py-10 sm:px-10 h-full relative z-10`}>
