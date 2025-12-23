@@ -5,7 +5,7 @@ import { useLoading } from "@/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight } from "react-icons/hi2";
+import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight, HiCube } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
 import NavLinksBg from "./ui/NavLinksBg";
@@ -283,6 +283,13 @@ type ComingSoonProduct = {
 type AtomProduct = AvailableProduct | ComingSoonProduct;
 
 const atomAIProducts: AtomProduct[] = [
+  {
+    icon: HiCube,
+    title: "Atom Framework",
+    desc: "Enterprise-grade AI framework for secure, model-agnostic deployment",
+    href: "/enterprise-ai",
+    available: true as const,
+  },
   {
     icon: HiMicrophone,
     title: "Atom Voice",

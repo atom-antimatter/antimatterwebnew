@@ -4,7 +4,7 @@ import { AnimatePresence, motion, Variants } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
-import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight } from "react-icons/hi2";
+import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight, HiCube } from "react-icons/hi2";
 import HamButton from "./HamButton";
 import NavButton from "./NavButton";
 import TransitionLink from "./TransitionLink";
@@ -18,6 +18,12 @@ type AtomProductMobile = {
 };
 
 const atomAIProducts: AtomProductMobile[] = [
+  {
+    icon: HiCube,
+    title: "Atom Framework",
+    href: "/enterprise-ai",
+    available: true as const,
+  },
   {
     icon: HiMicrophone,
     title: "Atom Voice",
