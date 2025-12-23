@@ -234,10 +234,9 @@ export default function EdgeGlobe() {
       <div
         className="pointer-events-none absolute inset-0 rounded-full"
         style={{
-          background:
-            "radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 58%, rgba(255,255,255,0.16) 66%, rgba(123,124,255,0.14) 70%, rgba(0,0,0,0) 76%)",
+          // Thin rim highlight only (avoid “glass dome” / thick donut look)
           boxShadow:
-            "inset 0 0 0 1px rgba(255,255,255,0.14), 0 0 26px rgba(255,255,255,0.07), 0 0 90px rgba(123,124,255,0.18)",
+            "inset 0 0 0 1px rgba(255,255,255,0.12), inset 0 0 36px rgba(255,255,255,0.04), 0 0 70px rgba(123,124,255,0.16)",
         }}
       />
 
@@ -249,9 +248,8 @@ export default function EdgeGlobe() {
         rendererConfig={{ antialias: true, alpha: true }}
         globeImageUrl={BLACK_TEXTURE_1PX}
         bumpImageUrl={BLACK_TEXTURE_1PX}
-        showAtmosphere={true}
-        atmosphereColor="rgba(255,255,255,0.35)"
-        atmosphereAltitude={0.32}
+        // Disable Globe's atmosphere layer to remove the “bubble” outline.
+        showAtmosphere={false}
         // Dotted continents (land only)
         pointsData={pointsData}
         pointLat="lat"
