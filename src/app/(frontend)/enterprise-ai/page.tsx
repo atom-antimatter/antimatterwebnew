@@ -1,7 +1,7 @@
 import ClientsSection from "@/components/ClientsSection";
 import CTASection from "@/components/CTASection";
 import AtomAIHeroSection from "@/components/AtomAIHeroSection";
-import ServiceSection from "@/components/ServiceSection";
+import EnterpriseAIPillarsSection from "@/components/EnterpriseAIPillarsSection";
 import Testimonial from "@/components/Testimonial";
 import LightRays from "@/components/ui/LightRays";
 import Loading from "@/components/ui/Loading";
@@ -24,7 +24,7 @@ export default function EnterpriseAIPage() {
       <TransitionContainer initial={100} exit={-600}>
         <AtomAIHeroSection />
         <MainLayout className="pt-40 sm:pt-60 overflow-x-hidden">
-          <ServiceSection />
+          <EnterpriseAIPillarsSection />
           <WorkSection />
           <Testimonial />
           <ClientsSection />
