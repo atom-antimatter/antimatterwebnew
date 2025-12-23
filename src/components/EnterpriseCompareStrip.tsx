@@ -3,7 +3,7 @@
 import { vendors as vendorMatrixVendors, type Vendor } from "@/data/vendorMatrix";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EnterpriseCompareStrip.module.css";
 import VendorLogo from "@/components/vendorMatrix/VendorLogo";
 import Button from "@/components/ui/Button";
@@ -75,42 +75,94 @@ function buildCompareHref(vendorId: string, filters: string | null) {
 function CompareTile({
   vendor,
   filtersParam,
+  activeVendorId,
+  setActiveVendorId,
+  scheduleClose,
+  cancelClose,
 }: {
   vendor: Vendor & { slug: VendorSlug };
   filtersParam: string | null;
+  activeVendorId: string | null;
+  setActiveVendorId: (id: string) => void;
+  scheduleClose: () => void;
+  cancelClose: () => void;
 }) {
-  const [showTooltip, setShowTooltip] = useState(false);
   const href = useMemo(() => buildCompareHref(vendor.id, filtersParam), [vendor.id, filtersParam]);
+  const isActive = activeVendorId === vendor.id;
 
   return (
     <motion.div
       className="relative"
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
+      onMouseEnter={() => {
+        cancelClose();
+        setActiveVendorId(vendor.id);
+      }}
+      onMouseLeave={() => {
+        scheduleClose();
+      }}
+      onFocusCapture={() => {
+        cancelClose();
+        setActiveVendorId(vendor.id);
+      }}
+      onBlurCapture={(e) => {
+        // Keep open if focus moved within the tile/tooltip.
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+        scheduleClose();
+      }}
       whileHover={{ scale: 1.02 }}
       transition={{ duration: 0.2 }}
     >
       {/* Tooltip (match vendor-matrix style: anchored, pointer-events-none, no flicker) */}
-      {showTooltip ? (
+      {isActive ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-20 pointer-events-none"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-20"
+          onMouseEnter={() => {
+            cancelClose();
+          }}
+          onMouseLeave={() => {
+            scheduleClose();
+          }}
         >
           <div className="text-xs space-y-2">
-            <p className="text-sm font-semibold text-foreground">
-              Why Atom vs {vendor.name}
-            </p>
-            <ul className="space-y-1.5 text-foreground/80">
-              {ATOM_STRENGTH_BULLETS.map((b) => (
-                <li key={b} className="flex gap-2">
-                  <span className="mt-[3px] size-[6px] rounded-full bg-secondary/80 flex-none" />
-                  <span className="leading-snug">{b}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-secondary underline">Open full comparison →</p>
+            {vendor.id === "atom" ? (
+              <>
+                <p className="text-sm font-semibold text-foreground">Atom AI Framework</p>
+                <p className="text-foreground/80">
+                  Select competitors to compare against Atom.
+                </p>
+                <Link
+                  href={buildCompareHref("atom", filtersParam)}
+                  className="text-secondary hover:text-secondary/80 underline inline-block"
+                  onClick={() => trackClick("atom")}
+                >
+                  Open comparison matrix →
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-foreground">
+                  Why Atom vs {vendor.name}
+                </p>
+                <ul className="space-y-1.5 text-foreground/80">
+                  {ATOM_STRENGTH_BULLETS.map((b) => (
+                    <li key={b} className="flex gap-2">
+                      <span className="mt-[3px] size-[6px] rounded-full bg-secondary/80 flex-none" />
+                      <span className="leading-snug">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={href}
+                  className="text-secondary hover:text-secondary/80 underline inline-block"
+                  onClick={() => trackClick(vendor.slug)}
+                >
+                  Open full comparison →
+                </Link>
+              </>
+            )}
           </div>
         </motion.div>
       ) : null}
@@ -138,6 +190,9 @@ function CompareTile({
 
 export default function EnterpriseCompareStrip() {
   const [filtersParam, setFiltersParam] = useState<string | null>(null);
+  const [activeVendorId, setActiveVendorId] = useState<string | null>(null);
+  const openTimerRef = useRef<number | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
 
   // Optionally preserve active capability filters if present in the current URL.
   useEffect(() => {
@@ -145,6 +200,40 @@ export default function EnterpriseCompareStrip() {
     const sp = new URLSearchParams(window.location.search);
     const filters = sp.get("filters");
     setFiltersParam(filters);
+  }, []);
+
+  const cancelTimers = () => {
+    if (openTimerRef.current != null) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+    if (closeTimerRef.current != null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const cancelClose = () => {
+    if (closeTimerRef.current != null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = window.setTimeout(() => {
+      setActiveVendorId(null);
+      closeTimerRef.current = null;
+    }, 320);
+  };
+
+  useEffect(() => {
+    return () => {
+      // cleanup timers on unmount
+      if (openTimerRef.current != null) window.clearTimeout(openTimerRef.current);
+      if (closeTimerRef.current != null) window.clearTimeout(closeTimerRef.current);
+    };
   }, []);
 
   const vendorList = useMemo(() => {
@@ -186,11 +275,24 @@ export default function EnterpriseCompareStrip() {
 
         {/* Desktop grid */}
         <div className="mt-8 hidden sm:grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {vendorList
-            .filter((v) => v.id !== "atom")
-            .map((v) => (
-              <CompareTile key={v.id} vendor={v} filtersParam={filtersParam} />
-            ))}
+          {vendorList.map((v) => (
+            <CompareTile
+              key={v.id}
+              vendor={v}
+              filtersParam={filtersParam}
+              activeVendorId={activeVendorId}
+              setActiveVendorId={(id) => {
+                cancelTimers();
+                // small open delay to reduce flicker
+                openTimerRef.current = window.setTimeout(() => {
+                  setActiveVendorId(id);
+                  openTimerRef.current = null;
+                }, 80);
+              }}
+              scheduleClose={scheduleClose}
+              cancelClose={cancelClose}
+            />
+          ))}
         </div>
 
         {/* Mobile horizontal scroll */}
@@ -199,9 +301,7 @@ export default function EnterpriseCompareStrip() {
             className={`overflow-x-auto overflow-y-hidden scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${styles.mobileScroller}`}
           >
             <div className="flex gap-3 pr-8">
-              {vendorList
-                .filter((v) => v.id !== "atom")
-                .map((v) => (
+              {vendorList.map((v) => (
                   <Link
                     key={v.id}
                     href={buildCompareHref(v.id, filtersParam)}
@@ -219,7 +319,7 @@ export default function EnterpriseCompareStrip() {
                     </div>
                     <p className="text-xs text-foreground/70 text-center">{v.name}</p>
                   </Link>
-                ))}
+              ))}
             </div>
           </div>
         </div>
