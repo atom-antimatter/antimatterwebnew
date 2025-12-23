@@ -39,6 +39,21 @@ const EnterpriseAIPillarCardContainer = () => {
     const el = scrollerRef.current;
     if (!el) return;
 
+    // Allow vertical page scroll to pass through this horizontal scroller.
+    // On trackpads, browsers often map wheel deltaY to horizontal scrolling when overflow-x is enabled,
+    // which feels like the page "stalls" under this section. We forward vertical intent to window scroll.
+    const onWheel = (e: WheelEvent) => {
+      // If the user is intentionally scrolling horizontally (trackpad deltaX or shift+wheel), let it happen.
+      const absX = Math.abs(e.deltaX);
+      const absY = Math.abs(e.deltaY);
+      const horizontalIntent = e.shiftKey || absX > absY;
+      if (horizontalIntent) return;
+
+      // Forward vertical intent to the page and prevent the scroller from consuming it.
+      e.preventDefault();
+      window.scrollBy({ top: e.deltaY, left: 0, behavior: "auto" });
+    };
+
     const onScroll = () => {
       if (rafRef.current != null) return;
       rafRef.current = window.requestAnimationFrame(() => {
@@ -53,9 +68,11 @@ const EnterpriseAIPillarCardContainer = () => {
     };
 
     el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("resize", onResize);
     return () => {
       el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("wheel", onWheel);
       window.removeEventListener("resize", onResize);
       if (rafRef.current != null) {
         window.cancelAnimationFrame(rafRef.current);
