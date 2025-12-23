@@ -1,15 +1,46 @@
+\"use client\";
+
 import Reveal from "./ui/Reveal";
 import DottedWorldMap from "./ui/DottedWorldMap";
 import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
+import { EDGE_LOCATIONS } from "@/data/edgeLocations";
+import { useEffect, useRef, useState } from "react";
 
 const EdgeDeploymentSection = () => {
+  const sectionRef = useRef<HTMLDivElement | null>(null);
+  const [mapMode, setMapMode] = useState<"full" | "edge">("full");
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setMapMode(entry.isIntersecting ? "edge" : "full");
+      },
+      {
+        threshold: 0.45,
+        rootMargin: "0px 0px -20% 0px",
+      }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="py-32 sm:py-40" id="edge-deployment-section">
+    <div ref={sectionRef} className="py-32 sm:py-40" id="edge-deployment-section">
       <div className="flex flex-col md:flex-row justify-between items-center gap-10 md:gap-16 lg:gap-20">
         {/* Left: Animated map */}
         <div className="relative w-full md:w-1/2 order-2 md:order-1">
-          <DottedWorldMap variant="enterpriseEdge" />
+          <DottedWorldMap
+            variant="enterpriseEdge"
+            mode={mapMode}
+            edgeLocations={EDGE_LOCATIONS}
+            edgeLocationsLimit={8}
+            activeRadiusPx={24}
+          />
         </div>
         
         {/* Right: Content */}
