@@ -13,7 +13,7 @@ const EnterpriseAIPillarsSection = () => {
             </div>
             <Reveal className="font-light max-w-[390px] justify-end">
               <p>
-                Atom is built for regulated, enterprise environments—secure by default, model-agnostic, and designed so you retain full control of IP, data, and deployment.
+                Built for regulated teams that need isolation, auditability, and deployment control. Keep your data and IP in your environment—without provider lock‑in.
               </p>
             </Reveal>
           </div>

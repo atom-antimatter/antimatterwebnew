@@ -80,7 +80,7 @@ const AtomAIHeroComponent = () => {
             >
               <div className="flex max-w-xs lg:max-w-lg flex-col gap-6 md:gap-10 md:items-start items-center text-center md:text-left">
                 <p className="text-sm md:text-base">
-                  Atom AI is an enterprise-grade platform for deploying secure, agentic AI across voice, search, workflows, and decision systems — built for real-world production environments.
+                  Atom AI is a framework for teams deploying voice, search, and workflow agents in controlled environments. Run it in your VPC, on‑prem, or at the edge—with governance and zero‑training guarantees.
                 </p>
                 <div className="flex text-lg">
                   <TransitionLink href="/contact">
@@ -103,9 +103,9 @@ const AtomAIHeroComponent = () => {
                     <span className="text-tertiary">✓</span>
                   </h3>
                   <h3 className="text-xs sm:text-sm leading-tight">
-                    Enterprise
+                    VPC / On‑Prem
                     <br />
-                    Ready
+                    Deploy
                   </h3>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
@@ -120,9 +120,9 @@ const AtomAIHeroComponent = () => {
                     <span className="text-tertiary">↔</span>
                   </h3>
                   <h3 className="text-xs sm:text-sm leading-tight">
-                    Flexible
+                    RBAC + Audit
                     <br />
-                    Deployment
+                    Controls
                   </h3>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
@@ -137,9 +137,9 @@ const AtomAIHeroComponent = () => {
                     <span className="text-tertiary">⚡</span>
                   </h3>
                   <h3 className="text-xs sm:text-sm leading-tight">
-                    Agentic by
+                    Provider Swap
                     <br />
-                    Design
+                    Built‑In
                   </h3>
                 </div>
               </div>

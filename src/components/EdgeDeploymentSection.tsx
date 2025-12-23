@@ -1,4 +1,4 @@
-\"use client\";
+"use client";
 
 import Reveal from "./ui/Reveal";
 import DottedWorldMap from "./ui/DottedWorldMap";
@@ -50,25 +50,25 @@ const EdgeDeploymentSection = () => {
               Edge Deployment
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold mb-6">
-              Edge AI for Maximum Speed
+              Edge AI, Lower Latency
             </h2>
             <p className="text-base sm:text-lg text-foreground/80 mb-8 leading-relaxed">
-              Deploy Atom closer to your users for ultra-low latency voice, search, and agent execution. With edge compute and private networking, you get faster responses, lower bandwidth costs, and tighter control over data movement.
+              Place inference and orchestration closer to users without moving sensitive data. Keep regional control and route workloads across edge, VPC, and on‑prem.
             </p>
             
             {/* Bullets */}
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3">
                 <span className="text-secondary mt-1 flex-shrink-0">→</span>
-                <span className="text-sm sm:text-base">Sub-second interactions for voice + GenUI</span>
+                <span className="text-sm sm:text-base">Lower round‑trip latency for voice and real‑time UX</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-secondary mt-1 flex-shrink-0">→</span>
-                <span className="text-sm sm:text-base">Run inference and orchestration at the edge (or hybrid)</span>
+                <span className="text-sm sm:text-base">Regional execution with data‑residency boundaries</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-secondary mt-1 flex-shrink-0">→</span>
-                <span className="text-sm sm:text-base">Private networking and regional controls for regulated workloads</span>
+                <span className="text-sm sm:text-base">Hybrid routing: edge inference + VPC/on‑prem orchestration</span>
               </li>
             </ul>
             

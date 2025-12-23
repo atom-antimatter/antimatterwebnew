@@ -1,23 +1,26 @@
+const frameworkIntro =
+  "A concise view of how Atom runs in production deployments.";
+
 const frameworkItems = [
   {
-    title: "ATOM AI FRAMEWORK",
-    desc: "A modular, agentic AI framework for building search, voice, workflow, and decision systems. Atom supports deterministic GenUI, RAG, tool calling, and multi-agent orchestration—designed for production from day one.",
+    title: "FRAMEWORK CORE",
+    desc: "Compose agents, retrieval, tools, and deterministic UI into end‑to‑end systems. Reuse patterns across products and teams.",
   },
   {
-    title: "DEPLOYMENT MODELS",
-    desc: "Deploy Atom in public cloud, private cloud, hybrid, on-prem, or fully containerized environments. Supports Kubernetes, VPC isolation, and enterprise networking requirements.",
+    title: "DEPLOYMENT OPTIONS",
+    desc: "Run in public cloud, private cloud, hybrid, on‑prem, or containers. Support Kubernetes and VPC isolation.",
   },
   {
-    title: "MODEL-AGNOSTIC ARCHITECTURE",
-    desc: "Run OpenAI, Anthropic, open-source, or private models interchangeably. Atom abstracts model providers to prevent lock-in and enable cost, latency, and compliance optimization.",
+    title: "PROVIDER ABSTRACTION",
+    desc: "Switch model and embedding providers as requirements change. Optimize for cost, latency, and policy constraints.",
   },
   {
-    title: "SECURITY & GOVERNANCE",
-    desc: "Enterprise-grade controls including encryption at rest/in transit, audit logs, RBAC, SSO, private networking, and zero-training guarantees.",
+    title: "GOVERNANCE LAYER",
+    desc: "Apply RBAC, audit logs, encryption, and retention policies per environment. Keep sensitive traffic on private networks.",
   },
   {
-    title: "EDGE & PERFORMANCE",
-    desc: "Optional edge deployment via Akamai / Linode for ultra-low latency inference, regional data residency, and high-availability workloads.",
+    title: "EDGE FOOTPRINT",
+    desc: "Optionally deploy to Akamai / Linode regions for low latency and residency. Keep high‑availability routing near users.",
   },
 ];
 
@@ -30,6 +33,9 @@ const AtomAIFrameworkDetails = () => {
       >
         Atom AI Framework & Enterprise Deployments
       </h2>
+      <p className="text-sm sm:text-base text-foreground/70 max-w-2xl">
+        {frameworkIntro}
+      </p>
 
       <div className="mt-14 lg:mt-32">
         {frameworkItems.map(({ title, desc }, index) => (

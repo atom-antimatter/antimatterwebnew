@@ -191,7 +191,6 @@ const DottedWorldMap = ({
         <div
           ref={svgContainerRef}
           className="w-full"
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: enterpriseSvgMarkup }}
         />
       </div>

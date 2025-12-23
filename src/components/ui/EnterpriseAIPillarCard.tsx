@@ -42,9 +42,12 @@ const EnterpriseAIPillarCard = (props: EnterpriseAIPillarCardProps) => {
                 </h2>
               </div>
               <div className="flex flex-col gap-6 justify-between h-full">
-                <h2 className={`text-xl pr-1 2xl:text-2xl font-semibold opacity-0`}>
+                <div
+                  aria-hidden="true"
+                  className="text-xl pr-1 2xl:text-2xl font-semibold opacity-0"
+                >
                   {props.title}
-                </h2>
+                </div>
                 <div className="flex justify-between">
                   <p className="text-sm 2xl:text-base">{props.description}</p>
                 </div>
