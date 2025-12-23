@@ -1,7 +1,25 @@
-import { HiShieldCheck, HiLockClosed, HiKey, HiDocumentCheck, HiNoSymbol } from "react-icons/hi2";
-import { HiCube, HiTemplate, HiDownload, HiDatabase, HiUserGroup } from "react-icons/hi2";
-import { HiCog, HiLightningBolt, HiLink, HiBookOpen, HiSparkles } from "react-icons/hi2";
-import { HiServer, HiCode, HiCpuChip, HiCloud, HiVariable } from "react-icons/hi2";
+import { 
+  HiShieldCheck, 
+  HiLockClosed, 
+  HiKey, 
+  HiDocumentCheck, 
+  HiNoSymbol,
+  HiCube,
+  HiDocumentText,
+  HiArrowDownTray,
+  HiCircleStack,
+  HiUserGroup,
+  HiCog,
+  HiBolt,
+  HiLink,
+  HiBookOpen,
+  HiSparkles,
+  HiServer,
+  HiCodeBracket,
+  HiCpuChip,
+  HiCloud,
+  HiVariable
+} from "react-icons/hi2";
 
 export interface EnterpriseAIPillarCardProps {
   title: string;
@@ -69,17 +87,17 @@ export const enterpriseAIPillarData: EnterpriseAIPillarCardProps[] = [
         tooltip: "Hard isolation between tenants/environments",
       },
       {
-        icon: <HiDownload key="export" />,
+        icon: <HiArrowDownTray key="export" />,
         label: "Exportable logic",
         tooltip: "Export workflows, prompts, and agent configs",
       },
       {
-        icon: <HiDatabase key="retention" />,
+        icon: <HiCircleStack key="retention" />,
         label: "Data retention control",
         tooltip: "Configurable retention & deletion",
       },
       {
-        icon: <HiTemplate key="pools" />,
+        icon: <HiDocumentText key="pools" />,
         label: "No shared prompt pools",
         tooltip: "No shared prompt pools or cross-tenant learning",
       },
@@ -98,7 +116,7 @@ export const enterpriseAIPillarData: EnterpriseAIPillarCardProps[] = [
         tooltip: "Composable agents for different jobs",
       },
       {
-        icon: <HiLightningBolt key="orchestration" />,
+        icon: <HiBolt key="orchestration" />,
         label: "Orchestration",
         tooltip: "Deterministic orchestration layer",
       },
@@ -132,7 +150,7 @@ export const enterpriseAIPillarData: EnterpriseAIPillarCardProps[] = [
         tooltip: "Use hosted providers when appropriate",
       },
       {
-        icon: <HiCode key="opensource" />,
+        icon: <HiCodeBracket key="opensource" />,
         label: "Open-source",
         tooltip: "Run open-source models in your infra",
       },
