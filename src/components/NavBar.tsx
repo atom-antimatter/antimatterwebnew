@@ -1,10 +1,10 @@
 "use client";
+import React, { useEffect, useRef, useState } from "react";
 import { ServiceProps, ServicesData } from "@/data/services";
 import { useLoading } from "@/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
@@ -294,6 +294,36 @@ const atomAIProducts = [
   },
 ];
 
+// Discriminated union wrapper component for available/unavailable products
+type ProductItemWrapperProps = 
+  | { available: true; href: string; className?: string; title?: string; children: React.ReactNode }
+  | { available: false; className?: string; title?: string; children: React.ReactNode };
+
+const ProductItemWrapper: React.FC<ProductItemWrapperProps> = (props) => {
+  if (props.available) {
+    return (
+      <TransitionLink
+        href={props.href}
+        className={props.className}
+        title={props.title}
+      >
+        {props.children}
+      </TransitionLink>
+    );
+  }
+  
+  return (
+    <div
+      className={props.className}
+      title={props.title}
+      aria-disabled="true"
+      tabIndex={-1}
+    >
+      {props.children}
+    </div>
+  );
+};
+
 const AtomAIDropdown = ({ open }: { open: boolean }) => (
   <div
     className={`
@@ -311,44 +341,38 @@ const AtomAIDropdown = ({ open }: { open: boolean }) => (
       `}
     >
       <div className="p-5">
-        {atomAIProducts.map((product) => {
-          const ItemWrapper = product.available ? TransitionLink : 'div';
-          const itemProps = product.available 
-            ? { href: product.href }
-            : {};
-          
-          return (
-            <ItemWrapper
-              key={product.title}
-              {...itemProps}
-              className={`
-                flex items-start gap-4 p-4 rounded-lg border border-transparent transition
-                ${product.available 
-                  ? 'hover:bg-white/5 hover:border-white/5 cursor-pointer' 
-                  : 'opacity-45 cursor-default'
-                }
-              `}
-              title={!product.available ? 'This module is coming soon' : undefined}
-            >
-              <div className={`mt-0.5 ${product.available ? 'text-white/90' : 'text-white/50'}`}>
-                <product.icon className="size-6" />
+        {atomAIProducts.map((product) => (
+          <ProductItemWrapper
+            key={product.title}
+            available={product.available}
+            {...(product.available ? { href: product.href } : {})}
+            className={`
+              flex items-start gap-4 p-4 rounded-lg border border-transparent transition
+              ${product.available 
+                ? 'hover:bg-white/5 hover:border-white/5 cursor-pointer' 
+                : 'opacity-45 cursor-default'
+              }
+            `}
+            title={!product.available ? 'This module is coming soon' : undefined}
+          >
+            <div className={`mt-0.5 ${product.available ? 'text-white/90' : 'text-white/50'}`}>
+              <product.icon className="size-6" />
+            </div>
+            <div className="flex flex-col flex-1">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <h3 className="text-base font-semibold">{product.title}</h3>
+                {!product.available && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-[10px] font-medium text-zinc-400 whitespace-nowrap">
+                    Coming soon
+                  </span>
+                )}
               </div>
-              <div className="flex flex-col flex-1">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <h3 className="text-base font-semibold">{product.title}</h3>
-                  {!product.available && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-[10px] font-medium text-zinc-400 whitespace-nowrap">
-                      Coming soon
-                    </span>
-                  )}
-                </div>
-                <p className={`text-sm text-pretty leading-snug ${product.available ? 'opacity-70' : 'opacity-50'}`}>
-                  {product.desc}
-                </p>
-              </div>
-            </ItemWrapper>
-          );
-        })}
+              <p className={`text-sm text-pretty leading-snug ${product.available ? 'opacity-70' : 'opacity-50'}`}>
+                {product.desc}
+              </p>
+            </div>
+          </ProductItemWrapper>
+        ))}
       </div>
     </div>
   </div>
