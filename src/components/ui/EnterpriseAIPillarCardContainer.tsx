@@ -2,7 +2,7 @@
 
 import { enterpriseAIPillarData } from "@/data/enterpriseAIPillars";
 import { useActiveIndex } from "@/store";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   HiOutlineArrowLongLeft,
   HiOutlineArrowLongRight,
@@ -12,6 +12,8 @@ import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperTypes } from "swiper/types";
 import EnterpriseAIPillarCard from "./EnterpriseAIPillarCard";
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 const EnterpriseAIPillarCardContainer = () => {
   const activeIndex = useActiveIndex((state) => state.activeIndex);
@@ -56,9 +58,96 @@ const EnterpriseAIPillarCardContainer = () => {
     [setActiveIndex, updateBullets]
   );
 
+  // Desktop sticky horizontal scroll (wheel/vertical scroll drives X translation).
+  const desktopOuterRef = useRef<HTMLDivElement | null>(null);
+  const desktopStickyRef = useRef<HTMLDivElement | null>(null);
+  const desktopTrackRef = useRef<HTMLDivElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const scrollDistanceRef = useRef(0);
+  const stepRef = useRef(0);
+  const [outerHeightPx, setOuterHeightPx] = useState<number>(0);
+
+  const desktopCards = useMemo(() => enterpriseAIPillarData, []);
+
+  const measureDesktop = useCallback(() => {
+    const outer = desktopOuterRef.current;
+    const sticky = desktopStickyRef.current;
+    const track = desktopTrackRef.current;
+    if (!outer || !sticky || !track) return;
+
+    const viewportW = sticky.clientWidth;
+    const trackW = track.scrollWidth;
+    const distance = Math.max(0, trackW - viewportW);
+    scrollDistanceRef.current = distance;
+    setOuterHeightPx(window.innerHeight + distance);
+
+    const cards = Array.from(track.querySelectorAll<HTMLElement>("[data-pillar-card]"));
+    if (cards.length >= 2) {
+      stepRef.current = Math.max(1, cards[1].offsetLeft - cards[0].offsetLeft);
+    } else {
+      stepRef.current = 0;
+    }
+  }, []);
+
+  const updateDesktop = useCallback(() => {
+    const outer = desktopOuterRef.current;
+    const track = desktopTrackRef.current;
+    if (!outer || !track) return;
+
+    const distance = scrollDistanceRef.current;
+    if (distance <= 0) {
+      track.style.transform = "translate3d(0,0,0)";
+      return;
+    }
+
+    const rect = outer.getBoundingClientRect();
+    const offset = clamp(-rect.top, 0, distance);
+    track.style.transform = `translate3d(${-offset}px, 0, 0)`;
+
+    const step = stepRef.current;
+    if (step > 0) {
+      const nextIndex = clamp(Math.round(offset / step), 0, desktopCards.length - 1);
+      if (nextIndex !== activeIndex) setActiveIndex(nextIndex);
+    }
+  }, [activeIndex, desktopCards.length, setActiveIndex]);
+
+  useEffect(() => {
+    // Only activate on large screens.
+    const mq = window.matchMedia("(min-width: 1024px)");
+    if (!mq.matches) return;
+
+    measureDesktop();
+    updateDesktop();
+
+    const onScroll = () => {
+      if (rafRef.current != null) return;
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null;
+        updateDesktop();
+      });
+    };
+
+    const onResize = () => {
+      measureDesktop();
+      updateDesktop();
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      if (rafRef.current != null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [measureDesktop, updateDesktop]);
+
   return (
     <div id="enterprise-pillars-cards">
-      {/* Navigation */}
+      {/* Mobile/tablet: Swiper */}
       <div className="flex mb-8 justify-between items-center lg:hidden">
         <button
           aria-label="Previous slide"
@@ -85,9 +174,8 @@ const EnterpriseAIPillarCardContainer = () => {
         </button>
       </div>
 
-      {/* Swiper */}
       <Swiper
-        className="overflow-visible w-full"
+        className="overflow-visible w-full lg:hidden"
         slidesPerView={1}
         slidesOffsetAfter={30}
         spaceBetween={5}
@@ -131,37 +219,45 @@ const EnterpriseAIPillarCardContainer = () => {
             threshold: 2,
             longSwipesRatio: 0.3,
           },
-          1024: {
-            slidesPerView: "auto",
-            allowTouchMove: false,
-            simulateTouch: false,
-            pagination: false,
-            navigation: false,
-            slidesOffsetAfter: 0,
-            spaceBetween: 0,
-          },
         }}
       >
         {enterpriseAIPillarData.map((card, index) => (
-          <SwiperSlide
-            key={card.title}
-            className="lg:!w-auto transition-all duration-500 ease-in-out"
-          >
-            <div
-              className={`
-                transition-all duration-500 ease-in-out
-                enterprise-pillar-card w-full lg:w-[340px] xl:w-[380px] 2xl:w-[460px] shrink-0 
-              `}
-            >
+          <SwiperSlide key={card.title}>
+            <div className="enterprise-pillar-card w-full shrink-0">
               <EnterpriseAIPillarCard active={activeIndex === index} {...card} />
             </div>
           </SwiperSlide>
         ))}
-        {/* Avoid unnecessary empty slide */}
-        {(breakpoint === "768" || breakpoint === "1300") && (
-          <SwiperSlide></SwiperSlide>
-        )}
+        {(breakpoint === "768" || breakpoint === "1300") && <SwiperSlide />}
       </Swiper>
+
+      {/* Desktop: sticky horizontal traversal */}
+      <div
+        ref={desktopOuterRef}
+        className="hidden lg:block relative"
+        style={{ height: outerHeightPx ? `${outerHeightPx}px` : "100vh" }}
+      >
+        <div
+          ref={desktopStickyRef}
+          className="sticky top-28 xl:top-32 overflow-hidden"
+        >
+          <div
+            ref={desktopTrackRef}
+            className="flex gap-5 xl:gap-6 will-change-transform"
+            style={{ transform: "translate3d(0,0,0)" }}
+          >
+            {desktopCards.map((card, index) => (
+              <div
+                key={card.title}
+                data-pillar-card
+                className="enterprise-pillar-card w-[340px] xl:w-[380px] 2xl:w-[460px] shrink-0"
+              >
+                <EnterpriseAIPillarCard active={activeIndex === index} {...card} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <style jsx global>{`
         .custom-bullet {

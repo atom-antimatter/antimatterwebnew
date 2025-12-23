@@ -54,14 +54,14 @@ const EnterpriseAIPillarCard = (props: EnterpriseAIPillarCardProps) => {
                 <div className="flex gap-6 justify-between flex-col sm:flex-row sm:gap-8">
                   <div className="flex-1">
                     <h3 className="text-foreground/60 text-lg mb-3">{props.iconLabel}</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-4 pt-1">
+                    <div className="grid grid-cols-3 sm:grid-cols-3 gap-x-2 gap-y-3">
                       {props.features?.map((feature, index) => (
                         <div
                           key={index}
-                          className="flex flex-col items-start gap-1.5"
+                          className="flex flex-col items-start gap-1"
                           title={feature.tooltip}
                         >
-                          <span className="text-2xl opacity-90" aria-hidden="true">
+                          <span className="text-xl opacity-90" aria-hidden="true">
                             {feature.icon}
                           </span>
                           <span className="text-xs text-foreground/70 leading-tight">
