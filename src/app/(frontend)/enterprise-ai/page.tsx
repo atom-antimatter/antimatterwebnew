@@ -3,12 +3,11 @@ import CTASection from "@/components/CTASection";
 import AtomAIHeroSection from "@/components/AtomAIHeroSection";
 import EnterpriseAIPillarsSection from "@/components/EnterpriseAIPillarsSection";
 import EdgeDeploymentSection from "@/components/EdgeDeploymentSection";
-import Testimonial from "@/components/Testimonial";
+import AtomAIFrameworkDetails from "@/components/AtomAIFrameworkDetails";
 import LightRays from "@/components/ui/LightRays";
 import Loading from "@/components/ui/Loading";
 import MainLayout from "@/components/ui/MainLayout";
 import TransitionContainer from "@/components/ui/TransitionContainer";
-import WorkSection from "@/components/WorkSection";
 import Interactions from "@/utils/interactions";
 import type { Metadata } from "next";
 
@@ -27,8 +26,7 @@ export default function EnterpriseAIPage() {
         <MainLayout className="pt-40 sm:pt-60 overflow-x-hidden">
           <EnterpriseAIPillarsSection />
           <EdgeDeploymentSection />
-          <WorkSection />
-          <Testimonial />
+          <AtomAIFrameworkDetails />
           <ClientsSection />
           <CTASection />
         </MainLayout>
