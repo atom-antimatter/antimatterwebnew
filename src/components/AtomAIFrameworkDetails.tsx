@@ -1,3 +1,7 @@
+"use client";
+
+import { motion } from "motion/react";
+
 const frameworkIntro =
   "A concise view of how Atom runs in production deployments.";
 
@@ -39,9 +43,26 @@ const AtomAIFrameworkDetails = () => {
 
       <div className="mt-14 lg:mt-32">
         {frameworkItems.map(({ title, desc }, index) => (
-          <div
+          <motion.div
             key={title}
             className="border-y border-foreground/40 h-auto md:h-40 xl:h-60 flex gap-5 justify-between md:items-center flex-col md:flex-row py-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{
+              amount: 1,
+              margin: "-70px 0px -150px 0px",
+            }}
+            variants={{
+              hidden: { opacity: 0.2 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  duration: 0.3,
+                  ease: "easeOut",
+                  when: "beforeChildren",
+                },
+              },
+            }}
           >
             <h3 className="text-2xl lg:text-4xl xl:text-6xl uppercase font-bold flex gap-3">
               <span className="text-base lg:text-xl align-top font-light lg:pt-1">
@@ -49,8 +70,19 @@ const AtomAIFrameworkDetails = () => {
               </span>
               <span>{title}</span>
             </h3>
-            <p className="md:max-w-lg md:text-right">{desc}</p>
-          </div>
+            <motion.p
+              className="md:max-w-lg md:text-right"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { duration: 0.5, ease: "easeOut" },
+                },
+              }}
+            >
+              {desc}
+            </motion.p>
+          </motion.div>
         ))}
       </div>
     </section>
