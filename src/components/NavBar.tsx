@@ -269,24 +269,28 @@ const atomAIProducts = [
     title: "Atom Voice",
     desc: "AI-powered voice agent and assistant",
     href: "/voice-agent-demo",
+    available: true,
   },
   {
     icon: HiMagnifyingGlass,
     title: "Atom Search",
     desc: "Next-generation AI search with generative UI",
     href: "/atom/search",
+    available: true,
   },
   {
     icon: HiCurrencyDollar,
     title: "Atom Finance",
     desc: "Intelligent financial analysis and insights",
     href: "/atom/finance",
+    available: false,
   },
   {
     icon: HiChatBubbleLeftRight,
     title: "Atom Chat",
     desc: "Advanced conversational AI interface",
     href: "/atom/chat",
+    available: false,
   },
 ];
 
@@ -307,21 +311,44 @@ const AtomAIDropdown = ({ open }: { open: boolean }) => (
       `}
     >
       <div className="p-5">
-        {atomAIProducts.map((product) => (
-          <TransitionLink
-            key={product.title}
-            href={product.href}
-            className="flex items-start gap-4 p-4 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/5 transition"
-          >
-            <div className="text-white/90 mt-0.5">
-              <product.icon className="size-6" />
-            </div>
-            <div className="flex flex-col">
-              <h3 className="text-base font-semibold mb-1">{product.title}</h3>
-              <p className="text-sm opacity-70 text-pretty leading-snug">{product.desc}</p>
-            </div>
-          </TransitionLink>
-        ))}
+        {atomAIProducts.map((product) => {
+          const ItemWrapper = product.available ? TransitionLink : 'div';
+          const itemProps = product.available 
+            ? { href: product.href }
+            : {};
+          
+          return (
+            <ItemWrapper
+              key={product.title}
+              {...itemProps}
+              className={`
+                flex items-start gap-4 p-4 rounded-lg border border-transparent transition
+                ${product.available 
+                  ? 'hover:bg-white/5 hover:border-white/5 cursor-pointer' 
+                  : 'opacity-45 cursor-default'
+                }
+              `}
+              title={!product.available ? 'This module is coming soon' : undefined}
+            >
+              <div className={`mt-0.5 ${product.available ? 'text-white/90' : 'text-white/50'}`}>
+                <product.icon className="size-6" />
+              </div>
+              <div className="flex flex-col flex-1">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <h3 className="text-base font-semibold">{product.title}</h3>
+                  {!product.available && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-[10px] font-medium text-zinc-400 whitespace-nowrap">
+                      Coming soon
+                    </span>
+                  )}
+                </div>
+                <p className={`text-sm text-pretty leading-snug ${product.available ? 'opacity-70' : 'opacity-50'}`}>
+                  {product.desc}
+                </p>
+              </div>
+            </ItemWrapper>
+          );
+        })}
       </div>
     </div>
   </div>

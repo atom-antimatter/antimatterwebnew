@@ -14,21 +14,25 @@ const atomAIProducts = [
     icon: HiMicrophone,
     title: "Atom Voice",
     href: "/voice-agent-demo",
+    available: true,
   },
   {
     icon: HiMagnifyingGlass,
     title: "Atom Search",
     href: "/atom/search",
+    available: true,
   },
   {
     icon: HiCurrencyDollar,
     title: "Atom Finance",
     href: "/atom/finance",
+    available: false,
   },
   {
     icon: HiChatBubbleLeftRight,
     title: "Atom Chat",
     href: "/atom/chat",
+    available: false,
   },
 ];
 
@@ -237,23 +241,42 @@ const HamMenu = ({ navData }: Props) => {
                           >
                             <FaArrowLeft className="size-6 " />
                           </div>
-                          {atomAIProducts.map((product, index) => (
-                            <li
-                              key={product.title}
-                              className="relative pl-10 whitespace-nowrap"
-                            >
-                              <TransitionLink
-                                href={product.href}
-                                className="block pr-4"
-                                onClick={() => setActive(false)}
+                          {atomAIProducts.map((product, index) => {
+                            const ItemWrapper = product.available ? TransitionLink : 'div';
+                            const itemProps = product.available 
+                              ? { 
+                                  href: product.href,
+                                  onClick: () => setActive(false)
+                                }
+                              : { 
+                                  onClick: (e: React.MouseEvent) => e.preventDefault()
+                                };
+                            
+                            return (
+                              <li
+                                key={product.title}
+                                className={`relative pl-10 whitespace-nowrap ${!product.available ? 'opacity-45' : ''}`}
+                                title={!product.available ? 'This module is coming soon' : undefined}
                               >
-                                <span className="opacity-30 absolute left-0 bottom-0 text-xl sm:text-2xl">
-                                  0{index + 1}
-                                </span>
-                                {product.title}
-                              </TransitionLink>
-                            </li>
-                          ))}
+                                <ItemWrapper
+                                  {...itemProps}
+                                  className={`block pr-4 ${!product.available ? 'cursor-default' : ''}`}
+                                >
+                                  <span className="opacity-30 absolute left-0 bottom-0 text-xl sm:text-2xl">
+                                    0{index + 1}
+                                  </span>
+                                  <span className="flex items-center gap-2">
+                                    {product.title}
+                                    {!product.available && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-[10px] font-medium text-zinc-400 whitespace-nowrap">
+                                        Coming soon
+                                      </span>
+                                    )}
+                                  </span>
+                                </ItemWrapper>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </motion.div>
                     </motion.nav>
