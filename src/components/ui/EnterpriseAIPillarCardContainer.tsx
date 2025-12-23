@@ -239,18 +239,18 @@ const EnterpriseAIPillarCardContainer = () => {
       >
         <div
           ref={desktopStickyRef}
-          className="sticky top-28 xl:top-32 overflow-hidden"
+          className="sticky top-28 xl:top-32 overflow-hidden w-full min-w-0"
         >
           <div
             ref={desktopTrackRef}
-            className="flex gap-5 xl:gap-6 will-change-transform"
+            className="flex flex-nowrap gap-5 xl:gap-6 will-change-transform min-w-0"
             style={{ transform: "translate3d(0,0,0)" }}
           >
             {desktopCards.map((card, index) => (
               <div
                 key={card.title}
                 data-pillar-card
-                className="enterprise-pillar-card w-[340px] xl:w-[380px] 2xl:w-[460px] shrink-0"
+                className="enterprise-pillar-card w-[340px] xl:w-[380px] 2xl:w-[460px] shrink-0 min-w-0"
               >
                 <EnterpriseAIPillarCard active={activeIndex === index} {...card} />
               </div>
