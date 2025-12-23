@@ -263,41 +263,60 @@ const ServicesDropdown = ({ open }: { open: boolean }) => (
 /* -----------------------------
    Atom AI Dropdown
 -------------------------------- */
-const atomAIProducts = [
+// Strict product type with discriminated union on available
+type AvailableProduct = {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+  href: string;
+  available: true;
+};
+
+type ComingSoonProduct = {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+  href: string; // Present but won't be used
+  available: false;
+};
+
+type AtomProduct = AvailableProduct | ComingSoonProduct;
+
+const atomAIProducts: AtomProduct[] = [
   {
     icon: HiMicrophone,
     title: "Atom Voice",
     desc: "AI-powered voice agent and assistant",
     href: "/voice-agent-demo",
-    available: true,
+    available: true as const,
   },
   {
     icon: HiMagnifyingGlass,
     title: "Atom Search",
     desc: "Next-generation AI search with generative UI",
     href: "/atom/search",
-    available: true,
+    available: true as const,
   },
   {
     icon: HiCurrencyDollar,
     title: "Atom Finance",
     desc: "Intelligent financial analysis and insights",
     href: "/atom/finance",
-    available: false,
+    available: false as const,
   },
   {
     icon: HiChatBubbleLeftRight,
     title: "Atom Chat",
     desc: "Advanced conversational AI interface",
     href: "/atom/chat",
-    available: false,
+    available: false as const,
   },
 ];
 
 // Discriminated union wrapper component for available/unavailable products
 type ProductItemWrapperProps = 
   | { available: true; href: string; className?: string; title?: string; children: React.ReactNode }
-  | { available: false; className?: string; title?: string; children: React.ReactNode };
+  | { available: false; href?: never; className?: string; title?: string; children: React.ReactNode };
 
 const ProductItemWrapper: React.FC<ProductItemWrapperProps> = (props) => {
   if (props.available) {
@@ -341,38 +360,55 @@ const AtomAIDropdown = ({ open }: { open: boolean }) => (
       `}
     >
       <div className="p-5">
-        {atomAIProducts.map((product) => (
-          <ProductItemWrapper
-            key={product.title}
-            available={product.available}
-            {...(product.available ? { href: product.href } : {})}
-            className={`
-              flex items-start gap-4 p-4 rounded-lg border border-transparent transition
-              ${product.available 
-                ? 'hover:bg-white/5 hover:border-white/5 cursor-pointer' 
-                : 'opacity-45 cursor-default'
-              }
-            `}
-            title={!product.available ? 'This module is coming soon' : undefined}
-          >
-            <div className={`mt-0.5 ${product.available ? 'text-white/90' : 'text-white/50'}`}>
-              <product.icon className="size-6" />
-            </div>
-            <div className="flex flex-col flex-1">
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <h3 className="text-base font-semibold">{product.title}</h3>
-                {!product.available && (
+        {atomAIProducts.map((product) => {
+          // Explicit conditional rendering for proper type narrowing
+          if (product.available) {
+            return (
+              <ProductItemWrapper
+                key={product.title}
+                available={true}
+                href={product.href}
+                className="flex items-start gap-4 p-4 rounded-lg border border-transparent transition hover:bg-white/5 hover:border-white/5 cursor-pointer"
+              >
+                <div className="mt-0.5 text-white/90">
+                  <product.icon className="size-6" />
+                </div>
+                <div className="flex flex-col flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h3 className="text-base font-semibold">{product.title}</h3>
+                  </div>
+                  <p className="text-sm text-pretty leading-snug opacity-70">
+                    {product.desc}
+                  </p>
+                </div>
+              </ProductItemWrapper>
+            );
+          }
+          
+          return (
+            <ProductItemWrapper
+              key={product.title}
+              available={false}
+              className="flex items-start gap-4 p-4 rounded-lg border border-transparent transition opacity-45 cursor-default"
+              title="This module is coming soon"
+            >
+              <div className="mt-0.5 text-white/50">
+                <product.icon className="size-6" />
+              </div>
+              <div className="flex flex-col flex-1">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <h3 className="text-base font-semibold">{product.title}</h3>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-[10px] font-medium text-zinc-400 whitespace-nowrap">
                     Coming soon
                   </span>
-                )}
+                </div>
+                <p className="text-sm text-pretty leading-snug opacity-50">
+                  {product.desc}
+                </p>
               </div>
-              <p className={`text-sm text-pretty leading-snug ${product.available ? 'opacity-70' : 'opacity-50'}`}>
-                {product.desc}
-              </p>
-            </div>
-          </ProductItemWrapper>
-        ))}
+            </ProductItemWrapper>
+          );
+        })}
       </div>
     </div>
   </div>
