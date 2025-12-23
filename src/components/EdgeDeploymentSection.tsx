@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Gauge, ShieldCheck, Network, type LucideIcon } from "lucide-react";
 import dynamic from "next/dynamic";
-import CompareEnterpriseAICTA from "./ui/CompareEnterpriseAICTA";
 
 const EdgeGlobe = dynamic(() => import("./enterprise/EdgeGlobe"), {
   ssr: false,
@@ -111,15 +110,12 @@ const EdgeDeploymentSection = () => {
             </p>
             
             {/* CTA */}
-            <div className="flex flex-col items-start gap-3">
-              <div className="flex">
-                <TransitionLink href="/contact">
-                  <Button>
-                    <span className="px-5">Explore Edge Deployment</span>
-                  </Button>
-                </TransitionLink>
-              </div>
-              <CompareEnterpriseAICTA location="edge" variant="link" />
+            <div className="flex">
+              <TransitionLink href="/contact">
+                <Button>
+                  <span className="px-5">Explore Edge Deployment</span>
+                </Button>
+              </TransitionLink>
             </div>
           </Reveal>
         </div>

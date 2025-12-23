@@ -1,7 +1,6 @@
 import Reveal from "./ui/Reveal";
 import EnterpriseAIPillarCardContainer from "./ui/EnterpriseAIPillarCardContainer";
 import BreakTitle from "./ui/BreakTitle";
-import CompareEnterpriseAICTA from "./ui/CompareEnterpriseAICTA";
 
 const EnterpriseAIPillarsSection = () => {
   return (
@@ -24,16 +23,6 @@ const EnterpriseAIPillarsSection = () => {
           <Reveal className="relative overflow-visible">
             <div className="hidden lg:block absolute -right-[100px] lg:-right-[300px] wide:hidden top-0 h-full w-[150px] sm:w-[300px] bg-gradient-to-l from-background from-75% to-white/0 z-10"></div>
             <EnterpriseAIPillarCardContainer />
-          </Reveal>
-
-          {/* Compare strip (between sections) */}
-          <Reveal y={40} className="mt-10">
-            <div className="w-full rounded-2xl border border-foreground/15 bg-background/20 backdrop-blur px-6 sm:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <p className="text-sm text-foreground/75">
-                Want the full breakdown?
-              </p>
-              <CompareEnterpriseAICTA location="cards" variant="secondary" />
-            </div>
           </Reveal>
         </div>
       </div>

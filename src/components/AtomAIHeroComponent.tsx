@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
 import ParticelsStatic from "./ParticelsStatic";
-import CompareEnterpriseAICTA from "./ui/CompareEnterpriseAICTA";
 
 const AtomAIHeroComponent = () => {
   const finished = useLoading((s) => s.finished);
@@ -69,18 +68,13 @@ const AtomAIHeroComponent = () => {
               </p>
 
               <div className="pt-2">
-                <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  <TransitionLink href="/contact" className="w-full sm:w-auto">
-                    <Button>
-                      <span className="px-10 py-3 block min-h-[48px]">
-                        Talk to Our Team
-                      </span>
-                    </Button>
-                  </TransitionLink>
-                  <div className="w-full sm:w-auto">
-                    <CompareEnterpriseAICTA location="hero" variant="secondary" />
-                  </div>
-                </div>
+                <TransitionLink href="/contact" className="w-full sm:w-auto">
+                  <Button>
+                    <span className="px-10 py-3 block min-h-[48px]">
+                      Talk to Our Team
+                    </span>
+                  </Button>
+                </TransitionLink>
               </div>
 
               <div className="w-full pt-8 border-t border-foreground/10">
@@ -169,13 +163,12 @@ const AtomAIHeroComponent = () => {
                 <p className="text-sm md:text-base">
                   Atom AI is a framework for teams deploying voice, search, and workflow agents in controlled environments. Run it in your VPC, on‑prem, or at the edge—with governance and zero‑training guarantees.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3 text-lg items-stretch sm:items-center">
+                <div className="flex text-lg">
                   <TransitionLink href="/contact">
                     <Button>
                       Talk to Our Team
                     </Button>
                   </TransitionLink>
-                  <CompareEnterpriseAICTA location="hero" variant="secondary" />
                 </div>
               </div>
               <div className="flex text-xs md:text-sm gap-6 mobile:gap-8 lg:gap-16 sm:justify-center md:justify-end justify-between w-full md:w-auto">
