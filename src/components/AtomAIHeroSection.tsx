@@ -1,4 +1,4 @@
-import Particels from "./Particels";
+import ParticelsStatic from "./ParticelsStatic";
 import AtomAIHeroComponent from "./AtomAIHeroComponent";
 
 const AtomAIHeroSection = () => {
@@ -10,7 +10,7 @@ const AtomAIHeroSection = () => {
       >
         ATOM AI
       </h2>
-      <Particels />
+      <ParticelsStatic />
       <div className="relative z-20 h-full">
         <AtomAIHeroComponent />
       </div>
