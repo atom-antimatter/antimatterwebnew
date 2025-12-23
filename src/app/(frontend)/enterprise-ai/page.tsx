@@ -1,6 +1,7 @@
 import ClientsSection from "@/components/ClientsSection";
 import CTASection from "@/components/CTASection";
 import AtomAIHeroSection from "@/components/AtomAIHeroSection";
+import EnterpriseCompareStrip from "@/components/EnterpriseCompareStrip";
 import EnterpriseAIPillarsSection from "@/components/EnterpriseAIPillarsSection";
 import EdgeDeploymentSection from "@/components/EdgeDeploymentSection";
 import AtomAIFrameworkDetails from "@/components/AtomAIFrameworkDetails";
@@ -91,6 +92,7 @@ export default function EnterpriseAIPage() {
       <TransitionContainer initial={100} exit={-600}>
         <AtomAIHeroSection />
         <MainLayout className="pt-40 sm:pt-60 overflow-x-hidden">
+          <EnterpriseCompareStrip />
           <EnterpriseAIPillarsSection />
           <EdgeDeploymentSection />
           <AtomAIFrameworkDetails />
