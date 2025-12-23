@@ -4,10 +4,13 @@ import { enterpriseAIPillarData } from "@/data/enterpriseAIPillars";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HiOutlineArrowLongLeft, HiOutlineArrowLongRight } from "react-icons/hi2";
 import EnterpriseAIPillarCard from "./EnterpriseAIPillarCard";
+import styles from "./EnterpriseAIPillarCardContainer.module.css";
 
 const EnterpriseAIPillarCardContainer = () => {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const wheelRafRef = useRef<number | null>(null);
+  const pendingWheelYRef = useRef<number>(0);
   const stepPxRef = useRef<number>(420);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -51,7 +54,16 @@ const EnterpriseAIPillarCardContainer = () => {
 
       // Forward vertical intent to the page and prevent the scroller from consuming it.
       e.preventDefault();
-      window.scrollBy({ top: e.deltaY, left: 0, behavior: "auto" });
+      pendingWheelYRef.current += e.deltaY;
+      if (wheelRafRef.current != null) return;
+      wheelRafRef.current = window.requestAnimationFrame(() => {
+        wheelRafRef.current = null;
+        const dy = pendingWheelYRef.current;
+        pendingWheelYRef.current = 0;
+        if (dy !== 0) {
+          window.scrollBy({ top: dy, left: 0, behavior: "auto" });
+        }
+      });
     };
 
     const onScroll = () => {
@@ -78,6 +90,11 @@ const EnterpriseAIPillarCardContainer = () => {
         window.cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
+      if (wheelRafRef.current != null) {
+        window.cancelAnimationFrame(wheelRafRef.current);
+        wheelRafRef.current = null;
+      }
+      pendingWheelYRef.current = 0;
     };
   }, [measureStep, updateStateFromScroll]);
 
@@ -124,7 +141,7 @@ const EnterpriseAIPillarCardContainer = () => {
           if (e.key === "ArrowLeft") scrollByCard(-1);
           if (e.key === "ArrowRight") scrollByCard(1);
         }}
-        className="overflow-x-auto overflow-y-hidden scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:outline-none"
+        className={`overflow-x-auto overflow-y-hidden scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:outline-none ${styles.cardsScrollerViewport}`}
         aria-label="Enterprise AI Deployment cards"
       >
         {/* Track */}

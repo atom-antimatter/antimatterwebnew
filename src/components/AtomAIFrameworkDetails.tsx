@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import CompareEnterpriseAICTA from "./ui/CompareEnterpriseAICTA";
 
 const frameworkIntro =
   "A concise view of how Atom runs in production deployments.";
@@ -40,6 +41,9 @@ const AtomAIFrameworkDetails = () => {
       <p className="text-sm sm:text-base text-foreground/70 max-w-2xl">
         {frameworkIntro}
       </p>
+      <div className="mt-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <CompareEnterpriseAICTA location="framework" variant="secondary" />
+      </div>
 
       <div className="mt-14 lg:mt-32">
         {frameworkItems.map(({ title, desc }, index) => (

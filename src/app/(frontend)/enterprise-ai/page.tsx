@@ -4,6 +4,7 @@ import AtomAIHeroSection from "@/components/AtomAIHeroSection";
 import EnterpriseAIPillarsSection from "@/components/EnterpriseAIPillarsSection";
 import EdgeDeploymentSection from "@/components/EdgeDeploymentSection";
 import AtomAIFrameworkDetails from "@/components/AtomAIFrameworkDetails";
+import CompareEnterpriseAIFinalCTA from "@/components/CompareEnterpriseAIFinalCTA";
 import LightRays from "@/components/ui/LightRays";
 import Loading from "@/components/ui/Loading";
 import MainLayout from "@/components/ui/MainLayout";
@@ -95,6 +96,7 @@ export default function EnterpriseAIPage() {
           <EdgeDeploymentSection />
           <AtomAIFrameworkDetails />
           <ClientsSection />
+          <CompareEnterpriseAIFinalCTA />
           <CTASection />
         </MainLayout>
         <Interactions />
