@@ -3,7 +3,7 @@ import AtomAIHeroComponent from "./AtomAIHeroComponent";
 
 const AtomAIHeroSection = () => {
   return (
-    <div className="relative w-full h-screen z-40 overflow-x-hidden" id="hero-section">
+    <div className="relative w-full min-h-[100svh] md:h-screen z-40 overflow-x-hidden" id="hero-section">
       <h2
         id="hero-company"
         className="absolute top-24 sm:top-30 left-1/2 -translate-x-1/2 text-[18vw] sm:text-[14vw] font-bold text-nowrap text-center opacity-[0.025] sm:opacity-5 pointer-events-none select-none"

@@ -13,13 +13,27 @@ export function createSceneSetup(container: HTMLElement) {
   );
   camera.position.z = 49;
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    powerPreference: isMobile ? "low-power" : "high-performance",
+  });
+  if (typeof window !== "undefined") {
+    // Clamp DPR for mobile performance and to avoid huge GPU cost.
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 2);
+    renderer.setPixelRatio(dpr);
+  }
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.setClearColor(0x000000, 0);
   container.appendChild(renderer.domElement);
 
   function resizeToContainer() {
     const rect = container.getBoundingClientRect();
+    if (typeof window !== "undefined") {
+      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 2);
+      renderer.setPixelRatio(dpr);
+    }
     renderer.setSize(rect.width, rect.height);
     camera.aspect = rect.width / rect.height || 1;
     camera.updateProjectionMatrix();

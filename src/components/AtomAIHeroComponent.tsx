@@ -2,6 +2,7 @@
 import { useLoading, usePageTransition } from "@/store";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { GitCompareArrows, KeyRound, Server } from "lucide-react";
 import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
 import ParticelsStatic from "./ParticelsStatic";
@@ -9,15 +10,36 @@ import ParticelsStatic from "./ParticelsStatic";
 const AtomAIHeroComponent = () => {
   const finished = useLoading((s) => s.finished);
 
-  const [fontSize, setFontSize] = useState(() => {
-    if (typeof window === "undefined") return 30;
-    if (window.innerWidth >= 1024) return 30;
-    return 22;
-  });
+  const VALUE_PROPS = [
+    {
+      key: "deploy",
+      title: "Deploy Anywhere (VPC / On‑Prem)",
+      description:
+        "Run Atom in your VPC, private cloud, or on‑prem—aligned with your security, networking, and compliance requirements.",
+      Icon: Server,
+    },
+    {
+      key: "controls",
+      title: "Enterprise Controls (RBAC + Audit Trails)",
+      description:
+        "Role-based access, scoped permissions, and searchable audit logs—built for regulated teams and real governance.",
+      Icon: KeyRound,
+    },
+    {
+      key: "flex",
+      title: "Model & Provider Flexibility",
+      description:
+        "Swap LLMs, embeddings, and vendors without rewrites—avoid lock‑in while keeping the same workflows and UX.",
+      Icon: GitCompareArrows,
+    },
+  ] as const;
+
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth < 768;
   });
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isLowEndDevice, setIsLowEndDevice] = useState(false);
   const setIsTransition = usePageTransition((s) => s.setIsTransition);
   useEffect(() => {
     setIsTransition(false);
@@ -25,12 +47,24 @@ const AtomAIHeroComponent = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) setFontSize(30);
-      else setFontSize(22);
       setIsMobile(window.innerWidth < 768);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    const update = () => setPrefersReducedMotion(Boolean(mq?.matches));
+    update();
+    mq?.addEventListener?.("change", update);
+    return () => mq?.removeEventListener?.("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    setIsLowEndDevice(Boolean(navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4));
   }, []);
 
   if (!finished) return null;
@@ -42,10 +76,10 @@ const AtomAIHeroComponent = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-full w-full flex flex-col items-center text-center px-6 pt-[calc(env(safe-area-inset-top)+84px)] pb-12"
+            className="h-full w-full flex flex-col items-center text-center px-5 pt-[calc(env(safe-area-inset-top)+56px)] pb-8"
           >
-            <div className="w-full max-w-[420px] mx-auto flex flex-col items-center gap-6">
-              <h1 className="text-4xl leading-tight font-light tracking-normal">
+            <div className="w-full max-w-[420px] mx-auto flex flex-col items-center gap-4">
+              <h1 className="text-[34px] leading-[1.12] font-light tracking-normal">
                 <span className="block">
                   Building <span className="italic font-bold">Enterprise AI</span>
                 </span>
@@ -54,62 +88,56 @@ const AtomAIHeroComponent = () => {
                 </span>
               </h1>
 
-              {/* Orb lives in-flow on mobile so it never collides with text */}
-              <div className="w-full flex justify-center pt-2 pb-1">
-                <ParticelsStatic
-                  id="particles3d-static-mobile"
-                  inline
-                  className="size-[340px] mobile:size-[380px]"
-                />
-              </div>
-
-              <p className="text-sm text-foreground/80 max-w-[36ch] leading-relaxed">
+              <p className="text-sm text-foreground/80 max-w-[40ch] leading-relaxed">
                 Atom AI is a framework for teams deploying voice, search, and workflow agents in controlled environments. Run it in your VPC, on‑prem, or at the edge—with governance and zero‑training guarantees.
               </p>
 
-              <div className="pt-2">
+              <div className="pt-1 w-full">
                 <TransitionLink href="/contact" className="w-full sm:w-auto">
                   <Button>
-                    <span className="px-10 py-3 block min-h-[48px]">
+                    <span className="px-10 py-3 block min-h-[48px] w-full">
                       Talk to Our Team
                     </span>
                   </Button>
                 </TransitionLink>
               </div>
 
-              <div className="w-full pt-8 border-t border-foreground/10">
-                <div className="grid grid-cols-2 gap-x-8 gap-y-6 text-xs text-foreground/80">
-                  <div className="flex items-center gap-3 justify-start">
-                    <span className="text-tertiary text-lg" aria-hidden="true">
-                      ✓
-                    </span>
-                    <span className="leading-tight">
-                      VPC / On‑Prem
-                      <br />
-                      Deploy
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 justify-start">
-                    <span className="text-tertiary text-lg" aria-hidden="true">
-                      ↔
-                    </span>
-                    <span className="leading-tight">
-                      RBAC + Audit
-                      <br />
-                      Controls
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 justify-center col-span-2">
-                    <span className="text-tertiary text-lg" aria-hidden="true">
-                      ⚡
-                    </span>
-                    <span className="leading-tight">
-                      Provider Swap
-                      <br />
-                      Built‑In
-                    </span>
-                  </div>
+              {/* Value props: stacked cards on mobile (kept below headline + CTA) */}
+              <div className="w-full pt-6 border-t border-foreground/10">
+                <div className="grid grid-cols-1 gap-3 text-left">
+                  {VALUE_PROPS.map(({ key, title, description, Icon }) => (
+                    <div
+                      key={key}
+                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 size-10 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
+                          <Icon
+                            className="size-5 text-tertiary/90"
+                            strokeWidth={1.8}
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold leading-snug">{title}</p>
+                          <p className="text-xs text-foreground/70 leading-relaxed mt-1">
+                            {description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              </div>
+
+              {/* 3D orb moved below CTA + value props on mobile; lite fallback for low-end/reduced-motion */}
+              <div className="w-full flex justify-center pt-5 pb-2">
+                <ParticelsStatic
+                  id="particles3d-static-mobile"
+                  inline
+                  lite={prefersReducedMotion || isLowEndDevice}
+                  className="size-[220px] mobile:size-[240px]"
+                />
               </div>
             </div>
           </motion.div>
@@ -172,56 +200,29 @@ const AtomAIHeroComponent = () => {
                 </div>
               </div>
               <div className="flex text-xs md:text-sm gap-6 mobile:gap-8 lg:gap-16 sm:justify-center md:justify-end justify-between w-full md:w-auto">
-                <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-                  <h3 
-                    className="text-xl sm:text-2xl lg:text-3xl flex items-center font-semibold text-nowrap -ml-5 sm:-ml-0"
-                    style={{ 
-                      height: isMobile ? `${fontSize + 12}px` : 'auto',
-                      paddingTop: isMobile ? '6px' : '0',
-                      paddingBottom: isMobile ? '6px' : '0'
-                    }}
-                  >
-                    <span className="text-tertiary">✓</span>
-                  </h3>
-                  <h3 className="text-xs sm:text-sm leading-tight">
-                    VPC / On‑Prem
-                    <br />
-                    Deploy
-                  </h3>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-                  <h3 
-                    className="text-xl sm:text-2xl lg:text-3xl flex items-center font-semibold text-nowrap -ml-5 sm:-ml-0"
-                    style={{ 
-                      height: isMobile ? `${fontSize + 12}px` : 'auto',
-                      paddingTop: isMobile ? '6px' : '0',
-                      paddingBottom: isMobile ? '6px' : '0'
-                    }}
-                  >
-                    <span className="text-tertiary">↔</span>
-                  </h3>
-                  <h3 className="text-xs sm:text-sm leading-tight">
-                    RBAC + Audit
-                    <br />
-                    Controls
-                  </h3>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2">
-                  <h3 
-                    className="text-xl sm:text-2xl lg:text-3xl flex items-center font-semibold text-nowrap -ml-5 sm:-ml-0"
-                    style={{ 
-                      height: isMobile ? `${fontSize + 12}px` : 'auto',
-                      paddingTop: isMobile ? '6px' : '0',
-                      paddingBottom: isMobile ? '6px' : '0'
-                    }}
-                  >
-                    <span className="text-tertiary">⚡</span>
-                  </h3>
-                  <h3 className="text-xs sm:text-sm leading-tight">
-                    Provider Swap
-                    <br />
-                    Built‑In
-                  </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full md:w-auto max-w-[740px]">
+                  {VALUE_PROPS.map(({ key, title, description, Icon }) => (
+                    <div
+                      key={key}
+                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 size-10 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
+                          <Icon
+                            className="size-5 text-tertiary/90"
+                            strokeWidth={1.8}
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold leading-snug">{title}</p>
+                          <p className="text-xs text-foreground/70 leading-relaxed mt-1">
+                            {description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

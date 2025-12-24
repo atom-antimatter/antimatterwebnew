@@ -23,14 +23,20 @@ type Props = {
    * When true, renders as a normal flow element (not absolute-centered).
    */
   inline?: boolean;
+  /**
+   * Lightweight fallback (no WebGL). Useful for mobile/reduced-motion.
+   */
+  lite?: boolean;
 };
 
 const ParticelsStatic = ({
   id = "particles3d-static",
   className = "",
   inline = false,
+  lite = false,
 }: Props) => {
   useEffect(() => {
+    if (lite) return;
     // Ensure particles are visible and centered (no scroll animation)
     const particles = document.querySelector(`#${id}`);
     if (particles) {
@@ -42,7 +48,7 @@ const ParticelsStatic = ({
         clearProps: "transform" // Clear any inherited transforms but keep position
       });
     }
-  }, [id]);
+  }, [id, lite]);
 
   return (
     <div
@@ -56,8 +62,18 @@ const ParticelsStatic = ({
       style={{ opacity: 1 }} // Always visible
     >
       <div className="relative w-full h-full">
-        <Particles3D />
-        <div className="size-1/2 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 absolute bg-primary rounded-full blur-[100px]"></div>
+        {lite ? (
+          <>
+            <div className="absolute inset-0 rounded-full bg-white/5" />
+            <div className="absolute inset-[18%] rounded-full bg-primary/35 blur-[70px]" />
+            <div className="absolute inset-[30%] rounded-full bg-secondary/25 blur-[55px]" />
+          </>
+        ) : (
+          <>
+            <Particles3D />
+            <div className="size-1/2 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 absolute bg-primary rounded-full blur-[100px]"></div>
+          </>
+        )}
       </div>
     </div>
   );

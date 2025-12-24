@@ -68,7 +68,12 @@ export function startAnimationLoop(params: AnimateParams): () => void {
   let t = 0;
   let isRunning = true;
   let lastFrameTime = 0;
-  const targetFPS = 60;
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
+  const prefersReducedMotion =
+    typeof window !== "undefined"
+      ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+      : false;
+  const targetFPS = prefersReducedMotion ? 20 : isMobile ? 30 : 60;
   const frameInterval = 1000 / targetFPS;
 
   function frame(currentTime: number = 0) {
@@ -201,7 +206,7 @@ export function startAnimationLoop(params: AnimateParams): () => void {
     if (instancedMesh.instanceColor)
       instancedMesh.instanceColor.needsUpdate = true;
 
-      t += 0.02;
+      t += prefersReducedMotion ? 0.01 : 0.02;
       
       // Check if renderer context is still valid
       if (renderer.domElement && !renderer.domElement.isConnected) {
@@ -219,7 +224,10 @@ export function startAnimationLoop(params: AnimateParams): () => void {
       
       renderer.render(scene, camera);
 
-      if (currentIndexRef.current > 1) {
+      if (prefersReducedMotion) {
+        // Keep motion subtle for reduced-motion users.
+        shapeGroup.rotation.y += 0.0005;
+      } else if (currentIndexRef.current > 1) {
         // shapeGroup.rotation.y = (shapeGroup.rotation.y % 2) * Math.PI;
         gsap.to(shapeGroup.rotation, {
           y: Math.PI,
