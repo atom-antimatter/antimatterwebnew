@@ -2,7 +2,7 @@
 import { useLoading, usePageTransition } from "@/store";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { GitCompareArrows, KeyRound, Server } from "lucide-react";
+import { KeyRound, Server, Shuffle } from "lucide-react";
 import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
 import ParticelsStatic from "./ParticelsStatic";
@@ -13,24 +13,18 @@ const AtomAIHeroComponent = () => {
   const VALUE_PROPS = [
     {
       key: "deploy",
-      title: "Deploy Anywhere (VPC / On‑Prem)",
-      description:
-        "Run Atom in your VPC, private cloud, or on‑prem—aligned with your security, networking, and compliance requirements.",
+      title: "Deploy Anywhere",
       Icon: Server,
     },
     {
       key: "controls",
-      title: "Enterprise Controls (RBAC + Audit Trails)",
-      description:
-        "Role-based access, scoped permissions, and searchable audit logs—built for regulated teams and real governance.",
+      title: "RBAC + Audit Trails",
       Icon: KeyRound,
     },
     {
       key: "flex",
-      title: "Model & Provider Flexibility",
-      description:
-        "Swap LLMs, embeddings, and vendors without rewrites—avoid lock‑in while keeping the same workflows and UX.",
-      Icon: GitCompareArrows,
+      title: "Provider Flexibility",
+      Icon: Shuffle,
     },
   ] as const;
 
@@ -104,14 +98,14 @@ const AtomAIHeroComponent = () => {
 
               {/* Value props: stacked cards on mobile (kept below headline + CTA) */}
               <div className="w-full pt-6 border-t border-foreground/10">
-                <div className="grid grid-cols-1 gap-3 text-left">
-                  {VALUE_PROPS.map(({ key, title, description, Icon }) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                  {VALUE_PROPS.map(({ key, title, Icon }) => (
                     <div
                       key={key}
-                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-4"
+                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-3 transition-colors hover:bg-background/30"
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 size-10 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
                           <Icon
                             className="size-5 text-tertiary/90"
                             strokeWidth={1.8}
@@ -119,9 +113,8 @@ const AtomAIHeroComponent = () => {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold leading-snug">{title}</p>
-                          <p className="text-xs text-foreground/70 leading-relaxed mt-1">
-                            {description}
+                          <p className="text-[15px] font-semibold leading-tight text-foreground">
+                            {title}
                           </p>
                         </div>
                       </div>
@@ -200,14 +193,14 @@ const AtomAIHeroComponent = () => {
                 </div>
               </div>
               <div className="flex text-xs md:text-sm gap-6 mobile:gap-8 lg:gap-16 sm:justify-center md:justify-end justify-between w-full md:w-auto">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full md:w-auto max-w-[740px]">
-                  {VALUE_PROPS.map(({ key, title, description, Icon }) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full md:w-auto max-w-[860px]">
+                  {VALUE_PROPS.map(({ key, title, Icon }) => (
                     <div
                       key={key}
-                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-4"
+                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-3 transition-colors hover:bg-background/30"
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 size-10 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
                           <Icon
                             className="size-5 text-tertiary/90"
                             strokeWidth={1.8}
@@ -215,9 +208,8 @@ const AtomAIHeroComponent = () => {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold leading-snug">{title}</p>
-                          <p className="text-xs text-foreground/70 leading-relaxed mt-1">
-                            {description}
+                          <p className="text-[15px] font-semibold leading-tight text-foreground">
+                            {title}
                           </p>
                         </div>
                       </div>
