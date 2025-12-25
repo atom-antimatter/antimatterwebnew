@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
 
 const GlobeFrame = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="relative w-full mx-auto max-w-[620px] h-[320px] sm:h-[400px] md:h-[560px] xl:h-[620px]">
+    <div className="relative w-full mx-auto max-w-[620px] h-[320px] sm:h-[400px] md:h-[560px] xl:h-[620px] overflow-hidden md:overflow-visible">
       {children}
     </div>
   );
