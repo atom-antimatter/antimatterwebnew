@@ -283,22 +283,22 @@ const HamMenu = ({ navData }: Props) => {
                             return (
                               <li
                                 key={product.title}
-                                className="relative pl-10 whitespace-nowrap opacity-45"
+                                className="relative pl-10 opacity-45"
                                 title="This module is coming soon"
                               >
                                 <div
-                                  className="block pr-4 cursor-default"
+                                  className="flex items-center justify-between pr-5 cursor-default"
                                   aria-disabled="true"
                                   tabIndex={-1}
                                 >
                                   <span className="opacity-30 absolute left-0 bottom-0 text-xl sm:text-2xl">
                                     0{index + 1}
                                   </span>
-                                  <span className="flex items-center gap-2">
+                                  <span className="min-w-0 truncate">
                                     {product.title}
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-[10px] font-medium text-zinc-400 whitespace-nowrap">
-                                      Coming soon
-                                    </span>
+                                  </span>
+                                  <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-[10px] font-medium text-zinc-400 whitespace-nowrap ml-2">
+                                    Coming soon
                                   </span>
                                 </div>
                               </li>
