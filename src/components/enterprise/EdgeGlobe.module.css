@@ -131,9 +131,16 @@
 
 @media (max-width: 768px) {
   .container::before {
-    inset: -7%;
-    opacity: 0.82;
-    filter: blur(22px);
+    inset: -10%;
+    opacity: 0.92;
+    filter: blur(28px);
+    background: radial-gradient(
+      circle at center,
+      rgba(104, 91, 255, 0.28) 0%,
+      rgba(104, 91, 255, 0.16) 28%,
+      rgba(104, 91, 255, 0.06) 55%,
+      rgba(0, 0, 0, 0) 75%
+    );
   }
 }
 

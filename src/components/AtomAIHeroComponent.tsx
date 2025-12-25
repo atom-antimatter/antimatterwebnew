@@ -32,8 +32,6 @@ const AtomAIHeroComponent = () => {
     if (typeof window === "undefined") return false;
     return window.innerWidth < 768;
   });
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [isLowEndDevice, setIsLowEndDevice] = useState(false);
   const setIsTransition = usePageTransition((s) => s.setIsTransition);
   useEffect(() => {
     setIsTransition(false);
@@ -45,20 +43,6 @@ const AtomAIHeroComponent = () => {
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    const update = () => setPrefersReducedMotion(Boolean(mq?.matches));
-    update();
-    mq?.addEventListener?.("change", update);
-    return () => mq?.removeEventListener?.("change", update);
-  }, []);
-
-  useEffect(() => {
-    if (typeof navigator === "undefined") return;
-    setIsLowEndDevice(Boolean(navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4));
   }, []);
 
   if (!finished) return null;
@@ -94,13 +78,13 @@ const AtomAIHeroComponent = () => {
                 </TransitionLink>
               </div>
 
-              {/* 3D orb: hero visual (homepage style) between CTA + value props */}
+              {/* 3D orb: full particles (matches homepage) renders immediately on load */}
               <div className="w-full flex justify-center pt-4 pb-3">
                 <ParticelsStatic
                   id="particles3d-static-mobile"
                   inline
-                  lite={prefersReducedMotion || isLowEndDevice}
-                  className="size-[240px]"
+                  lite={false}
+                  className="size-[260px]"
                 />
               </div>
 

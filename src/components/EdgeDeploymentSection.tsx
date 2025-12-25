@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
 
 const GlobeFrame = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="relative w-full mx-auto max-w-[620px] h-[320px] sm:h-[400px] md:h-[560px] xl:h-[620px] overflow-hidden md:overflow-visible">
+    <div className="relative w-full mx-auto max-w-[620px] h-[320px] sm:h-[400px] md:h-[560px] xl:h-[620px]">
       {children}
     </div>
   );
@@ -99,7 +99,7 @@ const EdgeDeploymentSection = () => {
   }, [pathname]);
 
   return (
-    <div ref={sectionRef} className="py-20 sm:py-32 md:py-40" id="edge-deployment-section">
+    <div ref={sectionRef} className="py-12 sm:py-24 md:py-40" id="edge-deployment-section">
       <div className="flex flex-col md:flex-row justify-between items-center gap-8 sm:gap-10 md:gap-16 lg:gap-20">
         {/* Left: 3D globe (lazy-loaded, stable wrapper prevents CLS) */}
         <div className="relative w-full md:w-1/2 order-2 md:order-1 flex justify-center">
