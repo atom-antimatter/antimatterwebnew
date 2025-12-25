@@ -42,6 +42,20 @@ async function loadLandGeoJson() {
   return feature(topo, topo.objects.land);
 }
 
+let landGeoPromise: Promise<any> | null = null;
+let landDotsDesktop: Array<LatLng> | null = null;
+let landDotsMobile: Array<LatLng> | null = null;
+
+function requestIdle(cb: () => void, timeoutMs = 1200) {
+  const w = window as any;
+  if (typeof w.requestIdleCallback === "function") {
+    const id = w.requestIdleCallback(cb, { timeout: timeoutMs });
+    return () => w.cancelIdleCallback?.(id);
+  }
+  const id = window.setTimeout(cb, 60);
+  return () => window.clearTimeout(id);
+}
+
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
@@ -66,7 +80,18 @@ function generateLandDots(
   return pts;
 }
 
-export default function EdgeGlobe() {
+type EdgeGlobeProps = {
+  /**
+   * When false, stop/slow animation work (used when offscreen).
+   */
+  active?: boolean;
+  /**
+   * Called once when the globe has mounted and is ready to be revealed.
+   */
+  onReady?: () => void;
+};
+
+export default function EdgeGlobe({ active = true, onReady }: EdgeGlobeProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const globeRef = useRef<any>(null);
   const reducedMotion = usePrefersReducedMotion();
@@ -74,40 +99,66 @@ export default function EdgeGlobe() {
   const [landDots, setLandDots] = useState<Array<LatLng> | null>(null);
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 420, h: 420 });
   const [activeHotspotId, setActiveHotspotId] = useState<string | null>(null);
+  const readyFiredRef = useRef(false);
 
   const isMobile = size.w < 420;
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let raf = 0;
     const ro = new ResizeObserver(() => {
-      const rect = el.getBoundingClientRect();
-      const w = Math.max(320, Math.floor(rect.width));
-      setSize({ w, h: w });
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const rect = el.getBoundingClientRect();
+        // Keep the canvas square, but NEVER change the wrapper layout height.
+        const s = Math.floor(Math.min(rect.width, rect.height));
+        const w = clamp(s, 320, 700);
+        setSize((prev) => (prev.w === w ? prev : { w, h: w }));
+      });
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const landGeo = await loadLandGeoJson();
-        if (cancelled) return;
+    // Use cached dots if already computed.
+    const cached = isMobile ? landDotsMobile : landDotsDesktop;
+    if (cached) {
+      setLandDots(cached);
+      return () => {
+        cancelled = true;
+      };
+    }
 
-        const dots = generateLandDots(landGeo, {
-          stepDeg: isMobile ? 3.2 : 2.2,
-          maxDots: isMobile ? 2200 : 5600,
-        });
-        if (!cancelled) setLandDots(dots);
-      } catch {
-        if (!cancelled) setLandDots([]);
-      }
-    })();
+    // Defer heavy geoContains loops to idle time to avoid scroll jank.
+    const cancelIdle = requestIdle(() => {
+      (async () => {
+        try {
+          landGeoPromise = landGeoPromise ?? loadLandGeoJson();
+          const landGeo = await landGeoPromise;
+          if (cancelled) return;
+
+          const dots = generateLandDots(landGeo, {
+            stepDeg: isMobile ? 3.2 : 2.2,
+            maxDots: isMobile ? 2200 : 5600,
+          });
+          if (isMobile) landDotsMobile = dots;
+          else landDotsDesktop = dots;
+          if (!cancelled) setLandDots(dots);
+        } catch {
+          if (!cancelled) setLandDots([]);
+        }
+      })();
+    }, 1600);
 
     return () => {
       cancelled = true;
+      cancelIdle();
     };
   }, [isMobile]);
 
@@ -142,7 +193,7 @@ export default function EdgeGlobe() {
     if (controls) {
       controls.enableZoom = false;
       controls.enablePan = false;
-      controls.autoRotate = !reducedMotion;
+      controls.autoRotate = active && !reducedMotion;
       controls.autoRotateSpeed = 0.18;
       controls.rotateSpeed = 0.28;
       // Prevent upside-down flips (keep a premium “guided” feel)
@@ -172,7 +223,15 @@ export default function EdgeGlobe() {
     // Initial framing (slight tilt, Framer-like)
     const initialAlt = isMobile ? 2.25 : 2.05;
     globe.pointOfView?.({ lat: 18, lng: -30, altitude: initialAlt }, reducedMotion ? 0 : 900);
-  }, [isMobile, reducedMotion]);
+  }, [active, isMobile, reducedMotion]);
+
+  useEffect(() => {
+    const globe = globeRef.current;
+    if (!globe) return;
+    // Pause expensive render loop when offscreen, if supported by the underlying lib.
+    if (!active && typeof globe.pauseAnimation === "function") globe.pauseAnimation();
+    if (active && typeof globe.resumeAnimation === "function") globe.resumeAnimation();
+  }, [active]);
 
   const focusHotspot = useCallback(
     (loc: EdgeLocation) => {
@@ -200,10 +259,18 @@ export default function EdgeGlobe() {
     return items;
   }, [isMobile]);
 
+  useEffect(() => {
+    if (readyFiredRef.current) return;
+    if (!globeRef.current) return;
+    if (!landDots) return;
+    readyFiredRef.current = true;
+    onReady?.();
+  }, [landDots, onReady]);
+
   return (
     <div
       ref={containerRef}
-      className={`relative w-full max-w-[520px] xl:max-w-[600px] mx-auto aspect-square ${styles.container}`}
+      className={`absolute inset-0 ${styles.container}`}
     >
       {/* Starfield (subtle, behind everything) */}
       <div className="pointer-events-none absolute inset-0 rounded-full overflow-hidden">
@@ -233,67 +300,70 @@ export default function EdgeGlobe() {
       />
       {/* NOTE: Removed container rim/outline overlay (it created an outer “ring” around the sphere). */}
 
-      <Globe
-        ref={globeRef}
-        width={size.w}
-        height={size.h}
-        backgroundColor="rgba(0,0,0,0)"
-        rendererConfig={{ antialias: true, alpha: true }}
-        globeImageUrl={BLACK_TEXTURE_1PX}
-        bumpImageUrl={BLACK_TEXTURE_1PX}
-        // Disable Globe's atmosphere layer to remove the “bubble” outline.
-        showAtmosphere={false}
-        // Dotted continents (land only)
-        pointsData={pointsData}
-        pointLat="lat"
-        pointLng="lng"
-        pointAltitude={0.008}
-        pointColor={(d: any) => d.color}
-        pointRadius={(d: any) => d.size}
-        // Interactive hotspots
-        htmlElementsData={hotspots as any}
-        htmlLat="lat"
-        htmlLng="lng"
-        htmlAltitude={0.012}
-        htmlElement={(d: any) => {
-          const loc = d as EdgeLocation & { tooltip: string; active: boolean; reduced: boolean };
-          const el = document.createElement("div");
-          el.className = styles.hotspot;
-          el.setAttribute("data-active", loc.active ? "true" : "false");
-          el.setAttribute("data-reduced", loc.reduced ? "true" : "false");
-          el.setAttribute("role", "button");
-          el.setAttribute("tabindex", "0");
-          el.setAttribute("aria-label", loc.tooltip);
+      {/* Absolute stage keeps layout stable while allowing square canvas inside a fixed wrapper. */}
+      <div className={styles.stage} style={{ width: size.w, height: size.h }}>
+        <Globe
+          ref={globeRef}
+          width={size.w}
+          height={size.h}
+          backgroundColor="rgba(0,0,0,0)"
+          rendererConfig={{ antialias: true, alpha: true }}
+          globeImageUrl={BLACK_TEXTURE_1PX}
+          bumpImageUrl={BLACK_TEXTURE_1PX}
+          // Disable Globe's atmosphere layer to remove the “bubble” outline.
+          showAtmosphere={false}
+          // Dotted continents (land only)
+          pointsData={pointsData}
+          pointLat="lat"
+          pointLng="lng"
+          pointAltitude={0.008}
+          pointColor={(d: any) => d.color}
+          pointRadius={(d: any) => d.size}
+          // Interactive hotspots
+          htmlElementsData={hotspots as any}
+          htmlLat="lat"
+          htmlLng="lng"
+          htmlAltitude={0.012}
+          htmlElement={(d: any) => {
+            const loc = d as EdgeLocation & { tooltip: string; active: boolean; reduced: boolean };
+            const el = document.createElement("div");
+            el.className = styles.hotspot;
+            el.setAttribute("data-active", loc.active ? "true" : "false");
+            el.setAttribute("data-reduced", loc.reduced ? "true" : "false");
+            el.setAttribute("role", "button");
+            el.setAttribute("tabindex", "0");
+            el.setAttribute("aria-label", loc.tooltip);
 
-          const pulse = document.createElement("div");
-          pulse.className = styles.pulse;
+            const pulse = document.createElement("div");
+            pulse.className = styles.pulse;
 
-          const core = document.createElement("div");
-          core.className = styles.core;
+            const core = document.createElement("div");
+            core.className = styles.core;
 
-          const tip = document.createElement("div");
-          tip.className = styles.tooltip;
-          tip.innerHTML = `<span class="${styles.tooltipDot}"></span>${loc.tooltip}`;
+            const tip = document.createElement("div");
+            tip.className = styles.tooltip;
+            tip.innerHTML = `<span class="${styles.tooltipDot}"></span>${loc.tooltip}`;
 
-          el.appendChild(pulse);
-          el.appendChild(core);
-          el.appendChild(tip);
+            el.appendChild(pulse);
+            el.appendChild(core);
+            el.appendChild(tip);
 
-          const onClick = () => focusHotspot(loc);
-          const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              focusHotspot(loc);
-            }
-          };
-          el.addEventListener("click", onClick);
-          el.addEventListener("keydown", onKeyDown as any);
+            const onClick = () => focusHotspot(loc);
+            const onKeyDown = (e: KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                focusHotspot(loc);
+              }
+            };
+            el.addEventListener("click", onClick);
+            el.addEventListener("keydown", onKeyDown as any);
 
-          return el;
-        }}
-        // Keep UX tight
-        animateIn={true}
-      />
+            return el;
+          }}
+          // Keep UX tight
+          animateIn={true}
+        />
+      </div>
     </div>
   );
 }

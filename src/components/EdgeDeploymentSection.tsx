@@ -8,10 +8,34 @@ import { usePathname } from "next/navigation";
 import { Gauge, ShieldCheck, Network, type LucideIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 
+const GlobeFrame = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="relative w-full mx-auto max-w-[620px] h-[340px] sm:h-[420px] md:h-[560px] xl:h-[620px]">
+      {children}
+    </div>
+  );
+};
+
+const GlobeSkeleton = ({ className = "" }: { className?: string }) => {
+  return (
+    <div
+      className={[
+        "absolute inset-0 rounded-full",
+        "border border-foreground/10 bg-foreground/[0.02]",
+        "shadow-[0_0_0_1px_rgba(123,124,255,.06)]",
+        className,
+      ].join(" ")}
+      aria-hidden="true"
+    />
+  );
+};
+
 const EdgeGlobe = dynamic(() => import("./enterprise/EdgeGlobe"), {
   ssr: false,
   loading: () => (
-    <div className="w-full max-w-[520px] xl:max-w-[600px] mx-auto aspect-square rounded-full border border-foreground/10 bg-foreground/[0.02]" />
+    <GlobeFrame>
+      <GlobeSkeleton />
+    </GlobeFrame>
   ),
 });
 
@@ -48,6 +72,8 @@ const EdgePointRow = ({ icon: Icon, text }: EdgePointRowProps) => {
 const EdgeDeploymentSection = () => {
   const sectionRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoadGlobe, setShouldLoadGlobe] = useState(false);
+  const [globeActive, setGlobeActive] = useState(false);
+  const [globeReady, setGlobeReady] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -57,14 +83,14 @@ const EdgeDeploymentSection = () => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         const ratio = entry.intersectionRatio ?? 0;
-        if (ratio >= 0.15) {
-          setShouldLoadGlobe(true);
-        }
+        const active = ratio >= 0.2;
+        setGlobeActive(active);
+        if (ratio >= 0.12) setShouldLoadGlobe(true);
       },
       {
-        threshold: [0, 0.1, 0.2],
+        threshold: [0, 0.12, 0.2, 0.35],
         // Preload earlier to avoid main-thread jank right as the user scrolls into the section.
-        rootMargin: "320px 0px 320px 0px",
+        rootMargin: "800px 0px 800px 0px",
       }
     );
 
@@ -77,7 +103,27 @@ const EdgeDeploymentSection = () => {
       <div className="flex flex-col md:flex-row justify-between items-center gap-10 md:gap-16 lg:gap-20">
         {/* Left: 3D globe (lazy-loaded) */}
         <div className="relative w-full md:w-1/2 order-2 md:order-1">
-          {shouldLoadGlobe ? <EdgeGlobe /> : <div className="w-full max-w-[520px] xl:max-w-[600px] mx-auto aspect-square rounded-full border border-foreground/10 bg-foreground/[0.02]" />}
+          <GlobeFrame>
+            <GlobeSkeleton
+              className={[
+                "transition-opacity duration-500",
+                globeReady ? "opacity-0" : "opacity-100",
+              ].join(" ")}
+            />
+            {shouldLoadGlobe ? (
+              <div
+                className={[
+                  "absolute inset-0 transition-opacity duration-500",
+                  globeReady ? "opacity-100" : "opacity-0",
+                ].join(" ")}
+              >
+                <EdgeGlobe
+                  active={globeActive}
+                  onReady={() => setGlobeReady(true)}
+                />
+              </div>
+            ) : null}
+          </GlobeFrame>
         </div>
         
         {/* Right: Content */}
