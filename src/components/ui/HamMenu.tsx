@@ -159,7 +159,7 @@ const HamMenu = ({ navData }: Props) => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="h-full max-w-[320px] w-full bg-zinc-950 p-5 sm:px-8 relative z-10 overflow-hidden touch-none"
+              className="h-full max-w-[320px] w-full bg-zinc-950 p-5 sm:px-8 relative z-10 overflow-x-hidden overflow-y-auto touch-none"
             >
               <div className="relative flex items-center h-full">
                 <div className="absolute top-0 right-0">
@@ -168,8 +168,8 @@ const HamMenu = ({ navData }: Props) => {
                     onClick={() => setActive(!active)}
                   />
                 </div>
-                <div className="relative w-full ">
-                  <div className="overflow-hidden">
+                <div className="relative w-full">
+                  <div className="overflow-x-hidden">
                     <motion.nav
                       animate={{ x: serviceNav || atomAINav ? "-100%" : 0 }}
                       transition={{ duration: 0.3 }}
@@ -246,9 +246,9 @@ const HamMenu = ({ navData }: Props) => {
                       </motion.div>
                       <motion.div
                         animate={{ opacity: atomAINav ? 1 : 0 }}
-                        className="absolute top-1/2 -translate-y-1/2 left-full"
+                        className="absolute top-1/2 -translate-y-1/2 left-full w-full pr-8"
                       >
-                        <ul className="text-2xl sm:text-3xl leading-tight flex flex-col gap-1">
+                        <ul className="text-2xl sm:text-3xl leading-tight flex flex-col gap-1 pr-2">
                           <div
                             className="py-3 pr-3"
                             onClick={() => setAtomAINav(false)}
