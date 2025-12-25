@@ -261,7 +261,7 @@ export default function EnterpriseCompareStrip() {
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
             <TransitionLink href={openMatrixHref}>
               <Button>
-                <span className="px-8">Open Comparison Matrix</span>
+                <span className="px-8 whitespace-nowrap">Compare Vendors</span>
               </Button>
             </TransitionLink>
             <Link

@@ -94,7 +94,17 @@ const AtomAIHeroComponent = () => {
                 </TransitionLink>
               </div>
 
-              {/* Value props: tight spacing to keep above fold */}
+              {/* 3D orb: hero visual (homepage style) between CTA + value props */}
+              <div className="w-full flex justify-center pt-4 pb-3">
+                <ParticelsStatic
+                  id="particles3d-static-mobile"
+                  inline
+                  lite={prefersReducedMotion || isLowEndDevice}
+                  className="size-[240px]"
+                />
+              </div>
+
+              {/* Value props: below orb for clean homepage-style hierarchy */}
               <div className="w-full pt-5 border-t border-foreground/10">
                 <div className="grid grid-cols-1 gap-2.5 text-left">
                   {VALUE_PROPS.map(({ key, title, Icon }) => (
@@ -119,16 +129,6 @@ const AtomAIHeroComponent = () => {
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* 3D orb: below fold, smaller, lite fallback for low-end/reduced-motion */}
-              <div className="w-full flex justify-center pt-5 pb-2">
-                <ParticelsStatic
-                  id="particles3d-static-mobile"
-                  inline
-                  lite={prefersReducedMotion || isLowEndDevice}
-                  className="size-[180px]"
-                />
               </div>
             </div>
           </motion.div>

@@ -131,9 +131,9 @@
 
 @media (max-width: 768px) {
   .container::before {
-    inset: -6%;
-    opacity: 0.75;
-    filter: blur(18px);
+    inset: -7%;
+    opacity: 0.82;
+    filter: blur(22px);
   }
 }
 
