@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { KeyRound, Server, Shuffle } from "lucide-react";
 import Button from "./ui/Button";
 import TransitionLink from "./ui/TransitionLink";
-import ParticelsStatic from "./ParticelsStatic";
 
 const AtomAIHeroComponent = () => {
   const finished = useLoading((s) => s.finished);
@@ -49,72 +48,41 @@ const AtomAIHeroComponent = () => {
   return (
     <AnimatePresence>
       <>
-        {/* Mobile hero: fit headline + subcopy + CTA + 3 pills above fold */}
+        {/* Mobile hero: EXACT match to Home page pattern (orb as absolute bg, flex-between) */}
         {isMobile ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-full w-full flex flex-col items-center text-center px-6 pt-20 pb-10"
+            className="flex flex-col w-main m-auto pt-10 pb-14 h-full relative z-10 justify-between"
+            data-testid="atom-mobile-hero"
           >
-            <div className="w-full max-w-[420px] mx-auto flex flex-col items-center gap-5">
-              {/* Headline: concise for mobile viewport */}
-              <h1 className="text-[36px] leading-[1.1] font-light tracking-tight">
+            {/* Top: Headline (overlays orb) */}
+            <div className="flex justify-center items-center flex-1 min-h-0">
+              <h1 className="text-[40px] leading-[1.08] font-light text-center max-w-[360px]">
                 Building <span className="italic font-bold">Enterprise AI</span> that Makes Sense
               </h1>
+            </div>
 
-              {/* Subcopy: shortened to fit viewport */}
-              <p className="text-[15px] text-foreground/80 max-w-[36ch] leading-snug">
-                Deploy voice, search, and workflow agents in controlled environments—VPC, on‑prem, or edge.
-              </p>
-
-              {/* CTA: smaller on mobile to save space */}
-              <div className="w-full pt-1">
-                <TransitionLink href="/contact" className="w-full">
-                  <Button>
-                    <span className="px-8 py-2.5 block min-h-[48px] w-full">
+            {/* Bottom: Subcopy + CTA (anchored low) */}
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 1.8, ease: "anticipate" }}
+              className="flex-shrink-0"
+            >
+              <div className="flex flex-col items-center text-center gap-6">
+                <p className="text-sm max-w-[34ch] text-foreground/80">
+                  Deploy voice, search, and workflow agents in controlled environments—VPC, on‑prem, or edge.
+                </p>
+                <div className="flex text-lg">
+                  <TransitionLink href="/contact">
+                    <Button>
                       Talk to Our Team
-                    </span>
-                  </Button>
-                </TransitionLink>
-              </div>
-
-              {/* 3D orb: full particles (matches homepage) renders immediately on load */}
-              <div className="w-full flex justify-center pt-4 pb-3">
-                <ParticelsStatic
-                  id="particles3d-static-mobile"
-                  inline
-                  lite={false}
-                  className="size-[260px]"
-                />
-              </div>
-
-              {/* Value props: below orb for clean homepage-style hierarchy */}
-              <div className="w-full pt-5 border-t border-foreground/10">
-                <div className="grid grid-cols-1 gap-2.5 text-left">
-                  {VALUE_PROPS.map(({ key, title, Icon }) => (
-                    <div
-                      key={key}
-                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-3.5 transition-colors hover:bg-background/30"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="size-10 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
-                          <Icon
-                            className="size-[21px] text-tertiary/90"
-                            strokeWidth={1.8}
-                            aria-hidden="true"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[15px] font-semibold leading-tight text-foreground">
-                            {title}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    </Button>
+                  </TransitionLink>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         ) : null}
 
