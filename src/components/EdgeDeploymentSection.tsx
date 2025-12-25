@@ -99,7 +99,7 @@ const EdgeDeploymentSection = () => {
   }, [pathname]);
 
   return (
-    <div ref={sectionRef} className="py-12 sm:py-24 md:py-40" id="edge-deployment-section">
+    <div ref={sectionRef} className="py-6 sm:py-16 md:py-40" id="edge-deployment-section">
       <div className="flex flex-col md:flex-row justify-between items-center gap-8 sm:gap-10 md:gap-16 lg:gap-20">
         {/* Left: 3D globe (lazy-loaded, stable wrapper prevents CLS) */}
         <div className="relative w-full md:w-1/2 order-2 md:order-1 flex justify-center">

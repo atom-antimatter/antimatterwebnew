@@ -30,10 +30,10 @@ const frameworkItems = [
 
 const AtomAIFrameworkDetails = () => {
   return (
-    <section className="py-32 sm:py-40" id="framework-details" aria-labelledby="framework-details-title">
+    <section className="py-8 sm:py-20 md:py-32 lg:py-40" id="framework-details" aria-labelledby="framework-details-title">
       <h2
         id="framework-details-title"
-        className="text-xl lg:text-2xl xl:text-3xl font-extralight uppercase lg:tracking-wide mb-14 lg:mb-32"
+        className="text-xl lg:text-2xl xl:text-3xl font-extralight uppercase lg:tracking-wide mb-10 md:mb-14 lg:mb-32"
       >
         Atom AI Framework & Enterprise Deployments
       </h2>
