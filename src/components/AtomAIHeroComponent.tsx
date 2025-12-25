@@ -70,10 +70,11 @@ const AtomAIHeroComponent = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-full w-full flex flex-col items-center text-center px-5 pt-[calc(env(safe-area-inset-top)+56px)] pb-8"
+            className="h-full w-full flex flex-col items-center text-center px-6 pt-24 pb-12"
           >
-            <div className="w-full max-w-[420px] mx-auto flex flex-col items-center gap-4">
-              <h1 className="text-[34px] leading-[1.12] font-light tracking-normal">
+            <div className="w-full max-w-[420px] mx-auto flex flex-col items-center gap-6">
+              {/* Headline: smaller, tighter leading for mobile */}
+              <h1 className="text-[38px] leading-[1.08] font-light tracking-tight">
                 <span className="block">
                   Building <span className="italic font-bold">Enterprise AI</span>
                 </span>
@@ -82,32 +83,34 @@ const AtomAIHeroComponent = () => {
                 </span>
               </h1>
 
-              <p className="text-sm text-foreground/80 max-w-[40ch] leading-relaxed">
+              {/* Subcopy: better readability */}
+              <p className="text-base text-foreground/80 max-w-[38ch] leading-relaxed">
                 Atom AI is a framework for teams deploying voice, search, and workflow agents in controlled environments. Run it in your VPC, on‑prem, or at the edge—with governance and zero‑training guarantees.
               </p>
 
-              <div className="pt-1 w-full">
-                <TransitionLink href="/contact" className="w-full sm:w-auto">
+              {/* CTA: breathing room above/below */}
+              <div className="pt-2 pb-2 w-full">
+                <TransitionLink href="/contact" className="w-full">
                   <Button>
-                    <span className="px-10 py-3 block min-h-[48px] w-full">
+                    <span className="px-10 py-3 block min-h-[52px] w-full">
                       Talk to Our Team
                     </span>
                   </Button>
                 </TransitionLink>
               </div>
 
-              {/* Value props: stacked cards on mobile (kept below headline + CTA) */}
-              <div className="w-full pt-6 border-t border-foreground/10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+              {/* Value props: subtle divider + cleaner spacing */}
+              <div className="w-full pt-8 border-t border-foreground/10">
+                <div className="grid grid-cols-1 gap-3 text-left">
                   {VALUE_PROPS.map(({ key, title, Icon }) => (
                     <div
                       key={key}
-                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-3 transition-colors hover:bg-background/30"
+                      className="rounded-2xl border border-foreground/10 bg-background/20 backdrop-blur px-4 py-4 transition-colors hover:bg-background/30"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="size-10 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
+                        <div className="size-11 shrink-0 rounded-xl border border-foreground/10 bg-white/5 flex items-center justify-center">
                           <Icon
-                            className="size-5 text-tertiary/90"
+                            className="size-[22px] text-tertiary/90"
                             strokeWidth={1.8}
                             aria-hidden="true"
                           />
@@ -123,13 +126,13 @@ const AtomAIHeroComponent = () => {
                 </div>
               </div>
 
-              {/* 3D orb moved below CTA + value props on mobile; lite fallback for low-end/reduced-motion */}
-              <div className="w-full flex justify-center pt-5 pb-2">
+              {/* 3D orb: below everything, smaller, lite fallback for low-end/reduced-motion */}
+              <div className="w-full flex justify-center pt-6 pb-4">
                 <ParticelsStatic
                   id="particles3d-static-mobile"
                   inline
                   lite={prefersReducedMotion || isLowEndDevice}
-                  className="size-[220px] mobile:size-[240px]"
+                  className="size-[200px]"
                 />
               </div>
             </div>

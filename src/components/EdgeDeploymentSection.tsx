@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
 
 const GlobeFrame = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="relative w-full mx-auto max-w-[620px] h-[340px] sm:h-[420px] md:h-[560px] xl:h-[620px]">
+    <div className="relative w-full mx-auto max-w-[620px] h-[320px] sm:h-[400px] md:h-[560px] xl:h-[620px]">
       {children}
     </div>
   );
@@ -99,22 +99,22 @@ const EdgeDeploymentSection = () => {
   }, [pathname]);
 
   return (
-    <div ref={sectionRef} className="py-32 sm:py-40" id="edge-deployment-section">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-10 md:gap-16 lg:gap-20">
-        {/* Left: 3D globe (lazy-loaded) */}
-        <div className="relative w-full md:w-1/2 order-2 md:order-1">
+    <div ref={sectionRef} className="py-20 sm:py-32 md:py-40" id="edge-deployment-section">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-8 sm:gap-10 md:gap-16 lg:gap-20">
+        {/* Left: 3D globe (lazy-loaded, stable wrapper prevents CLS) */}
+        <div className="relative w-full md:w-1/2 order-2 md:order-1 flex justify-center">
           <GlobeFrame>
             <GlobeSkeleton
               className={[
                 "transition-opacity duration-500",
-                globeReady ? "opacity-0" : "opacity-100",
+                globeReady ? "opacity-0 pointer-events-none" : "opacity-100",
               ].join(" ")}
             />
             {shouldLoadGlobe ? (
               <div
                 className={[
                   "absolute inset-0 transition-opacity duration-500",
-                  globeReady ? "opacity-100" : "opacity-0",
+                  globeReady ? "opacity-100" : "opacity-0 pointer-events-none",
                 ].join(" ")}
               >
                 <EdgeGlobe
