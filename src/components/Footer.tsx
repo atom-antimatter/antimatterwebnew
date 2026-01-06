@@ -82,7 +82,7 @@ const Footer = () => {
         </div>
         <div className="flex flex-col md:flex-row mt-20 gap-10 md:gap-5 justify-between font-light">
           <p className=" text-foreground/50 text-center">
-            Antimatter AI, © 2025. All rights reserved.
+            Antimatter AI, © 2026. All rights reserved.
           </p>
         </div>
       </div>
