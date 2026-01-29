@@ -283,8 +283,15 @@ const teamData = [
     name: "Jacob Mandt",
     role: "Head of Product",
     image: "jacob.jpg",
-    linkedin: "https://www.linkedin.com/in/jacob-mandt-3b0898222/",
-    bio: `An engineer with a passion for creative technology and product design. Jacob ensures every experience is not just functional, but emotionally resonant and beautifully built.`,
+    linkedin: "https://www.linkedin.com/in/jacobmandt/",
+    bio: `Drives product vision and user experience strategy across our AI platform portfolio.`,
+  },
+  {
+    name: "Antwan Owens",
+    role: "Partner, Head of Sports and Media",
+    image: "Owens-formal-smiling-cropped-742x1024.png",
+    linkedin: "https://www.linkedin.com/in/antwanowens/",
+    bio: `A Forbes 30 Under 30 honoree and NIL pioneer, Antwan Owens is a Georgia Tech graduate and former All-American student-athlete who helped redefine athlete empowerment as one of the first NCAA players to secure an NIL endorsement. Antwan leads strategic partnerships, growth, and market expansion efforts, bridging technology, media, and business development.`,
   },
 ];
 
