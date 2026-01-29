@@ -132,35 +132,79 @@ const CompanyPage = () => {
                 <Reveal
                   delay={index * 0.15}
                   key={team.name}
-                  className="rounded-xl w-full sm:w-[calc(50%-0.625rem)] lg:w-full relative border-2 border-foreground/19 lg:basis-0 lg:grow overflow-hidden pb-10 lg:pb-20 2xl:pb-10 group"
+                  className="rounded-xl w-full sm:w-[calc(50%-0.625rem)] lg:w-full relative border-2 border-foreground/19 lg:basis-0 lg:grow overflow-hidden group flex flex-col"
+                  style={{
+                    /* Consistent card height across breakpoints */
+                    minHeight: 'clamp(420px, 50vw, 580px)',
+                  }}
                 >
-                  <Image
-                    src={`/images/team/${team.image}`}
-                    alt={team.name}
-                    width={400}
-                    height={400}
-                    className="w-full h-auto aspect-square object-cover group-hover:scale-120 group-hover:-translate-y-28 transition-transform duration-500"
-                  />
+                  {/* Image container with controlled height to prevent cropping on hover */}
+                  <div className="relative w-full overflow-hidden" style={{
+                    /* Fixed aspect ratio for consistent image framing */
+                    height: 'clamp(280px, 32vw, 420px)',
+                  }}>
+                    <Image
+                      src={`/images/team/${team.image}`}
+                      alt={team.name}
+                      width={400}
+                      height={400}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      style={{
+                        /* Center faces slightly higher than default center */
+                        objectPosition: 'center 30%',
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Text overlay container with gradient background */}
                   <div
-                    className="absolute top-full w-full h-full md:h-[95%] xl:h-[80%] left-0 bg-gradient-to-b from-transparent
-                to-15% to-background -translate-y-32 sm:-translate-y-36 group-hover:-translate-y-full transition-transform duration-500 p-6 xl:p-8 pt-6
-                flex flex-col gap-5 text-center"
+                    className="absolute top-full w-full h-full left-0 bg-gradient-to-b from-transparent
+                to-15% to-background -translate-y-32 sm:-translate-y-36 group-hover:-translate-y-full transition-transform duration-500 px-4 sm:px-6 xl:px-8 pt-6 pb-8
+                flex flex-col gap-3 sm:gap-4 text-center items-center justify-between overflow-hidden"
                   >
-                    <div className="group-hover:scale-75 transition-transform duration-500">
-                      <h3 className="text-center text-2xl md:text-3xl xl:text-4xl font-bold">
+                    {/* Name and title section - scales down on hover to make room for bio */}
+                    <div className="group-hover:scale-90 transition-transform duration-500 w-full">
+                      <h3 
+                        className="text-center font-bold line-clamp-2"
+                        style={{
+                          /* Responsive name sizing with clamp for smaller cards */
+                          fontSize: 'clamp(1.25rem, 2.2vw, 2rem)',
+                          lineHeight: '1.2',
+                        }}
+                      >
                         {team.name}
                       </h3>
-                      <p className="font-light text-lg md:text-xl xl:text-2xl text-center">
+                      <p 
+                        className="font-light text-center mt-1 line-clamp-2"
+                        style={{
+                          /* Responsive title sizing */
+                          fontSize: 'clamp(0.875rem, 1.4vw, 1.25rem)',
+                          lineHeight: '1.3',
+                        }}
+                      >
                         {team.role}
                       </p>
                     </div>
-                    <p className="text-sm lg:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-700 mt-0 2xl:mt-10">
+                    
+                    {/* Bio section - appears on hover */}
+                    <p 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-700 line-clamp-5 sm:line-clamp-6"
+                      style={{
+                        /* Responsive bio text with line clamping to fit card bounds */
+                        fontSize: 'clamp(0.75rem, 1vw, 0.9rem)',
+                        lineHeight: '1.5',
+                        maxWidth: '90%',
+                      }}
+                    >
                       {team.bio}
                     </p>
+                    
+                    {/* LinkedIn icon */}
                     <a
                       href={team.linkedin}
-                      className="mx-auto text-4xl"
+                      className="mt-auto text-3xl sm:text-4xl hover:text-accent transition-colors"
                       target="_blank"
+                      rel="noopener noreferrer"
                     >
                       <IoLogoLinkedin />
                     </a>
