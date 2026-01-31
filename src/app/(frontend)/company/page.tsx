@@ -77,7 +77,10 @@ const CompanyPage = () => {
           <div className="py-20 sm:py-40">
             <Reveal>
               <h2 className="text-center text-3xl md:text-4xl font-bold">
-                Key highlights{" "}
+                Things that{" "}
+                <span className="text-tertiary">
+                  matter.
+                </span>
               </h2>
             </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xl:gap-5 w-full mt-20 flex-wrap">
