@@ -2,15 +2,11 @@ import { MotionDiv } from "@/components/Motion";
 import Button from "@/components/ui/Button";
 import MainLayout from "@/components/ui/MainLayout";
 import Reveal from "@/components/ui/Reveal";
-import ScrollToSection from "@/components/ui/ScrollToSection";
 import TransitionContainer from "@/components/ui/TransitionContainer";
 import TransitionLink from "@/components/ui/TransitionLink";
 import DottedWorldMap from "@/components/ui/DottedWorldMap";
-import Image from "next/image";
 import { HiMiniArrowLongRight } from "react-icons/hi2";
-import { IoLogoLinkedin } from "react-icons/io5";
 import Interactions from "./components/Interactions";
-import BreakTitle from "@/components/ui/BreakTitle";
 // import Career from "./components/Career";
 
 const CompanyPage = () => {
@@ -38,16 +34,11 @@ const CompanyPage = () => {
                 y={0}
                 className="mt-20 mobile:mt-40 sm:mt-64 flex flex-col sm:flex-row gap-6 capitalize items-center"
               >
-                <ScrollToSection id="story">
+                <TransitionLink href="#story">
                   <Button>
                     <span className="">Watch Our Story</span>
                   </Button>
-                </ScrollToSection>
-                <ScrollToSection id="team">
-                  <div className="sm:text-xl cursor-pointer flex items-center gap-2 border-b hover:border-accent transition-border duration-300">
-                    Meet the team <HiMiniArrowLongRight className="size-7" />
-                  </div>
-                </ScrollToSection>
+                </TransitionLink>
               </Reveal>
             </div>
           </div>
@@ -121,96 +112,6 @@ const CompanyPage = () => {
                   </p>
                 </div>
               </Reveal>
-            </div>
-          </div>
-          <div className="py-20 sm:py-40" id="team">
-            <BreakTitle text="Meet the Team" align="center" />
-            <BreakTitle text="Behind Antimatter" align="center" />
-
-            <div className="flex flex-wrap justify-center gap-5 xl:gap-10 w-full mt-20">
-              {teamData.map((team, index) => (
-                <Reveal
-                  delay={index * 0.15}
-                  key={team.name}
-                  className="rounded-xl w-full sm:w-[calc(50%-0.625rem)] lg:w-full relative border-2 border-foreground/19 lg:basis-0 lg:grow overflow-hidden group flex flex-col"
-                  style={{
-                    /* Consistent card height across breakpoints */
-                    minHeight: 'clamp(420px, 50vw, 580px)',
-                  }}
-                >
-                  {/* Image container with controlled height to prevent cropping on hover */}
-                  <div className="relative w-full overflow-hidden" style={{
-                    /* Fixed aspect ratio for consistent image framing */
-                    height: 'clamp(280px, 32vw, 420px)',
-                  }}>
-                    <Image
-                      src={`/images/team/${team.image}`}
-                      alt={team.name}
-                      width={400}
-                      height={400}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      style={{
-                        /* Center faces slightly higher than default center */
-                        objectPosition: 'center 30%',
-                      }}
-                    />
-                  </div>
-                  
-                  {/* Text overlay container with gradient background */}
-                  <div
-                    className="absolute top-full w-full h-full left-0 bg-gradient-to-b from-transparent
-                to-15% to-background -translate-y-32 sm:-translate-y-36 group-hover:-translate-y-full transition-transform duration-500 px-4 sm:px-6 xl:px-8 pt-6 pb-8
-                flex flex-col gap-3 sm:gap-4 text-center items-center justify-between overflow-hidden"
-                  >
-                    {/* Name and title section - scales down on hover to make room for bio */}
-                    <div className="group-hover:scale-90 transition-transform duration-500 w-full">
-                      <h3 
-                        className="text-center font-bold line-clamp-2"
-                        style={{
-                          /* Responsive name sizing with clamp for smaller cards */
-                          fontSize: 'clamp(1.25rem, 2.2vw, 2rem)',
-                          lineHeight: '1.2',
-                        }}
-                      >
-                        {team.name}
-                      </h3>
-                      <p 
-                        className="font-light text-center mt-1 line-clamp-2"
-                        style={{
-                          /* Responsive title sizing */
-                          fontSize: 'clamp(0.875rem, 1.4vw, 1.25rem)',
-                          lineHeight: '1.3',
-                        }}
-                      >
-                        {team.role}
-                      </p>
-                    </div>
-                    
-                    {/* Bio section - appears on hover */}
-                    <p 
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-700 line-clamp-5 sm:line-clamp-6"
-                      style={{
-                        /* Responsive bio text with line clamping to fit card bounds */
-                        fontSize: 'clamp(0.75rem, 1vw, 0.9rem)',
-                        lineHeight: '1.5',
-                        maxWidth: '90%',
-                      }}
-                    >
-                      {team.bio}
-                    </p>
-                    
-                    {/* LinkedIn icon */}
-                    <a
-                      href={team.linkedin}
-                      className="mt-auto text-3xl sm:text-4xl hover:text-accent transition-colors"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <IoLogoLinkedin />
-                    </a>
-                  </div>
-                </Reveal>
-              ))}
             </div>
           </div>
           <div className=" py-20 sm:py-40">
@@ -307,37 +208,6 @@ const CompanyPage = () => {
 };
 
 export default CompanyPage;
-
-const teamData = [
-  {
-    name: "Matt Bravo",
-    role: "Co-Founder & Partner",
-    image: "matt.jpg",
-    linkedin: "https://www.linkedin.com/in/matt-bravo-703424a4/",
-    bio: `Former Fortune 500 sales and marketing executive turned technologist. Matt bridges storytelling and strategy — ensuring every product we build drives business impact.`,
-  },
-  {
-    name: "Paul Wallace",
-    role: "Co-Founder & CTO",
-    image: "paul.jpg",
-    linkedin: "https://www.linkedin.com/in/paul-wallace-08664b223/",
-    bio: `A former Cognizant software engineer who turned down a Google SWE offer to build meaningful technology. Paul leads our architecture and AI integration efforts, from healthcare systems to enterprise-grade deployments.`,
-  },
-  {
-    name: "Jacob Mandt",
-    role: "Head of Product",
-    image: "jacob.jpg",
-    linkedin: "https://www.linkedin.com/in/jacobmandt/",
-    bio: `Drives product vision and user experience strategy across our AI platform portfolio.`,
-  },
-  {
-    name: "Antwan Owens",
-    role: "Partner, Head of Sports and Media",
-    image: "Owens-formal-smiling-cropped-742x1024.png",
-    linkedin: "https://www.linkedin.com/in/antwanowens/",
-    bio: `A Forbes 30 Under 30 honoree and NIL pioneer, Antwan Owens is a Georgia Tech graduate and former All-American student-athlete who helped redefine athlete empowerment as one of the first NCAA players to secure an NIL endorsement. Antwan leads strategic partnerships, growth, and market expansion efforts, bridging technology, media, and business development.`,
-  },
-];
 
 const coreBeliefs = [
   "Design first, always. — Every product starts with empathy and storytelling.",
