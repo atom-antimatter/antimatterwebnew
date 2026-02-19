@@ -1,3 +1,47 @@
+# === USER INSTRUCTIONS ===
+Core Business Logic Architecture (Importance Score: 85/100)
+1. AI Integration Layer
+- Emotion Analysis System (src/app/(frontend)/emotion-tracking-demo/EmotionTrackingDemo.tsx)
+  - 53-dimensional emotion detection
+  - Combined facial and text sentiment analysis
+  - Real-time emotion state processing
+  - Custom confidence scoring algorithms
+- Voice Agent System (src/app/(frontend)/voice-agent-demo/VoiceAgentDemo.tsx)
+  - Bi-directional AI voice communication
+  - Real-time audio queue management
+  - Custom interruption handling
+  - WebSocket-based streaming
+2. Content Intelligence Layer
+- Blog AI Assistant (src/app/(frontend)/admin-old/components/BlogAIChat.tsx)
+  - Multi-phase content generation
+  - SEO optimization workflow
+  - Content refinement system
+  - Automated metadata generation
+3. SEO Analysis Layer
+- Sitemap Analysis Engine (src/app/(frontend)/admin-old/components/SitemapMindMap.tsx)
+  - Hierarchical page relationship analysis
+  - Internal link density calculation
+  - Page importance scoring
+  - Missing link detection
+4. Business Service Structure
+- Service Taxonomy System
+  - Healthcare-compliant development paths
+  - IoT service specifications
+  - AI/ML implementation frameworks
+  - Domain-specific categorization
+5. Content Management Layer
+- Custom chapter extraction
+- Industry-specific categorization
+- SEO metadata inheritance
+- Parent-child page relationships
+Key Integration Points:
+- Real-time emotion data processing with Hume AI API
+- Voice agent authentication and session management
+- Multi-model parallel AI analysis for content generation
+- Healthcare compliance integration points
+- IoT protocol specifications
+# === END USER INSTRUCTIONS ===
+
 
 # main-overview
 
@@ -10,54 +54,57 @@
 - Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
 
 
-Core Business Logic Architecture (Importance Score: 85/100)
+SYSTEM ARCHITECTURE: AI-Powered Enterprise Platform
+Importance Score: 85/100
 
-1. AI Integration Layer
-- Emotion Analysis System (src/app/(frontend)/emotion-tracking-demo/EmotionTrackingDemo.tsx)
-  - 53-dimensional emotion detection
-  - Combined facial and text sentiment analysis
-  - Real-time emotion state processing
-  - Custom confidence scoring algorithms
+Core Business Domains:
 
-- Voice Agent System (src/app/(frontend)/voice-agent-demo/VoiceAgentDemo.tsx)
-  - Bi-directional AI voice communication
-  - Real-time audio queue management
-  - Custom interruption handling
-  - WebSocket-based streaming
+1. Emotion Intelligence Pipeline
+- Multi-modal emotion analysis across 53 dimensions
+- Real-time facial expression processing
+- Text sentiment analysis integration
+- Radar chart visualization of emotional metrics
+- Custom sentiment scoring algorithms
 
-2. Content Intelligence Layer
-- Blog AI Assistant (src/app/(frontend)/admin-old/components/BlogAIChat.tsx)
-  - Multi-phase content generation
-  - SEO optimization workflow
-  - Content refinement system
-  - Automated metadata generation
+2. Voice Agent System
+- AI-powered voice interaction engine
+- Dynamic audio queue management
+- Natural conversation interrupt handling
+- Empathic response generation
+- Speaker differentiation system
 
-3. SEO Analysis Layer
-- Sitemap Analysis Engine (src/app/(frontend)/admin-old/components/SitemapMindMap.tsx)
-  - Hierarchical page relationship analysis
-  - Internal link density calculation
-  - Page importance scoring
-  - Missing link detection
+3. Content Generation Engine
+- Multi-phase blog content workflow
+  * Research and outline generation
+  * SEO-optimized writing
+  * Content quality scoring
+- Automated chapter organization
+- Context-aware content integration
 
-4. Business Service Structure
-- Service Taxonomy System
-  - Healthcare-compliant development paths
-  - IoT service specifications
-  - AI/ML implementation frameworks
-  - Domain-specific categorization
-
-5. Content Management Layer
-- Custom chapter extraction
-- Industry-specific categorization
-- SEO metadata inheritance
-- Parent-child page relationships
+4. Enterprise AI Comparison
+- Vendor capability scoring system
+- Multi-dimensional feature analysis
+- Deployment type classification
+- Custom lead qualification logic
+- Real-time comparison streaming
 
 Key Integration Points:
-- Real-time emotion data processing with Hume AI API
-- Voice agent authentication and session management
-- Multi-model parallel AI analysis for content generation
-- Healthcare compliance integration points
-- IoT protocol specifications
+- Emotion tracking feeds into voice agent responses
+- Content generation leverages emotional intelligence
+- Enterprise comparisons incorporate sentiment analysis
+- Cross-domain data sharing for personalization
+
+Business Logic Organization:
+/src/app/api/ask/ - Core AI response generation
+/src/app/api/cache/ - Conversation thread management
+/src/lib/ - Domain-specific agents and prompts
+/src/components/enterprise/ - Enterprise visualization systems
+
+Primary Value Streams:
+1. Emotional intelligence driving personalized interactions
+2. Automated content generation with SEO optimization
+3. Enterprise AI capability assessment
+4. Multi-modal user interaction processing
 
 $END$
 

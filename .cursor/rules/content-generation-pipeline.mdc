@@ -1,16 +1,12 @@
 ---
-description: Specification for multi-phase blog content generation system including SEO optimization and metadata handling
+description: Defines the multi-phase blog content generation system, including SEO optimization, content structuring, and metadata workflows
 ---
 
-
-# content-generation-pipeline
-
+# === USER INSTRUCTIONS ===
+description: Specification for multi-phase blog content generation system including SEO optimization and metadata handling
 Multi-phase content generation system with intelligent SEO optimization and metadata handling.
-
 Importance Score: 80/100
-
 Core Components:
-
 1. Content Generation Pipeline
 Path: src/app/(frontend)/admin-old/components/BlogAIChat.tsx
 - Multi-phase blog content orchestration
@@ -18,14 +14,12 @@ Path: src/app/(frontend)/admin-old/components/BlogAIChat.tsx
 - Automated metadata generation
 - SEO keyword density analysis
 - Content refinement workflow
-
 2. Topic Research System
 Path: src/lib/blogAIAgent.ts
 - Industry-specific research automation
 - Competitive content analysis
 - Topic clustering and relationship mapping
 - Reference material extraction
-
 3. SEO Optimization Workflow
 Path: src/app/api/blog-ai-generate/route.ts
 - Keyword optimization algorithms
@@ -33,15 +27,67 @@ Path: src/app/api/blog-ai-generate/route.ts
 - Title optimization for search intent
 - Internal linking suggestions
 - Content structure recommendations
-
 Key Business Rules:
 1. Content structure follows domain-specific templates
 2. SEO metadata generated based on industry vertical
 3. Multi-stage approval workflow for content refinement
 4. Automated quality scoring for generated content
 5. Topic relationship mapping for internal linking
-
 The system implements a sophisticated content generation pipeline specifically designed for technical and AI-focused blog content, with strong emphasis on search optimization and structured presentation.
+# === END USER INSTRUCTIONS ===
+
+# content-generation-pipeline
+
+Multi-phase blog content generation system with integrated SEO optimization and metadata generation.
+
+Importance Score: 85/100
+
+Core Pipeline Components:
+
+1. Content Research Phase
+- Automated competitor content analysis 
+- SEO keyword extraction and density planning
+- Topic clustering and hierarchy generation
+- Custom prompt engineering for research synthesis
+
+2. Content Structuring Algorithm
+- Hierarchical heading organization (H1-H4)
+- Internal linking strategy calculation
+- Section length optimization
+- Custom content relationship mapping
+- SEO-aware paragraph structuring
+
+3. Metadata Generation
+- Automated meta description creation
+- Title tag optimization with keyword placement
+- Image alt text generation
+- Schema markup suggestions
+- Social media preview optimization
+
+4. Quality Scoring System
+- Real-time content quality metrics
+- Readability score calculation
+- Keyword optimization feedback
+- Internal link density analysis
+- Content completeness validation
+
+Key Integration Points:
+
+1. BlogAIChat.tsx
+- Manages multi-phase content generation workflow
+- Real-time content preview with SEO metrics
+- Phase transition handling and progress tracking
+
+2. generateAndStreamC1Response.ts
+- Streaming content generation with thinking steps
+- Context-aware content suggestions
+- Real-time optimization feedback
+
+3. blogAIAgent.ts
+- Custom prompt engineering for each generation phase
+- Content structure validation
+- SEO rule enforcement
+- Metadata optimization logic
 
 $END$
 

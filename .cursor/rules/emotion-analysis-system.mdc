@@ -1,34 +1,27 @@
 ---
-description: Documentation for the 53-dimensional emotion detection and analysis system, including facial analysis, text sentiment, and real-time processing.
+description: Documentation for the emotion analysis system including facial analysis, text sentiment, and real-time emotion processing
 ---
 
-
-# emotion-analysis-system
-
+# === USER INSTRUCTIONS ===
+description: Documentation for the 53-dimensional emotion detection and analysis system, including facial analysis, text sentiment, and real-time processing.
 Importance Score: 85/100
-
 Core Components:
-
 1. Multi-dimensional Emotion Detection
 Path: src/app/(frontend)/emotion-tracking-demo/EmotionTrackingDemo.tsx
 - Real-time facial emotion tracking using Hume AI API
 - 53-dimensional emotion detection vectors
 - Parallel processing of facial expressions and text sentiment
 - Radar chart visualization of emotional states
-
 2. Real-time Analysis Queue
 - Custom emotion scoring system with confidence calculations
 - Live emotion state management
 - Prioritized processing queue for multi-modal inputs
 - Aggregated emotional metrics including intensity and authenticity
-
 3. Dual-Model Analysis Pipeline
 Path: src/app/api/emotion-analysis/route.ts
 - Combined Hume AI and OpenAI emotion analysis
 - Text sentiment correlation with facial expressions
-- Session-based emotion tracking
 - Aggregated emotional metrics calculation
-
 4. WebSocket Integration
 Path: src/lib/humeWebSocket.ts
 - Real-time emotion data streaming
@@ -38,13 +31,71 @@ Path: src/lib/humeWebSocket.ts
   - Prosody analysis
   - Emotional burst detection
 - Specialized error handling for audio/video streams
-
 Business Rules:
 - Emotional states must be processed in real-time with < 100ms latency
 - Confidence scores below 0.4 trigger automatic reanalysis
 - Text sentiment must be correlated with facial expressions when both are available
 - Emotional state history maintained for trend analysis
 - Automatic fallback to text-only analysis when video is unavailable
+# === END USER INSTRUCTIONS ===
+
+# emotion-analysis-system
+
+## Core Components (Importance: 90/100)
+
+1. Emotion Detection Pipeline
+- 53-dimensional emotion analysis system
+- Parallel processing of facial expressions and text sentiment
+- Real-time emotion queue management
+- Multi-modal integration (face, text, prosody)
+
+2. Facial Analysis (Importance: 85/100)
+- Real-time facial feature extraction
+- Expression classification across 53 emotional dimensions
+- Continuous emotion stream processing
+- Facial micro-expression detection
+
+3. Text Sentiment Engine (Importance: 80/100)
+- Natural language sentiment scoring
+- Emotional context analysis 
+- Real-time text stream processing
+- Contextual emotional pattern recognition
+
+4. Visualization System (Importance: 75/100)
+- Radar chart emotion visualization
+- Real-time emotion metric updates
+- Multi-dimensional emotional state display
+- Interactive emotion trend analysis
+
+## Key Files
+
+/src/app/(frontend)/emotion-tracking-demo/EmotionTrackingDemo.tsx
+- Main emotion tracking integration
+- Real-time processing queue management
+- Visualization component coordination
+
+/src/lib/humeWebSocket.ts
+- WebSocket emotion stream handling
+- Multi-modal analysis coordination
+- Custom emotion score processing
+- Error handling for analysis streams
+
+## Business Workflows
+
+1. Real-time Emotion Processing
+- Continuous emotion detection pipeline
+- Parallel processing of multiple emotion streams
+- Emotional state aggregation and scoring
+
+2. Sentiment Analysis Integration 
+- Combined facial-textual emotion analysis
+- Emotional context interpretation
+- Pattern recognition across modalities
+
+3. Visualization Pipeline
+- Real-time metric updates
+- Interactive emotional state display
+- Trend analysis and reporting
 
 $END$
 

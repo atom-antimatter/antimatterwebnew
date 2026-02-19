@@ -1,49 +1,83 @@
 ---
-description: Specification for SEO analysis algorithms, scoring systems, and page relationship analysis
+description: Technical documentation for SEO analysis engine components, scoring algorithms and page relationship analysis
 ---
 
-
-# seo-analysis-engine
-
+# === USER INSTRUCTIONS ===
+description: Specification for SEO analysis algorithms, scoring systems, and page relationship analysis
 Core SEO scoring and relationship analysis engine for managing site-wide SEO optimization.
-
 Importance Score: 75/100
-
 Key Components:
-
 1. Page Relationship Analysis
 Path: src/app/(frontend)/admin-old/components/SitemapMindMap.tsx
 - Hierarchical page relationship mapping with parent-child connections
 - Internal link density calculation across page clusters
 - Missing link detection between related content
 - Automated relationship strength scoring based on content similarity
-
 2. SEO Scoring Algorithm 
 Path: src/app/(frontend)/admin-old/components/PageEditor.tsx
 - Multi-factor SEO score calculation
 - Internal link suggestion system for content relationships
 - Parent-child page relationship management
 - Automated slug collision detection and resolution
-
 Key Business Rules:
 - Page importance scores factor in:
   - Internal link count
   - Content relationships
   - Hierarchical position
   - Traffic patterns
-  
 - Link recommendations based on:
   - Content similarity
   - Site structure position
   - Existing relationship strength
   - Page authority scores
-
 Core Functionality:
 - Automated SEO relationship visualization
 - Missing link detection between related pages
 - Page importance scoring system
 - Internal link optimization recommendations
 - Hierarchical content structure analysis
+# === END USER INSTRUCTIONS ===
+
+# seo-analysis-engine
+
+The SEO analysis engine implements hierarchical page relationship analysis and scoring through several key components:
+
+## Page Relationship Analysis (Importance: 85/100)
+- Hierarchical content relationship mapping using internal linking patterns
+- Parent-child page relationship detection and scoring
+- Link density calculations between related content
+- Content cluster identification and topic mapping
+
+## SEO Scoring Algorithm (Importance: 90/100)
+- Multi-dimensional scoring based on:
+  - Page depth in site hierarchy 
+  - Inbound/outbound link ratios
+  - Content relevance to parent topics
+  - URL structure optimization
+- Custom weighting system for different content types
+- Real-time content quality evaluation
+- SEO impact scoring for site structure changes
+
+## Sitemap Intelligence (Importance: 75/100)
+- Automated content relationship visualization
+- Internal link optimization suggestions
+- Page importance calculations based on:
+  - Link density
+  - Content freshness
+  - Topic authority
+  - User engagement metrics
+- Visual mapping of content relationships and hierarchies
+
+## Dynamic SEO Generation (Importance: 70/100)
+- Hierarchical content prioritization (0.7-1.0)
+- Custom change frequency rules:
+  - Daily: Home and blog content
+  - Weekly: Work and enterprise sections
+  - Monthly: Company and contact pages
+- Non-indexed page filtering
+- Automated meta tag optimization
+
+The engine focuses on maintaining optimal site structure through automated analysis of page relationships, content clustering, and hierarchical importance scoring. The system provides actionable insights for internal linking and content organization while maintaining SEO best practices.
 
 $END$
 

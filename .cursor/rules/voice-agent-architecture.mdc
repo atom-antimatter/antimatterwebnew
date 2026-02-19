@@ -1,54 +1,91 @@
 ---
-description: Specification for bi-directional voice agent communication system with real-time audio processing and transcription
+description: Specifications for bi-directional voice communication system including audio queues, WebSocket streaming, and interruption handling
 ---
 
-
-# voice-agent-architecture
-
-Importance Score: 90/100
-
+# === USER INSTRUCTIONS ===
+description: Specification for bi-directional voice agent communication system with real-time audio processing and transcription
 Core Voice Agent Components:
-
 1. Audio Queue Management System
 - Custom audio buffer management for bi-directional voice streams
 - Base64 encoding/decoding for WebSocket transmission
 - Real-time audio packet prioritization and sequencing
 - Interruption handling for mid-stream voice interactions
-
 2. WebSocket Streaming Controller
 Path: src/app/(frontend)/voice-agent-demo/VoiceAgentDemo.tsx
 - Bi-directional audio streaming implementation
 - Session-based connection management
 - Real-time audio packet transmission
 - Stream health monitoring and reconnection logic
-
 3. Voice Agent Prompt System
 Path: src/lib/voiceAgentPrompt.ts
 - Domain-specific knowledge base for technical sales conversations
 - Custom personality configuration for "Atom" voice agent
 - Technical advisory response patterns
 - Conversation flow management rules
-
 4. Token Management Service
 Path: src/app/api/voice-agent-token/route.ts
 - OAuth2 implementation for voice agent authentication
 - Token lifecycle management
 - Session-based authentication
 - Error recovery for authentication failures
-
 5. Transcription Handler
 - Real-time speech-to-text processing
 - Custom transcription queue management
 - Parallel processing of voice streams
 - Context preservation across conversation segments
-
 Integration Points:
 - Hume AI voice processing API
 - WebSocket streaming infrastructure
 - Authentication service
 - Real-time transcription service
-
 The system implements a sophisticated voice agent architecture focused on real-time bidirectional communication with specialized handling for technical sales conversations and domain-specific knowledge integration.
+# === END USER INSTRUCTIONS ===
+
+# voice-agent-architecture
+
+## Audio Queue Management System
+Importance Score: 85/100
+
+Location: src/app/(frontend)/voice-agent-demo/VoiceAgentDemo.tsx
+
+- Dynamic audio queue system for managing continuous speech segments
+- Prioritization logic for interruption handling and response timing
+- Real-time audio buffer management with fade in/out transitions
+- State machine for managing speaking/listening/idle states
+
+## WebSocket Streaming Handler
+Importance Score: 90/100
+
+- Bi-directional audio streaming over WebSocket connection
+- Chunked audio transmission with metadata packaging
+- Speaker differentiation markers for multi-party conversation
+- Connection state management with auto-recovery
+
+## Transcription Pipeline
+Importance Score: 80/100
+
+- Real-time speech-to-text processing with speaker identification
+- Multi-modal analysis integrating with Hume EVI for empathic responses
+- Custom prompt injection for context-aware responses
+- Transcription accuracy monitoring and error correction
+
+## Interruption Management 
+Importance Score: 75/100
+
+- Natural conversation flow control with interruption detection
+- Voice activity detection (VAD) for turn-taking
+- Dynamic response truncation when interrupted
+- Graceful handover between speakers with audio fade management
+
+## Audio State Controller
+Importance Score: 70/100
+
+- Unified state management for voice agent lifecycle
+- Audio device handling and input/output routing
+- Volume normalization and noise reduction
+- Error recovery and fallback mechanisms
+
+Voice agent architecture implements sophisticated bi-directional communication with emphasis on natural conversation flow and real-time processing. Core focus on maintaining fluid interactions while handling technical complexities of audio streaming and transcription.
 
 $END$
 
