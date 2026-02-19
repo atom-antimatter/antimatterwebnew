@@ -3,6 +3,7 @@
 import { Check } from "lucide-react";
 import { HiMiniArrowLongRight } from "react-icons/hi2";
 import { motion } from "motion/react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
@@ -129,7 +130,7 @@ export function Pricing(): ReactNode {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2, ease: easeOut }}
         >
-          <a
+          <Link
             href="/contact"
             className="group inline-flex w-full items-center justify-center gap-3 rounded-md bg-accent py-3 pl-5 pr-3 font-medium text-black transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-lg hover:shadow-accent/20 sm:w-auto"
           >
@@ -137,13 +138,13 @@ export function Pricing(): ReactNode {
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-all duration-300 group-hover:scale-110">
               <HiMiniArrowLongRight className="h-5 w-5" />
             </span>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/contact"
             className="text-foreground/50 text-sm transition-colors hover:text-foreground"
           >
             Request a demo
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>

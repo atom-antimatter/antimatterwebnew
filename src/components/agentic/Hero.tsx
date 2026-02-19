@@ -3,7 +3,7 @@
 import { HiMiniArrowLongRight } from "react-icons/hi2";
 import { motion } from "motion/react";
 import Image from "next/image";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import RotatingCards, { type Card } from "./RotatingCards";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;

@@ -3,6 +3,7 @@
 import { HiMiniArrowLongRight } from "react-icons/hi2";
 import { motion } from "motion/react";
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
@@ -102,7 +103,7 @@ export function Features(): ReactNode {
             CRMs, billing, and critical SaaS-backed by policy, logging, audit
             trails, and deployment in your VPC, edge, or on-prem.
           </p>
-          <a
+          <Link
             href="/contact"
             className="bg-foreground group inline-flex w-full items-center justify-center gap-3 rounded-md py-3 pr-3 pl-5 font-medium text-background transition-all duration-500 ease-out hover:rounded-[50px] sm:w-auto"
           >
@@ -110,7 +111,7 @@ export function Features(): ReactNode {
             <span className="bg-background text-foreground flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110">
               <HiMiniArrowLongRight className="h-5 w-5" />
             </span>
-          </a>
+          </Link>
         </motion.div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-6 md:gap-32">

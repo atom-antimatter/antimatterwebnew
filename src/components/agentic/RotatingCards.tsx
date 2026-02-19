@@ -44,10 +44,8 @@ const RotatingCards: React.FC<RotatingCardsProps> = ({
   cardHeight = 190,
   pauseOnHover = true,
   reverse = false,
-  draggable = false,
   autoPlay = true,
   onCardClick,
-  mouseWheel = false,
   className = "",
   cardClassName = "",
   initialRotation = 0,
@@ -55,15 +53,13 @@ const RotatingCards: React.FC<RotatingCardsProps> = ({
   trackLineOffset = 25,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const rotationRef = useRef(initialRotation);
   const lastTimeRef = useRef<number | null>(null);
-  const dragStartAngleRef = useRef(0);
-  const dragStartRotationRef = useRef(0);
 
   const rotation = useMotionValue(initialRotation);
   const smoothRotation = useSpring(rotation, {
@@ -169,20 +165,6 @@ const RotatingCards: React.FC<RotatingCardsProps> = ({
       cancelAnimationFrame(animationFrameId);
     };
   }, [duration, reverse, isHovered, isDragging, autoPlay, rotation, loaded]);
-
-  const getAngleFromPointer = useCallback(
-    (clientX: number, clientY: number) => {
-      if (!containerRef.current) return 0;
-
-      const rect = containerRef.current.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      const angle = Math.atan2(clientY - centerY, clientX - centerX);
-      return (angle * 180) / Math.PI;
-    },
-    [],
-  );
 
   const handleCardClick = useCallback(
     (card: Card, index: number) => {
