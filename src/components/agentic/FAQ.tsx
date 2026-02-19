@@ -48,7 +48,7 @@ function FAQItem({
 }): ReactNode {
   return (
     <motion.div
-      className="border-foreground/10 border-b last:border-b-0"
+      className="border-gray-200 border-b last:border-b-0"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.5 }}
@@ -58,11 +58,11 @@ function FAQItem({
         onClick={onToggle}
         className="group flex w-full items-center justify-between py-6 text-left"
       >
-        <span className="text-foreground text-lg font-medium pr-8 md:text-xl">
+        <span className="text-gray-900 text-lg font-medium pr-8 md:text-xl">
           {faq.question}
         </span>
         <motion.div
-          className="text-foreground/50 shrink-0"
+          className="text-gray-500 shrink-0"
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3, ease: easeOut }}
         >
@@ -78,7 +78,7 @@ function FAQItem({
             transition={{ duration: 0.3, ease: easeOut }}
             className="overflow-hidden"
           >
-            <p className="text-foreground/60 pb-6 text-base leading-relaxed">
+            <p className="text-gray-600 pb-6 text-base leading-relaxed">
               {faq.answer}
             </p>
           </motion.div>
@@ -137,16 +137,16 @@ export function FAQ(): ReactNode {
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.6, delay: 0.2, ease: easeOut }}
         >
-          <p className="text-black/70 mb-6 text-base">
+          <p className="text-gray-900 mb-6 text-base">
             Enterprises treat agents with account access as a liability. Our
             stance is simple: govern every action before production.
           </p>
           <a
             href="mailto:operators@antimatterai.com"
-            className="group inline-flex items-center gap-3 rounded-md bg-white py-3 pl-5 pr-3 font-medium text-black shadow-lg transition-all duration-500 ease-out hover:rounded-[50px]"
+            className="group inline-flex items-center gap-3 rounded-md bg-gray-900 py-3 pl-5 pr-3 font-medium text-white shadow-lg transition-all duration-500 ease-out hover:rounded-[50px]"
           >
             <span>Talk to the operators</span>
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-black transition-all duration-300 group-hover:scale-110">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-900 transition-all duration-300 group-hover:scale-110">
               <HiMiniArrowLongRight className="h-5 w-5" />
             </span>
           </a>
