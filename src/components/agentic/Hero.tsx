@@ -3,7 +3,7 @@
 import { HiMiniArrowLongRight } from "react-icons/hi2";
 import { motion } from "motion/react";
 import Image from "next/image";
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, useEffect, type ReactNode } from "react";
 import RotatingCards, { type Card } from "./RotatingCards";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
@@ -45,11 +45,33 @@ const carouselCards: Card[] = cardData.map((card, index) => ({
 export function Hero(): ReactNode {
   const sectionRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLDivElement>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        setMousePosition({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        });
+      }
+    };
+
+    const section = sectionRef.current;
+    if (section) {
+      section.addEventListener("mousemove", handleMouseMove);
+      return () => section.removeEventListener("mousemove", handleMouseMove);
+    }
+  }, []);
 
   return (
     <section
       ref={sectionRef}
       className="relative flex min-h-dvh flex-col items-center justify-start overflow-hidden px-6 pt-40 sm:pt-82"
+      style={{
+        background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(162, 163, 233, 0.15), transparent 40%)`,
+      }}
     >
       <div ref={headlineRef} className="relative z-10 mx-auto md:text-center">
         <h1 className="mb-8 text-5xl font-medium tracking-tighter md:text-8xl lg:text-8xl">
