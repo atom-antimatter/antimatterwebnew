@@ -7,27 +7,27 @@ const easeOut = [0.16, 1, 0.3, 1] as const;
 
 const stats = [
   {
-    value: 1,
-    suffix: "",
-    label: "Grok (xAI) - Frontier intelligence via API for reasoning + chat.",
+    value: 314,
+    suffix: "B",
+    label: "Grok (xAI) - 314B parameter frontier model for reasoning + chat.",
     decimals: 0,
   },
   {
-    value: 1,
-    suffix: "",
-    label: "ChatGPT (OpenAI) - Best-in-class language understanding + generation.",
+    value: 200,
+    suffix: "M+",
+    label: "ChatGPT (OpenAI) - 200M+ weekly active users, best-in-class language understanding.",
     decimals: 0,
   },
   {
-    value: 1,
-    suffix: "",
-    label: "Claude (Anthropic) - Strong reasoning with safety-forward design.",
+    value: 200,
+    suffix: "K",
+    label: "Claude (Anthropic) - 200K token context, strong reasoning with safety-forward design.",
     decimals: 0,
   },
   {
-    value: 1,
-    suffix: "",
-    label: "The challenge: brains need wiring-workflows, security, governance, and enterprise system access.",
+    value: 75,
+    suffix: "%",
+    label: "Enterprise adoption challenge: 75% lack governance, workflows, security, and system access.",
     decimals: 0,
   },
 ];

@@ -26,17 +26,27 @@ const cardData = [
 const carouselCards: Card[] = cardData.map((card, index) => ({
   id: index + 1,
   content: (
-    <div className="flex h-full flex-col p-2">
-      <div className="relative flex-1 overflow-hidden rounded-t-sm rounded-b-full">
-        <Image
-          src={card.image}
-          alt={card.label}
-          fill
-          className="object-cover grayscale"
-        />
+    <div className="flex h-full flex-col items-center justify-center p-8 bg-gradient-to-br from-white to-gray-50 border border-gray-200">
+      <div className="text-6xl mb-4 opacity-80">
+        {index === 0 && "𝕏"} {/* Grok/xAI */}
+        {index === 1 && "◇"} {/* ChatGPT/OpenAI */}
+        {index === 2 && "⟁"} {/* Claude/Anthropic */}
+        {index === 3 && "🎙"} {/* Voice Agents */}
+        {index === 4 && "⚙"} {/* Workflow Agents */}
+        {index === 5 && "🔐"} {/* Enterprise Security */}
+        {index === 6 && "◉"} {/* Model orchestration */}
+        {index === 7 && "✓"} {/* Compliance */}
+        {index === 8 && "◈"} {/* Regulated ops */}
+        {index === 9 && "↻"} {/* Observability */}
+        {index === 10 && "◆"} {/* Governed execution */}
       </div>
-      <div className="px-1 pt-3 text-center">
-        <span className="text-sm font-medium">{card.label}</span>
+      <div className="text-center">
+        <span className="text-sm font-semibold text-gray-900">{card.label.split(' ')[0]}</span>
+        {card.label.includes('(') && (
+          <p className="text-xs text-gray-500 mt-1">
+            {card.label.match(/\((.*?)\)/)?.[1]}
+          </p>
+        )}
       </div>
     </div>
   ),
