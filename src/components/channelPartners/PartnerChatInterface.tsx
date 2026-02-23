@@ -44,12 +44,6 @@ export default function PartnerChatInterface({
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    if (promptToSend) {
-      handleSend(promptToSend);
-    }
-  }, [promptToSend]);
-
   const handleSend = async (messageText?: string) => {
     const message = messageText || input.trim();
     if (!message || isLoading) return;
@@ -133,6 +127,13 @@ export default function PartnerChatInterface({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (promptToSend) {
+      handleSend(promptToSend);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [promptToSend]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
