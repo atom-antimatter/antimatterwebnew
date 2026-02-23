@@ -156,9 +156,14 @@ export default function VendorMatrixClient() {
             </h1>
             <Link
               href="/resources/channel-partners"
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-accent text-black rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
+              className="hidden md:flex group items-center justify-center gap-3 rounded-md bg-accent py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-accent/25 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-accent/40"
             >
-              Channel Partners
+              <span>Channel Partners</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-all duration-300 group-hover:scale-110">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </span>
             </Link>
           </div>
           <p className="text-lg text-foreground/70 mb-6">
@@ -166,9 +171,14 @@ export default function VendorMatrixClient() {
           </p>
           <Link
             href="/resources/channel-partners"
-            className="md:hidden inline-flex items-center gap-2 px-4 py-2 bg-accent text-black rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium mb-4"
+            className="md:hidden group inline-flex items-center justify-center gap-3 rounded-md bg-accent py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-accent/25 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-accent/40 mb-4 w-full sm:w-auto"
           >
-            Channel Partners
+            <span>Channel Partners</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-all duration-300 group-hover:scale-110">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </span>
           </Link>
 
           {/* Mobile filter toggle */}
