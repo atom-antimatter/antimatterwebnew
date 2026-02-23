@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { HiPaperAirplane, HiArrowPath } from "react-icons/hi2";
+import { HiPaperAirplane } from "react-icons/hi2";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

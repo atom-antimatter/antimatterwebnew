@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import { HiCheck, HiXMark } from "react-icons/hi2";
+import { HiCheck } from "react-icons/hi2";
 
 export type DiscoveryContext = {
   competitors: string[];
