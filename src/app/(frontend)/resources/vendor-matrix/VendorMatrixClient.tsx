@@ -15,41 +15,28 @@ export default function VendorMatrixClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [view, setView] = useState<"grid" | "comparison">("grid");
+  const vendorsParam = searchParams.get("vendors");
+  const filtersParam = searchParams.get("filters");
+  const viewParam = searchParams.get("view");
+
+  const initialVendors = vendorsParam 
+    ? vendorsParam.split(",").filter(Boolean)
+    : ["atom"];
+
+  const [view, setView] = useState<"grid" | "comparison">(
+    viewParam === "comparison" && initialVendors.length >= 2 ? "comparison" : "grid"
+  );
   const [filterSidebarOpen, setFilterSidebarOpen] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState<(keyof Vendor['capabilities'])[]>([]);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>(["atom"]);
+  const [selectedFilters, setSelectedFilters] = useState<(keyof Vendor['capabilities'])[]>(
+    filtersParam ? filtersParam.split(",").filter(Boolean) as (keyof Vendor['capabilities'])[] : []
+  );
+  const [selectedVendors, setSelectedVendors] = useState<string[]>(
+    initialVendors.includes("atom") 
+      ? ["atom", ...initialVendors.filter(v => v !== "atom")]
+      : ["atom", ...initialVendors]
+  );
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPrompt, setChatPrompt] = useState<string>("");
-
-  useEffect(() => {
-    const vendorsParam = searchParams.get("vendors");
-    const filtersParam = searchParams.get("filters");
-    const viewParam = searchParams.get("view");
-
-    let vendorsList: string[] = [];
-    if (vendorsParam) {
-      vendorsList = vendorsParam.split(",").filter(Boolean);
-    } else {
-      vendorsList = ["atom"];
-    }
-    
-    if (!vendorsList.includes("atom")) {
-      vendorsList = ["atom", ...vendorsList];
-    } else {
-      vendorsList = ["atom", ...vendorsList.filter(v => v !== "atom")];
-    }
-    
-    setSelectedVendors(vendorsList);
-    
-    if (filtersParam) {
-      setSelectedFilters(filtersParam.split(",").filter(Boolean) as (keyof Vendor['capabilities'])[]);
-    }
-    if (viewParam === "comparison" && vendorsList.length >= 2) {
-      setView("comparison");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
 
   // Update URL when state changes
   const updateURL = (vendors: string[], filters: (keyof Vendor['capabilities'])[], currentView: "grid" | "comparison") => {
@@ -133,7 +120,7 @@ export default function VendorMatrixClient() {
   };
 
   return (
-    <div className="min-h-screen py-12 px-6">
+    <div className="min-h-screen py-12 px-6 bg-background">
       <div className="max-w-[1500px] mx-auto">
         {/* Back to Antimatter */}
         <Link
