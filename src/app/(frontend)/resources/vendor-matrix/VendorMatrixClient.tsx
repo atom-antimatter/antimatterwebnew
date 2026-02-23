@@ -11,9 +11,16 @@ import CompareBar from "@/components/vendorMatrix/CompareBar";
 import ComparisonTable from "@/components/vendorMatrix/ComparisonTable";
 import AtomChatWidget from "@/components/vendorMatrix/AtomChatWidget";
 import { vendors } from "@/data/vendorMatrix";
+import { usePageTransition } from "@/store";
+
 export default function VendorMatrixClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const setIsTransition = usePageTransition((s) => s.setIsTransition);
+
+  useEffect(() => {
+    setIsTransition(false);
+  }, [setIsTransition]);
 
   const vendorsParam = searchParams.get("vendors");
   const filtersParam = searchParams.get("filters");

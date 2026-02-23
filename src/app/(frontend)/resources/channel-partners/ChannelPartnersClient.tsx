@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { vendors } from "@/data/vendorMatrix";
 import PartnerDiscoveryWizard, {
   type DiscoveryContext,
@@ -12,8 +12,14 @@ import OutputTabsDrawer, {
 } from "@/components/channelPartners/OutputTabsDrawer";
 import Link from "next/link";
 import { HiArrowLeft } from "react-icons/hi2";
+import { usePageTransition } from "@/store";
 
 export default function ChannelPartnersClient() {
+  const setIsTransition = usePageTransition((s) => s.setIsTransition);
+
+  useEffect(() => {
+    setIsTransition(false);
+  }, [setIsTransition]);
   const [discoveryContext, setDiscoveryContext] = useState<DiscoveryContext>({
     competitors: [],
     customerPriorities: [],
