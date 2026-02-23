@@ -150,12 +150,26 @@ export default function VendorMatrixClient() {
 
         {/* Page Header */}
         <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Enterprise AI Vendor Matrix
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold">
+              Enterprise AI Vendor Matrix
+            </h1>
+            <Link
+              href="/resources/channel-partners"
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-accent text-black rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
+            >
+              Channel Partners
+            </Link>
+          </div>
           <p className="text-lg text-foreground/70 mb-6">
             Select capabilities, choose vendors, generate a side-by-side comparison.
           </p>
+          <Link
+            href="/resources/channel-partners"
+            className="md:hidden inline-flex items-center gap-2 px-4 py-2 bg-accent text-black rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium mb-4"
+          >
+            Channel Partners
+          </Link>
 
           {/* Mobile filter toggle */}
           {view === "grid" && (
