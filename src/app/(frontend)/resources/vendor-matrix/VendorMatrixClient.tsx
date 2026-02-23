@@ -18,11 +18,10 @@ export default function VendorMatrixClient() {
   const [view, setView] = useState<"grid" | "comparison">("grid");
   const [filterSidebarOpen, setFilterSidebarOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<(keyof Vendor['capabilities'])[]>([]);
-  const [selectedVendors, setSelectedVendors] = useState<string[]>(["atom"]); // Atom preselected by default
+  const [selectedVendors, setSelectedVendors] = useState<string[]>(["atom"]);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatPrompt, setChatPrompt] = useState<string>("");
 
-  // Initialize state from URL params
   useEffect(() => {
     const vendorsParam = searchParams.get("vendors");
     const filtersParam = searchParams.get("filters");
@@ -31,15 +30,13 @@ export default function VendorMatrixClient() {
     let vendorsList: string[] = [];
     if (vendorsParam) {
       vendorsList = vendorsParam.split(",").filter(Boolean);
+    } else {
+      vendorsList = ["atom"];
     }
     
-    // Ensure Atom is always included and first
     if (!vendorsList.includes("atom")) {
       vendorsList = ["atom", ...vendorsList];
-      // Update URL to include atom
-      updateURL(vendorsList, selectedFilters, viewParam === "comparison" ? "comparison" : view);
     } else {
-      // Move atom to first position if not already
       vendorsList = ["atom", ...vendorsList.filter(v => v !== "atom")];
     }
     
@@ -51,6 +48,7 @@ export default function VendorMatrixClient() {
     if (viewParam === "comparison" && vendorsList.length >= 2) {
       setView("comparison");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // Update URL when state changes
