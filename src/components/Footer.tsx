@@ -65,17 +65,17 @@ const Footer = () => {
                 <TransitionLink href={"/atom-intentiq"}>
                   Atom IntentIQ
                 </TransitionLink>
-                <TransitionLink href={"/voice-agents"}>
-                  Atom Voice
-                </TransitionLink>
-                <TransitionLink href={"/atom/search"}>
-                  Atom Search
-                </TransitionLink>
               </div>
             </div>
             <div>
-              <h2 className="text-foreground/50 mb-2">Solutions</h2>
+              <h2 className="text-foreground/50 mb-2">Demos</h2>
               <div className="flex flex-col gap-2">
+                <TransitionLink href={"/voice-agents"}>
+                  Voice Agents
+                </TransitionLink>
+                <TransitionLink href={"/atom/search"}>
+                  Generative UI
+                </TransitionLink>
                <TransitionLink href={"/emotion-ai"}>
                  Sentiment AI
                </TransitionLink>
