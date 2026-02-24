@@ -54,14 +54,28 @@ const Footer = () => {
               </div>
             </div>
             <div>
-              <h2 className="text-foreground/50 mb-2">Solutions</h2>
+              <h2 className="text-foreground/50 mb-2">Atom</h2>
               <div className="flex flex-col gap-2">
+                <TransitionLink href={"/enterprise-ai"}>
+                  Atom Enterprise
+                </TransitionLink>
                 <TransitionLink href={"/agentic-ai"}>
-                  Agentic AI
+                  Atom Agentic
+                </TransitionLink>
+                <TransitionLink href={"/atom-intentiq"}>
+                  Atom IntentIQ
                 </TransitionLink>
                 <TransitionLink href={"/voice-agents"}>
-                  Voice Agents
+                  Atom Voice
                 </TransitionLink>
+                <TransitionLink href={"/atom/search"}>
+                  Atom Search
+                </TransitionLink>
+              </div>
+            </div>
+            <div>
+              <h2 className="text-foreground/50 mb-2">Solutions</h2>
+              <div className="flex flex-col gap-2">
                <TransitionLink href={"/emotion-ai"}>
                  Sentiment AI
                </TransitionLink>

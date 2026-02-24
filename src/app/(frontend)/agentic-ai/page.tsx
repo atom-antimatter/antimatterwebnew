@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 import TransitionContainer from "@/components/ui/TransitionContainer";
 
 export const metadata: Metadata = createMetadata({
-  title: "Agentic AI — The Nervous System for Deployed AI Workers",
+  title: "Atom Agentic — Autonomous AI Agents for Workflows",
   description: "Transform Grok, Claude, and ChatGPT from brains into governed, auditable digital workers wired into your phones, EHRs, CRMs, billing systems, and mission-critical SaaS.",
   path: "/agentic-ai",
 });

@@ -125,15 +125,24 @@ const NavItemWithDropdown = ({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLLIElement>(null);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click and ESC key
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   if (text === "Services") {
@@ -144,7 +153,13 @@ const NavItemWithDropdown = ({
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
       >
-        <span className="px-4 lg:px-7 py-1.5 flex cursor-pointer">{text}</span>
+        <button
+          className="px-4 lg:px-7 py-1.5 flex cursor-pointer"
+          aria-expanded={open}
+          aria-haspopup="true"
+        >
+          {text}
+        </button>
         <ServicesDropdown open={open} />
       </li>
     );
@@ -158,7 +173,13 @@ const NavItemWithDropdown = ({
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
       >
-        <span className="px-4 lg:px-7 py-1.5 flex cursor-pointer">{text}</span>
+        <button
+          className="px-4 lg:px-7 py-1.5 flex cursor-pointer"
+          aria-expanded={open}
+          aria-haspopup="true"
+        >
+          {text}
+        </button>
         <AtomAIDropdown open={open} />
       </li>
     );
@@ -285,38 +306,24 @@ type AtomProduct = AvailableProduct | ComingSoonProduct;
 const atomAIProducts: AtomProduct[] = [
   {
     icon: HiCube,
-    title: "Atom Framework",
-    desc: "Enterprise-grade AI framework for secure, model-agnostic deployment",
+    title: "Atom Enterprise",
+    desc: "Enterprise-grade AI deployment across VPC, on-prem, and edge",
     href: "/enterprise-ai",
     available: true as const,
   },
   {
-    icon: HiMicrophone,
-    title: "Atom Voice",
-    desc: "AI-powered voice agent and assistant",
-    href: "/voice-agent-demo",
-    available: true as const,
-  },
-  {
-    icon: HiMagnifyingGlass,
-    title: "Atom Search",
-    desc: "Next-generation AI search with generative UI",
-    href: "/atom/search",
+    icon: HiChatBubbleLeftRight,
+    title: "Atom Agentic",
+    desc: "Autonomous AI agents that execute workflows end-to-end",
+    href: "/agentic-ai",
     available: true as const,
   },
   {
     icon: HiCurrencyDollar,
-    title: "Atom Finance",
-    desc: "Intelligent financial analysis and insights",
-    href: "/atom/finance",
-    available: false as const,
-  },
-  {
-    icon: HiChatBubbleLeftRight,
-    title: "Atom Chat",
-    desc: "Advanced conversational AI interface",
-    href: "/atom/chat",
-    available: false as const,
+    title: "Atom IntentIQ",
+    desc: "Real-time buyer intent scoring and pipeline intelligence",
+    href: "/atom-intentiq",
+    available: true as const,
   },
 ];
 

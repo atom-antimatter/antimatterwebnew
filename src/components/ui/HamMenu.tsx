@@ -20,33 +20,21 @@ type AtomProductMobile = {
 const atomAIProducts: AtomProductMobile[] = [
   {
     icon: HiCube,
-    title: "Atom Framework",
+    title: "Atom Enterprise",
     href: "/enterprise-ai",
     available: true as const,
   },
   {
-    icon: HiMicrophone,
-    title: "Atom Voice",
-    href: "/voice-agent-demo",
-    available: true as const,
-  },
-  {
-    icon: HiMagnifyingGlass,
-    title: "Atom Search",
-    href: "/atom/search",
+    icon: HiChatBubbleLeftRight,
+    title: "Atom Agentic",
+    href: "/agentic-ai",
     available: true as const,
   },
   {
     icon: HiCurrencyDollar,
-    title: "Atom Finance",
-    href: "/atom/finance",
-    available: false as const,
-  },
-  {
-    icon: HiChatBubbleLeftRight,
-    title: "Atom Chat",
-    href: "/atom/chat",
-    available: false as const,
+    title: "Atom IntentIQ",
+    href: "/atom-intentiq",
+    available: true as const,
   },
 ];
 

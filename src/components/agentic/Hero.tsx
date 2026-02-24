@@ -6,7 +6,7 @@ import { useRef, useState, useEffect, type ReactNode } from "react";
 import RotatingCards, { type Card } from "./RotatingCards";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
-const headlineText = "AntimatterAI: The Nervous System + Spine for Deployed AI";
+const headlineText = "Atom Agentic: Autonomous AI Agents for Workflows";
 
 const cardData = [
   { label: "Grok (xAI)", image: "/img/chrome-extension.webp" },

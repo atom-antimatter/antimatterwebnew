@@ -14,7 +14,7 @@ import Interactions from "@/utils/interactions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Enterprise AI Deployment Framework (Atom)",
+  title: "Atom Enterprise — Enterprise AI Deployment Framework",
   description:
     "Deploy agentic AI in VPC, hybrid, on-prem, or edge—secure by default, model-agnostic, with IP ownership and audit-ready controls.",
   alternates: {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    title: "Enterprise AI Deployment Framework (Atom)",
+    title: "Atom Enterprise — Enterprise AI Deployment Framework",
     description:
       "Deploy agentic AI in VPC, hybrid, on-prem, or edge—secure by default, model-agnostic, with IP ownership and audit-ready controls.",
     url: "https://www.antimatterai.com/enterprise-ai",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Enterprise AI Deployment Framework (Atom)",
+    title: "Atom Enterprise — Enterprise AI Deployment Framework",
     description:
       "Deploy agentic AI in VPC, hybrid, on-prem, or edge—secure by default, model-agnostic, with IP ownership and audit-ready controls.",
     images: [{ url: "/images/HeroOpenGraph.png" }],
