@@ -26,7 +26,7 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
     {
       role: "assistant",
       content:
-        "Hi! I'm Atom IntentIQ. I analyze buyer conversations in real-time to help you qualify leads and close deals faster. Try one of the suggested prompts below or tell me about your customer's needs.",
+        "Ask anything about Atom or Antimatter AI. I'll answer using the latest product context and score the conversation in real-time.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -99,52 +99,56 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
     setInput(e.target.value);
     const textarea = e.target;
     textarea.style.height = "auto";
-    const maxHeight = 120;
+    const maxHeight = 96;
     textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-foreground/5 to-foreground/10 backdrop-blur-sm border border-foreground/10 rounded-xl overflow-hidden">
-      {/* Suggested Prompts */}
-      <div className="border-b border-foreground/10 bg-foreground/5 p-4">
-        <h3 className="text-sm font-semibold text-foreground/50 mb-3">
-          Try asking:
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {suggestedPrompts.map((prompt, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSend(prompt)}
-              disabled={isLoading}
-              className="px-3 py-1.5 text-xs bg-accent/10 hover:bg-accent hover:text-black border border-accent/20 hover:border-accent rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {prompt}
-            </button>
-          ))}
+    <div className="flex flex-col h-full bg-foreground/[0.03] border border-foreground/10 rounded-xl overflow-hidden">
+      {/* Chat header */}
+      <div className="shrink-0 border-b border-foreground/10 px-5 py-3 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent text-sm font-bold">
+          IQ
         </div>
+        <div>
+          <div className="text-sm font-semibold leading-tight">
+            Atom IntentIQ
+          </div>
+          <div className="text-[11px] text-foreground/40">
+            Powered by GPT-4o &amp; your context
+          </div>
+        </div>
+        {isLoading && (
+          <span className="ml-auto text-xs text-foreground/40 animate-pulse">
+            Thinking...
+          </span>
+        )}
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 min-h-0">
         <AnimatePresence mode="popLayout">
           {messages.map((message, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               className={`flex ${
                 message.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
               <div
-                className={`max-w-[85%] rounded-lg px-4 py-3 ${
+                className={`max-w-[85%] rounded-xl px-4 py-2.5 ${
                   message.role === "user"
-                    ? "bg-accent text-black"
-                    : "bg-foreground/10 border border-foreground/10"
+                    ? "bg-accent text-black rounded-br-sm"
+                    : "bg-foreground/10 rounded-bl-sm"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                  {message.content}
+                </p>
               </div>
             </motion.div>
           ))}
@@ -155,20 +159,14 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
             animate={{ opacity: 1 }}
             className="flex justify-start"
           >
-            <div className="bg-foreground/10 border border-foreground/10 rounded-lg px-4 py-3">
-              <div className="flex gap-1">
-                <div
-                  className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce"
-                  style={{ animationDelay: "0ms" }}
-                />
-                <div
-                  className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce"
-                  style={{ animationDelay: "150ms" }}
-                />
-                <div
-                  className="w-2 h-2 bg-foreground/50 rounded-full animate-bounce"
-                  style={{ animationDelay: "300ms" }}
-                />
+            <div className="bg-foreground/10 rounded-xl rounded-bl-sm px-4 py-3">
+              <div className="flex gap-1.5 items-center text-xs text-foreground/40">
+                <span>Thinking through your answer</span>
+                <span className="flex gap-0.5">
+                  <span className="animate-bounce" style={{ animationDelay: "0ms" }}>.</span>
+                  <span className="animate-bounce" style={{ animationDelay: "150ms" }}>.</span>
+                  <span className="animate-bounce" style={{ animationDelay: "300ms" }}>.</span>
+                </span>
               </div>
             </div>
           </motion.div>
@@ -176,24 +174,42 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-foreground/10 p-4 bg-foreground/5">
-        <div className="flex gap-2">
+      {/* Suggested follow-ups — shown when few messages */}
+      {messages.length <= 2 && !isLoading && (
+        <div className="shrink-0 border-t border-foreground/10 px-5 py-3">
+          <div className="flex flex-wrap gap-2">
+            {suggestedPrompts.map((prompt, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(prompt)}
+                disabled={isLoading}
+                className="px-3 py-1.5 text-xs bg-foreground/5 hover:bg-accent hover:text-black border border-foreground/10 hover:border-accent rounded-lg transition-all disabled:opacity-50"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Input — sticky at bottom */}
+      <div className="shrink-0 border-t border-foreground/10 px-4 py-3">
+        <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Describe your customer's needs and priorities..."
-            className="flex-1 bg-background/50 border border-foreground/10 rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-accent/50 min-h-[44px] max-h-[120px]"
+            placeholder="How can we help? (Shift+Enter for new line)"
+            className="flex-1 bg-transparent border-0 px-1 py-1.5 text-sm resize-none focus:outline-none min-h-[36px] max-h-[96px] placeholder:text-foreground/30"
             rows={1}
           />
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || isLoading}
-            className="px-4 py-3 bg-accent text-black rounded-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2 bg-accent text-black rounded-full hover:bg-accent/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
           >
-            <HiPaperAirplane className="w-5 h-5" />
+            <HiPaperAirplane className="w-4 h-4" />
           </button>
         </div>
       </div>
