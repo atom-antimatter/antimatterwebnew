@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { HiCheck } from "react-icons/hi2";
 
 export type IntentIQContext = {
+  competitors: string[];
   industry: string;
   companySize: string;
   priorities: string[];
@@ -17,7 +18,10 @@ interface IntentIQDiscoveryProps {
   onChange: (context: IntentIQContext) => void;
 }
 
+import { vendors } from "@/data/vendorMatrix";
+
 const steps = [
+  { id: "competitors", title: "Selling against" },
   { id: "industry", title: "Industry / Vertical" },
   { id: "companySize", title: "Company size" },
   { id: "priorities", title: "Buyer priorities" },
@@ -75,6 +79,13 @@ export default function IntentIQDiscovery({
     onChange({ ...context, ...updates });
   };
 
+  const toggleCompetitor = (value: string) => {
+    const updated = context.competitors.includes(value)
+      ? context.competitors.filter((c) => c !== value)
+      : [...context.competitors, value];
+    update({ competitors: updated });
+  };
+
   const togglePriority = (value: string) => {
     const updated = context.priorities.includes(value)
       ? context.priorities.filter((p) => p !== value)
@@ -83,6 +94,7 @@ export default function IntentIQDiscovery({
   };
 
   const completedSteps = [
+    context.competitors.length > 0,
     !!context.industry,
     !!context.companySize,
     context.priorities.length > 0,
@@ -97,6 +109,7 @@ export default function IntentIQDiscovery({
         <button
           onClick={() =>
             onChange({
+              competitors: [],
               industry: "",
               companySize: "",
               priorities: [],
@@ -127,7 +140,7 @@ export default function IntentIQDiscovery({
       </div>
 
       <div className="space-y-5">
-        {/* Step 0: Industry */}
+        {/* Step 0: Competitors */}
         <div>
           <button
             onClick={() => setCurrentStep(0)}
@@ -143,11 +156,58 @@ export default function IntentIQDiscovery({
               </div>
               <span className="font-medium text-sm">{steps[0]?.title}</span>
             </div>
+            {context.competitors.length > 0 && (
+              <span className="text-xs text-foreground/50">
+                {context.competitors.length} selected
+              </span>
+            )}
+          </button>
+          {currentStep === 0 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              className="mt-3 ml-9 flex flex-wrap gap-2"
+            >
+              {vendors
+                .filter((v) => v.id !== "atom")
+                .map((vendor) => (
+                  <button
+                    key={vendor.id}
+                    onClick={() => toggleCompetitor(vendor.name)}
+                    className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                      context.competitors.includes(vendor.name)
+                        ? "bg-accent text-black"
+                        : "bg-foreground/5 hover:bg-foreground/10"
+                    }`}
+                  >
+                    {vendor.name}
+                  </button>
+                ))}
+            </motion.div>
+          )}
+        </div>
+
+        {/* Step 1: Industry */}
+        <div>
+          <button
+            onClick={() => setCurrentStep(1)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                  completedSteps[1] ? "bg-accent text-black" : "bg-foreground/10"
+                }`}
+              >
+                {completedSteps[1] ? <HiCheck className="w-4 h-4" /> : "2"}
+              </div>
+              <span className="font-medium text-sm">{steps[1]?.title}</span>
+            </div>
             {context.industry && (
               <span className="text-xs text-foreground/50">{context.industry}</span>
             )}
           </button>
-          {currentStep === 0 && (
+          {currentStep === 1 && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -170,27 +230,27 @@ export default function IntentIQDiscovery({
           )}
         </div>
 
-        {/* Step 1: Company Size */}
+        {/* Step 2: Company Size */}
         <div>
           <button
-            onClick={() => setCurrentStep(1)}
+            onClick={() => setCurrentStep(2)}
             className="flex items-center justify-between w-full text-left"
           >
             <div className="flex items-center gap-3">
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                  completedSteps[1] ? "bg-accent text-black" : "bg-foreground/10"
+                  completedSteps[2] ? "bg-accent text-black" : "bg-foreground/10"
                 }`}
               >
-                {completedSteps[1] ? <HiCheck className="w-4 h-4" /> : "2"}
+                {completedSteps[2] ? <HiCheck className="w-4 h-4" /> : "3"}
               </div>
-              <span className="font-medium text-sm">{steps[1]?.title}</span>
+              <span className="font-medium text-sm">{steps[2]?.title}</span>
             </div>
             {context.companySize && (
               <span className="text-xs text-foreground/50">{context.companySize}</span>
             )}
           </button>
-          {currentStep === 1 && (
+          {currentStep === 2 && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -213,21 +273,21 @@ export default function IntentIQDiscovery({
           )}
         </div>
 
-        {/* Step 2: Priorities */}
+        {/* Step 3: Priorities */}
         <div>
           <button
-            onClick={() => setCurrentStep(2)}
+            onClick={() => setCurrentStep(3)}
             className="flex items-center justify-between w-full text-left"
           >
             <div className="flex items-center gap-3">
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                  completedSteps[2] ? "bg-accent text-black" : "bg-foreground/10"
+                  completedSteps[3] ? "bg-accent text-black" : "bg-foreground/10"
                 }`}
               >
-                {completedSteps[2] ? <HiCheck className="w-4 h-4" /> : "3"}
+                {completedSteps[3] ? <HiCheck className="w-4 h-4" /> : "4"}
               </div>
-              <span className="font-medium text-sm">{steps[2]?.title}</span>
+              <span className="font-medium text-sm">{steps[3]?.title}</span>
             </div>
             {context.priorities.length > 0 && (
               <span className="text-xs text-foreground/50">
@@ -235,7 +295,7 @@ export default function IntentIQDiscovery({
               </span>
             )}
           </button>
-          {currentStep === 2 && (
+          {currentStep === 3 && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -258,24 +318,24 @@ export default function IntentIQDiscovery({
           )}
         </div>
 
-        {/* Step 3: Current Tools */}
+        {/* Step 4: Current Tools */}
         <div>
           <button
-            onClick={() => setCurrentStep(3)}
+            onClick={() => setCurrentStep(4)}
             className="flex items-center justify-between w-full text-left"
           >
             <div className="flex items-center gap-3">
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                  completedSteps[3] ? "bg-accent text-black" : "bg-foreground/10"
+                  completedSteps[4] ? "bg-accent text-black" : "bg-foreground/10"
                 }`}
               >
-                {completedSteps[3] ? <HiCheck className="w-4 h-4" /> : "4"}
+                {completedSteps[4] ? <HiCheck className="w-4 h-4" /> : "5"}
               </div>
-              <span className="font-medium text-sm">{steps[3]?.title}</span>
+              <span className="font-medium text-sm">{steps[4]?.title}</span>
             </div>
           </button>
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -292,27 +352,27 @@ export default function IntentIQDiscovery({
           )}
         </div>
 
-        {/* Step 4: Timeline */}
+        {/* Step 5: Timeline */}
         <div>
           <button
-            onClick={() => setCurrentStep(4)}
+            onClick={() => setCurrentStep(5)}
             className="flex items-center justify-between w-full text-left"
           >
             <div className="flex items-center gap-3">
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                  completedSteps[4] ? "bg-accent text-black" : "bg-foreground/10"
+                  completedSteps[5] ? "bg-accent text-black" : "bg-foreground/10"
                 }`}
               >
-                {completedSteps[4] ? <HiCheck className="w-4 h-4" /> : "5"}
+                {completedSteps[5] ? <HiCheck className="w-4 h-4" /> : "6"}
               </div>
-              <span className="font-medium text-sm">{steps[4]?.title}</span>
+              <span className="font-medium text-sm">{steps[5]?.title}</span>
             </div>
             {context.timeline && (
               <span className="text-xs text-foreground/50">{context.timeline}</span>
             )}
           </button>
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}

@@ -92,7 +92,7 @@ export default function IntentIQBuyerModal({ data }: IntentIQBuyerModalProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="relative w-full max-w-lg bg-zinc-950 border border-foreground/10 rounded-2xl overflow-hidden max-h-[85vh] flex flex-col"
+              className="relative w-full max-w-lg bg-zinc-950 border border-foreground/10 rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/10">
@@ -112,8 +112,8 @@ export default function IntentIQBuyerModal({ data }: IntentIQBuyerModalProps) {
                 </button>
               </div>
 
-              {/* Content */}
-              <div className="overflow-y-auto p-6 space-y-4">
+              {/* Content — scrollable */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-4">
                 {!data && (
                   <div className="text-center py-8 text-foreground/40 text-sm">
                     Start a conversation to see buyer intent scoring

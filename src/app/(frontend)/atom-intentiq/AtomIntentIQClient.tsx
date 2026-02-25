@@ -14,6 +14,7 @@ import { usePageTransition } from "@/store";
 export default function AtomIntentIQClient() {
   const [analyticsData, setAnalyticsData] = useState<IntentIQData | null>(null);
   const [discoveryContext, setDiscoveryContext] = useState<IntentIQContext>({
+    competitors: [],
     industry: "",
     companySize: "",
     priorities: [],
