@@ -21,7 +21,7 @@ const features: Feature[] = [
     title: "Voice Agents",
     description:
       "Real-time conversations • Phone system integration • HIPAA-ready recording + retention controls • Multi-language support",
-    image: "/img/article-summary.webp",
+    image: "/img/voice-agents-hero.png",
   },
   {
     number: "02",
