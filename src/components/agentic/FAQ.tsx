@@ -14,7 +14,7 @@ const faqs = [
       "We do not compete in commodity consumer agent lanes. Our advantage is governed execution in regulated operations where auditability, controls, and domain workflows decide outcomes.",
   },
   {
-    question: "What makes AntimatterAI defensible?",
+    question: "What makes Antimatter AI defensible?",
     answer:
       "Our moat is governance plus domain execution: policy enforcement, least-privilege access, replay, HITL approvals, and full audit trails tied to business systems.",
   },

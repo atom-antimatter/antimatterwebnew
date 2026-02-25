@@ -99,7 +99,7 @@ export function Features(): ReactNode {
             The Result: Digital Workers That Run in Production
           </h2>
           <p className="text-foreground/65 mb-6 max-w-sm text-base md:mb-8 md:text-lg">
-            AntimatterAI wires those brains into real execution: phones, EHRs,
+            Antimatter AI wires those brains into real execution: phones, EHRs,
             CRMs, billing, and critical SaaS-backed by policy, logging, audit
             trails, and deployment in your VPC, edge, or on-prem.
           </p>
