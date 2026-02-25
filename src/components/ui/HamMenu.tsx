@@ -4,7 +4,7 @@ import { AnimatePresence, motion, Variants } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
-import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight, HiCube } from "react-icons/hi2";
+import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale } from "react-icons/hi2";
 import HamButton from "./HamButton";
 import NavButton from "./NavButton";
 import TransitionLink from "./TransitionLink";
@@ -19,21 +19,27 @@ type AtomProductMobile = {
 
 const atomAIProducts: AtomProductMobile[] = [
   {
-    icon: HiCube,
+    icon: HiBuildingOffice2,
     title: "Atom Enterprise",
     href: "/enterprise-ai",
     available: true as const,
   },
   {
-    icon: HiChatBubbleLeftRight,
+    icon: HiCpuChip,
     title: "Atom Agentic",
     href: "/agentic-ai",
     available: true as const,
   },
   {
-    icon: HiCurrencyDollar,
+    icon: HiLightBulb,
     title: "Atom IntentIQ",
     href: "/atom-intentiq",
+    available: true as const,
+  },
+  {
+    icon: HiScale,
+    title: "Compare Atom",
+    href: "/resources/vendor-matrix",
     available: true as const,
   },
 ];

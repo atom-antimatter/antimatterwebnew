@@ -5,7 +5,7 @@ import { useLoading } from "@/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight, HiCube } from "react-icons/hi2";
+import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight, HiCube, HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
 import NavLinksBg from "./ui/NavLinksBg";
@@ -305,24 +305,31 @@ type AtomProduct = AvailableProduct | ComingSoonProduct;
 
 const atomAIProducts: AtomProduct[] = [
   {
-    icon: HiCube,
+    icon: HiBuildingOffice2,
     title: "Atom Enterprise",
     desc: "Enterprise-grade AI deployment across VPC, on-prem, and edge",
     href: "/enterprise-ai",
     available: true as const,
   },
   {
-    icon: HiChatBubbleLeftRight,
+    icon: HiCpuChip,
     title: "Atom Agentic",
     desc: "Autonomous AI agents that execute workflows end-to-end",
     href: "/agentic-ai",
     available: true as const,
   },
   {
-    icon: HiCurrencyDollar,
+    icon: HiLightBulb,
     title: "Atom IntentIQ",
     desc: "Real-time buyer intent scoring and pipeline intelligence",
     href: "/atom-intentiq",
+    available: true as const,
+  },
+  {
+    icon: HiScale,
+    title: "Compare Atom",
+    desc: "See how Atom stacks up against enterprise AI vendors",
+    href: "/resources/vendor-matrix",
     available: true as const,
   },
 ];
