@@ -8,7 +8,7 @@ import remarkGfm from "remark-gfm";
 import type { DiscoveryContext } from "./PartnerDiscoveryWizard";
 import type { SalesOutputs } from "./OutputTabsDrawer";
 
-interface Message {
+export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
 }
@@ -17,14 +17,16 @@ interface PartnerChatInterfaceProps {
   context: DiscoveryContext;
   onOutputsGenerated: (outputs: SalesOutputs) => void;
   promptToSend?: string | null;
+  onMessagesChange?: (messages: ChatMessage[]) => void;
 }
 
 export default function PartnerChatInterface({
   context,
   onOutputsGenerated,
   promptToSend,
+  onMessagesChange,
 }: PartnerChatInterfaceProps) {
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
       content:
@@ -33,22 +35,29 @@ export default function PartnerChatInterface({
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    onMessagesChange?.(messages);
+  }, [messages, onMessagesChange]);
+
   const handleSend = async (messageText?: string) => {
     const message = messageText || input.trim();
     if (!message || isLoading) return;
 
-    const userMessage: Message = { role: "user", content: message };
+    const userMessage: ChatMessage = { role: "user", content: message };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
@@ -153,7 +162,7 @@ export default function PartnerChatInterface({
   return (
     <div className="flex flex-col h-full bg-background border border-foreground/10 rounded-xl overflow-hidden">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4">
         <AnimatePresence mode="popLayout">
           {messages.map((message, idx) => (
             <motion.div
