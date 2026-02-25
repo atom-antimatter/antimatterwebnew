@@ -54,6 +54,17 @@ export default function IntentIQBuyerModal({ data }: IntentIQBuyerModalProps) {
     return () => document.removeEventListener("keydown", handleEsc);
   }, []);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   const getScoreColor = (score: number) => {
     if (score >= 75) return "text-green-400";
     if (score >= 50) return "text-yellow-400";
@@ -79,12 +90,15 @@ export default function IntentIQBuyerModal({ data }: IntentIQBuyerModalProps) {
       {/* Modal */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+            onWheel={(e) => e.stopPropagation()}
+          >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setIsOpen(false)}
             />
             <motion.div
@@ -93,6 +107,7 @@ export default function IntentIQBuyerModal({ data }: IntentIQBuyerModalProps) {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
               className="relative w-full max-w-lg bg-zinc-950 border border-foreground/10 rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/10">

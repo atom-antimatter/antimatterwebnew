@@ -14,6 +14,7 @@ interface Message {
 
 interface RequestBody {
   messages: Message[];
+  discoveryContext?: string;
 }
 
 const INTENTIQ_SYSTEM_PROMPT = `You are Atom IntentIQ, a buyer intent analysis system for Antimatter AI.
@@ -79,11 +80,11 @@ RULES:
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as RequestBody;
-    const { messages } = body;
+    const { messages, discoveryContext } = body;
 
     const systemMessage = {
       role: "system" as const,
-      content: INTENTIQ_SYSTEM_PROMPT,
+      content: INTENTIQ_SYSTEM_PROMPT + (discoveryContext || ""),
     };
 
     const chatMessages = [

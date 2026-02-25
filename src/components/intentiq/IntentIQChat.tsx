@@ -115,11 +115,22 @@ export default function IntentIQChat({ onAnalyticsUpdate, discoveryContext }: In
     }
 
     try {
+      const contextSummary = discoveryContext
+        ? `\n\nDISCOVERY CONTEXT:\n- Competitors: ${discoveryContext.competitors?.join(", ") || "None"}\n- Industry: ${discoveryContext.industry || "Not specified"}\n- Company Size: ${discoveryContext.companySize || "Not specified"}\n- Priorities: ${discoveryContext.priorities?.join(", ") || "None"}\n- Current Tools: ${discoveryContext.currentTools || "Not specified"}\n- Timeline: ${discoveryContext.timeline || "Not specified"}`
+        : "";
+
+      const messagesWithContext = [...messages, userMessage].map((m, i) =>
+        i === 0 && m.role === "assistant"
+          ? m
+          : m
+      );
+
       const response = await fetch("/api/intentiq-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          messages: messagesWithContext,
+          discoveryContext: contextSummary,
         }),
       });
 
@@ -212,7 +223,7 @@ export default function IntentIQChat({ onAnalyticsUpdate, discoveryContext }: In
               <div
                 className={`max-w-[85%] rounded-xl px-4 py-2.5 ${
                   message.role === "user"
-                    ? "bg-accent text-black rounded-br-sm"
+                    ? "bg-white text-black rounded-br-sm"
                     : "bg-foreground/10 rounded-bl-sm"
                 }`}
               >
