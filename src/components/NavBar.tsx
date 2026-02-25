@@ -5,7 +5,7 @@ import { useLoading } from "@/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { HiMicrophone, HiMagnifyingGlass, HiCurrencyDollar, HiChatBubbleLeftRight, HiCube, HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale } from "react-icons/hi2";
+import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
 import NavLinksBg from "./ui/NavLinksBg";

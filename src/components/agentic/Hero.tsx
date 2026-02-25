@@ -12,37 +12,27 @@ import Image from "next/image";
 
 const cardData = [
   { label: "OpenAI", logo: "/img/logos/openai.svg" },
-  { label: "Anthropic", logo: null },
+  { label: "Anthropic", logo: "/img/logos/anthropic.svg" },
   { label: "Grok", logo: "/img/logos/grok.svg" },
   { label: "Hume", logo: "/img/logos/hume.png" },
-  { label: "Custom Models", logo: "/img/logos/huggingface.svg" },
+  { label: "Hugging Face", logo: "/img/logos/huggingface.svg" },
 ];
-
-const AnthropicLogo = () => (
-  <svg viewBox="0 0 256 176" className="w-32 h-auto" fill="#181818">
-    <path d="M147.487 0L256 176h-51.407L147.487 0Zm-38.974 0L0 176h51.407L108.513 0Z" />
-  </svg>
-);
 
 const carouselCards: Card[] = cardData.map((card, index) => ({
   id: index + 1,
   content: (
-    <div className="flex h-full flex-col items-center justify-center p-6 bg-gradient-to-br from-white to-gray-50 border border-gray-200">
-      <div className="flex-1 flex items-center justify-center w-full px-4">
-        {card.logo ? (
-          <Image
-            src={card.logo}
-            alt={card.label}
-            width={160}
-            height={60}
-            className="w-auto h-10 object-contain"
-          />
-        ) : (
-          <AnthropicLogo />
-        )}
+    <div className="flex h-full flex-col items-center justify-center p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200">
+      <div className="flex-1 flex items-center justify-center w-full">
+        <Image
+          src={card.logo}
+          alt={card.label}
+          width={140}
+          height={50}
+          className="w-auto h-8 object-contain"
+        />
       </div>
-      <div className="pt-3 text-center">
-        <span className="text-sm font-semibold text-gray-900">{card.label}</span>
+      <div className="pt-2 text-center">
+        <span className="text-xs font-semibold text-gray-900">{card.label}</span>
       </div>
     </div>
   ),
@@ -127,16 +117,16 @@ export function Hero(): ReactNode {
           <div className="origin-top scale-[0.6] lg:scale-[0.7] xl:scale-100">
             <RotatingCards
               cards={carouselCards}
-              radius={1000}
+              radius={550}
               cardClassName="rounded-md"
-              cardWidth={350}
-              cardHeight={275}
-              duration={100}
+              cardWidth={220}
+              cardHeight={160}
+              duration={80}
               pauseOnHover={true}
               autoPlay={true}
               initialRotation={-90}
               showTrackLine={true}
-              trackLineOffset={25}
+              trackLineOffset={20}
             />
           </div>
         </div>

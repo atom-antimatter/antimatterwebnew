@@ -209,7 +209,7 @@ export default function PartnerChatInterface({
             </div>
           </motion.div>
         )}
-        <div ref={messagesEndRef} />
+        <div />
       </div>
 
       {/* Input */}
