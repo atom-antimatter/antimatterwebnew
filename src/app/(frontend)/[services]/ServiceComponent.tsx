@@ -7,67 +7,15 @@ import { ServicesData } from "@/data/services";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { notFound, usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 
 const ServiceComponent = () => {
   const pathname = usePathname();
   const data = ServicesData;
   const service = data.find((value) => value.link === pathname);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const envVideoUrl = process.env.NEXT_PUBLIC_DESIGN_VIDEO_URL;
-  const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ailcmdpnkzgwvwsnxlav.supabase.co";
-  const supabaseBucket = process.env.SUPABASE_STORAGE_BUCKET || "media";
-  const supabaseFile =
-    process.env.NEXT_PUBLIC_DESIGN_VIDEO || "website_background_loop.mp4";
-  const supabaseVideoUrl = `${supabaseUrl}/storage/v1/object/public/${supabaseBucket}/${supabaseFile}`;
-  const fallbackVideoUrl = "/Antimatter-astronaut-loop-1.mp4";
-  const initialSource = envVideoUrl && envVideoUrl.length > 0 ? envVideoUrl : supabaseVideoUrl;
-  const [videoSource, setVideoSource] = useState(initialSource);
 
   if (!service) notFound();
   return (
     <TransitionContainer>
-      {/* Full-page video background - only for design-agency */}
-      {pathname === '/design-agency' && (
-        <div className="fixed inset-0 z-0">
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            onError={() => {
-              if (videoSource === fallbackVideoUrl) {
-                return;
-              }
-              setVideoSource(fallbackVideoUrl);
-            }}
-            style={{ objectFit: 'cover', objectPosition: 'center' }}
-            className="absolute inset-0 w-full h-full opacity-100"
-            poster="/Antimatter-astronaut-fallback.webp"
-          >
-            <source key={videoSource} src={videoSource} type="video/mp4" />
-          </video>
-          {/* Dark overlay + gradient fade out starting much earlier */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.6) 20%, rgba(2,2,2,0.7) 35%, rgba(2,2,2,0.9) 50%, rgba(2,2,2,0.98) 60%, #020202 65%)",
-            }}
-          />
-          <div
-            className="absolute inset-x-0 bottom-0 h-[70vh] pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(2,2,2,0) 0%, rgba(2,2,2,0.7) 25%, rgba(2,2,2,0.95) 50%, #020202 75%)",
-            }}
-          />
-        </div>
-      )}
-      
       <MainLayout className="pt-32 mobile:pt-52 md:pt-60 relative z-10">
         <div className="overflow-x-hidden">
           <TitleH1Anim

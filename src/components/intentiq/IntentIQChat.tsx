@@ -13,6 +13,7 @@ interface Message {
 interface IntentIQChatProps {
   onAnalyticsUpdate: (data: IntentIQData) => void;
   discoveryContext?: {
+    competitors?: string[];
     industry: string;
     companySize: string;
     priorities: string[];
