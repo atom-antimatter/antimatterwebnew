@@ -148,10 +148,10 @@ export default function VendorMatrixClient() {
             </h1>
             <Link
               href="/resources/channel-partners"
-              className="hidden md:flex group items-center justify-center gap-3 rounded-md bg-accent py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-accent/25 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-accent/40"
+              className="hidden md:flex group items-center justify-center gap-3 rounded-md bg-white py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-white/10 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-white/20"
             >
               <span>Channel Partners</span>
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-all duration-300 group-hover:scale-110">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-all duration-300 group-hover:scale-110">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
@@ -163,10 +163,10 @@ export default function VendorMatrixClient() {
           </p>
           <Link
             href="/resources/channel-partners"
-            className="md:hidden group inline-flex items-center justify-center gap-3 rounded-md bg-accent py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-accent/25 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-accent/40 mb-4 w-full sm:w-auto"
+            className="md:hidden group inline-flex items-center justify-center gap-3 rounded-md bg-white py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-white/10 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-white/20 mb-4 w-full sm:w-auto"
           >
             <span>Channel Partners</span>
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-all duration-300 group-hover:scale-110">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-all duration-300 group-hover:scale-110">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>

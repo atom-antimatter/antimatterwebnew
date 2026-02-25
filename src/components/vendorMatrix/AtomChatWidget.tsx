@@ -301,7 +301,7 @@ export default function AtomChatWidget({
           onClick={() => {
             useAtomChatStore.getState().open();
           }}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-secondary text-white rounded-full shadow-lg hover:bg-secondary/90 transition-colors z-50 flex items-center justify-center"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-accent text-white rounded-full shadow-lg hover:bg-accent/90 transition-colors z-50 flex items-center justify-center"
           aria-label="Open Atom Chat"
         >
           <HiChatBubbleLeftRight className="w-6 h-6" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { HiPaperAirplane } from "react-icons/hi2";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
@@ -159,6 +159,35 @@ export default function PartnerChatInterface({
     textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
   };
 
+  const suggestedPrompts = useMemo(() => {
+    const comp = context.competitors[0] || "the competitor";
+    const priorities = context.customerPriorities.join(", ") || "their priorities";
+    const userCount = messages.filter((m) => m.role === "user").length;
+
+    if (userCount === 0) {
+      return [
+        `Give me a battlecard vs ${comp}`,
+        "What questions should I ask to qualify this deal?",
+        `Why does Antimatter win for ${priorities}?`,
+        "Walk me through a discovery call approach",
+      ];
+    }
+
+    if (userCount <= 2) {
+      return [
+        "Draft a follow-up email based on this conversation",
+        `Create an executive comparison table vs ${comp}`,
+        "What objections should I prepare for?",
+      ];
+    }
+
+    return [
+      "Draft a proposal with scope and pricing options",
+      "Summarize buyer needs and recommended next steps",
+      "Write an executive summary for the CTO",
+    ];
+  }, [context.competitors, context.customerPriorities, messages]);
+
   return (
     <div className="flex flex-col h-full bg-background border border-foreground/10 rounded-xl overflow-hidden">
       {/* Messages */}
@@ -211,6 +240,23 @@ export default function PartnerChatInterface({
         )}
         <div />
       </div>
+
+      {/* Suggested prompts */}
+      {!isLoading && (
+        <div className="shrink-0 border-t border-foreground/10 px-4 py-3">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            {suggestedPrompts.map((prompt, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(prompt)}
+                className="flex-shrink-0 px-3 py-1.5 text-xs bg-foreground/5 hover:bg-accent hover:text-black border border-foreground/10 hover:border-accent rounded-lg transition-all"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Input */}
       <div className="border-t border-foreground/10 p-4">

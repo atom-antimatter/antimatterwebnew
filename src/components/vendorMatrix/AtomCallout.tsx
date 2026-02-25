@@ -31,7 +31,7 @@ export default function AtomCallout() {
         {/* Right: CTA */}
         <button
           onClick={handleClick}
-          className="w-full md:w-auto flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-all hover:shadow-lg hover:shadow-secondary/20 text-sm font-semibold"
+          className="w-full md:w-auto flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-white rounded-full hover:bg-accent/90 transition-all hover:shadow-lg hover:shadow-accent/20 text-sm font-semibold"
         >
           Ask Atom
         </button>
