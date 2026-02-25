@@ -12,8 +12,9 @@ export default function LayoutContent({ children }: LayoutContentProps) {
   const isAdminRoute = pathname?.startsWith("/admin");
   const isAtomSearchRoute = pathname?.startsWith("/atom/search");
   const isVendorMatrixRoute = pathname?.startsWith("/resources/vendor-matrix");
+  const isChannelPartnersRoute = pathname?.startsWith("/resources/channel-partners");
 
-  if (isAdminRoute || isAtomSearchRoute || isVendorMatrixRoute) {
+  if (isAdminRoute || isAtomSearchRoute || isVendorMatrixRoute || isChannelPartnersRoute) {
     // For these routes, only render the main content (Providers and children)
     return <div className="relative">{children[1]}</div>;
   }

@@ -38,22 +38,19 @@ export default function ChannelPartnersClient() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b border-foreground/10 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-6">
             <Link
               href="/resources/vendor-matrix"
-              className="inline-flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors mb-2"
+              className="inline-flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors"
             >
               <HiArrowLeft className="w-4 h-4" />
-              Back to Vendor Matrix
+              Back to Atom
             </Link>
-            <h1 className="text-2xl md:text-3xl font-bold">
+            <div className="hidden sm:block h-5 w-px bg-foreground/15" />
+            <h1 className="hidden sm:block text-lg font-semibold">
               Channel Partner Sales Assist
             </h1>
-            <p className="text-foreground/65 text-sm md:text-base mt-1">
-              Ask questions, compare vendors, and generate follow-ups,
-              proposals, and pricing in minutes.
-            </p>
           </div>
         </div>
       </header>
@@ -63,7 +60,7 @@ export default function ChannelPartnersClient() {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left sidebar: Discovery wizard */}
           <div className="lg:w-[360px] xl:w-[400px] shrink-0">
-            <div className="lg:sticky lg:top-24">
+            <div className="lg:sticky lg:top-16">
               <PartnerDiscoveryWizard
                 vendors={vendors}
                 onChange={setDiscoveryContext}
@@ -74,8 +71,8 @@ export default function ChannelPartnersClient() {
 
           {/* Right: Chat interface fills remaining space */}
           <div
-            className="flex-1 min-w-0 lg:sticky lg:top-24"
-            style={{ height: "calc(100vh - 140px)" }}
+            className="flex-1 min-w-0 lg:sticky lg:top-16"
+            style={{ height: "calc(100vh - 80px)" }}
           >
             <PartnerChatInterface
               context={discoveryContext}

@@ -22,7 +22,7 @@ const carouselCards: Card[] = cardData.map((card, index) => ({
   id: index + 1,
   content: (
     <div className="flex h-full flex-col items-center justify-center p-5 bg-gradient-to-br from-white to-gray-50 border border-gray-200">
-      <div className="flex-1 flex items-center justify-center w-full px-3">
+      <div className="flex-1 flex items-center justify-center w-full px-3 bg-white rounded-lg">
         <Image
           src={card.logo}
           alt={card.label}
