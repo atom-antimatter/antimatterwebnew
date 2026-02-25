@@ -21,18 +21,20 @@ const cardData = [
 const carouselCards: Card[] = cardData.map((card, index) => ({
   id: index + 1,
   content: (
-    <div className="flex h-full flex-col items-center justify-center p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200">
-      <div className="flex-1 flex items-center justify-center w-full">
+    <div className="flex h-full flex-col items-center justify-center p-5 bg-gradient-to-br from-white to-gray-50 border border-gray-200">
+      <div className="flex-1 flex items-center justify-center w-full px-3">
         <Image
           src={card.logo}
           alt={card.label}
-          width={140}
-          height={50}
-          className="w-auto h-8 object-contain"
+          width={200}
+          height={80}
+          className={`w-auto object-contain ${
+            card.label === "Anthropic" ? "h-14" : "h-10"
+          }`}
         />
       </div>
       <div className="pt-2 text-center">
-        <span className="text-xs font-semibold text-gray-900">{card.label}</span>
+        <span className="text-sm font-semibold text-gray-900">{card.label}</span>
       </div>
     </div>
   ),
@@ -117,10 +119,10 @@ export function Hero(): ReactNode {
           <div className="origin-top scale-[0.6] lg:scale-[0.7] xl:scale-100">
             <RotatingCards
               cards={carouselCards}
-              radius={550}
+              radius={600}
               cardClassName="rounded-md"
-              cardWidth={220}
-              cardHeight={160}
+              cardWidth={280}
+              cardHeight={200}
               duration={80}
               pauseOnHover={true}
               autoPlay={true}
