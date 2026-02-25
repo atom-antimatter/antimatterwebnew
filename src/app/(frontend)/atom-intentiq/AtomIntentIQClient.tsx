@@ -25,18 +25,18 @@ export default function AtomIntentIQClient() {
         </p>
       </header>
 
-      {/* Main split view with fixed height so neither panel scrolls the page */}
-      <div
-        className="flex flex-col lg:flex-row gap-6"
-        style={{ height: "calc(100vh - 180px)", minHeight: "600px" }}
-      >
-        {/* Left: Admin Analytics Panel — scrolls independently */}
-        <div className="lg:w-[420px] xl:w-[480px] shrink-0 overflow-y-auto overscroll-contain lg:pr-2 min-h-[300px] lg:min-h-0">
+      {/* Split view: analytics grows freely, chat is viewport-pinned */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left: Analytics — grows to fit all content, no height constraint */}
+        <div className="lg:w-[420px] xl:w-[480px] shrink-0">
           <IntentIQAnalytics data={analyticsData} />
         </div>
 
-        {/* Right: Live Chat Interface — contained, never pushes page */}
-        <div className="flex-1 min-h-[400px] lg:min-h-0 min-w-0">
+        {/* Right: Chat — fixed to viewport height, sticky on desktop */}
+        <div
+          className="flex-1 min-w-0 lg:sticky lg:top-28"
+          style={{ height: "calc(100vh - 140px)" }}
+        >
           <IntentIQChat onAnalyticsUpdate={setAnalyticsData} />
         </div>
       </div>
