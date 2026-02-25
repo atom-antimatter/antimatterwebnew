@@ -69,13 +69,23 @@ SCORING GUIDELINES:
 - proposal_outline: Brief proposal structure with phases
 - suggested_pricing_range: Realistic ranges with context
 
+CRITICAL — DISCOVERY CONTEXT:
+If discovery context is provided below, you MUST use it to tailor every response:
+- Reference the specific competitors by name when comparing
+- Address the buyer's industry-specific needs and regulations
+- Factor in their company size for pricing and deployment scope
+- Directly address their stated priorities in your analysis
+- Account for their current tools when discussing integration
+- Adjust urgency scoring based on their stated timeline
+
 RULES:
 - Always return valid JSON
 - Be realistic about scoring
 - Base intent on conversation signals (questions about pricing, timeline, security = high intent)
 - Extract actual topics discussed
 - Make emails and proposals professional and ready to use
-- Pricing should reflect enterprise AI project scope`;
+- Pricing should reflect enterprise AI project scope
+- ALWAYS reference discovery context details in your responses`;
 
 export async function POST(request: NextRequest) {
   try {

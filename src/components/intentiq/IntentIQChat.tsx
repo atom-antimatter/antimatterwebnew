@@ -116,21 +116,24 @@ export default function IntentIQChat({ onAnalyticsUpdate, discoveryContext }: In
     }
 
     try {
-      const contextSummary = discoveryContext
-        ? `\n\nDISCOVERY CONTEXT:\n- Competitors: ${discoveryContext.competitors?.join(", ") || "None"}\n- Industry: ${discoveryContext.industry || "Not specified"}\n- Company Size: ${discoveryContext.companySize || "Not specified"}\n- Priorities: ${discoveryContext.priorities?.join(", ") || "None"}\n- Current Tools: ${discoveryContext.currentTools || "Not specified"}\n- Timeline: ${discoveryContext.timeline || "Not specified"}`
-        : "";
+      const ctx = discoveryContext;
+      const contextParts: string[] = [];
+      if (ctx?.competitors?.length) contextParts.push(`Competitors: ${ctx.competitors.join(", ")}`);
+      if (ctx?.industry) contextParts.push(`Industry: ${ctx.industry}`);
+      if (ctx?.companySize) contextParts.push(`Company Size: ${ctx.companySize}`);
+      if (ctx?.priorities?.length) contextParts.push(`Priorities: ${ctx.priorities.join(", ")}`);
+      if (ctx?.currentTools) contextParts.push(`Current Tools: ${ctx.currentTools}`);
+      if (ctx?.timeline) contextParts.push(`Timeline: ${ctx.timeline}`);
 
-      const messagesWithContext = [...messages, userMessage].map((m, i) =>
-        i === 0 && m.role === "assistant"
-          ? m
-          : m
-      );
+      const contextSummary = contextParts.length > 0
+        ? `\n\nDISCOVERY CONTEXT (use this to tailor your response):\n${contextParts.map(p => `- ${p}`).join("\n")}`
+        : "";
 
       const response = await fetch("/api/intentiq-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: messagesWithContext,
+          messages: [...messages, userMessage],
           discoveryContext: contextSummary,
         }),
       });
