@@ -150,7 +150,7 @@ export default function VendorMatrixClient() {
               href="/resources/channel-partners"
               className="hidden md:flex group items-center justify-center gap-3 rounded-md bg-white py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-white/10 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-white/20"
             >
-              <span>Channel Partners</span>
+              <span>Trusted Advisors</span>
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-all duration-300 group-hover:scale-110">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
