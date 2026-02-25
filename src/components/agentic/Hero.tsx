@@ -8,44 +8,41 @@ import RotatingCards, { type Card } from "./RotatingCards";
 const easeOut = [0.16, 1, 0.3, 1] as const;
 const headlineText = "Autonomous AI Agents for Workflows";
 
+import Image from "next/image";
+
 const cardData = [
-  { label: "Grok (xAI)", image: "/img/chrome-extension.webp" },
-  { label: "ChatGPT (OpenAI)", image: "/img/safari-extension.webp" },
-  { label: "Claude (Anthropic)", image: "/img/api-access.webp" },
-  { label: "Voice Agents", image: "/img/article-summary.webp" },
-  { label: "Workflow Agents", image: "/img/video-summary.webp" },
-  { label: "Enterprise Security", image: "/img/podcast-summary.webp" },
-  { label: "Model-agnostic orchestration", image: "/img/pdf-summary.webp" },
-  { label: "Compliance-ready by design", image: "/img/research-papers.webp" },
-  { label: "Regulated ops focus", image: "/img/social-threads.webp" },
-  { label: "Full observability + replay", image: "/img/email-digest.webp" },
-  { label: "Governed execution", image: "/img/book-summary.webp" },
+  { label: "OpenAI", logo: "/img/logos/openai.svg" },
+  { label: "Anthropic", logo: null },
+  { label: "Grok", logo: "/img/logos/grok.svg" },
+  { label: "Hume", logo: "/img/logos/hume.png" },
+  { label: "Custom Models", logo: "/img/logos/huggingface.svg" },
 ];
+
+const AnthropicLogo = () => (
+  <svg viewBox="0 0 256 176" className="w-32 h-auto" fill="#181818">
+    <path d="M147.487 0L256 176h-51.407L147.487 0Zm-38.974 0L0 176h51.407L108.513 0Z" />
+  </svg>
+);
 
 const carouselCards: Card[] = cardData.map((card, index) => ({
   id: index + 1,
   content: (
-    <div className="flex h-full flex-col items-center justify-center p-8 bg-gradient-to-br from-white to-gray-50 border border-gray-200">
-      <div className="text-6xl mb-4 opacity-80">
-        {index === 0 && "𝕏"} {/* Grok/xAI */}
-        {index === 1 && "◇"} {/* ChatGPT/OpenAI */}
-        {index === 2 && "⟁"} {/* Claude/Anthropic */}
-        {index === 3 && "🎙"} {/* Voice Agents */}
-        {index === 4 && "⚙"} {/* Workflow Agents */}
-        {index === 5 && "🔐"} {/* Enterprise Security */}
-        {index === 6 && "◉"} {/* Model orchestration */}
-        {index === 7 && "✓"} {/* Compliance */}
-        {index === 8 && "◈"} {/* Regulated ops */}
-        {index === 9 && "↻"} {/* Observability */}
-        {index === 10 && "◆"} {/* Governed execution */}
-      </div>
-      <div className="text-center">
-        <span className="text-sm font-semibold text-gray-900">{card.label.split(' ')[0]}</span>
-        {card.label.includes('(') && (
-          <p className="text-xs text-gray-500 mt-1">
-            {card.label.match(/\((.*?)\)/)?.[1]}
-          </p>
+    <div className="flex h-full flex-col items-center justify-center p-6 bg-gradient-to-br from-white to-gray-50 border border-gray-200">
+      <div className="flex-1 flex items-center justify-center w-full px-4">
+        {card.logo ? (
+          <Image
+            src={card.logo}
+            alt={card.label}
+            width={160}
+            height={60}
+            className="w-auto h-10 object-contain"
+          />
+        ) : (
+          <AnthropicLogo />
         )}
+      </div>
+      <div className="pt-3 text-center">
+        <span className="text-sm font-semibold text-gray-900">{card.label}</span>
       </div>
     </div>
   ),
