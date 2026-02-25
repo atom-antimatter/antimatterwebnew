@@ -95,8 +95,8 @@ export default function EnterpriseAIPage() {
         <AtomValuePropsSection />
         <MainLayout className="pt-40 sm:pt-60 overflow-x-hidden">
           <EnterpriseCompareStrip />
-          <EnterpriseAIPillarsSection />
           <EdgeDeploymentSection />
+          <EnterpriseAIPillarsSection />
           <AtomAIFrameworkDetails />
           <ClientsSection />
           <CTASection />
