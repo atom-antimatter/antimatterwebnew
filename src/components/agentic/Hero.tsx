@@ -6,7 +6,7 @@ import { useRef, useState, useEffect, type ReactNode } from "react";
 import RotatingCards, { type Card } from "./RotatingCards";
 
 const easeOut = [0.16, 1, 0.3, 1] as const;
-const headlineText = "Atom Agentic: Autonomous AI Agents for Workflows";
+const headlineText = "Autonomous AI Agents for Workflows";
 
 const cardData = [
   { label: "Grok (xAI)", image: "/img/chrome-extension.webp" },
@@ -108,7 +108,7 @@ export function Hero(): ReactNode {
             delay: 0.8,
             ease: "easeOut",
           }}
-          className="text-foreground/65 mx-auto mt-6 max-w-2xl text-xl leading-relaxed tracking-tight md:text-2xl"
+          className="text-foreground/65 mx-auto mt-6 max-w-2xl text-lg leading-relaxed tracking-tight md:text-xl"
         >
           Connect frontier AI models to your existing systems — EHRs, CRMs,
           billing, phones, and internal tools — to create governed, auditable
