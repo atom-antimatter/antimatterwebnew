@@ -65,6 +65,9 @@ const Footer = () => {
                 <TransitionLink href={"/atom-intentiq"}>
                   Atom IntentIQ
                 </TransitionLink>
+                <Link href={"/resources/vendor-matrix"}>
+                  Compare Atom
+                </Link>
               </div>
             </div>
             <div>
@@ -84,9 +87,6 @@ const Footer = () => {
             <div>
               <h2 className="text-foreground/50 mb-2">Resources</h2>
               <div className="flex flex-col gap-2">
-                <Link href={"/resources/vendor-matrix"}>
-                  AI Vendor Matrix
-                </Link>
                 <Link href={"/case-study/clinixAI"}>Clinix AI</Link>
                 <Link href={"/case-study/synergies4"}>Synergies4</Link>
                 <Link href={"/case-study/curehire"}>Curehire</Link>
