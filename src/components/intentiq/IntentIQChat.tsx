@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { HiPaperAirplane } from "react-icons/hi2";
 import { motion, AnimatePresence } from "motion/react";
 import type { IntentIQData } from "./IntentIQAnalytics";
@@ -14,23 +14,71 @@ interface IntentIQChatProps {
   onAnalyticsUpdate: (data: IntentIQData) => void;
 }
 
-const suggestedPrompts = [
+const initialPrompts = [
   "We're evaluating vendors — how do you handle SOC2 and HIPAA?",
-  "What would a 90-day pilot look like?",
-  "Draft a follow-up email based on this conversation.",
-  "Summarize buyer needs and next steps.",
+  "Our prospect needs on-prem deployment. How does Atom compare?",
+  "Walk me through a typical enterprise discovery call for Atom.",
+  "What questions should I ask to qualify a healthcare buyer?",
 ];
+
+function getFollowUpPrompts(
+  messageCount: number,
+  lastData: IntentIQData | null
+): string[] {
+  if (messageCount <= 2) return [];
+
+  if (!lastData) {
+    return [
+      "What deployment options matter most to this buyer?",
+      "Help me understand their compliance requirements.",
+    ];
+  }
+
+  const stage = lastData.buyer_stage;
+  const intent = lastData.intent_score;
+
+  if (stage === "Research" || intent < 40) {
+    return [
+      "What pain points should I probe for next?",
+      "Help me move this conversation from research to evaluation.",
+      "What differentiators matter most at this stage?",
+    ];
+  }
+
+  if (stage === "Evaluation" || intent < 65) {
+    return [
+      "Draft a follow-up email based on this conversation.",
+      "What objections should I prepare for?",
+      "Create a comparison table vs their current shortlist.",
+    ];
+  }
+
+  if (stage === "Shortlist" || intent < 85) {
+    return [
+      "Draft a proposal outline with scope and timeline.",
+      "What pricing range should I present?",
+      "What does a 90-day pilot look like for this buyer?",
+    ];
+  }
+
+  return [
+    "Draft a proposal with pricing tiers for this deal.",
+    "Summarize the full buyer profile and recommended next steps.",
+    "Write an executive summary I can share with their CTO.",
+  ];
+}
 
 export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
       content:
-        "Ask anything about Atom or Antimatter AI. I'll answer using the latest product context and score the conversation in real-time.",
+        "I'm Atom IntentIQ. Describe your prospect's situation and I'll score intent, suggest next steps, and generate follow-ups in real-time. Pick a prompt below to get started.",
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [lastData, setLastData] = useState<IntentIQData | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -77,6 +125,7 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
         { role: "assistant", content: data.assistant_response },
       ]);
 
+      setLastData(data);
       onAnalyticsUpdate(data);
     } catch (error) {
       console.error("Chat error:", error);
@@ -107,6 +156,13 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
     textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
   };
 
+  const showInitialPrompts = messages.length <= 1 && !isLoading;
+  const followUpPrompts = useMemo(
+    () => getFollowUpPrompts(messages.length, lastData),
+    [messages.length, lastData]
+  );
+  const showFollowUps = followUpPrompts.length > 0 && !isLoading && !showInitialPrompts;
+
   return (
     <div className="flex flex-col h-full bg-foreground/[0.03] border border-foreground/10 rounded-xl overflow-hidden">
       {/* Chat header */}
@@ -130,7 +186,10 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
       </div>
 
       {/* Messages */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4 min-h-0">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4 min-h-0"
+      >
         <AnimatePresence mode="popLayout">
           {messages.map((message, idx) => (
             <motion.div
@@ -178,11 +237,34 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested follow-ups — shown when few messages */}
-      {messages.length <= 2 && !isLoading && (
+      {/* Initial prompts — discovery starters */}
+      {showInitialPrompts && (
         <div className="shrink-0 border-t border-foreground/10 px-5 py-3">
+          <p className="text-[11px] text-foreground/40 uppercase tracking-wider mb-2">
+            Start a discovery conversation
+          </p>
           <div className="flex flex-wrap gap-2">
-            {suggestedPrompts.map((prompt, idx) => (
+            {initialPrompts.map((prompt, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(prompt)}
+                className="px-3 py-1.5 text-xs bg-foreground/5 hover:bg-accent hover:text-black border border-foreground/10 hover:border-accent rounded-lg transition-all"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Follow-up prompts — contextual to buyer stage */}
+      {showFollowUps && (
+        <div className="shrink-0 border-t border-foreground/10 px-5 py-3">
+          <p className="text-[11px] text-foreground/40 uppercase tracking-wider mb-2">
+            Suggested follow-ups
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {followUpPrompts.map((prompt, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(prompt)}
@@ -196,7 +278,7 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
         </div>
       )}
 
-      {/* Input — sticky at bottom */}
+      {/* Input */}
       <div className="shrink-0 border-t border-foreground/10 px-4 py-3">
         <div className="flex items-end gap-2">
           <textarea

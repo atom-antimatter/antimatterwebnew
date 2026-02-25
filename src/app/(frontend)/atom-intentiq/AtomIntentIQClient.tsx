@@ -16,7 +16,7 @@ export default function AtomIntentIQClient() {
   }, [setIsTransition]);
 
   return (
-    <div className="bg-background pt-28 md:pt-32 pb-10 px-6 lg:px-10">
+    <div className="bg-background pt-28 md:pt-32 pb-32 px-6 lg:px-10">
       {/* Compact page header */}
       <header className="mb-6">
         <h1 className="text-2xl font-bold">Atom IntentIQ</h1>

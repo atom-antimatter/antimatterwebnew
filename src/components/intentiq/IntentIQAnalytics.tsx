@@ -138,9 +138,13 @@ export default function IntentIQAnalytics({ data }: IntentIQAnalyticsProps) {
 
   return (
     <div className="space-y-4">
-      {/* Section header — Akamai style */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">📊</span>
+      {/* Section header */}
+      <div className="flex items-center gap-2.5 mb-2">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-accent">
+          <rect x="1" y="10" width="4" height="9" rx="1" fill="currentColor" opacity="0.5" />
+          <rect x="8" y="6" width="4" height="13" rx="1" fill="currentColor" opacity="0.7" />
+          <rect x="15" y="1" width="4" height="18" rx="1" fill="currentColor" />
+        </svg>
         <h2 className="text-base font-semibold">Admin Analytics</h2>
       </div>
 
