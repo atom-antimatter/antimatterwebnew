@@ -82,22 +82,21 @@ export function Hero(): ReactNode {
         background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(162, 163, 233, 0.15), transparent 40%)`,
       }}
     >
-      <div ref={headlineRef} className="relative z-10 mx-auto md:text-center">
-        <h1 className="mb-8 text-5xl font-medium tracking-tighter md:text-8xl lg:text-8xl">
-          {headlineText.split("").map((char, index) => (
+      <div ref={headlineRef} className="relative z-10 mx-auto md:text-center max-w-5xl">
+        <h1 className="mb-8 text-5xl font-medium tracking-tighter md:text-7xl lg:text-8xl">
+          {headlineText.split(" ").map((word, index) => (
             <motion.span
               key={index}
               initial={{ opacity: 0, filter: "blur(10px)" }}
               animate={{ opacity: 1, filter: "blur(0px)" }}
               transition={{
                 duration: 0.4,
-                delay: index * 0.03,
+                delay: index * 0.08,
                 ease: "easeOut",
               }}
-              className="inline-block"
-              style={{ whiteSpace: char === " " ? "pre" : "normal" }}
+              className="inline-block mr-[0.25em]"
             >
-              {char}
+              {word}
             </motion.span>
           ))}
         </h1>
@@ -109,11 +108,11 @@ export function Hero(): ReactNode {
             delay: 0.8,
             ease: "easeOut",
           }}
-          className="text-foreground/65 mx-auto mt-6 max-w-xl text-2xl leading-12 tracking-tight md:text-3xl"
+          className="text-foreground/65 mx-auto mt-6 max-w-2xl text-xl leading-relaxed tracking-tight md:text-2xl"
         >
-          Transform Grok, Claude, and ChatGPT from brains into governed,
-          auditable digital workers wired into your phones, EHRs, CRMs, billing
-          systems, and mission-critical SaaS.
+          Connect frontier AI models to your existing systems — EHRs, CRMs,
+          billing, phones, and internal tools — to create governed, auditable
+          AI workers that execute real workflows in production.
         </motion.p>
       </div>
 
