@@ -132,10 +132,10 @@ export function Pricing(): ReactNode {
         >
           <Link
             href="/contact"
-            className="group inline-flex w-full items-center justify-center gap-3 rounded-md bg-accent py-3 pl-5 pr-3 font-medium text-black transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-lg hover:shadow-accent/20 sm:w-auto"
+            className="group inline-flex w-full items-center justify-center gap-3 rounded-md bg-white py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-white/10 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-white/20 sm:w-auto"
           >
             <span>Book a call</span>
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-all duration-300 group-hover:scale-110">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition-all duration-300 group-hover:scale-110">
               <HiMiniArrowLongRight className="h-5 w-5" />
             </span>
           </Link>

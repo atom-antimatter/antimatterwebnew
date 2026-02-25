@@ -148,14 +148,14 @@ export function Hero(): ReactNode {
         </h2>
         <motion.a
           href="/contact"
-          className="bg-accent group mt-8 inline-flex w-full items-center justify-center gap-3 rounded-md py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-accent/25 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-accent/40 sm:w-auto"
+          className="bg-white group mt-8 inline-flex w-full items-center justify-center gap-3 rounded-md py-3 pl-5 pr-3 font-medium text-black shadow-lg shadow-white/10 transition-all duration-500 ease-out hover:rounded-[50px] hover:shadow-xl hover:shadow-white/20 sm:w-auto"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.6, ease: easeOut, delay: 0.2 }}
         >
           <span>Talk to the operators</span>
-          <span className="bg-background text-foreground flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110">
+          <span className="bg-black text-white flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110">
             <HiMiniArrowLongRight className="h-5 w-5" />
           </span>
         </motion.a>
