@@ -31,11 +31,15 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    }
   };
 
   useEffect(() => {
@@ -126,7 +130,7 @@ export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 min-h-0">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4 min-h-0">
         <AnimatePresence mode="popLayout">
           {messages.map((message, idx) => (
             <motion.div
