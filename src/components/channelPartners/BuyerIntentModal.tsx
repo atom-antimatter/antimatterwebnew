@@ -54,7 +54,9 @@ export default function BuyerIntentModal({
     const userCount = messages.filter((m) => m.role === "user").length;
     if (userCount === 0) return;
     analyze();
-  }, [isOpen, messages.length, analyze]);
+    // Only run when modal opens, not on every message change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -75,12 +77,12 @@ export default function BuyerIntentModal({
       {/* Floating trigger button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 bg-accent text-black rounded-full shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/40 transition-all hover:scale-105"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 bg-white text-black rounded-full shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/20 transition-all hover:scale-105 border border-gray-200"
       >
-        <HiChartBar className="w-5 h-5" />
+        <HiChartBar className="w-5 h-5 text-gray-700" />
         <span className="text-sm font-semibold hidden sm:inline">Buyer Intent</span>
         {data && (
-          <span className={`text-xs font-bold ${data.intent_score >= 60 ? "text-green-800" : "text-black/60"}`}>
+          <span className={`text-xs font-bold ${data.intent_score >= 60 ? "text-green-600" : "text-gray-500"}`}>
             {data.intent_score}%
           </span>
         )}
