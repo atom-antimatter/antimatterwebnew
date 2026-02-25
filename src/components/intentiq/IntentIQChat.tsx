@@ -12,6 +12,13 @@ interface Message {
 
 interface IntentIQChatProps {
   onAnalyticsUpdate: (data: IntentIQData) => void;
+  discoveryContext?: {
+    industry: string;
+    companySize: string;
+    priorities: string[];
+    currentTools: string;
+    timeline: string;
+  };
 }
 
 const initialPrompts = [
@@ -68,7 +75,7 @@ function getFollowUpPrompts(
   ];
 }
 
-export default function IntentIQChat({ onAnalyticsUpdate }: IntentIQChatProps) {
+export default function IntentIQChat({ onAnalyticsUpdate, discoveryContext }: IntentIQChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
