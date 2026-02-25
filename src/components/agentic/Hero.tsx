@@ -14,7 +14,6 @@ const cardData = [
   { label: "OpenAI", logo: "/img/logos/openai.svg" },
   { label: "Anthropic", logo: "/img/logos/anthropic.svg" },
   { label: "Grok", logo: "/img/logos/grok.svg" },
-  { label: "Hume", logo: "/img/logos/hume.png" },
   { label: "Hugging Face", logo: "/img/logos/huggingface.svg" },
 ];
 
@@ -29,7 +28,7 @@ const carouselCards: Card[] = cardData.map((card, index) => ({
           width={200}
           height={80}
           className={`w-auto object-contain ${
-            card.label === "Anthropic" ? "h-14" : "h-10"
+            card.label === "Anthropic" ? "h-20" : "h-10"
           }`}
         />
       </div>
