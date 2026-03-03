@@ -51,7 +51,7 @@ type IndexEntry = {
 // ─── Singleton state ──────────────────────────────────────────────────────────
 
 let fuse: Fuse<IndexEntry> | null = null;
-let zipMap: Map<string, { lat: number; lng: number; city: string; state: string }> = new Map();
+const zipMap: Map<string, { lat: number; lng: number; city: string; state: string }> = new Map();
 let ready = false;
 let initPromise: Promise<void> | null = null;
 

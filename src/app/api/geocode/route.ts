@@ -28,7 +28,7 @@ const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 let lastNominatimCallMs = 0;
 const MIN_INTERVAL_MS = 1050;
-let pendingQueue: Array<() => void> = [];
+const pendingQueue: Array<() => void> = [];
 let queueRunning = false;
 
 async function nominatimThrottle(): Promise<void> {
