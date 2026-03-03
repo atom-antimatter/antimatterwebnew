@@ -2,14 +2,11 @@ import type { NextConfig } from "next";
 import { withPayload } from '@payloadcms/next/withPayload'
 
 const nextConfig: NextConfig = {
-  /* config options here */
   images: {
     qualities: [25, 50, 75, 100],
   },
-  // experimental: {
-  //   scrollRestoration: true,
-  //   viewTransition: true,
-  // },
+  // Allow Next.js to process the cesium and resium ESM packages
+  transpilePackages: ["cesium", "resium"],
 };
 
 export default withPayload(nextConfig);

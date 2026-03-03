@@ -1,0 +1,574 @@
+/**
+ * AtlasMap — CesiumJS-based interactive infrastructure map.
+ *
+ * Replaces react-globe.gl.  Renders:
+ *  - OSM / Carto raster basemap
+ *  - Country + state/province borders (GeoJSON)
+ *  - Data center point markers with EntityCluster
+ *  - City labels with LOD zoom gating
+ *  - Fiber route polylines (visible at LOCAL/CITY levels)
+ *  - Hover tooltip & click-to-select
+ *
+ * NOTE: CesiumJS cannot run server-side. This file is always loaded via
+ * `next/dynamic` with `{ ssr: false }` (see DataCenterMapLoader.tsx).
+ */
+"use client";
+
+// ── Set CESIUM_BASE_URL before any Cesium code executes ─────────────────────
+if (typeof window !== "undefined") {
+  (window as any).CESIUM_BASE_URL = "/cesium";
+}
+
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import * as Cesium from "cesium";
+
+import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
+import { useCameraLevel } from "./useCameraLevel";
+import { initCityIndex, getCitiesForLevel } from "./cities/cityIndex";
+
+// ─── constants ────────────────────────────────────────────────────────────────
+
+// Disable Cesium ion (we use OSM / Carto — no token needed)
+Cesium.Ion.defaultAccessToken = "";
+
+export type Basemap = "osmDark" | "osmLight" | "osmStandard";
+
+export type AtlasLayers = {
+  countryBorders: boolean;
+  stateBorders: boolean;
+  cities: boolean;
+  points: boolean;
+  routes: boolean;
+};
+
+export type AtlasMapRef = {
+  flyTo: (pos: { lat: number; lng: number; height?: number }, durationSeconds?: number) => void;
+  resetView: () => void;
+};
+
+type TooltipState = { x: number; y: number; dc: DataCenter } | null;
+
+// ─── imagery providers ────────────────────────────────────────────────────────
+
+function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
+  switch (basemap) {
+    case "osmLight":
+      return new Cesium.UrlTemplateImageryProvider({
+        url: "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        credit: new Cesium.Credit("Carto, OpenStreetMap contributors"),
+        minimumLevel: 0,
+        maximumLevel: 19,
+      });
+    case "osmStandard":
+      return new Cesium.UrlTemplateImageryProvider({
+        url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        credit: new Cesium.Credit("OpenStreetMap contributors"),
+        minimumLevel: 0,
+        maximumLevel: 19,
+      });
+    case "osmDark":
+    default:
+      return new Cesium.UrlTemplateImageryProvider({
+        url: "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        credit: new Cesium.Credit("Carto, OpenStreetMap contributors"),
+        minimumLevel: 0,
+        maximumLevel: 19,
+      });
+  }
+}
+
+// ─── tier helpers ─────────────────────────────────────────────────────────────
+
+function tierPixelSize(tier: DataCenter["tier"]): number {
+  switch (tier) {
+    case "hyperscale": return 13;
+    case "core": return 10;
+    case "enterprise": return 9;
+    case "edge": return 8;
+    default: return 9;
+  }
+}
+
+function tierColor(tier: DataCenter["tier"]): Cesium.Color {
+  switch (tier) {
+    case "hyperscale": return Cesium.Color.fromCssColorString("#8587e3").withAlpha(0.97);
+    case "core": return Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.93);
+    case "enterprise": return Cesium.Color.fromCssColorString("#c7c8f2").withAlpha(0.88);
+    case "edge": return Cesium.Color.fromCssColorString("#696aac").withAlpha(0.9);
+    default: return Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.85);
+  }
+}
+
+// ─── component ────────────────────────────────────────────────────────────────
+
+type AtlasMapProps = {
+  selectedId?: string | null;
+  onSelectDc?: (dc: DataCenter | null) => void;
+  highlightIds?: string[] | null;
+  layers: AtlasLayers;
+  basemap: Basemap;
+};
+
+const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
+  ({ selectedId, onSelectDc, highlightIds, layers, basemap }, ref) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const viewerRef = useRef<Cesium.Viewer | null>(null);
+    const dcSourceRef = useRef<Cesium.CustomDataSource | null>(null);
+    const citySourceRef = useRef<Cesium.CustomDataSource | null>(null);
+    const routeSourceRef = useRef<Cesium.CustomDataSource | null>(null);
+    const countrySourceRef = useRef<Cesium.GeoJsonDataSource | null>(null);
+    const stateSourceRef = useRef<Cesium.GeoJsonDataSource | null>(null);
+    const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
+    const layerListenerRef = useRef<Cesium.ImageryLayer | null>(null);
+
+    const [tooltip, setTooltip] = useState<TooltipState>(null);
+    const [isReady, setIsReady] = useState(false);
+
+    // Camera LOD hook (reads from viewerRef)
+    const cameraState = useCameraLevel(viewerRef);
+
+    // ── expose flyTo + resetView via forwarded ref ─────────────────────────
+    useImperativeHandle(ref, () => ({
+      flyTo: (pos, durationSeconds = 1.5) => {
+        const viewer = viewerRef.current;
+        if (!viewer || viewer.isDestroyed()) return;
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, pos.height ?? 1_500_000),
+          duration: durationSeconds,
+          easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+        });
+      },
+      resetView: () => {
+        const viewer = viewerRef.current;
+        if (!viewer || viewer.isDestroyed()) return;
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000),
+          duration: 2,
+          easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+        });
+      },
+    }), []);
+
+    // ── initialise Cesium viewer once ──────────────────────────────────────
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container || viewerRef.current) return;
+
+      const viewer = new Cesium.Viewer(container, {
+        // Disable all default Cesium UI chrome
+        animation: false,
+        baseLayerPicker: false,
+        fullscreenButton: false,
+        geocoder: false,
+        homeButton: false,
+        infoBox: false,
+        navigationHelpButton: false,
+        navigationInstructionsInitiallyVisible: false,
+        sceneModePicker: false,
+        selectionIndicator: false,
+        timeline: false,
+        vrButton: false,
+        // Terrain: flat ellipsoid (no paid terrain needed)
+        terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      });
+
+      // Suppress Cesium ion credit warning
+      (viewer.cesiumWidget as any)._creditContainer.style.display = "none";
+
+      // Dark base color so the ellipsoid shows correctly before tiles load
+      viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#020202");
+      // Reduce performance cost — we don't need lighting for a 2D-ish map style
+      viewer.scene.globe.enableLighting = false;
+      // Smooth depth culling
+      viewer.scene.globe.depthTestAgainstTerrain = false;
+      // Remove atmosphere, sky box, sun, moon (matches dark brand / performance)
+      if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
+      if (viewer.scene.skyBox) (viewer.scene.skyBox as any).show = false;
+      if (viewer.scene.sun) viewer.scene.sun.show = false;
+      if (viewer.scene.moon) viewer.scene.moon.show = false;
+      viewer.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
+
+      // Add initial basemap
+      const provider = makeProvider("osmDark");
+      layerListenerRef.current = viewer.imageryLayers.addImageryProvider(provider);
+
+      // Initial camera position (overview of the world)
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000),
+      });
+
+      viewerRef.current = viewer;
+
+      // Load geo assets + setup layers
+      initCityIndex();
+      setupCountryBorders(viewer);
+      setupStatesBorders(viewer);
+      setupDCMarkers(viewer);
+      setupRoutes(viewer);
+
+      // Interaction handler
+      const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+      // Click: select DC
+      handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+        const picked = viewer.scene.pick(event.position);
+        if (picked?.id?.dcData) {
+          onSelectDc?.(picked.id.dcData as DataCenter);
+        } else {
+          onSelectDc?.(null);
+          setTooltip(null);
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+      // Hover: tooltip (desktop)
+      handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
+        const picked = viewer.scene.pick(event.endPosition);
+        if (picked?.id?.dcData) {
+          const dc = picked.id.dcData as DataCenter;
+          setTooltip({ x: event.endPosition.x, y: event.endPosition.y, dc });
+        } else {
+          setTooltip(null);
+        }
+      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+      handlerRef.current = handler;
+      setIsReady(true);
+
+      return () => {
+        if (handlerRef.current && !handlerRef.current.isDestroyed()) {
+          handlerRef.current.destroy();
+        }
+        if (!viewer.isDestroyed()) viewer.destroy();
+        viewerRef.current = null;
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // ── helpers ────────────────────────────────────────────────────────────
+
+    async function setupCountryBorders(viewer: Cesium.Viewer) {
+      try {
+        const source = await Cesium.GeoJsonDataSource.load("/geo/countries.geojson", {
+          stroke: Cesium.Color.fromCssColorString("#f6f6fd").withAlpha(0.14),
+          fill: Cesium.Color.TRANSPARENT,
+          strokeWidth: 1,
+          clampToGround: true,
+        });
+        countrySourceRef.current = source;
+        source.name = "country-borders";
+        viewer.dataSources.add(source);
+      } catch (e) {
+        console.warn("[AtlasMap] Country borders load failed:", e);
+      }
+    }
+
+    async function setupStatesBorders(viewer: Cesium.Viewer) {
+      try {
+        const source = await Cesium.GeoJsonDataSource.load("/geo/states_provinces.geojson", {
+          stroke: Cesium.Color.fromCssColorString("#f6f6fd").withAlpha(0.07),
+          fill: Cesium.Color.TRANSPARENT,
+          strokeWidth: 0.6,
+          clampToGround: true,
+        });
+        stateSourceRef.current = source;
+        source.name = "state-borders";
+        source.show = false; // default off
+        viewer.dataSources.add(source);
+      } catch (e) {
+        console.warn("[AtlasMap] State borders load failed:", e);
+      }
+    }
+
+    function setupDCMarkers(viewer: Cesium.Viewer) {
+      const source = new Cesium.CustomDataSource("data-centers");
+      dcSourceRef.current = source;
+
+      // EntityCluster for WORLD/REGION zoom levels
+      source.clustering.enabled = true;
+      source.clustering.pixelRange = 45;
+      source.clustering.minimumClusterSize = 3;
+
+      // Style the cluster label bubbles
+      source.clustering.clusterEvent.addEventListener(
+        (clustered: Cesium.Entity[], cluster: any) => {
+          cluster.label.show = false;
+          cluster.billboard.show = true;
+          cluster.billboard.image = makeClusterCanvas(clustered.length);
+          cluster.billboard.scale = 1;
+          cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.CENTER;
+          cluster.billboard.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
+          cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        }
+      );
+
+      DATA_CENTERS.forEach((dc) => {
+        const entity = source.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(dc.lng, dc.lat),
+          point: new Cesium.PointGraphics({
+            pixelSize: tierPixelSize(dc.tier),
+            color: tierColor(dc.tier),
+            outlineColor: Cesium.Color.BLACK.withAlpha(0.4),
+            outlineWidth: 1,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            scaleByDistance: new Cesium.NearFarScalar(200_000, 1.4, 8_000_000, 0.7),
+          }),
+        });
+        // Attach DC data so it's accessible on pick
+        (entity as any).dcData = dc;
+      });
+
+      viewer.dataSources.add(source);
+    }
+
+    async function setupRoutes(viewer: Cesium.Viewer) {
+      try {
+        const res = await fetch("/geo/submarine-cables.json");
+        if (!res.ok) return;
+        const geo = await res.json();
+        const source = new Cesium.CustomDataSource("fiber-routes");
+        routeSourceRef.current = source;
+        source.show = false;
+
+        for (const feature of geo?.features ?? []) {
+          const coords: [number, number][] = feature.geometry?.coordinates ?? [];
+          if (coords.length < 2) continue;
+          const positions = coords.map(([lng, lat]) =>
+            Cesium.Cartesian3.fromDegrees(lng, lat)
+          );
+          const color = feature.properties?.color ?? "#696aac";
+          source.entities.add({
+            polyline: new Cesium.PolylineGraphics({
+              positions: new Cesium.ConstantProperty(positions),
+              width: 1.5,
+              material: new Cesium.PolylineDashMaterialProperty({
+                color: Cesium.Color.fromCssColorString(color).withAlpha(0.55),
+                dashLength: 16,
+                dashPattern: 0xFF00,
+              }),
+              clampToGround: false,
+            }),
+          });
+        }
+
+        viewer.dataSources.add(source);
+      } catch (e) {
+        console.warn("[AtlasMap] Routes load failed:", e);
+      }
+    }
+
+    // Draws a circular canvas for cluster bubbles
+    function makeClusterCanvas(count: number): HTMLCanvasElement {
+      const size = count > 99 ? 52 : count > 9 ? 46 : 38;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d")!;
+      const r = size / 2;
+
+      // Outer glow
+      ctx.beginPath();
+      ctx.arc(r, r, r - 1, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(105,106,172,0.25)";
+      ctx.fill();
+
+      // Inner circle
+      ctx.beginPath();
+      ctx.arc(r, r, r * 0.72, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(105,106,172,0.9)";
+      ctx.fill();
+
+      // Count text
+      ctx.fillStyle = "#f6f6fd";
+      ctx.font = `bold ${count > 99 ? 12 : 13}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(count), r, r);
+
+      return canvas;
+    }
+
+    // ── basemap swap ───────────────────────────────────────────────────────
+    useEffect(() => {
+      const viewer = viewerRef.current;
+      if (!viewer || viewer.isDestroyed()) return;
+      viewer.imageryLayers.removeAll();
+      viewer.imageryLayers.addImageryProvider(makeProvider(basemap));
+    }, [basemap]);
+
+    // ── layer visibility toggles ───────────────────────────────────────────
+    useEffect(() => {
+      const src = countrySourceRef.current;
+      if (src) src.show = layers.countryBorders;
+    }, [layers.countryBorders]);
+
+    useEffect(() => {
+      const src = stateSourceRef.current;
+      if (src) src.show = layers.stateBorders;
+    }, [layers.stateBorders]);
+
+    useEffect(() => {
+      const src = dcSourceRef.current;
+      if (src) src.show = layers.points;
+    }, [layers.points]);
+
+    useEffect(() => {
+      const src = routeSourceRef.current;
+      if (!src) return;
+      // Only show fiber routes when layer is on AND at LOCAL or CITY zoom
+      const showAtLevel =
+        layers.routes &&
+        (cameraState.level === "LOCAL" || cameraState.level === "CITY");
+      src.show = showAtLevel;
+    }, [layers.routes, cameraState.level]);
+
+    // ── cluster toggle based on zoom level ─────────────────────────────────
+    useEffect(() => {
+      const src = dcSourceRef.current;
+      if (!src) return;
+      src.clustering.enabled =
+        cameraState.level === "WORLD" || cameraState.level === "REGION";
+    }, [cameraState.level]);
+
+    // ── city labels (imperative, LOD-driven) ───────────────────────────────
+    useEffect(() => {
+      const viewer = viewerRef.current;
+      if (!viewer || viewer.isDestroyed()) return;
+
+      let source = citySourceRef.current;
+      if (!source) {
+        source = new Cesium.CustomDataSource("cities");
+        citySourceRef.current = source;
+        viewer.dataSources.add(source);
+      }
+
+      // Clear existing city labels
+      source.entities.removeAll();
+
+      if (!layers.cities || cameraState.level === "WORLD") return;
+
+      const cities = getCitiesForLevel(cameraState);
+      if (cities.length === 0) return;
+
+      for (const city of cities) {
+        source.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(city.lng, city.lat),
+          label: new Cesium.LabelGraphics({
+            text: city.name,
+            font: "11px system-ui, sans-serif",
+            fillColor: Cesium.Color.fromCssColorString("#e8e9ff"),
+            outlineColor: Cesium.Color.fromCssColorString("#020202"),
+            outlineWidth: 2.5,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            pixelOffset: new Cesium.Cartesian2(0, -10),
+            horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            scaleByDistance: new Cesium.NearFarScalar(50_000, 1.3, 3_000_000, 0.65),
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 4_000_000),
+            // Scale smaller cities smaller
+            scale: city.scalerank <= 1 ? 1.2 : city.scalerank <= 3 ? 1.0 : 0.85,
+          }),
+          point: city.scalerank <= 3
+            ? new Cesium.PointGraphics({
+                pixelSize: 3,
+                color: Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.7),
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                scaleByDistance: new Cesium.NearFarScalar(50_000, 1.2, 2_000_000, 0.5),
+              })
+            : undefined,
+        });
+      }
+    // Depend on both level and viewRect so CITY level re-filters on pan
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [layers.cities, cameraState.level, cameraState.viewRect]);
+
+    // ── selected DC visual ─────────────────────────────────────────────────
+    useEffect(() => {
+      const source = dcSourceRef.current;
+      if (!source) return;
+
+      source.entities.values.forEach((entity) => {
+        const dc = (entity as any).dcData as DataCenter | undefined;
+        if (!dc || !entity.point) return;
+        const pt = entity.point;
+        const isSelected = dc.id === selectedId;
+        const isHighlighted = !highlightIds || highlightIds.includes(dc.id);
+
+        pt.pixelSize = new Cesium.ConstantProperty(
+          tierPixelSize(dc.tier) + (isSelected ? 7 : 0)
+        );
+        pt.color = new Cesium.ConstantProperty(
+          isSelected
+            ? Cesium.Color.WHITE
+            : !isHighlighted
+            ? tierColor(dc.tier).withAlpha(0.25)
+            : tierColor(dc.tier)
+        );
+        pt.outlineColor = new Cesium.ConstantProperty(
+          isSelected ? Cesium.Color.WHITE.withAlpha(0.6) : Cesium.Color.BLACK.withAlpha(0.4)
+        );
+        pt.outlineWidth = new Cesium.ConstantProperty(isSelected ? 3 : 1);
+      });
+    }, [selectedId, highlightIds]);
+
+    // ── render ─────────────────────────────────────────────────────────────
+    return (
+      <div className="absolute inset-0 w-full h-full bg-[#020202]">
+        {/*
+          Minimal Cesium canvas styles. We skip importing the full widgets.css
+          because that file is processed by Cesium's webpack pipeline and
+          conflicts with PayloadCMS's SCSS loader in Next.js.
+          These rules are the only ones required for the Viewer canvas to
+          fill its container correctly.
+        */}
+        <style>{`
+          .cesium-viewer,.cesium-widget{position:relative;overflow:hidden;width:100%;height:100%;}
+          .cesium-widget canvas{width:100%;height:100%;touch-action:none;}
+          .cesium-viewer-cesiumWidgetContainer{width:100%;height:100%;}
+          .cesium-credit-container,.cesium-widget-credits{display:none!important;}
+        `}</style>
+        {/* Cesium mounts into this div */}
+        <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+
+        {/* Loading veil */}
+        {!isReady && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#020202] text-[rgba(246,246,253,0.5)] text-sm z-10">
+            Loading map…
+          </div>
+        )}
+
+        {/* Hover tooltip */}
+        {tooltip && (
+          <div
+            className="pointer-events-none absolute z-20 bg-[rgba(6,7,15,0.92)] backdrop-blur-sm border border-[rgba(246,246,253,0.1)] rounded-xl px-3 py-2 shadow-lg max-w-[220px]"
+            style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
+          >
+            <p className="text-sm font-semibold text-[#f6f6fd] leading-snug">
+              {tooltip.dc.name}
+            </p>
+            <p className="text-xs text-[rgba(246,246,253,0.55)] mt-0.5">
+              {[tooltip.dc.city, tooltip.dc.stateOrRegion, tooltip.dc.country]
+                .filter(Boolean)
+                .join(", ")}
+            </p>
+            {tooltip.dc.capabilities.length > 0 && (
+              <p className="text-[11px] text-[rgba(162,163,233,0.8)] mt-1">
+                {tooltip.dc.capabilities.slice(0, 3).join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+AtlasMap.displayName = "AtlasMap";
+export default AtlasMap;

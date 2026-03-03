@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { X, MapPin, ExternalLink, Globe, ArrowRight } from "lucide-react";
+import styles from "@/components/ui/css/Button.module.css";
 import type { DataCenter } from "@/data/dataCenters";
 import { CAPABILITY_CATALOG, capabilityLabel } from "@/data/capabilityCatalog";
 
@@ -175,14 +176,8 @@ export default function DetailCard({ dc, onClose }: DetailCardProps) {
       <div className="p-4 flex flex-col gap-2">
         <Link
           href="/contact?source=atlas"
-          className="
-            flex items-center justify-center gap-2
-            h-9 rounded-xl text-sm font-medium
-            text-[#f6f6fd]
-            bg-gradient-to-r from-[#8587e3] via-[#4c4dac] to-[#696aac]
-            hover:opacity-90 transition-opacity
-            focus:outline-none focus:ring-2 focus:ring-[rgba(105,106,172,0.5)]
-          "
+          className={`${styles.button} flex items-center justify-center gap-2 w-full text-sm text-[#f6f6fd]`}
+          style={{ padding: "9px 0" }}
         >
           Talk to an architect
           <ArrowRight className="w-3.5 h-3.5" />

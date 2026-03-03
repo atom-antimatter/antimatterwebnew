@@ -1,36 +1,52 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import GlobeView, { type GlobeViewRef } from "@/components/dataCenterGlobe/GlobeView";
+import dynamic from "next/dynamic";
 import CommandPanel, { type SearchStatus } from "@/components/dataCenterGlobe/CommandPanel";
 import DetailCard from "@/components/dataCenterGlobe/DetailCard";
-import LayersToggle, { type LayersState } from "@/components/dataCenterGlobe/LayersToggle";
+import LayersMenu, { type LayersState } from "@/components/atlas/LayersMenu";
+import type { AtlasMapRef, Basemap } from "@/components/atlas/AtlasMap.client";
 import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { parseSearchQuery } from "@/lib/search/parseSearchQuery";
 import { filterDataCenters } from "@/lib/search/filterDataCenters";
+import { findCityByName } from "@/components/atlas/cities/cityIndex";
+
+// AtlasMap must be loaded client-side only (Cesium cannot run in Node).
+// The inner component uses forwardRef, so we use the `.default` shape.
+const AtlasMap = dynamic(
+  () => import("@/components/atlas/AtlasMap.client"),
+  { ssr: false, loading: () => null }
+);
+
+// ─── types ────────────────────────────────────────────────────────────────────
 
 type GeocodedPos = { lat: number; lng: number } | null;
+type GeocodeApiResult = { lat: number; lng: number; displayName: string };
 
-type GeocodeResult = { lat: number; lng: number; displayName: string };
-
-// ─── default layer state ──────────────────────────────────────────────────────
+// ─── defaults ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_LAYERS: LayersState = {
   countryBorders: true,
   stateBorders: false,
+  cities: true,
   points: true,
   routes: true,
 };
 
+// Height in metres for flyTo calls at each zoom context
+const FLY_HEIGHT_SEARCH = 1_800_000;  // after search → show a region
+const FLY_HEIGHT_DC = 800_000;        // when selecting a single DC
+
 // ─── component ────────────────────────────────────────────────────────────────
 
 export default function DataCenterMapClient() {
-  const globeRef = useRef<GlobeViewRef | null>(null);
+  const atlasRef = useRef<AtlasMapRef | null>(null);
 
   // UI state
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [selectedDc, setSelectedDc] = useState<DataCenter | null>(null);
   const [layers, setLayers] = useState<LayersState>(DEFAULT_LAYERS);
+  const [basemap, setBasemap] = useState<Basemap>("osmDark");
 
   // Search state
   const [results, setResults] = useState<DataCenter[] | null>(null);
@@ -41,11 +57,10 @@ export default function DataCenterMapClient() {
   const [geocodedPos, setGeocodedPos] = useState<GeocodedPos>(null);
   const [lastRawQuery, setLastRawQuery] = useState("");
 
-  // IDs to highlight when results are active
   const highlightIds =
     results && results.length > 0 ? results.map((d) => d.id) : null;
 
-  // ─── search handler ────────────────────────────────────────────────────────
+  // ─── search ───────────────────────────────────────────────────────────────
 
   const runSearch = useCallback(
     async (opts: {
@@ -56,40 +71,46 @@ export default function DataCenterMapClient() {
       pos?: GeocodedPos;
     }) => {
       const { rawQuery, capabilities, tier, radius, pos } = opts;
-
-      // Parse natural-language query into structured tokens
       const parsed = parseSearchQuery(rawQuery);
-
-      // Merge capability tokens from NL parse with active UI filters
       const mergedCaps = Array.from(new Set([...parsed.capabilities, ...capabilities]));
       const mergedTier = (parsed.tier ?? tier) as DataCenter["tier"] | null;
 
-      // Geocode if we have a place query and no already-known position
       let resolvedPos = pos ?? null;
 
       if (!resolvedPos && parsed.placeQuery) {
         setSearchStatus("loading");
-        try {
-          const res = await fetch(`/api/geocode?q=${encodeURIComponent(parsed.placeQuery)}`);
-          if (res.ok) {
-            const data = await res.json();
-            const list = data.results as GeocodeResult[] | undefined;
-            if (Array.isArray(list) && list.length > 0) {
-              resolvedPos = { lat: list[0].lat, lng: list[0].lng };
-              setGeocodedPos(resolvedPos);
-              // Fly globe to geocoded location
-              globeRef.current?.pointOfView(
-                { lat: list[0].lat, lng: list[0].lng, altitude: 1.6 },
-                900
-              );
+
+        // 1. Fast local city lookup first
+        const local = findCityByName(parsed.placeQuery);
+        if (local) {
+          resolvedPos = { lat: local.lat, lng: local.lng };
+        } else {
+          // 2. Fall back to Nominatim geocode API
+          try {
+            const res = await fetch(
+              `/api/geocode?q=${encodeURIComponent(parsed.placeQuery)}`
+            );
+            if (res.ok) {
+              const data = await res.json();
+              const list = data.results as GeocodeApiResult[] | undefined;
+              if (Array.isArray(list) && list.length > 0) {
+                resolvedPos = { lat: list[0].lat, lng: list[0].lng };
+              }
             }
+          } catch {
+            // geocode failure — fall through to text search
           }
-        } catch {
-          // Geocode failed — fall through to text search
+        }
+
+        if (resolvedPos) {
+          setGeocodedPos(resolvedPos);
+          atlasRef.current?.flyTo(
+            { lat: resolvedPos.lat, lng: resolvedPos.lng, height: FLY_HEIGHT_SEARCH },
+            1.5
+          );
         }
       }
 
-      // Run filter
       const filtered = filterDataCenters(DATA_CENTERS, {
         geocodedPos: resolvedPos,
         radiusKm: radius,
@@ -101,16 +122,14 @@ export default function DataCenterMapClient() {
       setResults(filtered);
       setSearchStatus(
         filtered.length === 0
-          ? resolvedPos
-            ? "no-dc"
-            : "geocode-none"
+          ? resolvedPos ? "no-dc" : "geocode-none"
           : "idle"
       );
 
-      // If text-only and found results, fly to first match
+      // Text-only: fly to first match
       if (!resolvedPos && filtered.length > 0) {
         const dc = filtered[0];
-        globeRef.current?.pointOfView({ lat: dc.lat, lng: dc.lng, altitude: 1.8 }, 900);
+        atlasRef.current?.flyTo({ lat: dc.lat, lng: dc.lng, height: FLY_HEIGHT_SEARCH }, 1.5);
       }
     },
     []
@@ -119,28 +138,16 @@ export default function DataCenterMapClient() {
   const handleSearch = useCallback(
     async (query: string) => {
       setLastRawQuery(query);
-      setGeocodedPos(null); // reset geocoded pos on new search
-      await runSearch({
-        rawQuery: query,
-        capabilities: capabilityFilters,
-        tier: tierFilter,
-        radius: radiusKm,
-      });
+      setGeocodedPos(null);
+      await runSearch({ rawQuery: query, capabilities: capabilityFilters, tier: tierFilter, radius: radiusKm });
     },
     [capabilityFilters, tierFilter, radiusKm, runSearch]
   );
 
-  // Re-run filter when capability/tier/radius change (using last geocoded pos if available)
   const handleFilterChange = useCallback(
     (newCaps: string[], newTier: string | null, newRadius: number) => {
-      if (!lastRawQuery && !geocodedPos) return; // nothing to re-filter
-      runSearch({
-        rawQuery: lastRawQuery,
-        capabilities: newCaps,
-        tier: newTier,
-        radius: newRadius,
-        pos: geocodedPos,
-      });
+      if (!lastRawQuery && !geocodedPos) return;
+      runSearch({ rawQuery: lastRawQuery, capabilities: newCaps, tier: newTier, radius: newRadius, pos: geocodedPos });
     },
     [lastRawQuery, geocodedPos, runSearch]
   );
@@ -172,16 +179,16 @@ export default function DataCenterMapClient() {
     [capabilityFilters, tierFilter, handleFilterChange]
   );
 
-  // ─── DC selection ──────────────────────────────────────────────────────────
+  // ─── DC selection ─────────────────────────────────────────────────────────
 
   const handleSelectDc = useCallback((dc: DataCenter | null) => {
     setSelectedDc(dc);
     if (dc) {
-      globeRef.current?.pointOfView({ lat: dc.lat, lng: dc.lng, altitude: 1.5 }, 900);
+      atlasRef.current?.flyTo({ lat: dc.lat, lng: dc.lng, height: FLY_HEIGHT_DC }, 1.2);
     }
   }, []);
 
-  // ─── reset ─────────────────────────────────────────────────────────────────
+  // ─── reset ────────────────────────────────────────────────────────────────
 
   const handleReset = useCallback(() => {
     setResults(null);
@@ -194,22 +201,18 @@ export default function DataCenterMapClient() {
     setSelectedDc(null);
   }, []);
 
-  // ─── render ────────────────────────────────────────────────────────────────
+  // ─── render ───────────────────────────────────────────────────────────────
 
   return (
-    // Full-screen container; globe sits behind fixed nav (z-50)
     <div className="h-[100dvh] w-full bg-[#020202] overflow-hidden relative">
-      {/* Globe fills full screen */}
-      <GlobeView
-        active={true}
-        globeRef={globeRef}
+      {/* Cesium map fills the full viewport */}
+      <AtlasMap
+        ref={atlasRef}
         selectedId={selectedDc?.id ?? null}
         onSelectDc={handleSelectDc}
         highlightIds={highlightIds}
-        showCountryBorders={layers.countryBorders}
-        showStateBorders={layers.stateBorders}
-        showRoutes={layers.routes}
-        showPoints={layers.points}
+        layers={layers}
+        basemap={basemap}
       />
 
       {/* Left command panel */}
@@ -233,14 +236,17 @@ export default function DataCenterMapClient() {
 
       {/* Right detail card */}
       {selectedDc && (
-        <DetailCard
-          dc={selectedDc}
-          onClose={() => setSelectedDc(null)}
-        />
+        <DetailCard dc={selectedDc} onClose={() => setSelectedDc(null)} />
       )}
 
-      {/* Layers toggle — bottom-right */}
-      <LayersToggle layers={layers} onChange={setLayers} />
+      {/* Layers menu — bottom right */}
+      <LayersMenu
+        layers={layers}
+        onChange={setLayers}
+        basemap={basemap}
+        onBasemapChange={setBasemap}
+        onResetView={() => atlasRef.current?.resetView()}
+      />
     </div>
   );
 }

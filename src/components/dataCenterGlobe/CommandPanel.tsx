@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Search, X, RotateCcw } from "lucide-react";
+import styles from "@/components/ui/css/Button.module.css";
 import type { DataCenter } from "@/data/dataCenters";
 import { FEATURED_CAPABILITIES, capabilityShortLabel } from "@/data/capabilityCatalog";
 
@@ -249,12 +250,8 @@ export default function CommandPanel({
             </div>
             <button
               type="submit"
-              className="
-                mt-2 w-full h-9 rounded-xl text-sm font-medium
-                text-[#f6f6fd] bg-[#696aac] hover:bg-[#8587e3]
-                focus:outline-none focus:ring-2 focus:ring-[rgba(105,106,172,0.5)]
-                transition-colors
-              "
+              className={`${styles.button} mt-2 w-full text-sm text-[#f6f6fd]`}
+              style={{ padding: "8px 0" }}
             >
               {searchStatus === "loading" ? "Searching…" : "Search"}
             </button>
