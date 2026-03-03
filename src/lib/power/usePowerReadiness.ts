@@ -1,11 +1,9 @@
 "use client";
 /**
- * usePowerReadiness — on-demand power feasibility fetch.
- *
+ * usePowerReadiness — on-demand power feasibility fetch with force-reload.
  * Only fetches when `enabled` is true.
- * Caches results in module-level memory by (lat, lng, mw, radius).
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { PowerFeasibilityResult } from "@/lib/power/scorePowerFeasibility";
 
 type CacheEntry = { result: PowerFeasibilityResult; at: number };
@@ -32,27 +30,30 @@ type Options = {
 };
 
 export function usePowerReadiness({
-  lat,
-  lng,
-  mw = 100,
-  radiusKm = 80,
-  enabled,
+  lat, lng, mw = 100, radiusKm = 80, enabled,
 }: Options): {
   state: PowerReadinessState;
-  trigger: () => void; // manually re-fetch
+  trigger: (force?: boolean) => void;
+  reload:  () => void;
 } {
   const [state, setState] = useState<PowerReadinessState>({ status: "idle" });
   const abortRef   = useRef<AbortController | null>(null);
   const requestRef = useRef(0);
 
-  const doFetch = () => {
+  const doFetch = useCallback((force = false) => {
     if (!lat || !lng) { setState({ status: "idle" }); return; }
 
     const key = cacheKey(lat, lng, mw, radiusKm);
-    const hit = CACHE.get(key);
-    if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
-      setState({ status: "success", result: hit.result });
-      return;
+
+    if (!force) {
+      const hit = CACHE.get(key);
+      if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+        setState({ status: "success", result: hit.result });
+        return;
+      }
+    } else {
+      // Force: evict client cache entry
+      CACHE.delete(key);
     }
 
     abortRef.current?.abort();
@@ -62,10 +63,11 @@ export function usePowerReadiness({
 
     setState({ status: "loading" });
 
-    fetch(
-      `/api/power/site?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}&mw=${mw}&radiusKm=${radiusKm}`,
-      { signal: ctrl.signal }
-    )
+    const url = force
+      ? `/api/power/site?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}&mw=${mw}&radiusKm=${radiusKm}&force=1`
+      : `/api/power/site?lat=${lat.toFixed(4)}&lon=${lng.toFixed(4)}&mw=${mw}&radiusKm=${radiusKm}`;
+
+    fetch(url, { signal: ctrl.signal })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((result: PowerFeasibilityResult) => {
         if (myId !== requestRef.current) return;
@@ -77,14 +79,22 @@ export function usePowerReadiness({
         if (myId !== requestRef.current) return;
         setState({ status: "error", message: (e as Error).message ?? String(e) });
       });
-  };
+  }, [lat, lng, mw, radiusKm]);
 
   useEffect(() => {
     if (!enabled) return;
-    doFetch();
+    doFetch(false);
     return () => abortRef.current?.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lat, lng, mw, radiusKm, enabled]);
+  }, [lat, lng, mw, radiusKm, enabled, doFetch]);
 
-  return { state, trigger: doFetch };
+  // Reset to idle when target changes while NOT enabled
+  useEffect(() => {
+    if (!enabled) setState({ status: "idle" });
+  }, [lat, lng, enabled]);
+
+  return {
+    state,
+    trigger: (force = false) => doFetch(force),
+    reload:  () => doFetch(true),
+  };
 }

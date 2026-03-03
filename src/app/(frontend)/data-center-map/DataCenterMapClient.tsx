@@ -21,6 +21,7 @@ import { runSearchPipeline } from "@/lib/search/searchPipeline";
 import type { GazetteerResult } from "@/lib/search/gazetteer";
 import type { ProviderRegion } from "@/lib/providers/linode/types";
 import { useAtlasLayersStore } from "@/state/atlasLayersStore";
+import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
 const LinodeCard = dynamic(() => import("@/components/atlas/providers/LinodeCard"), { ssr: false, loading: () => null });
 const AtlasMap   = dynamic(() => import("@/components/atlas/AtlasMap.client"),       { ssr: false, loading: () => null });
@@ -55,10 +56,16 @@ export default function DataCenterMapClient() {
     linodeRegions:   providers.linodeRegions,
   };
 
+  // ── Selection store (replaces local DC/Linode/pin state) ───────────────
+  const {
+    selectedDc, setSelectedDc,
+    selectedLinode, setSelectedLinode,
+    pinnedPoint, setPinnedPoint,
+    setLeftTab,
+  } = useAtlasSelectionStore();
+
   // ── UI state (not persisted) ────────────────────────────────────────────
   const [isPanelOpen,  setIsPanelOpen]  = useState(true);
-  const [selectedDc,   setSelectedDc]   = useState<DataCenter | null>(null);
-  const [selectedLinode, setSelectedLinode] = useState<ProviderRegion | null>(null);
   const [siteBriefPos, setSiteBriefPos] = useState<{ lat: number; lng: number } | null>(null);
 
   // ── Search state ────────────────────────────────────────────────────────
@@ -74,8 +81,11 @@ export default function DataCenterMapClient() {
 
   const handleSelectDc = useCallback((dc: DataCenter | null) => {
     setSelectedDc(dc);
-    if (dc) atlasRef.current?.flyTo({ lat: dc.lat, lng: dc.lng, height: FLY_HEIGHT_DC }, 1.2);
-  }, []);
+    if (dc) {
+      setSelectedLinode(null);
+      atlasRef.current?.flyTo({ lat: dc.lat, lng: dc.lng, height: FLY_HEIGHT_DC }, 1.2);
+    }
+  }, [setSelectedDc, setSelectedLinode]);
 
   const handleFilterChange = useCallback(
     (newCaps: string[], newTier: string | null, newRadius: number) => {
@@ -158,7 +168,8 @@ export default function DataCenterMapClient() {
     setCapabilityFilters([]); setTierFilter(null);
     setRadiusKm(500); setGeocodedPos(null);
     setLastRawQuery(""); setSelectedDc(null);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setSelectedDc]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -174,7 +185,7 @@ export default function DataCenterMapClient() {
         <span>Antimatter AI</span>
       </Link>
 
-      {/* Cesium map — reads layers from store via flat prop */}
+      {/* Cesium map */}
       <AtlasMap
         ref={atlasRef}
         selectedId={selectedDc?.id ?? null}
@@ -183,13 +194,18 @@ export default function DataCenterMapClient() {
         layers={layers}
         basemap={basemap}
         powerScenario={powerScenario}
-        onSelectLinode={r => { setSelectedLinode(r); if (r) { setSelectedDc(null); setSiteBriefPos(null); } }}
+        onSelectLinode={r => {
+          setSelectedLinode(r);
+          if (r) { setSelectedDc(null); setSiteBriefPos(null); setPinnedPoint(null); }
+        }}
         selectedLinodeId={selectedLinode?.region_id ?? null}
         onMapClick={(lat, lng) => {
-          // Always allow power assessment from any map click — no power-layer gate
-          setSiteBriefPos({ lat, lng });
-          setSelectedLinode(null);
+          // Pin the point + open Power tab in left panel
+          setPinnedPoint({ lat, lng });
+          setLeftTab("power");
           setSelectedDc(null);
+          setSelectedLinode(null);
+          setSiteBriefPos(null);
         }}
       />
 
@@ -211,6 +227,10 @@ export default function DataCenterMapClient() {
         showRadius={geocodedPos !== null}
         onReset={handleReset}
         onSelectSuggestion={handleSelectSuggestion}
+        onPinMapCenter={() => {
+          const centre = atlasRef.current?.getCameraCenter?.();
+          if (centre) { setPinnedPoint(centre); setLeftTab("power"); }
+        }}
       />
 
       {selectedDc && !siteBriefPos && !selectedLinode && (

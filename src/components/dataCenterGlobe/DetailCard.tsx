@@ -145,7 +145,7 @@ function PowerTab({ dc }: { dc: DataCenter }) {
           <AlertTriangle className="w-4 h-4 shrink-0" />
           {state.message}
         </div>
-        <button type="button" onClick={trigger} className="text-xs text-[rgba(162,163,233,0.7)] hover:text-[#a2a3e9] transition-colors">
+        <button type="button" onClick={() => trigger()} className="text-xs text-[rgba(162,163,233,0.7)] hover:text-[#a2a3e9] transition-colors">
           Retry
         </button>
       </div>
@@ -230,7 +230,7 @@ function PowerTab({ dc }: { dc: DataCenter }) {
           </div>
         )}
 
-        <button type="button" onClick={trigger}
+        <button type="button" onClick={() => trigger()}
           className="text-[10px] text-[rgba(162,163,233,0.6)] hover:text-[#a2a3e9] transition-colors">
           Refresh
         </button>

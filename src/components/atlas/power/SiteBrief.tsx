@@ -127,8 +127,8 @@ export default function SiteBrief({ lat, lng, onClose, targetMw = 100, radiusKm 
       className="
         fixed top-20 right-4 z-40
         w-[340px] xl:w-[360px]
-        max-h-[calc(100vh-100px)]
-        overflow-y-auto scrollbar-hide
+        max-h-[calc(100vh-90px)]
+        overflow-y-auto overscroll-contain
         bg-[rgba(6,7,15,0.94)] backdrop-blur-xl
         border border-[rgba(246,246,253,0.09)]
         rounded-2xl shadow-2xl
