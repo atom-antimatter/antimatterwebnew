@@ -142,6 +142,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const dcSourceRef = useRef<Cesium.CustomDataSource | null>(null);
     const citySourceRef = useRef<Cesium.CustomDataSource | null>(null);
     const routeSourceRef = useRef<Cesium.CustomDataSource | null>(null);
+    const routePrimitivesRef = useRef<Cesium.PrimitiveCollection | null>(null);
     const countrySourceRef = useRef<Cesium.GeoJsonDataSource | null>(null);
     const stateSourceRef = useRef<Cesium.GeoJsonDataSource | null>(null);
     const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
@@ -275,6 +276,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         if (handlerRef.current && !handlerRef.current.isDestroyed()) {
           handlerRef.current.destroy();
         }
+        // PrimitiveCollection is owned by viewer.scene.primitives; destroyed with viewer
+        routePrimitivesRef.current = null;
         if (!viewer.isDestroyed()) viewer.destroy();
         viewerRef.current = null;
       };
@@ -362,32 +365,55 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         const res = await fetch("/geo/submarine-cables.json");
         if (!res.ok) return;
         const geo = await res.json();
-        const source = new Cesium.CustomDataSource("fiber-routes");
-        routeSourceRef.current = source;
-        source.show = false;
+
+        // Collect all polyline segment arrays from both LineString and MultiLineString features
+        const segments: { positions: Cesium.Cartesian3[]; color: string }[] = [];
 
         for (const feature of geo?.features ?? []) {
-          const coords: [number, number][] = feature.geometry?.coordinates ?? [];
-          if (coords.length < 2) continue;
-          const positions = coords.map(([lng, lat]) =>
-            Cesium.Cartesian3.fromDegrees(lng, lat)
-          );
-          const color = feature.properties?.color ?? "#696aac";
-          source.entities.add({
-            polyline: new Cesium.PolylineGraphics({
-              positions: new Cesium.ConstantProperty(positions),
-              width: 1.5,
-              material: new Cesium.PolylineDashMaterialProperty({
-                color: Cesium.Color.fromCssColorString(color).withAlpha(0.55),
-                dashLength: 16,
-                dashPattern: 0xFF00,
-              }),
-              clampToGround: false,
-            }),
+          const geomType: string = feature.geometry?.type ?? "";
+          const rawColor: string = feature.properties?.color ?? "#696aac";
+
+          let lineArrays: [number, number][][] = [];
+          if (geomType === "LineString") {
+            lineArrays = [feature.geometry.coordinates];
+          } else if (geomType === "MultiLineString") {
+            lineArrays = feature.geometry.coordinates;
+          }
+
+          for (const line of lineArrays) {
+            if (!Array.isArray(line) || line.length < 2) continue;
+            const positions = line.map(([lng, lat]: [number, number]) =>
+              Cesium.Cartesian3.fromDegrees(lng, lat, 5000) // 5 km above surface so cables are visible
+            );
+            if (positions.length >= 2) segments.push({ positions, color: rawColor });
+          }
+        }
+
+        console.info(
+          `[AtlasMap] Fiber routes loaded: ${geo?.features?.length ?? 0} features → ${segments.length} polyline segments`
+        );
+
+        // Use a PolylineCollection (GPU primitive) for performance — much faster than
+        // thousands of individual Entity polylines.
+        const primitiveCollection = new Cesium.PrimitiveCollection();
+        const polylineCollection = new Cesium.PolylineCollection();
+
+        for (const { positions, color } of segments) {
+          const cesiumColor = Cesium.Color.fromCssColorString(color).withAlpha(0.65);
+          polylineCollection.add({
+            positions,
+            width: 1.5,
+            material: Cesium.Material.fromType("Color", { color: cesiumColor }),
           });
         }
 
-        viewer.dataSources.add(source);
+        primitiveCollection.add(polylineCollection);
+        primitiveCollection.show = false; // toggled by layer effect below
+
+        // Store on the primitive ref (not a data source this time)
+        routePrimitivesRef.current = primitiveCollection;
+        viewer.scene.primitives.add(primitiveCollection);
+
       } catch (e) {
         console.warn("[AtlasMap] Routes load failed:", e);
       }
@@ -449,13 +475,17 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     }, [layers.points]);
 
     useEffect(() => {
+      // Fiber routes are stored as a PrimitiveCollection (GPU path).
+      // Show at REGION, LOCAL, and CITY zoom (not WORLD — too noisy at planetary scale).
+      const prims = routePrimitivesRef.current;
+      if (prims) {
+        prims.show = layers.routes && cameraState.level !== "WORLD";
+      }
+      // Legacy CustomDataSource path (no-op if routes migrated to primitives)
       const src = routeSourceRef.current;
-      if (!src) return;
-      // Only show fiber routes when layer is on AND at LOCAL or CITY zoom
-      const showAtLevel =
-        layers.routes &&
-        (cameraState.level === "LOCAL" || cameraState.level === "CITY");
-      src.show = showAtLevel;
+      if (src) {
+        src.show = layers.routes && cameraState.level !== "WORLD";
+      }
     }, [layers.routes, cameraState.level]);
 
     // ── cluster toggle based on zoom level ─────────────────────────────────
@@ -601,8 +631,24 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
                 {tooltip.dc.capabilities.slice(0, 3).join(", ")}
               </p>
             )}
+            {tooltip.dc.confidence != null && (
+              <p className="text-[10px] text-[rgba(246,246,253,0.3)] mt-1.5 uppercase tracking-wide">
+                {tooltip.dc.source ?? "curated"} · {tooltip.dc.confidence}% conf.
+              </p>
+            )}
           </div>
         )}
+
+        {/* Attribution bar — bottom-center, always visible */}
+        <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-3 py-1 rounded-full bg-[rgba(2,2,2,0.55)] backdrop-blur-sm">
+          <span className="text-[10px] text-[rgba(246,246,253,0.45)]">
+            © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">OpenStreetMap</a>
+            {" "}contributors · <a href="https://carto.com/attributions" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">Carto</a>
+            {" "}· <a href="https://www.peeringdb.com" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">PeeringDB</a>
+            {" "}· <a href="https://www.wikidata.org" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">Wikidata CC0</a>
+            {" "}· <a href="https://www.telegeography.com" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">TeleGeography</a> (submarine cables)
+          </span>
+        </div>
       </div>
     );
   }

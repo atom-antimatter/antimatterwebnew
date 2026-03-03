@@ -126,6 +126,17 @@ export default function DetailCard({ dc, onClose }: DetailCardProps) {
             {dc.postalCode}
           </span>
         )}
+        {/* Data provenance chip */}
+        {dc.source && dc.source !== "curated" && (
+          <span className="text-[10px] uppercase tracking-wider text-[rgba(162,163,233,0.7)] bg-[rgba(105,106,172,0.12)] border border-[rgba(105,106,172,0.2)] rounded px-2 py-0.5">
+            {dc.source}
+          </span>
+        )}
+        {dc.confidence != null && dc.confidence < 90 && (
+          <span className="text-[10px] text-[rgba(246,246,253,0.35)]">
+            {dc.confidence}% confidence
+          </span>
+        )}
       </div>
 
       {/* Summary */}
@@ -187,18 +198,28 @@ export default function DetailCard({ dc, onClose }: DetailCardProps) {
             href={dc.website}
             target="_blank"
             rel="noopener noreferrer"
-            className="
-              flex items-center justify-center gap-2
-              h-9 rounded-xl text-sm font-medium
-              text-[rgba(162,163,233,0.8)] bg-[rgba(105,106,172,0.1)]
-              border border-[rgba(105,106,172,0.22)]
-              hover:bg-[rgba(105,106,172,0.2)] hover:text-[#f6f6fd]
-              transition-colors
-            "
+            className="flex items-center justify-center gap-2 h-9 rounded-xl text-sm font-medium text-[rgba(162,163,233,0.8)] bg-[rgba(105,106,172,0.1)] border border-[rgba(105,106,172,0.22)] hover:bg-[rgba(105,106,172,0.2)] hover:text-[#f6f6fd] transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Visit site
           </a>
+        )}
+        {/* For OSM-sourced entries, invite correction */}
+        {dc.source === "osm" && dc.sourceId && (
+          <a
+            href={`https://www.openstreetmap.org/edit?way=${dc.sourceId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 h-8 text-[11px] text-[rgba(246,246,253,0.35)] hover:text-[rgba(246,246,253,0.6)] transition-colors"
+          >
+            <ExternalLink className="w-3 h-3" />
+            Edit on OpenStreetMap
+          </a>
+        )}
+        {dc.licenseNote && (
+          <p className="text-[10px] text-[rgba(246,246,253,0.25)] text-center mt-0.5">
+            {dc.licenseNote}
+          </p>
         )}
       </div>
     </div>
