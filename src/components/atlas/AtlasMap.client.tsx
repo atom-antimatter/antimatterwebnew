@@ -510,6 +510,24 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       src.clustering.enabled = cameraState.level === "WORLD" || cameraState.level === "REGION";
     }, [cameraState.level]);
 
+    // ── Adaptive maximumScreenSpaceError ─────────────────────────────────
+    // ROOT CAUSE of the black globe at world zoom:
+    //   SSE = 2 forces Cesium to request tile zoom-levels that don't exist
+    //   at 18,000 km altitude → tiles are missing → globe goes black.
+    //   Solution: raise SSE at world view so Cesium happily uses zoom-0 tiles.
+    //   SSE meaning: higher = more permissive (fewer, lower-res tiles loaded).
+    useEffect(() => {
+      const viewer = viewerRef.current;
+      if (!viewer || viewer.isDestroyed()) return;
+      const sseByLevel: Record<string, number> = {
+        WORLD:  16,   // very permissive — zoom-0 tiles are fine
+        REGION:  4,   // comfortable mid-range
+        LOCAL:   2,   // sharp
+        CITY:    1.5, // maximum sharpness at street level
+      };
+      viewer.scene.globe.maximumScreenSpaceError = sseByLevel[cameraState.level] ?? 2;
+    }, [cameraState.level]);
+
     // ── Fiber routes toggle + zoom gate ───────────────────────────────────
     useEffect(() => {
       const prim = routePrimRef.current;
@@ -820,6 +838,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     }, []);
 
     // ── Render ────────────────────────────────────────────────────────────
+    const isWorldView = cameraState.level === "WORLD";
+
     return (
       <div className="absolute inset-0 w-full h-full bg-[#020202] overflow-hidden overscroll-none">
         <style>{`
@@ -827,7 +847,39 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           .cesium-widget canvas{width:100%;height:100%;touch-action:none;overscroll-behavior:none;}
           .cesium-viewer-cesiumWidgetContainer{width:100%;height:100%;}
           .cesium-credit-container,.cesium-widget-credits{display:none!important;}
+          @keyframes atlas-fade-in{from{opacity:0}to{opacity:1}}
+          .atlas-world-bg{animation:atlas-fade-in 0.8s ease-out forwards;}
         `}</style>
+
+        {/* "ATOM AI" background text — visible when fully zoomed out (world view).
+            Matches the enterprise-ai page aesthetic: large faded watermark.
+            Sits below the Cesium canvas (z-0) so it shows through the
+            dark #020202 background when the globe doesn't cover the viewport. */}
+        {isWorldView && (
+          <div
+            className="atlas-world-bg absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none z-0"
+            aria-hidden="true"
+          >
+            <span
+              className="font-bold uppercase tracking-[0.15em] text-center leading-none"
+              style={{
+                fontSize: "clamp(4rem, 18vw, 22rem)",
+                color: "rgba(246,246,253,0.025)",
+                letterSpacing: "0.15em",
+              }}
+            >
+              ATOM AI
+            </span>
+            <span
+              className="mt-4 text-center"
+              style={{ fontSize: "clamp(0.6rem, 1.4vw, 1.1rem)", color: "rgba(246,246,253,0.06)", letterSpacing: "0.4em" }}
+            >
+              INFRASTRUCTURE ATLAS
+            </span>
+          </div>
+        )}
+
+        {/* Cesium mounts into this div — sits above the background text */}
         <div ref={containerRef} className="absolute inset-0 w-full h-full" />
 
         {!isReady && (
