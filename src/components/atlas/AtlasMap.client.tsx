@@ -58,13 +58,16 @@ type TooltipState = { x: number; y: number; dc: DataCenter } | null;
 // ─── imagery providers ────────────────────────────────────────────────────────
 
 function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
+  // Carto tiles use {x}/{y}/{z} but Cesium uses {x}/{y}/{z} — use subdomains
+  // to spread load across a/b/c/d. Carto supports up to zoom 20.
   switch (basemap) {
     case "osmLight":
       return new Cesium.UrlTemplateImageryProvider({
-        url: "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        subdomains: ["a", "b", "c", "d"],
         credit: new Cesium.Credit("Carto, OpenStreetMap contributors"),
         minimumLevel: 0,
-        maximumLevel: 19,
+        maximumLevel: 20,
       });
     case "osmStandard":
       return new Cesium.UrlTemplateImageryProvider({
@@ -76,12 +79,18 @@ function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
     case "osmDark":
     default:
       return new Cesium.UrlTemplateImageryProvider({
-        url: "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        subdomains: ["a", "b", "c", "d"],
         credit: new Cesium.Credit("Carto, OpenStreetMap contributors"),
         minimumLevel: 0,
-        maximumLevel: 19,
+        maximumLevel: 20,
       });
   }
+}
+
+/** Whether the current basemap is light (affects marker colour). */
+function isLightBasemap(basemap: Basemap): boolean {
+  return basemap === "osmLight" || basemap === "osmStandard";
 }
 
 // ─── tier helpers ─────────────────────────────────────────────────────────────
@@ -96,7 +105,17 @@ function tierPixelSize(tier: DataCenter["tier"]): number {
   }
 }
 
-function tierColor(tier: DataCenter["tier"]): Cesium.Color {
+function tierColor(tier: DataCenter["tier"], light = false): Cesium.Color {
+  if (light) {
+    // Darker palette for light basemaps so dots are visible
+    switch (tier) {
+      case "hyperscale": return Cesium.Color.fromCssColorString("#3e3f7e").withAlpha(0.95);
+      case "core": return Cesium.Color.fromCssColorString("#4c4dac").withAlpha(0.93);
+      case "enterprise": return Cesium.Color.fromCssColorString("#5a5bb8").withAlpha(0.9);
+      case "edge": return Cesium.Color.fromCssColorString("#696aac").withAlpha(0.92);
+      default: return Cesium.Color.fromCssColorString("#4c4dac").withAlpha(0.88);
+    }
+  }
   switch (tier) {
     case "hyperscale": return Cesium.Color.fromCssColorString("#8587e3").withAlpha(0.97);
     case "core": return Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.93);
@@ -182,18 +201,29 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       // Suppress Cesium ion credit warning
       (viewer.cesiumWidget as any)._creditContainer.style.display = "none";
 
-      // Dark base color so the ellipsoid shows correctly before tiles load
-      viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#020202");
+      // Dark base colour shown while tiles are loading (prevents blank white flash)
+      viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#1a1b2e");
       // Reduce performance cost — we don't need lighting for a 2D-ish map style
       viewer.scene.globe.enableLighting = false;
       // Smooth depth culling
       viewer.scene.globe.depthTestAgainstTerrain = false;
+      // Keep tiles loaded even at high zoom so the globe never goes blank.
+      // Higher value = lower quality threshold = tiles always visible.
+      viewer.scene.globe.maximumScreenSpaceError = 4;
       // Remove atmosphere, sky box, sun, moon (matches dark brand / performance)
       if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
       if (viewer.scene.skyBox) (viewer.scene.skyBox as any).show = false;
       if (viewer.scene.sun) viewer.scene.sun.show = false;
       if (viewer.scene.moon) viewer.scene.moon.show = false;
       viewer.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
+
+      // ── Prevent the Cesium canvas from propagating wheel events to the page ──
+      // Without this, scrolling over the map also scrolls the browser page.
+      const canvasEl = viewer.scene.canvas;
+      const stopWheel = (e: WheelEvent) => e.stopPropagation();
+      canvasEl.addEventListener("wheel", stopWheel, { passive: true });
+      // Also block context-menu to avoid browser interfering with right-drag
+      canvasEl.addEventListener("contextmenu", (e) => e.preventDefault());
 
       // Add initial basemap
       const provider = makeProvider("osmDark");
@@ -489,10 +519,11 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layers.cities, cameraState.level, cameraState.viewRect]);
 
-    // ── selected DC visual ─────────────────────────────────────────────────
+    // ── selected DC visual + basemap-aware colours ─────────────────────────
     useEffect(() => {
       const source = dcSourceRef.current;
       if (!source) return;
+      const light = isLightBasemap(basemap);
 
       source.entities.values.forEach((entity) => {
         const dc = (entity as any).dcData as DataCenter | undefined;
@@ -506,31 +537,38 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         );
         pt.color = new Cesium.ConstantProperty(
           isSelected
-            ? Cesium.Color.WHITE
+            ? Cesium.Color.fromCssColorString("#8587e3")
             : !isHighlighted
-            ? tierColor(dc.tier).withAlpha(0.25)
-            : tierColor(dc.tier)
+            ? tierColor(dc.tier, light).withAlpha(0.25)
+            : tierColor(dc.tier, light)
         );
+        // Stronger outline on light basemaps so dots pop
         pt.outlineColor = new Cesium.ConstantProperty(
-          isSelected ? Cesium.Color.WHITE.withAlpha(0.6) : Cesium.Color.BLACK.withAlpha(0.4)
+          isSelected
+            ? Cesium.Color.WHITE
+            : light
+            ? Cesium.Color.fromCssColorString("#1a1b2e").withAlpha(0.7)
+            : Cesium.Color.BLACK.withAlpha(0.45)
         );
-        pt.outlineWidth = new Cesium.ConstantProperty(isSelected ? 3 : 1);
+        pt.outlineWidth = new Cesium.ConstantProperty(
+          isSelected ? 3 : light ? 2 : 1
+        );
       });
-    }, [selectedId, highlightIds]);
+    }, [selectedId, highlightIds, basemap]);
 
     // ── render ─────────────────────────────────────────────────────────────
     return (
-      <div className="absolute inset-0 w-full h-full bg-[#020202]">
+      // overscroll-none + overflow-hidden prevent the map from triggering
+      // elastic scroll or page scroll on desktop and mobile.
+      <div className="absolute inset-0 w-full h-full bg-[#020202] overflow-hidden overscroll-none">
         {/*
           Minimal Cesium canvas styles. We skip importing the full widgets.css
           because that file is processed by Cesium's webpack pipeline and
           conflicts with PayloadCMS's SCSS loader in Next.js.
-          These rules are the only ones required for the Viewer canvas to
-          fill its container correctly.
         */}
         <style>{`
           .cesium-viewer,.cesium-widget{position:relative;overflow:hidden;width:100%;height:100%;}
-          .cesium-widget canvas{width:100%;height:100%;touch-action:none;}
+          .cesium-widget canvas{width:100%;height:100%;touch-action:none;overscroll-behavior:none;}
           .cesium-viewer-cesiumWidgetContainer{width:100%;height:100%;}
           .cesium-credit-container,.cesium-widget-credits{display:none!important;}
         `}</style>

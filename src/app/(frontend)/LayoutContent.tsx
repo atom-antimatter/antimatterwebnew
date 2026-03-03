@@ -14,9 +14,10 @@ export default function LayoutContent({ children }: LayoutContentProps) {
   const isVendorMatrixRoute = pathname?.startsWith("/resources/vendor-matrix");
   const isChannelPartnersRoute = pathname?.startsWith("/resources/channel-partners");
   const isIntentIQRoute = pathname?.startsWith("/atom-intentiq");
+  const isAtlasRoute = pathname?.startsWith("/data-center-map");
 
-  if (isAdminRoute || isAtomSearchRoute || isVendorMatrixRoute || isChannelPartnersRoute || isIntentIQRoute) {
-    // For these routes, only render the main content (Providers and children)
+  if (isAdminRoute || isAtomSearchRoute || isVendorMatrixRoute || isChannelPartnersRoute || isIntentIQRoute || isAtlasRoute) {
+    // For these routes, only render the main content (Providers and children) — no nav/footer
     return <div className="relative">{children[1]}</div>;
   }
 

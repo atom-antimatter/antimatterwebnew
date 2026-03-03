@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import CommandPanel, { type SearchStatus } from "@/components/dataCenterGlobe/CommandPanel";
 import DetailCard from "@/components/dataCenterGlobe/DetailCard";
 import LayersMenu, { type LayersState } from "@/components/atlas/LayersMenu";
@@ -204,7 +206,26 @@ export default function DataCenterMapClient() {
   // ─── render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-[100dvh] w-full bg-[#020202] overflow-hidden relative">
+    // overscroll-none prevents elastic bounce / page scroll while interacting with the map
+    <div className="h-[100dvh] w-full bg-[#020202] overflow-hidden overscroll-none relative">
+      {/* Back button — top-right, clear of the command panel */}
+      <Link
+        href="/"
+        className="
+          fixed top-4 right-4 z-50 flex items-center gap-2
+          px-3 py-2 rounded-xl text-sm font-medium
+          bg-[rgba(6,7,15,0.82)] backdrop-blur-md
+          border border-[rgba(246,246,253,0.12)]
+          text-[rgba(246,246,253,0.75)] hover:text-[#f6f6fd] hover:border-[rgba(246,246,253,0.25)]
+          transition-colors shadow-lg
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-[#696aac]
+        "
+        aria-label="Back to Antimatter AI"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        <span>Antimatter AI</span>
+      </Link>
+
       {/* Cesium map fills the full viewport */}
       <AtlasMap
         ref={atlasRef}
