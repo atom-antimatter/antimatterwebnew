@@ -12,7 +12,11 @@
     "generate:types": "payload generate:types",
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts",
-    "copy:cesium": "mkdir -p public/cesium && cp -r node_modules/cesium/Build/Cesium/Workers public/cesium/ && cp -r node_modules/cesium/Build/Cesium/Assets public/cesium/ && cp -r node_modules/cesium/Build/Cesium/ThirdParty public/cesium/ && cp -r node_modules/cesium/Build/Cesium/Widgets public/cesium/"
+    "copy:cesium": "mkdir -p public/cesium && cp -r node_modules/cesium/Build/Cesium/Workers public/cesium/ && cp -r node_modules/cesium/Build/Cesium/Assets public/cesium/ && cp -r node_modules/cesium/Build/Cesium/ThirdParty public/cesium/ && cp -r node_modules/cesium/Build/Cesium/Widgets public/cesium/",
+    "ingest:urdb": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/ingest-urdb.ts",
+    "ingest:eia860": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/ingest-eia860.ts",
+    "ingest:egrid": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/ingest-egrid.ts",
+    "ingest:queue:miso": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/ingest-miso-queue.ts"
   },
   "dependencies": {
     "@crayonai/react-core": "^0.7.6",

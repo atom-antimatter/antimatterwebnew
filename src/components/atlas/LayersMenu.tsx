@@ -13,6 +13,16 @@ export type LayersState = {
   cities: boolean;
   points: boolean;
   routes: boolean;
+  // Power & Energy layers
+  powerHeatmap: boolean;
+  powerGeneration: boolean;
+  powerCarbon: boolean;
+  powerQueue: boolean;
+};
+
+export type PowerScenario = {
+  targetMw: 25 | 50 | 100 | 200;
+  radiusKm: 25 | 50 | 80 | 120;
 };
 
 export type LayersMenuProps = {
@@ -21,6 +31,8 @@ export type LayersMenuProps = {
   basemap: Basemap;
   onBasemapChange: (b: Basemap) => void;
   onResetView?: () => void;
+  powerScenario?: PowerScenario;
+  onPowerScenarioChange?: (s: PowerScenario) => void;
 };
 
 // ─── SwitchRow ────────────────────────────────────────────────────────────────
@@ -126,18 +138,25 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ─── main component ───────────────────────────────────────────────────────────
 
+const MW_OPTIONS: PowerScenario["targetMw"][] = [25, 50, 100, 200];
+const RADIUS_OPTIONS: PowerScenario["radiusKm"][] = [25, 50, 80, 120];
+
 export default function LayersMenu({
   layers,
   onChange,
   basemap,
   onBasemapChange,
   onResetView,
+  powerScenario,
+  onPowerScenarioChange,
 }: LayersMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const set = (key: keyof LayersState, val: boolean) =>
     onChange({ ...layers, [key]: val });
+
+  const scenario: PowerScenario = powerScenario ?? { targetMw: 100, radiusKm: 80 };
 
   return (
     <div className="fixed bottom-6 right-5 z-40 flex flex-col items-end gap-2">
@@ -224,6 +243,82 @@ export default function LayersMenu({
               checked={layers.routes}
               onToggle={() => set("routes", !layers.routes)}
             />
+          </div>
+
+          {/* Power & Energy section */}
+          <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
+            <SectionLabel>Power &amp; Energy</SectionLabel>
+            <SwitchRow
+              label="Feasibility heatmap"
+              helper="Score grid by electricity cost, carbon, generation, queue"
+              checked={layers.powerHeatmap}
+              onToggle={() => set("powerHeatmap", !layers.powerHeatmap)}
+            />
+            <SwitchRow
+              label="Nearby generation"
+              helper="EIA-860 plant points sized by MW"
+              checked={layers.powerGeneration}
+              onToggle={() => set("powerGeneration", !layers.powerGeneration)}
+            />
+            <SwitchRow
+              label="Grid carbon intensity"
+              helper="EPA eGRID annual avg lb CO₂/MWh"
+              checked={layers.powerCarbon}
+              onToggle={() => set("powerCarbon", !layers.powerCarbon)}
+            />
+            <SwitchRow
+              label="Interconnection queue"
+              helper="Queued MW proxy — not available capacity"
+              checked={layers.powerQueue}
+              onToggle={() => set("powerQueue", !layers.powerQueue)}
+            />
+
+            {/* Scenario controls — visible only when at least one power layer is on */}
+            {(layers.powerHeatmap || layers.powerGeneration || layers.powerQueue) && (
+              <div className="px-4 py-3 bg-[rgba(246,246,253,0.03)] border-t border-[rgba(246,246,253,0.06)]">
+                <p className="text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.35)] mb-2">
+                  Scenario
+                </p>
+                {/* Target MW */}
+                <p className="text-[11px] text-[rgba(246,246,253,0.5)] mb-1">Target load (MW)</p>
+                <div className="flex gap-1.5 flex-wrap mb-2" role="group" aria-label="Target MW">
+                  {MW_OPTIONS.map((mw) => (
+                    <button
+                      key={mw}
+                      type="button"
+                      aria-pressed={scenario.targetMw === mw}
+                      onClick={() => onPowerScenarioChange?.({ ...scenario, targetMw: mw })}
+                      className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${
+                        scenario.targetMw === mw
+                          ? "bg-[#696aac] text-white border-[#696aac]"
+                          : "bg-[rgba(105,106,172,0.1)] text-[rgba(162,163,233,0.8)] border-[rgba(105,106,172,0.2)] hover:border-[rgba(105,106,172,0.4)]"
+                      }`}
+                    >
+                      {mw} MW
+                    </button>
+                  ))}
+                </div>
+                {/* Radius */}
+                <p className="text-[11px] text-[rgba(246,246,253,0.5)] mb-1">Search radius</p>
+                <div className="flex gap-1.5 flex-wrap" role="group" aria-label="Search radius">
+                  {RADIUS_OPTIONS.map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      aria-pressed={scenario.radiusKm === r}
+                      onClick={() => onPowerScenarioChange?.({ ...scenario, radiusKm: r })}
+                      className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${
+                        scenario.radiusKm === r
+                          ? "bg-[#696aac] text-white border-[#696aac]"
+                          : "bg-[rgba(105,106,172,0.1)] text-[rgba(162,163,233,0.8)] border-[rgba(105,106,172,0.2)] hover:border-[rgba(105,106,172,0.4)]"
+                      }`}
+                    >
+                      {r} km
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}

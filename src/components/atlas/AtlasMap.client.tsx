@@ -46,6 +46,11 @@ export type AtlasLayers = {
   cities: boolean;
   points: boolean;
   routes: boolean;
+  // Power & Energy
+  powerHeatmap: boolean;
+  powerGeneration: boolean;
+  powerCarbon: boolean;
+  powerQueue: boolean;
 };
 
 export type AtlasMapRef = {
@@ -127,16 +132,24 @@ function tierColor(tier: DataCenter["tier"], light = false): Cesium.Color {
 
 // ─── component ────────────────────────────────────────────────────────────────
 
+export type PowerScenario = {
+  targetMw: number;
+  radiusKm: number;
+};
+
 type AtlasMapProps = {
   selectedId?: string | null;
   onSelectDc?: (dc: DataCenter | null) => void;
   highlightIds?: string[] | null;
   layers: AtlasLayers;
   basemap: Basemap;
+  powerScenario?: PowerScenario;
+  /** Called when user clicks the map background — for Site Brief */
+  onMapClick?: (lat: number, lng: number) => void;
 };
 
 const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
-  ({ selectedId, onSelectDc, highlightIds, layers, basemap }, ref) => {
+  ({ selectedId, onSelectDc, highlightIds, layers, basemap, powerScenario, onMapClick }, ref) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const viewerRef = useRef<Cesium.Viewer | null>(null);
     const dcSourceRef = useRef<Cesium.CustomDataSource | null>(null);
@@ -147,6 +160,10 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const stateSourceRef = useRef<Cesium.GeoJsonDataSource | null>(null);
     const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
     const layerListenerRef = useRef<Cesium.ImageryLayer | null>(null);
+    // Power layer primitives
+    const powerHeatmapRef = useRef<Cesium.PrimitiveCollection | null>(null);
+    const powerGenSourceRef = useRef<Cesium.CustomDataSource | null>(null);
+    const powerHeatmapFetchRef = useRef<AbortController | null>(null);
 
     const [tooltip, setTooltip] = useState<TooltipState>(null);
     const [isReady, setIsReady] = useState(false);
@@ -261,7 +278,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       // Interaction handler
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
-      // Click: select DC
+      // Click: select DC — or fire onMapClick for Site Brief when clicking globe
       handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
         const picked = viewer.scene.pick(event.position);
         if (picked?.id?.dcData) {
@@ -269,6 +286,16 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         } else {
           onSelectDc?.(null);
           setTooltip(null);
+          // If no DC was clicked, fire map-click for Site Brief
+          if (onMapClick) {
+            const cartesian = viewer.camera.pickEllipsoid(event.position, viewer.scene.globe.ellipsoid);
+            if (cartesian) {
+              const carto = Cesium.Cartographic.fromCartesian(cartesian);
+              const lat = Cesium.Math.toDegrees(carto.latitude);
+              const lng = Cesium.Math.toDegrees(carto.longitude);
+              onMapClick(lat, lng);
+            }
+          }
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -599,6 +626,156 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         );
       });
     }, [selectedId, highlightIds, basemap]);
+
+    // ── power heatmap ──────────────────────────────────────────────────────
+    // Fetches viewport grid scores and renders colored rectangle primitives.
+    // Throttled: only re-fetches when viewRect changes materially.
+    useEffect(() => {
+      const viewer = viewerRef.current;
+      if (!viewer || viewer.isDestroyed()) return;
+
+      // Clear existing heatmap primitives
+      if (powerHeatmapRef.current) {
+        if (!viewer.scene.primitives.contains(powerHeatmapRef.current)) {
+          // Already removed (e.g. viewer was recreated)
+        } else {
+          viewer.scene.primitives.remove(powerHeatmapRef.current);
+        }
+        powerHeatmapRef.current = null;
+      }
+
+      if (!layers.powerHeatmap) return;
+      if (cameraState.level === "WORLD") return; // too zoomed out
+      const rect = cameraState.viewRect;
+      if (!rect) return;
+
+      // Abort any in-flight request
+      powerHeatmapFetchRef.current?.abort();
+      const controller = new AbortController();
+      powerHeatmapFetchRef.current = controller;
+
+      const gridResolution = cameraState.level === "CITY" ? 15 : 10;
+      const mw = powerScenario?.targetMw ?? 100;
+
+      const url = `/api/power/viewport?west=${rect.west.toFixed(4)}&south=${rect.south.toFixed(4)}&east=${rect.east.toFixed(4)}&north=${rect.north.toFixed(4)}&mw=${mw}&grid=${gridResolution}`;
+
+      fetch(url, { signal: controller.signal })
+        .then((r) => r.json())
+        .then((data: { cells?: Array<{ west: number; south: number; east: number; north: number; score: number; color: { r: number; g: number; b: number; a: number } }> }) => {
+          if (controller.signal.aborted) return;
+          const vwr = viewerRef.current;
+          if (!vwr || vwr.isDestroyed()) return;
+
+          const collection = new Cesium.PrimitiveCollection();
+
+          for (const cell of data.cells ?? []) {
+            const { r, g, b, a } = cell.color;
+            const instances = [
+              new Cesium.GeometryInstance({
+                geometry: new Cesium.RectangleGeometry({
+                  rectangle: Cesium.Rectangle.fromDegrees(cell.west, cell.south, cell.east, cell.north),
+                  height: 100,
+                }),
+                attributes: {
+                  color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                    new Cesium.Color(r, g, b, a)
+                  ),
+                },
+              }),
+            ];
+            collection.add(new Cesium.Primitive({
+              geometryInstances: instances,
+              appearance: new Cesium.PerInstanceColorAppearance({ flat: true }),
+              asynchronous: false,
+            }));
+          }
+
+          powerHeatmapRef.current = collection;
+          vwr.scene.primitives.add(collection);
+        })
+        .catch(() => { /* aborted or network error — silent */ });
+
+      return () => { controller.abort(); };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [layers.powerHeatmap, cameraState.level, cameraState.viewRect, powerScenario?.targetMw]);
+
+    // ── power generation layer ──────────────────────────────────────────────
+    useEffect(() => {
+      const viewer = viewerRef.current;
+      if (!viewer || viewer.isDestroyed()) return;
+
+      // Get or create source
+      let source = powerGenSourceRef.current;
+      if (!source) {
+        source = new Cesium.CustomDataSource("power-generation");
+        powerGenSourceRef.current = source;
+        viewer.dataSources.add(source);
+      }
+
+      source.entities.removeAll();
+      source.show = layers.powerGeneration;
+
+      if (!layers.powerGeneration) return;
+      if (cameraState.level === "WORLD") return;
+
+      // Import static plants and render in view
+      import("@/lib/power/staticReferenceData").then(({ STATIC_LARGE_PLANTS }) => {
+        const src = powerGenSourceRef.current;
+        if (!src) return;
+        const rect = cameraState.viewRect;
+        const BUF = 2; // degree buffer
+
+        const visible = rect
+          ? STATIC_LARGE_PLANTS.filter(
+              (p) => p.lat >= rect.south - BUF && p.lat <= rect.north + BUF &&
+                     p.lng >= rect.west - BUF && p.lng <= rect.east + BUF
+            )
+          : STATIC_LARGE_PLANTS;
+
+        const FUEL_COLORS: Record<string, string> = {
+          NUC: "#60a5fa", WAT: "#34d399", NG: "#f97316", SUN: "#fbbf24",
+          WND: "#a78bfa", COL: "#6b7280", SUB: "#6b7280", BAT: "#ec4899",
+          GEO: "#84cc16",
+        };
+
+        for (const plant of visible) {
+          const color = Cesium.Color.fromCssColorString(FUEL_COLORS[plant.fuelType] ?? "#94a3b8");
+          const sizePx = Math.min(16, Math.max(6, Math.sqrt(plant.capacityMw / 100) * 4));
+          const entity = src.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(plant.lng, plant.lat, 2000),
+            point: new Cesium.PointGraphics({
+              pixelSize: sizePx,
+              color: color.withAlpha(0.85),
+              outlineColor: Cesium.Color.BLACK.withAlpha(0.5),
+              outlineWidth: 1.5,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              scaleByDistance: new Cesium.NearFarScalar(100_000, 1.4, 5_000_000, 0.5),
+            }),
+          });
+          const fuelLabel: Record<string, string> = {
+            NUC: "Nuclear", WAT: "Hydro", NG: "Gas", SUN: "Solar",
+            WND: "Wind", COL: "Coal", SUB: "Coal", BAT: "Battery",
+          };
+          (entity as any).genData = plant;
+          // Add label for important plants
+          if (plant.capacityMw >= 2000) {
+            entity.label = new Cesium.LabelGraphics({
+              text: `${plant.name}\n${Math.round(plant.capacityMw)} MW`,
+              font: "10px system-ui",
+              fillColor: color,
+              outlineColor: Cesium.Color.BLACK,
+              outlineWidth: 2,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+              pixelOffset: new Cesium.Cartesian2(0, -20),
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 3_000_000),
+              scaleByDistance: new Cesium.NearFarScalar(100_000, 1.0, 3_000_000, 0.5),
+            });
+          }
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [layers.powerGeneration, cameraState.level, cameraState.viewRect]);
 
     // ── render ─────────────────────────────────────────────────────────────
     return (

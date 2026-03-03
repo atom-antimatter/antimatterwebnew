@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import CommandPanel, { type SearchStatus } from "@/components/dataCenterGlobe/CommandPanel";
 import DetailCard from "@/components/dataCenterGlobe/DetailCard";
-import LayersMenu, { type LayersState } from "@/components/atlas/LayersMenu";
+import LayersMenu, { type LayersState, type PowerScenario } from "@/components/atlas/LayersMenu";
 import type { AtlasMapRef, Basemap } from "@/components/atlas/AtlasMap.client";
 import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { parseSearchQuery } from "@/lib/search/parseSearchQuery";
@@ -27,12 +27,23 @@ type GeocodeApiResult = { lat: number; lng: number; displayName: string };
 
 // ─── defaults ─────────────────────────────────────────────────────────────────
 
+// SiteBrief loads client-only (uses fetch hooks)
+const SiteBrief = dynamic(
+  () => import("@/components/atlas/power/SiteBrief"),
+  { ssr: false, loading: () => null }
+);
+
 const DEFAULT_LAYERS: LayersState = {
   countryBorders: true,
   stateBorders: false,
   cities: true,
   points: true,
   routes: true,
+  // Power layers — off by default to keep initial load clean
+  powerHeatmap: false,
+  powerGeneration: false,
+  powerCarbon: false,
+  powerQueue: false,
 };
 
 // Height in metres for flyTo calls at each zoom context
@@ -49,6 +60,9 @@ export default function DataCenterMapClient() {
   const [selectedDc, setSelectedDc] = useState<DataCenter | null>(null);
   const [layers, setLayers] = useState<LayersState>(DEFAULT_LAYERS);
   const [basemap, setBasemap] = useState<Basemap>("osmDark");
+  // Power & Energy
+  const [powerScenario, setPowerScenario] = useState<PowerScenario>({ targetMw: 100, radiusKm: 80 });
+  const [siteBriefPos, setSiteBriefPos] = useState<{ lat: number; lng: number } | null>(null);
 
   // Search state
   const [results, setResults] = useState<DataCenter[] | null>(null);
@@ -234,6 +248,13 @@ export default function DataCenterMapClient() {
         highlightIds={highlightIds}
         layers={layers}
         basemap={basemap}
+        powerScenario={powerScenario}
+        onMapClick={(lat, lng) => {
+          // Open Site Brief when power layer is active and user clicks the map
+          if (layers.powerHeatmap || layers.powerGeneration || layers.powerCarbon || layers.powerQueue) {
+            setSiteBriefPos({ lat, lng });
+          }
+        }}
       />
 
       {/* Left command panel */}
@@ -255,9 +276,20 @@ export default function DataCenterMapClient() {
         onReset={handleReset}
       />
 
-      {/* Right detail card */}
-      {selectedDc && (
+      {/* Right detail card (DC selection) */}
+      {selectedDc && !siteBriefPos && (
         <DetailCard dc={selectedDc} onClose={() => setSelectedDc(null)} />
+      )}
+
+      {/* Site Brief (power feasibility for clicked location) */}
+      {siteBriefPos && (
+        <SiteBrief
+          lat={siteBriefPos.lat}
+          lng={siteBriefPos.lng}
+          targetMw={powerScenario.targetMw}
+          radiusKm={powerScenario.radiusKm}
+          onClose={() => setSiteBriefPos(null)}
+        />
       )}
 
       {/* Layers menu — bottom right */}
@@ -267,6 +299,8 @@ export default function DataCenterMapClient() {
         basemap={basemap}
         onBasemapChange={setBasemap}
         onResetView={() => atlasRef.current?.resetView()}
+        powerScenario={powerScenario}
+        onPowerScenarioChange={setPowerScenario}
       />
     </div>
   );
