@@ -145,13 +145,20 @@ export default function CommandPanel({
   const [suggestions, setSuggestions] = useState<GazetteerResult[]>([]);
   const [activeSuggIdx, setActiveSuggIdx] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(15);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const suggRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const PAGE_SIZE = 15;
+
   // Initialise gazetteer on mount
   useEffect(() => { initGazetteer(); }, []);
+
+  // Reset pagination whenever a new result set arrives
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [results]);
 
   // Rotate placeholder examples
   useEffect(() => {
@@ -376,8 +383,25 @@ export default function CommandPanel({
           </form>
         </div>
 
-        {/* Filters */}
-        <div className="px-4 py-3 border-b border-[rgba(246,246,253,0.07)]">
+        {/* Filters — collapsible so results have room */}
+        <div className="border-b border-[rgba(246,246,253,0.07)]">
+          {/* Collapse toggle row */}
+          <button
+            type="button"
+            onClick={() => setFiltersCollapsed((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-white/[0.02] transition-colors focus:outline-none"
+            aria-expanded={!filtersCollapsed}
+          >
+            <span className="text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.4)]">
+              Filters
+            </span>
+            <span className="text-[rgba(246,246,253,0.35)] text-[11px]">
+              {filtersCollapsed ? "▸ show" : "▾ hide"}
+            </span>
+          </button>
+
+          {!filtersCollapsed && (
+          <div className="px-4 pb-3">
           {/* Capability pills */}
           <p className="text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.4)] mb-2">
             Capabilities
@@ -474,6 +498,8 @@ export default function CommandPanel({
               Reset filters
             </button>
           )}
+          </div>
+          )}
         </div>
 
         {/* Results */}
@@ -503,11 +529,21 @@ export default function CommandPanel({
 
           {results && results.length > 0 && (
             <>
-              <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.35)]">
-                {results.length} result{results.length !== 1 ? "s" : ""}
+              {/* Count row */}
+              <div className="px-4 py-2 flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.35)]">
+                  {results.length} result{results.length !== 1 ? "s" : ""}
+                </span>
+                {results.length > visibleCount && (
+                  <span className="text-[10px] text-[rgba(162,163,233,0.5)]">
+                    showing {visibleCount} of {results.length}
+                  </span>
+                )}
               </div>
+
+              {/* Paginated list */}
               <ul className="list-none p-0 m-0">
-                {results.map((dc) => (
+                {results.slice(0, visibleCount).map((dc) => (
                   <li key={dc.id}>
                     <ResultRow
                       dc={dc}
@@ -517,6 +553,27 @@ export default function CommandPanel({
                   </li>
                 ))}
               </ul>
+
+              {/* Load more */}
+              {visibleCount < results.length && (
+                <div className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                    className="
+                      w-full py-2 rounded-xl text-xs font-medium
+                      bg-[rgba(105,106,172,0.12)] border border-[rgba(105,106,172,0.22)]
+                      text-[rgba(162,163,233,0.8)] hover:bg-[rgba(105,106,172,0.22)] hover:text-[#f6f6fd]
+                      transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#696aac]
+                    "
+                  >
+                    Load {Math.min(PAGE_SIZE, results.length - visibleCount)} more
+                    <span className="text-[rgba(246,246,253,0.35)] ml-1">
+                      ({results.length - visibleCount} remaining)
+                    </span>
+                  </button>
+                </div>
+              )}
             </>
           )}
 
