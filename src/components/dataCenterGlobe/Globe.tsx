@@ -55,15 +55,31 @@ async function loadFiberRoutes(): Promise<FiberPath[]> {
   return paths;
 }
 
+/** GeoJSON Feature with geometry (Polygon or MultiPolygon). globe.gl expects GeoJsonGeometry. */
+type GeoJsonFeature = { type: string; geometry: { type: string; coordinates: number[] | number[][] | number[][][] }; properties?: Record<string, unknown> };
+
+/** Load country borders from Natural Earth 110m (public/geo/countries.geojson). */
+async function loadCountryBorders(): Promise<GeoJsonFeature[]> {
+  const res = await fetch("/geo/countries.geojson");
+  if (!res.ok) return [];
+  const geo = await res.json();
+  if (!geo?.features?.length) return [];
+  return geo.features.filter(
+    (f: GeoJsonFeature) => f.geometry && (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon")
+  );
+}
+
 export default function DataCenterGlobe({ active = true, globeRef: externalRef }: DataCenterGlobeProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const globeRef = useRef<any>(null);
   const reducedMotion = usePrefersReducedMotion();
   const [size, setSize] = useState({ w: 800, h: 600 });
   const [fiberPaths, setFiberPaths] = useState<FiberPath[]>([]);
+  const [countryPolygons, setCountryPolygons] = useState<GeoJsonFeature[]>([]);
 
   useEffect(() => {
     loadFiberRoutes().then(setFiberPaths);
+    loadCountryBorders().then(setCountryPolygons);
   }, []);
 
   useEffect(() => {
@@ -147,6 +163,12 @@ export default function DataCenterGlobe({ active = true, globeRef: externalRef }
         atmosphereColor="#696aac"
         atmosphereAltitude={0.15}
         animateIn={true}
+        polygonsData={countryPolygons}
+        polygonGeoJsonGeometry={(d: object) => (d as GeoJsonFeature).geometry as { type: string; coordinates: number[] }}
+        polygonCapColor="rgba(0,0,0,0)"
+        polygonSideColor="rgba(0,0,0,0)"
+        polygonStrokeColor="rgba(246,246,253,0.12)"
+        polygonAltitude={0.001}
         pointsData={pointsData}
         pointLat="lat"
         pointLng="lng"
@@ -154,8 +176,17 @@ export default function DataCenterGlobe({ active = true, globeRef: externalRef }
         pointColor={() => "rgba(162, 163, 233, 0.95)"}
         pointRadius={0.5}
         pointLabel={(d: object) => {
-          const dc = d as { name: string; city: string; country: string };
-          return `${dc.name} — ${dc.city}, ${dc.country}`;
+          const dc = d as {
+            name: string;
+            city: string;
+            country: string;
+            stateOrRegion?: string;
+            capabilities?: string[];
+            provider?: string;
+          };
+          const loc = [dc.city, dc.stateOrRegion, dc.country].filter(Boolean).join(", ");
+          const tags = dc.capabilities?.length ? ` (${dc.capabilities.join(", ")})` : "";
+          return `${dc.name} — ${loc}${tags}`;
         }}
         pathsData={fiberPaths}
         pathPoints="coords"
