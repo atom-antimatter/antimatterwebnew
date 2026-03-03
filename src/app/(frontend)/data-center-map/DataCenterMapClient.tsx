@@ -9,9 +9,9 @@ import DetailCard from "@/components/dataCenterGlobe/DetailCard";
 import LayersMenu, { type LayersState, type PowerScenario } from "@/components/atlas/LayersMenu";
 import type { AtlasMapRef, Basemap } from "@/components/atlas/AtlasMap.client";
 import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
-import { parseSearchQuery } from "@/lib/search/parseSearchQuery";
 import { filterDataCenters } from "@/lib/search/filterDataCenters";
-import { findCityByName } from "@/components/atlas/cities/cityIndex";
+import { runSearchPipeline } from "@/lib/search/searchPipeline";
+import type { GazetteerResult } from "@/lib/search/gazetteer";
 
 // AtlasMap must be loaded client-side only (Cesium cannot run in Node).
 // The inner component uses forwardRef, so we use the `.default` shape.
@@ -23,7 +23,6 @@ const AtlasMap = dynamic(
 // ─── types ────────────────────────────────────────────────────────────────────
 
 type GeocodedPos = { lat: number; lng: number } | null;
-type GeocodeApiResult = { lat: number; lng: number; displayName: string };
 
 // ─── defaults ─────────────────────────────────────────────────────────────────
 
@@ -78,95 +77,106 @@ export default function DataCenterMapClient() {
 
   // ─── search ───────────────────────────────────────────────────────────────
 
-  const runSearch = useCallback(
-    async (opts: {
-      rawQuery: string;
-      capabilities: string[];
-      tier: string | null;
-      radius: number;
-      pos?: GeocodedPos;
-    }) => {
-      const { rawQuery, capabilities, tier, radius, pos } = opts;
-      const parsed = parseSearchQuery(rawQuery);
-      const mergedCaps = Array.from(new Set([...parsed.capabilities, ...capabilities]));
-      const mergedTier = (parsed.tier ?? tier) as DataCenter["tier"] | null;
-
-      let resolvedPos = pos ?? null;
-
-      if (!resolvedPos && parsed.placeQuery) {
-        setSearchStatus("loading");
-
-        // 1. Fast local city lookup first
-        const local = findCityByName(parsed.placeQuery);
-        if (local) {
-          resolvedPos = { lat: local.lat, lng: local.lng };
-        } else {
-          // 2. Fall back to Nominatim geocode API
-          try {
-            const res = await fetch(
-              `/api/geocode?q=${encodeURIComponent(parsed.placeQuery)}`
-            );
-            if (res.ok) {
-              const data = await res.json();
-              const list = data.results as GeocodeApiResult[] | undefined;
-              if (Array.isArray(list) && list.length > 0) {
-                resolvedPos = { lat: list[0].lat, lng: list[0].lng };
-              }
-            }
-          } catch {
-            // geocode failure — fall through to text search
-          }
-        }
-
-        if (resolvedPos) {
-          setGeocodedPos(resolvedPos);
-          atlasRef.current?.flyTo(
-            { lat: resolvedPos.lat, lng: resolvedPos.lng, height: FLY_HEIGHT_SEARCH },
-            1.5
-          );
-        }
-      }
-
-      const filtered = filterDataCenters(DATA_CENTERS, {
-        geocodedPos: resolvedPos,
-        radiusKm: radius,
-        capabilities: mergedCaps,
-        tier: mergedTier,
-        textQuery: resolvedPos ? undefined : rawQuery,
-      });
-
-      setResults(filtered);
-      setSearchStatus(
-        filtered.length === 0
-          ? resolvedPos ? "no-dc" : "geocode-none"
-          : "idle"
-      );
-
-      // Text-only: fly to first match
-      if (!resolvedPos && filtered.length > 0) {
-        const dc = filtered[0];
-        atlasRef.current?.flyTo({ lat: dc.lat, lng: dc.lng, height: FLY_HEIGHT_SEARCH }, 1.5);
-      }
-    },
-    []
-  );
-
   const handleSearch = useCallback(
     async (query: string) => {
       setLastRawQuery(query);
       setGeocodedPos(null);
-      await runSearch({ rawQuery: query, capabilities: capabilityFilters, tier: tierFilter, radius: radiusKm });
+      setSearchStatus("loading");
+
+      // Run 3-stage pipeline: local gazetteer → NLP (parallel) → geocode fallback
+      const pipelineResult = await runSearchPipeline(query, {
+        useNLP: true,
+        defaultRadiusKm: radiusKm,
+      });
+
+      // Merge pipeline filters with active UI filters
+      const mergedCaps = Array.from(new Set([
+        ...capabilityFilters,
+        ...pipelineResult.filters.capabilities,
+      ]));
+      const mergedTier = (pipelineResult.filters.tier ?? tierFilter) as DataCenter["tier"] | null;
+      const mergedRadius = pipelineResult.filters.radiusKm ?? radiusKm;
+
+      // If pipeline extracted a provider, update capabilityFilters state accordingly (optional)
+      if (pipelineResult.filters.provider) {
+        // Provider is handled via text search — no separate state needed yet
+      }
+
+      const pos = pipelineResult.location
+        ? { lat: pipelineResult.location.lat, lng: pipelineResult.location.lng }
+        : null;
+
+      if (pos) {
+        setGeocodedPos(pos);
+        const bbox = pipelineResult.location?.bbox;
+        if (bbox) {
+          // Fly to bounding box centre
+          const [west, south, east, north] = bbox;
+          atlasRef.current?.flyTo({
+            lat: (south + north) / 2,
+            lng: (west + east) / 2,
+            height: FLY_HEIGHT_SEARCH,
+          }, 1.5);
+        } else {
+          atlasRef.current?.flyTo({ lat: pos.lat, lng: pos.lng, height: FLY_HEIGHT_SEARCH }, 1.5);
+        }
+      }
+
+      // If pipeline selected a facility directly, select it
+      if (pipelineResult.location?.kind === "facility" && pipelineResult.location.dc) {
+        handleSelectDc(pipelineResult.location.dc);
+        setSearchStatus("idle");
+        return;
+      }
+
+      const filtered = filterDataCenters(DATA_CENTERS, {
+        geocodedPos: pos ?? undefined,
+        radiusKm: mergedRadius,
+        capabilities: mergedCaps,
+        tier: mergedTier,
+        textQuery: pos ? undefined : query,
+      });
+
+      setResults(filtered);
+      setSearchStatus(filtered.length === 0 ? (pos ? "no-dc" : "geocode-none") : "idle");
+      if (!pos && filtered.length > 0) {
+        atlasRef.current?.flyTo({ lat: filtered[0].lat, lng: filtered[0].lng, height: FLY_HEIGHT_SEARCH }, 1.5);
+      }
     },
-    [capabilityFilters, tierFilter, radiusKm, runSearch]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [capabilityFilters, tierFilter, radiusKm]
   );
 
   const handleFilterChange = useCallback(
     (newCaps: string[], newTier: string | null, newRadius: number) => {
       if (!lastRawQuery && !geocodedPos) return;
-      runSearch({ rawQuery: lastRawQuery, capabilities: newCaps, tier: newTier, radius: newRadius, pos: geocodedPos });
+      const filtered = filterDataCenters(DATA_CENTERS, {
+        geocodedPos: geocodedPos ?? undefined,
+        radiusKm: newRadius,
+        capabilities: newCaps,
+        tier: newTier as DataCenter["tier"] | null,
+        textQuery: geocodedPos ? undefined : lastRawQuery,
+      });
+      setResults(filtered);
+      setSearchStatus(filtered.length === 0 ? (geocodedPos ? "no-dc" : "geocode-none") : "idle");
     },
-    [lastRawQuery, geocodedPos, runSearch]
+    [lastRawQuery, geocodedPos]
   );
+
+  /** Called when user picks a gazetteer city suggestion (not a facility) */
+  const handleSelectSuggestion = useCallback((r: GazetteerResult) => {
+    const pos = { lat: r.lat, lng: r.lng };
+    setGeocodedPos(pos);
+    atlasRef.current?.flyTo({ lat: r.lat, lng: r.lng, height: FLY_HEIGHT_SEARCH }, 1.2);
+    const filtered = filterDataCenters(DATA_CENTERS, {
+      geocodedPos: pos,
+      radiusKm,
+      capabilities: capabilityFilters,
+      tier: tierFilter as DataCenter["tier"] | null,
+    });
+    setResults(filtered);
+    setSearchStatus(filtered.length === 0 ? "no-dc" : "idle");
+  }, [radiusKm, capabilityFilters, tierFilter]);
 
   const handleToggleCapability = useCallback(
     (cap: string) => {
@@ -274,6 +284,7 @@ export default function DataCenterMapClient() {
         onSetRadius={handleSetRadius}
         showRadius={geocodedPos !== null}
         onReset={handleReset}
+        onSelectSuggestion={handleSelectSuggestion}
       />
 
       {/* Right detail card (DC selection) */}

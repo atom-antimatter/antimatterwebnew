@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Search, X, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, X, RotateCcw, MapPin, Building2, Hash } from "lucide-react";
 import styles from "@/components/ui/css/Button.module.css";
 import type { DataCenter } from "@/data/dataCenters";
 import { FEATURED_CAPABILITIES, capabilityShortLabel } from "@/data/capabilityCatalog";
+import { searchGazetteer, initGazetteer, type GazetteerResult } from "@/lib/search/gazetteer";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,8 @@ export type CommandPanelProps = {
   onToggle: () => void;
   onSearch: (query: string) => void;
   onSelectDc: (dc: DataCenter) => void;
+  /** Called when user picks a gazetteer suggestion (city/zip) — bypasses full search */
+  onSelectSuggestion?: (r: GazetteerResult) => void;
   selectedId?: string | null;
   results: DataCenter[] | null;
   searchStatus: SearchStatus;
@@ -46,7 +49,7 @@ const TIER_OPTIONS: { label: string; value: DataCenter["tier"] }[] = [
   { label: "Edge", value: "edge" },
 ];
 
-const EXAMPLES = ["Atlanta", "30308", "colocation in London", "GPU near Singapore"];
+const EXAMPLES = ["Atlanta", "30308", "edge + gpu near london", "hyperscale in dallas", "ixp in frankfurt"];
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
@@ -124,6 +127,7 @@ export default function CommandPanel({
   onToggle,
   onSearch,
   onSelectDc,
+  onSelectSuggestion,
   selectedId,
   results,
   searchStatus,
@@ -138,8 +142,16 @@ export default function CommandPanel({
 }: CommandPanelProps) {
   const [query, setQuery] = useState("");
   const [exampleIdx, setExampleIdx] = useState(0);
+  const [suggestions, setSuggestions] = useState<GazetteerResult[]>([]);
+  const [activeSuggIdx, setActiveSuggIdx] = useState(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const suggRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Initialise gazetteer on mount
+  useEffect(() => { initGazetteer(); }, []);
 
   // Rotate placeholder examples
   useEffect(() => {
@@ -147,9 +159,27 @@ export default function CommandPanel({
     return () => clearInterval(id);
   }, []);
 
+  // Debounced typeahead
+  const handleQueryChange = useCallback((value: string) => {
+    setQuery(value);
+    setActiveSuggIdx(-1);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      const s = searchGazetteer(value, 6);
+      setSuggestions(s);
+      setShowSuggestions(s.length > 0);
+    }, 250);
+  }, []);
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
+      setShowSuggestions(false);
       const q = query.trim();
       if (q) onSearch(q);
     },
@@ -158,20 +188,55 @@ export default function CommandPanel({
 
   const handleClear = useCallback(() => {
     setQuery("");
+    setSuggestions([]);
+    setShowSuggestions(false);
     onReset();
     inputRef.current?.focus();
   }, [onReset]);
 
-  // Keyboard: up/down to navigate results
+  const handleSelectSugg = useCallback((s: GazetteerResult) => {
+    setQuery(s.label);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    if (s.kind === "facility" && s.dc) {
+      onSelectDc(s.dc);
+    } else {
+      onSelectSuggestion?.(s);
+    }
+  }, [onSelectDc, onSelectSuggestion]);
+
+  // Keyboard nav: up/down for suggestions, then results list
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (!results?.length) return;
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        (resultsRef.current?.querySelector("button") as HTMLButtonElement)?.focus();
+      if (showSuggestions && suggestions.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setActiveSuggIdx((i) => Math.min(i + 1, suggestions.length - 1));
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setActiveSuggIdx((i) => Math.max(i - 1, -1));
+          return;
+        }
+        if (e.key === "Enter" && activeSuggIdx >= 0) {
+          e.preventDefault();
+          handleSelectSugg(suggestions[activeSuggIdx]);
+          return;
+        }
+        if (e.key === "Escape") {
+          setShowSuggestions(false);
+          return;
+        }
+      }
+      if (!showSuggestions && results?.length) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          (resultsRef.current?.querySelector("button") as HTMLButtonElement)?.focus();
+        }
       }
     },
-    [results]
+    [showSuggestions, suggestions, activeSuggIdx, results, handleSelectSugg]
   );
 
   const hasFilters =
@@ -219,33 +284,86 @@ export default function CommandPanel({
         {/* Search */}
         <div className="px-4 py-3 border-b border-[rgba(246,246,253,0.07)]">
           <form onSubmit={handleSubmit} role="search" aria-label="Search data centers">
-            <div className="relative flex items-center gap-2">
-              <Search className="absolute left-3 w-3.5 h-3.5 text-[rgba(105,106,172,0.7)] pointer-events-none" />
-              <input
-                ref={inputRef}
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`e.g. ${EXAMPLES[exampleIdx]}`}
-                aria-label="Search locations and capabilities"
-                className="
-                  w-full h-10 pl-8 pr-10 rounded-xl text-sm
-                  bg-[rgba(246,246,253,0.05)] border border-[rgba(246,246,253,0.09)]
-                  text-[#f6f6fd] placeholder:text-[rgba(246,246,253,0.35)]
-                  focus:outline-none focus:border-[#696aac] focus:ring-1 focus:ring-[rgba(105,106,172,0.4)]
-                  transition-colors
-                "
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  aria-label="Clear search"
-                  className="absolute right-3 text-[rgba(246,246,253,0.4)] hover:text-[rgba(246,246,253,0.8)] transition-colors"
+            <div className="relative">
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 w-3.5 h-3.5 text-[rgba(105,106,172,0.7)] pointer-events-none" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => handleQueryChange(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  placeholder={`e.g. ${EXAMPLES[exampleIdx]}`}
+                  autoComplete="off"
+                  aria-label="Search locations and capabilities"
+                  aria-autocomplete="list"
+                  aria-expanded={showSuggestions}
+                  aria-controls="search-suggestions"
+                  className="
+                    w-full h-10 pl-8 pr-10 rounded-xl text-sm
+                    bg-[rgba(246,246,253,0.05)] border border-[rgba(246,246,253,0.09)]
+                    text-[#f6f6fd] placeholder:text-[rgba(246,246,253,0.35)]
+                    focus:outline-none focus:border-[#696aac] focus:ring-1 focus:ring-[rgba(105,106,172,0.4)]
+                    transition-colors
+                  "
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    aria-label="Clear search"
+                    className="absolute right-3 text-[rgba(246,246,253,0.4)] hover:text-[rgba(246,246,253,0.8)] transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Typeahead suggestions dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div
+                  id="search-suggestions"
+                  ref={suggRef}
+                  role="listbox"
+                  aria-label="Search suggestions"
+                  className="
+                    absolute top-full left-0 right-0 mt-1 z-50
+                    rounded-xl overflow-hidden
+                    bg-[rgba(6,7,15,0.96)] backdrop-blur-xl
+                    border border-[rgba(246,246,253,0.1)] shadow-2xl
+                  "
                 >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                  {suggestions.map((s, i) => {
+                    const Icon = s.kind === "zip" ? Hash : s.kind === "facility" ? Building2 : MapPin;
+                    const isActive = i === activeSuggIdx;
+                    return (
+                      <button
+                        key={`${s.kind}-${s.lat}-${s.lng}-${i}`}
+                        type="button"
+                        role="option"
+                        aria-selected={isActive}
+                        onMouseDown={(e) => { e.preventDefault(); handleSelectSugg(s); }}
+                        className={`
+                          w-full flex items-start gap-2.5 px-3 py-2.5 text-left transition-colors
+                          ${isActive ? "bg-[rgba(105,106,172,0.2)]" : "hover:bg-[rgba(246,246,253,0.04)]"}
+                        `}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[rgba(162,163,233,0.6)]" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-[#f6f6fd] leading-snug truncate">{s.label}</div>
+                          {s.sublabel && (
+                            <div className="text-[10px] text-[rgba(246,246,253,0.45)] mt-0.5 truncate">{s.sublabel}</div>
+                          )}
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider text-[rgba(105,106,172,0.6)] shrink-0 mt-0.5">
+                          {s.kind}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
             <button

@@ -63,31 +63,37 @@ type TooltipState = { x: number; y: number; dc: DataCenter } | null;
 // ─── imagery providers ────────────────────────────────────────────────────────
 
 function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
-  // Carto tiles use {x}/{y}/{z} but Cesium uses {x}/{y}/{z} — use subdomains
-  // to spread load across a/b/c/d. Carto supports up to zoom 20.
+  // Standard 256-px tiles. tileWidth/tileHeight must match the tile server.
+  // DO NOT set them to 512 for these providers — it causes upscaling and blur.
+  const commonOpts = {
+    minimumLevel: 0,
+    tileWidth: 256,
+    tileHeight: 256,
+  } as const;
+
   switch (basemap) {
     case "osmLight":
       return new Cesium.UrlTemplateImageryProvider({
+        ...commonOpts,
         url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
         subdomains: ["a", "b", "c", "d"],
         credit: new Cesium.Credit("Carto, OpenStreetMap contributors"),
-        minimumLevel: 0,
         maximumLevel: 20,
       });
     case "osmStandard":
       return new Cesium.UrlTemplateImageryProvider({
+        ...commonOpts,
         url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         credit: new Cesium.Credit("OpenStreetMap contributors"),
-        minimumLevel: 0,
         maximumLevel: 19,
       });
     case "osmDark":
     default:
       return new Cesium.UrlTemplateImageryProvider({
+        ...commonOpts,
         url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
         subdomains: ["a", "b", "c", "d"],
         credit: new Cesium.Credit("Carto, OpenStreetMap contributors"),
-        minimumLevel: 0,
         maximumLevel: 20,
       });
   }
@@ -225,14 +231,25 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       viewer.scene.globe.enableLighting = false;
       // Smooth depth culling
       viewer.scene.globe.depthTestAgainstTerrain = false;
-      // Keep tiles loaded even at high zoom so the globe never goes blank.
-      // Higher value = lower quality threshold = tiles always visible.
-      viewer.scene.globe.maximumScreenSpaceError = 4;
-      // Increase the tile preload horizon so tiles are ready before the camera
-      // arrives — reduces black flicker when zooming in quickly.
-      viewer.scene.globe.preloadAncestors = true;
-      // Keep tiles in memory longer so they don't unload on quick zoom-out.
-      viewer.scene.globe.tileCacheSize = 200;
+     // Lower SSE = Cesium requests higher-resolution tiles earlier = sharper map.
+     // We use 2 (vs the default 2; previously 4) — safe with minimumZoomDistance=150m.
+     viewer.scene.globe.maximumScreenSpaceError = 2;
+     // Preload ancestor tiles so transitions are seamless.
+     viewer.scene.globe.preloadAncestors = true;
+     // Large tile cache so tiles don't unload on quick camera movements.
+     viewer.scene.globe.tileCacheSize = 1000;
+
+     // ── Render sharpness ──────────────────────────────────────────────────────
+     // Set resolution scale to native DPR (capped at 2 for GPU budget).
+     // Without this, the canvas renders at 1× and gets CSS-upscaled on retina,
+     // producing the "blurry" look the user reported.
+     viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
+
+     // FXAA reduces jagged edges on borders and labels.
+     viewer.scene.postProcessStages.fxaa.enabled = true;
+
+     // Fog makes distant tiles look washed-out / blurry.
+     viewer.scene.fog.enabled = false;
 
       // ── Zoom limits — prevent camera from getting so close that tiles fail ──
       // OSM/Carto tiles stop at zoom 20 (~streetview level).  Cesium's camera
@@ -251,11 +268,39 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
       // ── Prevent the Cesium canvas from propagating wheel events to the page ──
       // Without this, scrolling over the map also scrolls the browser page.
-      const canvasEl = viewer.scene.canvas;
-      const stopWheel = (e: WheelEvent) => e.stopPropagation();
-      canvasEl.addEventListener("wheel", stopWheel, { passive: true });
-      // Also block context-menu to avoid browser interfering with right-drag
-      canvasEl.addEventListener("contextmenu", (e) => e.preventDefault());
+     const canvasEl = viewer.scene.canvas;
+     const stopWheel = (e: WheelEvent) => e.stopPropagation();
+     canvasEl.addEventListener("wheel", stopWheel, { passive: true });
+     // Also block context-menu to avoid browser interfering with right-drag
+     canvasEl.addEventListener("contextmenu", (e) => e.preventDefault());
+
+     // ── Developer sharpness debug (Shift+S) ──────────────────────────────────
+     const onDebugKey = (e: KeyboardEvent) => {
+       if (e.shiftKey && e.key === "S") {
+         const v = viewerRef.current;
+         if (!v || v.isDestroyed()) return;
+         const layer = v.imageryLayers.length > 0 ? v.imageryLayers.get(0) : null;
+         console.group("[Atlas] Sharpness debug");
+         console.log("devicePixelRatio:", window.devicePixelRatio);
+         console.log("viewer.resolutionScale:", v.resolutionScale);
+         console.log("globe.maximumScreenSpaceError:", v.scene.globe.maximumScreenSpaceError);
+         console.log("tileCacheSize:", v.scene.globe.tileCacheSize);
+         console.log("FXAA:", v.scene.postProcessStages.fxaa.enabled);
+         console.log("fog:", v.scene.fog.enabled);
+         if (layer) console.log("imagery.maximumLevel:", (layer.imageryProvider as any).maximumLevel);
+         console.groupEnd();
+       }
+     };
+     window.addEventListener("keydown", onDebugKey);
+
+     // Keep resolutionScale in sync with DPR changes (retina plug-in/out).
+     const onWindowResize = () => {
+       if (!viewer.isDestroyed()) {
+         viewer.resize();
+         viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
+       }
+     };
+     window.addEventListener("resize", onWindowResize);
 
       // Add initial basemap
       const provider = makeProvider("osmDark");
@@ -314,6 +359,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       setIsReady(true);
 
       return () => {
+        window.removeEventListener("keydown", onDebugKey);
+        window.removeEventListener("resize", onWindowResize);
         if (handlerRef.current && !handlerRef.current.isDestroyed()) {
           handlerRef.current.destroy();
         }
@@ -562,10 +609,10 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           position: Cesium.Cartesian3.fromDegrees(city.lng, city.lat),
           label: new Cesium.LabelGraphics({
             text: city.name,
-            font: "11px system-ui, sans-serif",
+            font: "600 13px system-ui, -apple-system, sans-serif",
             fillColor: Cesium.Color.fromCssColorString("#e8e9ff"),
             outlineColor: Cesium.Color.fromCssColorString("#020202"),
-            outlineWidth: 2.5,
+            outlineWidth: 4,
             style: Cesium.LabelStyle.FILL_AND_OUTLINE,
             pixelOffset: new Cesium.Cartesian2(0, -10),
             horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
@@ -761,7 +808,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           if (plant.capacityMw >= 2000) {
             entity.label = new Cesium.LabelGraphics({
               text: `${plant.name}\n${Math.round(plant.capacityMw)} MW`,
-              font: "10px system-ui",
+              font: "600 11px system-ui, -apple-system, sans-serif",
               fillColor: color,
               outlineColor: Cesium.Color.BLACK,
               outlineWidth: 2,
