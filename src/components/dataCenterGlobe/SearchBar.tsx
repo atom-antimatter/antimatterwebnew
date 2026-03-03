@@ -25,7 +25,7 @@ export default function SearchBar({ onSearch, placeholder = "Search data centers
     >
       <input
         ref={inputRef}
-        type="search"
+        type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}

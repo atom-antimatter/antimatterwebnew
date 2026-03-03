@@ -211,6 +211,20 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       // Keep tiles loaded even at high zoom so the globe never goes blank.
       // Higher value = lower quality threshold = tiles always visible.
       viewer.scene.globe.maximumScreenSpaceError = 4;
+      // Increase the tile preload horizon so tiles are ready before the camera
+      // arrives — reduces black flicker when zooming in quickly.
+      viewer.scene.globe.preloadAncestors = true;
+      // Keep tiles in memory longer so they don't unload on quick zoom-out.
+      viewer.scene.globe.tileCacheSize = 200;
+
+      // ── Zoom limits — prevent camera from getting so close that tiles fail ──
+      // OSM/Carto tiles stop at zoom 20 (~streetview level).  Cesium's camera
+      // height of ~300 m corresponds to tile zoom 18-19 where tiles are fine.
+      // Below ~100 m the tiles are gone and the globe turns black, so we clamp.
+      const ctrl = viewer.scene.screenSpaceCameraController;
+      ctrl.minimumZoomDistance = 150;    // metres — never zoom closer than 150 m
+      ctrl.maximumZoomDistance = 2.5e7;  // 25 000 km — match our initial altitude
+
       // Remove atmosphere, sky box, sun, moon (matches dark brand / performance)
       if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
       if (viewer.scene.skyBox) (viewer.scene.skyBox as any).show = false;
