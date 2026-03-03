@@ -3,10 +3,17 @@
  * PowerReadinessTab — lives inside the left CommandPanel "Power" tab.
  * Fully scrollable, no map overlay.
  */
-import { useState } from "react";
-import { Zap, AlertTriangle, ChevronDown, ChevronUp, RefreshCw, MapPin, X, Target } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  Zap, AlertTriangle, ChevronDown, ChevronUp, RefreshCw,
+  MapPin, X, Target, Search, Hash, Building2,
+} from "lucide-react";
 import { useAtlasLayersStore } from "@/state/atlasLayersStore";
+import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 import { usePowerReadiness } from "@/lib/power/usePowerReadiness";
+import {
+  searchGazetteer, initGazetteer, type GazetteerResult,
+} from "@/lib/search/gazetteer";
 import type { DataCenter } from "@/data/dataCenters";
 import type { PowerFeasibilityResult } from "@/lib/power/scorePowerFeasibility";
 
@@ -27,7 +34,7 @@ function ScoreRing({ score }: { score: number }) {
         <div className="text-lg font-bold text-[#f6f6fd]">{score}</div>
         <div
           className="capitalize leading-tight"
-          style={{ color, fontSize: band.length > 8 ? '6.5px' : '8px' }}
+          style={{ color, fontSize: band.length > 8 ? "6.5px" : "8px" }}
         >
           {band}
         </div>
@@ -73,8 +80,7 @@ function PowerResults({ result, onReload }: { result: PowerFeasibilityResult; on
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-[#f6f6fd] mb-0.5">Power Feasibility</p>
           <p className="text-[11px] text-[rgba(246,246,253,0.5)]">
-            {result.state ? `${result.state} · ` : ""}
-            Composite score
+            {result.state ? `${result.state} · ` : ""}Composite score
           </p>
           <button
             type="button" onClick={onReload}
@@ -85,7 +91,6 @@ function PowerResults({ result, onReload }: { result: PowerFeasibilityResult; on
         </div>
       </div>
 
-      {/* Coverage warning */}
       {missing.length > 0 && (
         <div className="flex items-start gap-2 bg-[rgba(251,191,36,0.06)] border border-[rgba(251,191,36,0.2)] rounded-xl px-3 py-2.5">
           <AlertTriangle className="w-3.5 h-3.5 text-[#fbbf24] shrink-0 mt-0.5" />
@@ -96,31 +101,21 @@ function PowerResults({ result, onReload }: { result: PowerFeasibilityResult; on
         </div>
       )}
 
-      {/* Signal grid */}
       <div className="grid grid-cols-2 gap-2">
-        <SignalCard
-          label="Utility Rate" icon={Zap} color="#8587e3"
+        <SignalCard label="Utility Rate" icon={Zap} color="#8587e3"
           value={result.rateProxy.ratePerKwh !== null ? `$${(result.rateProxy.ratePerKwh*100).toFixed(1)}¢/kWh` : "N/A"}
-          score={result.signals.rateIndex}
-        />
-        <SignalCard
-          label="Grid Carbon" icon={Zap} color="#34d399"
+          score={result.signals.rateIndex} />
+        <SignalCard label="Grid Carbon" icon={Zap} color="#34d399"
           value={result.carbonProxy.co2LbPerMwh !== null ? `${Math.round(result.carbonProxy.co2LbPerMwh)} lb/MWh` : "N/A"}
-          score={result.signals.carbonIndex}
-        />
-        <SignalCard
-          label="Queue Pressure" icon={Zap} color="#fbbf24"
+          score={result.signals.carbonIndex} />
+        <SignalCard label="Queue Pressure" icon={Zap} color="#fbbf24"
           value={result.queueProxy.queuedMw !== null ? `${(result.queueProxy.queuedMw/1000).toFixed(0)} GW queued` : "N/A"}
-          score={result.signals.queueIndex}
-        />
-        <SignalCard
-          label="Nearby Gen." icon={Zap} color="#60a5fa"
+          score={result.signals.queueIndex} />
+        <SignalCard label="Nearby Gen." icon={Zap} color="#60a5fa"
           value={result.nearbyPlants.length > 0 ? `${result.nearbyPlants.length} plants` : "None in dataset"}
-          score={result.signals.genIndex}
-        />
+          score={result.signals.genIndex} />
       </div>
 
-      {/* Caveats */}
       {result.caveats.length > 0 && (
         <div className="border border-[rgba(246,246,253,0.07)] rounded-xl overflow-hidden">
           <button
@@ -131,8 +126,9 @@ function PowerResults({ result, onReload }: { result: PowerFeasibilityResult; on
             <span className="text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.4)]">
               Caveats &amp; Limitations
             </span>
-            {showCaveats ? <ChevronUp className="w-3.5 h-3.5 text-[rgba(246,246,253,0.3)]"/>
-                         : <ChevronDown className="w-3.5 h-3.5 text-[rgba(246,246,253,0.3)]"/>}
+            {showCaveats
+              ? <ChevronUp className="w-3.5 h-3.5 text-[rgba(246,246,253,0.3)]"/>
+              : <ChevronDown className="w-3.5 h-3.5 text-[rgba(246,246,253,0.3)]"/>}
           </button>
           {showCaveats && (
             <div className="px-3 pb-3 space-y-1.5 border-t border-[rgba(246,246,253,0.07)]">
@@ -147,7 +143,6 @@ function PowerResults({ result, onReload }: { result: PowerFeasibilityResult; on
         </div>
       )}
 
-      {/* Sources */}
       {result.attribution.length > 0 && (
         <div className="pt-1">
           <p className="text-[9px] uppercase tracking-widest text-[rgba(246,246,253,0.3)] mb-1.5">Data Sources</p>
@@ -157,6 +152,137 @@ function PowerResults({ result, onReload }: { result: PowerFeasibilityResult; on
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Location search ─────────────────────────────────────────────────────────
+
+function LocationSearch({
+  onSelect,
+}: {
+  onSelect: (lat: number, lng: number, label: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<GazetteerResult[]>([]);
+  const [showSugg, setShowSugg] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { initGazetteer(); }, []);
+
+  const handleChange = useCallback((value: string) => {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!value.trim()) { setSuggestions([]); setShowSugg(false); return; }
+    debounceRef.current = setTimeout(() => {
+      const results = searchGazetteer(value, 6);
+      setSuggestions(results);
+      setShowSugg(results.length > 0);
+    }, 160);
+  }, []);
+
+  const handleSelect = useCallback((s: GazetteerResult) => {
+    onSelect(s.lat, s.lng, s.label);
+    setQuery(s.label);
+    setSuggestions([]);
+    setShowSugg(false);
+    inputRef.current?.blur();
+  }, [onSelect]);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+
+    // Try first suggestion
+    if (suggestions.length > 0) { handleSelect(suggestions[0]); return; }
+
+    // Nominatim fallback
+    setGeocoding(true);
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.lat && data.lng) {
+        onSelect(Number(data.lat), Number(data.lng), data.displayName ?? q);
+        setQuery(data.displayName ?? q);
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setGeocoding(false);
+    }
+    setShowSugg(false);
+  }, [query, suggestions, handleSelect, onSelect]);
+
+  const SuggIcon = (kind: string) =>
+    kind === "zip" ? Hash : kind === "facility" ? Building2 : MapPin;
+
+  return (
+    <form onSubmit={handleSubmit} className="relative">
+      <div className="relative flex items-center">
+        <Search className="absolute left-3 w-3.5 h-3.5 text-[rgba(105,106,172,0.7)] pointer-events-none" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => handleChange(e.target.value)}
+          onFocus={() => suggestions.length > 0 && setShowSugg(true)}
+          onBlur={() => setTimeout(() => setShowSugg(false), 150)}
+          placeholder="City, ZIP, or address…"
+          autoComplete="off"
+          className="
+            w-full h-10 pl-8 pr-8 rounded-xl text-sm
+            bg-[rgba(246,246,253,0.05)] border border-[rgba(246,246,253,0.09)]
+            text-[#f6f6fd] placeholder:text-[rgba(246,246,253,0.35)]
+            focus:outline-none focus:border-[#696aac] focus:ring-1 focus:ring-[rgba(105,106,172,0.4)]
+            transition-colors
+          "
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => { setQuery(""); setSuggestions([]); setShowSugg(false); }}
+            className="absolute right-3 text-[rgba(246,246,253,0.4)] hover:text-[rgba(246,246,253,0.8)] transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* Typeahead suggestions */}
+      {showSugg && suggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-xl overflow-hidden bg-[rgba(6,7,15,0.97)] border border-[rgba(246,246,253,0.1)] shadow-2xl">
+          {suggestions.map((s, i) => {
+            const Icon = SuggIcon(s.kind);
+            return (
+              <button
+                key={`${s.kind}-${s.lat}-${s.lng}-${i}`}
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); handleSelect(s); }}
+                className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left hover:bg-[rgba(105,106,172,0.2)] transition-colors"
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[rgba(162,163,233,0.6)]" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-[#f6f6fd] leading-snug truncate">{s.label}</div>
+                  {s.sublabel && (
+                    <div className="text-[10px] text-[rgba(246,246,253,0.45)] mt-0.5 truncate">{s.sublabel}</div>
+                  )}
+                </div>
+                <span className="text-[10px] uppercase tracking-wider text-[rgba(105,106,172,0.6)] shrink-0 mt-0.5">
+                  {s.kind}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Geocode loading hint */}
+      {geocoding && (
+        <p className="mt-1.5 text-[10px] text-[rgba(162,163,233,0.55)]">Locating…</p>
+      )}
+    </form>
   );
 }
 
@@ -176,15 +302,15 @@ export default function PowerReadinessTab({
   selectedDc, pinnedPoint, onPinCenter, onClearPin,
 }: PowerReadinessTabProps) {
   const { powerScenario, setPowerScenario } = useAtlasLayersStore();
+  const { setPinnedPoint } = useAtlasSelectionStore();
   const [fetchEnabled, setFetchEnabled] = useState(false);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
 
   // Derive target for display + fetch
   const target = pinnedPoint ?? (selectedDc ? { lat: selectedDc.lat, lng: selectedDc.lng } : null);
-  const targetLabel = selectedDc
-    ? `${selectedDc.name}${selectedDc.provider ? ` · ${selectedDc.provider}` : ""}`
-    : pinnedPoint
-    ? "Pinned point"
-    : null;
+  const targetLabel = locationLabel
+    ?? (selectedDc ? `${selectedDc.name}${selectedDc.provider ? ` · ${selectedDc.provider}` : ""}` : null)
+    ?? (pinnedPoint ? "Pinned point" : null);
 
   const { state, trigger, reload } = usePowerReadiness({
     lat:      target?.lat ?? null,
@@ -193,6 +319,12 @@ export default function PowerReadinessTab({
     radiusKm: powerScenario.radiusKm,
     enabled:  fetchEnabled && !!target,
   });
+
+  const handleLocationSelect = useCallback((lat: number, lng: number, label: string) => {
+    setPinnedPoint({ lat, lng });
+    setLocationLabel(label);
+    setFetchEnabled(false); // require explicit Assess click
+  }, [setPinnedPoint]);
 
   const handleAssess = () => {
     if (!target) return;
@@ -207,47 +339,61 @@ export default function PowerReadinessTab({
 
   const handleClear = () => {
     setFetchEnabled(false);
+    setLocationLabel(null);
     onClearPin?.();
   };
 
-  return (
-    /* This outer div fills the flex-1 from CommandPanel body and allows scroll */
-    <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-4 scrollbar-thin scrollbar-thumb-[rgba(105,106,172,0.3)]">
+  // When dc selection changes externally, clear the manual label
+  useEffect(() => {
+    if (selectedDc) setLocationLabel(null);
+  }, [selectedDc]);
 
-      {/* Target display */}
+  return (
+    // onWheel stops trackpad scroll from leaking through to Cesium below
+    <div
+      className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-4 scrollbar-thin scrollbar-thumb-[rgba(105,106,172,0.3)]"
+      onWheel={(e) => e.stopPropagation()}
+    >
+      {/* Location search */}
       <div>
         <p className="text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.4)] mb-2">Target Location</p>
-        {target ? (
-          <div className="flex items-start gap-2 bg-[rgba(105,106,172,0.12)] border border-[rgba(105,106,172,0.25)] rounded-xl px-3 py-2.5">
-            <MapPin className="w-3.5 h-3.5 text-[#a2a3e9] shrink-0 mt-0.5"/>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[#f6f6fd] truncate">{targetLabel}</p>
-              <p className="text-[10px] text-[rgba(246,246,253,0.5)] mt-0.5">
-                {target.lat.toFixed(4)}, {target.lng.toFixed(4)}
-              </p>
-            </div>
-            <button type="button" onClick={handleClear}
-              className="text-[rgba(246,246,253,0.35)] hover:text-[#f6f6fd] transition-colors flex-shrink-0">
-              <X className="w-3.5 h-3.5"/>
-            </button>
-          </div>
-        ) : (
-          <div className="bg-[rgba(246,246,253,0.03)] border border-dashed border-[rgba(246,246,253,0.12)] rounded-xl px-4 py-4 text-center">
-            <MapPin className="w-5 h-5 text-[rgba(246,246,253,0.25)] mx-auto mb-2"/>
-            <p className="text-[11px] text-[rgba(246,246,253,0.45)] leading-relaxed">
-              Click a data center or tap anywhere on the map to pin a location.
-            </p>
-          </div>
-        )}
+        <LocationSearch onSelect={handleLocationSelect} />
       </div>
 
-      {/* Use map center */}
-      {onPinCenter && (
+      {/* Selected target display */}
+      {target && (
+        <div className="flex items-start gap-2 bg-[rgba(105,106,172,0.12)] border border-[rgba(105,106,172,0.25)] rounded-xl px-3 py-2.5 -mt-1">
+          <MapPin className="w-3.5 h-3.5 text-[#a2a3e9] shrink-0 mt-0.5"/>
+          <div className="flex-1 min-w-0">
+            {targetLabel && (
+              <p className="text-sm font-medium text-[#f6f6fd] truncate">{targetLabel}</p>
+            )}
+            <p className="text-[10px] text-[rgba(246,246,253,0.5)] mt-0.5">
+              {target.lat.toFixed(4)}, {target.lng.toFixed(4)}
+            </p>
+          </div>
+          <button type="button" onClick={handleClear}
+            className="text-[rgba(246,246,253,0.35)] hover:text-[#f6f6fd] transition-colors flex-shrink-0">
+            <X className="w-3.5 h-3.5"/>
+          </button>
+        </div>
+      )}
+
+      {/* Map-center shortcut */}
+      {onPinCenter && !target && (
         <button
           type="button" onClick={onPinCenter}
           className="w-full flex items-center justify-center gap-1.5 h-8 rounded-lg text-[11px] text-[rgba(162,163,233,0.8)] bg-[rgba(105,106,172,0.08)] border border-[rgba(105,106,172,0.2)] hover:bg-[rgba(105,106,172,0.18)] transition-colors"
         >
           <Target className="w-3 h-3"/> Use map center
+        </button>
+      )}
+      {onPinCenter && target && (
+        <button
+          type="button" onClick={onPinCenter}
+          className="w-full flex items-center justify-center gap-1.5 h-7 rounded-lg text-[10px] text-[rgba(162,163,233,0.6)] hover:text-[rgba(162,163,233,0.9)] transition-colors"
+        >
+          <Target className="w-3 h-3"/> Use map center instead
         </button>
       )}
 
@@ -309,7 +455,7 @@ export default function PowerReadinessTab({
         )}
       </div>
 
-      {/* Results area */}
+      {/* Results */}
       {state.status === "loading" && (
         <div className="flex items-center justify-center py-8 text-sm text-[rgba(246,246,253,0.45)]">
           Computing feasibility…

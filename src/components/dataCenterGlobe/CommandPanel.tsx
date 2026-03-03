@@ -261,6 +261,7 @@ export default function CommandPanel({
       <div
         role="complementary"
         aria-label="Infrastructure search panel"
+        onWheel={(e) => e.stopPropagation()}
         className={`
           fixed top-0 left-0 h-full z-40
           w-[340px] xl:w-[380px]
@@ -536,6 +537,7 @@ export default function CommandPanel({
         <div
           ref={resultsRef}
           className="flex-1 overflow-y-auto scrollbar-hide"
+          onWheel={(e) => e.stopPropagation()}
           role="listbox"
           aria-label="Data center results"
           aria-live="polite"
