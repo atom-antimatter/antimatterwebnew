@@ -51,6 +51,8 @@ export type AtlasLayers = {
   powerGeneration: boolean;
   powerCarbon: boolean;
   powerQueue: boolean;
+  // Providers
+  linodeRegions: boolean;
 };
 
 export type AtlasMapRef = {
@@ -143,6 +145,8 @@ export type PowerScenario = {
   radiusKm: number;
 };
 
+import type { ProviderRegion } from "@/lib/providers/linode/types";
+
 type AtlasMapProps = {
   selectedId?: string | null;
   onSelectDc?: (dc: DataCenter | null) => void;
@@ -152,10 +156,13 @@ type AtlasMapProps = {
   powerScenario?: PowerScenario;
   /** Called when user clicks the map background — for Site Brief */
   onMapClick?: (lat: number, lng: number) => void;
+  /** Called when a Linode region marker is clicked */
+  onSelectLinode?: (region: ProviderRegion | null) => void;
+  selectedLinodeId?: string | null;
 };
 
 const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
-  ({ selectedId, onSelectDc, highlightIds, layers, basemap, powerScenario, onMapClick }, ref) => {
+  ({ selectedId, onSelectDc, highlightIds, layers, basemap, powerScenario, onMapClick, onSelectLinode, selectedLinodeId }, ref) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const viewerRef = useRef<Cesium.Viewer | null>(null);
     const dcSourceRef = useRef<Cesium.CustomDataSource | null>(null);
@@ -169,7 +176,11 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     // Power layer primitives
     const powerHeatmapRef = useRef<Cesium.PrimitiveCollection | null>(null);
     const powerGenSourceRef = useRef<Cesium.CustomDataSource | null>(null);
+    const powerQueueSourceRef = useRef<Cesium.CustomDataSource | null>(null);
     const powerHeatmapFetchRef = useRef<AbortController | null>(null);
+    // Linode / provider regions
+    const linodeSourceRef = useRef<Cesium.CustomDataSource | null>(null);
+    const linodeRegionsRef = useRef<ProviderRegion[]>([]);
 
     const [tooltip, setTooltip] = useState<TooltipState>(null);
     const [isReady, setIsReady] = useState(false);
@@ -323,15 +334,21 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       // Interaction handler
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
-      // Click: select DC — or fire onMapClick for Site Brief when clicking globe
+      // Click: select DC / Linode region — or fire onMapClick for Site Brief
       handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
         const picked = viewer.scene.pick(event.position);
         if (picked?.id?.dcData) {
           onSelectDc?.(picked.id.dcData as DataCenter);
-        } else {
+          onSelectLinode?.(null);
+        } else if (picked?.id?.linodeData) {
+          onSelectLinode?.(picked.id.linodeData as import("@/lib/providers/linode/types").ProviderRegion);
           onSelectDc?.(null);
           setTooltip(null);
-          // If no DC was clicked, fire map-click for Site Brief
+        } else {
+          onSelectDc?.(null);
+          onSelectLinode?.(null);
+          setTooltip(null);
+          // If no entity was clicked, fire map-click for Site Brief
           if (onMapClick) {
             const cartesian = viewer.camera.pickEllipsoid(event.position, viewer.scene.globe.ellipsoid);
             if (cartesian) {
@@ -344,12 +361,23 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-      // Hover: tooltip (desktop)
+      // Hover: tooltip (desktop) — DCs and Linode regions
       handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
         const picked = viewer.scene.pick(event.endPosition);
         if (picked?.id?.dcData) {
           const dc = picked.id.dcData as DataCenter;
           setTooltip({ x: event.endPosition.x, y: event.endPosition.y, dc });
+        } else if (picked?.id?.linodeData) {
+          const r = picked.id.linodeData as import("@/lib/providers/linode/types").ProviderRegion;
+          // Synthesise a minimal DataCenter-like tooltip
+          const pseudo = {
+            name: r.label,
+            city: r.city ?? "",
+            stateOrRegion: r.metro ?? undefined,
+            country: r.country ?? "",
+            capabilities: r.capabilities,
+          } as DataCenter;
+          setTooltip({ x: event.endPosition.x, y: event.endPosition.y, dc: pseudo });
         } else {
           setTooltip(null);
         }
@@ -713,34 +741,47 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           const vwr = viewerRef.current;
           if (!vwr || vwr.isDestroyed()) return;
 
-          const collection = new Cesium.PrimitiveCollection();
+          const cells = data.cells ?? [];
+          if (cells.length === 0) return;
 
-          for (const cell of data.cells ?? []) {
+          // ── Batch ALL cells into ONE Primitive — critical for performance.
+          // Creating one Primitive per cell causes WebGL shader storm and is
+          // the root cause of the heatmap not rendering.
+          const instances = cells.map(cell => {
             const { r, g, b, a } = cell.color;
-            const instances = [
-              new Cesium.GeometryInstance({
-                geometry: new Cesium.RectangleGeometry({
-                  rectangle: Cesium.Rectangle.fromDegrees(cell.west, cell.south, cell.east, cell.north),
-                  height: 100,
-                }),
-                attributes: {
-                  color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                    new Cesium.Color(r, g, b, a)
-                  ),
-                },
+            return new Cesium.GeometryInstance({
+              geometry: new Cesium.RectangleGeometry({
+                rectangle: Cesium.Rectangle.fromDegrees(cell.west, cell.south, cell.east, cell.north),
+                height: 200,
+                extrudedHeight: 0,
               }),
-            ];
-            collection.add(new Cesium.Primitive({
-              geometryInstances: instances,
-              appearance: new Cesium.PerInstanceColorAppearance({ flat: true }),
-              asynchronous: false,
-            }));
-          }
+              attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+                  new Cesium.Color(r, g, b, Math.max(a, 0.25)) // ensure minimum visibility
+                ),
+              },
+            });
+          });
+
+          const collection = new Cesium.PrimitiveCollection();
+          collection.add(new Cesium.Primitive({
+            geometryInstances: instances,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              translucent: true,
+            }),
+            asynchronous: false,
+            allowPicking: false, // heatmap isn't pickable
+          }));
 
           powerHeatmapRef.current = collection;
           vwr.scene.primitives.add(collection);
         })
-        .catch(() => { /* aborted or network error — silent */ });
+        .catch((err) => {
+          if ((err as Error).name !== "AbortError") {
+            console.warn("[AtlasMap] Heatmap fetch failed:", err);
+          }
+        });
 
       return () => { controller.abort(); };
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -824,6 +865,100 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layers.powerGeneration, cameraState.level, cameraState.viewRect]);
 
+    // ── power queue layer ───────────────────────────────────────────────────
+    useEffect(() => {
+      const viewer = viewerRef.current;
+      if (!viewer || viewer.isDestroyed()) return;
+
+      let source = powerQueueSourceRef.current;
+      if (!source) {
+        source = new Cesium.CustomDataSource("power-queue");
+        powerQueueSourceRef.current = source;
+        viewer.dataSources.add(source);
+      }
+      source.entities.removeAll();
+      source.show = layers.powerQueue;
+      if (!layers.powerQueue) return;
+      if (cameraState.level === "WORLD") return;
+
+      const rect = cameraState.viewRect;
+      if (!rect) return;
+      const buf = 3;
+      const url = `/api/power/queue?west=${(rect.west-buf).toFixed(2)}&south=${(rect.south-buf).toFixed(2)}&east=${(rect.east+buf).toFixed(2)}&north=${(rect.north+buf).toFixed(2)}`;
+
+      fetch(url).then(r => r.json()).then((data: {
+        aggregates?: Array<{ state: string; queuedMw: number; lat: number; lng: number; approximate: boolean }>;
+      }) => {
+        const src = powerQueueSourceRef.current;
+        if (!src) return;
+        for (const agg of data.aggregates ?? []) {
+          if (!agg.queuedMw) continue;
+          const mw = agg.queuedMw;
+          const size = Math.min(18, Math.max(8, Math.sqrt(mw / 5000) * 14));
+          const entity = src.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(agg.lng, agg.lat, 3000),
+            point: new Cesium.PointGraphics({
+              pixelSize: size,
+              color: Cesium.Color.fromCssColorString("#fbbf24").withAlpha(0.65),
+              outlineColor: Cesium.Color.fromCssColorString("#92400e").withAlpha(0.5),
+              outlineWidth: 1.5,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              scaleByDistance: new Cesium.NearFarScalar(200_000, 1.4, 6_000_000, 0.5),
+            }),
+          });
+          (entity as any).queueData = agg;
+        }
+      }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [layers.powerQueue, cameraState.level, cameraState.viewRect]);
+
+    // ── Linode / provider regions layer ────────────────────────────────────
+    useEffect(() => {
+      const viewer = viewerRef.current;
+      if (!viewer || viewer.isDestroyed()) return;
+
+      let source = linodeSourceRef.current;
+      if (!source) {
+        source = new Cesium.CustomDataSource("linode-regions");
+        linodeSourceRef.current = source;
+        viewer.dataSources.add(source);
+      }
+      source.entities.removeAll();
+      source.show = layers.linodeRegions;
+      if (!layers.linodeRegions) return;
+
+      // Fetch Linode regions (cached server-side for 1 h)
+      fetch("/api/providers/linode/regions").then(r => r.json()).then((data: {
+        regions?: import("@/lib/providers/linode/types").ProviderRegion[];
+      }) => {
+        const src = linodeSourceRef.current;
+        if (!src || viewer.isDestroyed()) return;
+        const regions = (data.regions ?? []).filter(r => r.lat !== null && r.lng !== null);
+        linodeRegionsRef.current = data.regions ?? [];
+
+        for (const region of regions) {
+          const isSelected = region.region_id === selectedLinodeId;
+          const entity = src.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(region.lng!, region.lat!, 1000),
+            point: new Cesium.PointGraphics({
+              pixelSize: isSelected ? 16 : 10,
+              color: isSelected
+                ? Cesium.Color.fromCssColorString("#34d399")
+                : Cesium.Color.fromCssColorString("#34d399").withAlpha(0.75),
+              outlineColor: isSelected
+                ? Cesium.Color.WHITE
+                : Cesium.Color.fromCssColorString("#065f46").withAlpha(0.6),
+              outlineWidth: isSelected ? 3 : 2,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              scaleByDistance: new Cesium.NearFarScalar(200_000, 1.4, 8_000_000, 0.7),
+            }),
+          });
+          (entity as any).linodeData = region;
+        }
+      }).catch(err => console.warn("[AtlasMap] Linode regions fetch failed:", err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [layers.linodeRegions, selectedLinodeId]);
+
     // ── render ─────────────────────────────────────────────────────────────
     return (
       // overscroll-none + overflow-hidden prevent the map from triggering
@@ -881,10 +1016,14 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-3 py-1 rounded-full bg-[rgba(2,2,2,0.55)] backdrop-blur-sm">
           <span className="text-[10px] text-[rgba(246,246,253,0.45)]">
             © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">OpenStreetMap</a>
-            {" "}contributors · <a href="https://carto.com/attributions" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">Carto</a>
+            {" "}· <a href="https://carto.com/attributions" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">Carto</a>
             {" "}· <a href="https://www.peeringdb.com" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">PeeringDB</a>
             {" "}· <a href="https://www.wikidata.org" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">Wikidata CC0</a>
-            {" "}· <a href="https://www.telegeography.com" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">TeleGeography</a> (submarine cables)
+            {" "}· <a href="https://www.telegeography.com" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">TeleGeography</a>
+            {" "}· <a href="https://openei.org/wiki/Utility_Rate_Database" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">OpenEI URDB</a>
+            {" "}· <a href="https://www.eia.gov/electricity/data/eia860/" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">EIA-860</a>
+            {" "}· <a href="https://www.epa.gov/egrid" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">EPA eGRID</a>
+            {" "}· <a href="https://www.linode.com/docs/api/regions/" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">Akamai/Linode API</a>
           </span>
         </div>
       </div>

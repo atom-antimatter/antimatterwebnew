@@ -18,6 +18,8 @@ export type LayersState = {
   powerGeneration: boolean;
   powerCarbon: boolean;
   powerQueue: boolean;
+  // Provider layers
+  linodeRegions: boolean;
 };
 
 export type PowerScenario = {
@@ -324,6 +326,17 @@ export default function LayersMenu({
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Providers section */}
+            <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
+              <SectionLabel>Providers</SectionLabel>
+              <SwitchRow
+                label="Akamai / Linode regions"
+                helper="Cloud computing regions from Linode API"
+                checked={layers.linodeRegions}
+                onToggle={() => set("linodeRegions", !layers.linodeRegions)}
+              />
             </div>
 
           </div>{/* end scrollable body */}

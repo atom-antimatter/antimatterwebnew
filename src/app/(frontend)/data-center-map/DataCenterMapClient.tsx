@@ -12,6 +12,12 @@ import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { filterDataCenters } from "@/lib/search/filterDataCenters";
 import { runSearchPipeline } from "@/lib/search/searchPipeline";
 import type { GazetteerResult } from "@/lib/search/gazetteer";
+import type { ProviderRegion } from "@/lib/providers/linode/types";
+
+const LinodeCard = dynamic(
+  () => import("@/components/atlas/providers/LinodeCard"),
+  { ssr: false, loading: () => null }
+);
 
 // AtlasMap must be loaded client-side only (Cesium cannot run in Node).
 // The inner component uses forwardRef, so we use the `.default` shape.
@@ -43,6 +49,8 @@ const DEFAULT_LAYERS: LayersState = {
   powerGeneration: false,
   powerCarbon: false,
   powerQueue: false,
+  // Provider layers
+  linodeRegions: false,
 };
 
 // Height in metres for flyTo calls at each zoom context
@@ -62,6 +70,8 @@ export default function DataCenterMapClient() {
   // Power & Energy
   const [powerScenario, setPowerScenario] = useState<PowerScenario>({ targetMw: 100, radiusKm: 80 });
   const [siteBriefPos, setSiteBriefPos] = useState<{ lat: number; lng: number } | null>(null);
+  // Provider / Linode
+  const [selectedLinode, setSelectedLinode] = useState<ProviderRegion | null>(null);
 
   // Search state
   const [results, setResults] = useState<DataCenter[] | null>(null);
@@ -254,15 +264,18 @@ export default function DataCenterMapClient() {
       <AtlasMap
         ref={atlasRef}
         selectedId={selectedDc?.id ?? null}
-        onSelectDc={handleSelectDc}
+        onSelectDc={(dc) => { handleSelectDc(dc); if (dc) setSelectedLinode(null); }}
         highlightIds={highlightIds}
         layers={layers}
         basemap={basemap}
         powerScenario={powerScenario}
+        onSelectLinode={(r) => { setSelectedLinode(r); if (r) { setSelectedDc(null); setSiteBriefPos(null); } }}
+        selectedLinodeId={selectedLinode?.region_id ?? null}
         onMapClick={(lat, lng) => {
           // Open Site Brief when power layer is active and user clicks the map
           if (layers.powerHeatmap || layers.powerGeneration || layers.powerCarbon || layers.powerQueue) {
             setSiteBriefPos({ lat, lng });
+            setSelectedLinode(null);
           }
         }}
       />
@@ -288,8 +301,13 @@ export default function DataCenterMapClient() {
       />
 
       {/* Right detail card (DC selection) */}
-      {selectedDc && !siteBriefPos && (
+      {selectedDc && !siteBriefPos && !selectedLinode && (
         <DetailCard dc={selectedDc} onClose={() => setSelectedDc(null)} />
+      )}
+
+      {/* Linode region card */}
+      {selectedLinode && !siteBriefPos && (
+        <LinodeCard region={selectedLinode} onClose={() => setSelectedLinode(null)} />
       )}
 
       {/* Site Brief (power feasibility for clicked location) */}
