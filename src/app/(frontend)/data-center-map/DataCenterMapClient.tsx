@@ -186,10 +186,10 @@ export default function DataCenterMapClient() {
         onSelectLinode={r => { setSelectedLinode(r); if (r) { setSelectedDc(null); setSiteBriefPos(null); } }}
         selectedLinodeId={selectedLinode?.region_id ?? null}
         onMapClick={(lat, lng) => {
-          if (power.powerHeatmap || power.powerGeneration || power.powerCarbon || power.powerQueue) {
-            setSiteBriefPos({ lat, lng });
-            setSelectedLinode(null);
-          }
+          // Always allow power assessment from any map click — no power-layer gate
+          setSiteBriefPos({ lat, lng });
+          setSelectedLinode(null);
+          setSelectedDc(null);
         }}
       />
 

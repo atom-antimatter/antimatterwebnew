@@ -14,6 +14,8 @@ type Props = {
   cameraState: CameraState;
   viewerReady: boolean;
   layerManager: React.RefObject<LayerManager | null>;
+  /** Pass viewerRef so we can read resolutionScale + canvas size */
+  viewerRef?: React.RefObject<unknown>;
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -34,21 +36,39 @@ function Row({ label, value, highlight }: { label: string; value: string | numbe
   );
 }
 
-export default function DebugPanel({ cameraState, viewerReady, layerManager }: Props) {
+export default function DebugPanel({ cameraState, viewerReady, layerManager, viewerRef }: Props) {
   const { debugEnabled, toggleDebug, overlays, power, providers } = useAtlasLayersStore();
   const [stats, setStats] = useState<Record<string, LayerStats>>({});
+  const [sharpness, setSharpness] = useState<{
+    dpr: number; scale: number; sse: number;
+    canvasW: number; canvasH: number; cssW: number; cssH: number;
+  } | null>(null);
   const [tick, setTick] = useState(0);
 
-  // Poll layer stats
+  // Poll layer stats + sharpness diagnostics
   useEffect(() => {
     if (!debugEnabled) return;
     const id = setInterval(() => {
       const mgr = layerManager.current;
       if (mgr) setStats(mgr.getStats());
+      // Sharpness diagnostics
+      const v = viewerRef?.current as any;
+      if (v && !v.isDestroyed?.()) {
+        const canvas = v.scene?.canvas as HTMLCanvasElement | undefined;
+        setSharpness({
+          dpr:    window.devicePixelRatio,
+          scale:  v.resolutionScale ?? 1,
+          sse:    v.scene?.globe?.maximumScreenSpaceError ?? 0,
+          canvasW: canvas?.width  ?? 0,
+          canvasH: canvas?.height ?? 0,
+          cssW:   canvas?.clientWidth  ?? 0,
+          cssH:   canvas?.clientHeight ?? 0,
+        });
+      }
       setTick(n => n + 1);
     }, 800);
     return () => clearInterval(id);
-  }, [debugEnabled, layerManager]);
+  }, [debugEnabled, layerManager, viewerRef]);
 
   // Shift+D toggle
   const onKey = useCallback((e: KeyboardEvent) => {
@@ -76,11 +96,20 @@ export default function DebugPanel({ cameraState, viewerReady, layerManager }: P
 
       <div className="px-3 py-2 space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto">
 
-        {/* Viewer */}
+        {/* Viewer + Sharpness */}
         <section>
-          <p className="text-[9px] uppercase tracking-widest text-[rgba(162,163,233,0.7)] mb-1">Viewer</p>
+          <p className="text-[9px] uppercase tracking-widest text-[rgba(162,163,233,0.7)] mb-1">Viewer / Sharpness</p>
           <Row label="viewerReady"    value={String(viewerReady)} highlight={!viewerReady} />
           <Row label="devicePixelRatio" value={typeof window !== "undefined" ? window.devicePixelRatio : "?"} />
+          {sharpness && (
+            <>
+              <Row label="resolutionScale" value={sharpness.scale.toFixed(2)} highlight={sharpness.scale < sharpness.dpr * 0.95} />
+              <Row label="SSE" value={sharpness.sse.toFixed(1)} />
+              <Row label="canvas px" value={`${sharpness.canvasW}×${sharpness.canvasH}`} />
+              <Row label="canvas css" value={`${sharpness.cssW}×${sharpness.cssH}`} />
+              <Row label="pixel ratio check" value={sharpness.canvasW > 0 ? (sharpness.canvasW / Math.max(sharpness.cssW,1)).toFixed(2) : "?"} highlight={sharpness.canvasW > 0 && (sharpness.canvasW / Math.max(sharpness.cssW,1)) < 1.4} />
+            </>
+          )}
         </section>
 
         {/* Camera */}

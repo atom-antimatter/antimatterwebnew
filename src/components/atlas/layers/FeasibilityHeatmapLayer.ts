@@ -91,7 +91,8 @@ export class FeasibilityHeatmapLayer implements ILayer {
               Cesium.Rectangle.fromDegrees(cell.west, cell.south, cell.east, cell.north)
             ),
             material: new Cesium.ColorMaterialProperty(
-              new Cesium.Color(r, g, b, Math.max(a, 0.28))
+              // Subtle heatmap — doesn't compete with markers/labels
+              new Cesium.Color(r, g, b, Math.min(Math.max(a, 0.12), 0.22))
             ),
             height:   new Cesium.ConstantProperty(100),
             outline:  new Cesium.ConstantProperty(false),

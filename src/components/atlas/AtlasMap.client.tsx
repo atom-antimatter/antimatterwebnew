@@ -165,9 +165,17 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     canvas.addEventListener("wheel", (e) => e.stopPropagation(), { passive: true });
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
-    // Resize / DPR
+    // Resize / DPR — also poll every 2s for Mac display changes that shift DPR
     const onResize = () => { if (!viewer.isDestroyed()) { viewer.resize(); viewer.resolutionScale = Math.min(window.devicePixelRatio||1, 2); } };
     window.addEventListener("resize", onResize);
+    let lastDPR = window.devicePixelRatio;
+    const dprPollId = setInterval(() => {
+      if (!viewer.isDestroyed() && window.devicePixelRatio !== lastDPR) {
+        lastDPR = window.devicePixelRatio;
+        viewer.resolutionScale = Math.min(lastDPR, 2);
+        viewer.resize();
+      }
+    }, 2000);
 
     // Debug shortcut
     const onKey = (e: KeyboardEvent) => {
@@ -242,6 +250,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     setIsReady(true);
 
     return () => {
+      clearInterval(dprPollId);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("keydown", onKey);
       if (!handler.isDestroyed()) handler.destroy();
@@ -420,7 +429,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         <div className="absolute inset-0 flex items-center justify-center bg-[#020202] text-[rgba(246,246,253,0.5)] text-sm z-10">Loading map…</div>
       )}
 
-      <DebugPanel cameraState={cameraState} viewerReady={isReady} layerManager={managerRef} />
+      <DebugPanel cameraState={cameraState} viewerReady={isReady} layerManager={managerRef} viewerRef={viewerRef} />
 
       {tooltip && (
         <div className="pointer-events-none absolute z-20 bg-[rgba(6,7,15,0.92)] backdrop-blur-sm border border-[rgba(246,246,253,0.1)] rounded-xl px-3 py-2 shadow-lg max-w-[220px]" style={{ left:tooltip.x+14, top:tooltip.y-10 }}>
