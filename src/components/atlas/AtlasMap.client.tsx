@@ -1,20 +1,18 @@
 /**
  * AtlasMap — CesiumJS-based interactive infrastructure map.
  *
- * Replaces react-globe.gl.  Renders:
- *  - OSM / Carto raster basemap
- *  - Country + state/province borders (GeoJSON)
- *  - Data center point markers with EntityCluster
- *  - City labels with LOD zoom gating
- *  - Fiber route polylines (visible at LOCAL/CITY levels)
- *  - Hover tooltip & click-to-select
- *
- * NOTE: CesiumJS cannot run server-side. This file is always loaded via
- * `next/dynamic` with `{ ssr: false }` (see DataCenterMapLoader.tsx).
+ * Layer toggle correctness rules enforced here:
+ *  1. Every async data load applies the CURRENT layer state when it resolves
+ *     (fixes the race: "toggle off during fetch → layer still appears").
+ *  2. Every .show change is followed by viewer.scene.requestRender() to
+ *     guarantee the viewport updates even if Cesium batches frames.
+ *  3. Each async effect carries a requestId (integer); on re-run the old id
+ *     is incremented and stale callbacks silently discard their results.
+ *  4. The viewer is created once and destroyed on unmount; a guard prevents
+ *     double-init (React strict mode / hot reload).
  */
 "use client";
 
-// ── Set CESIUM_BASE_URL before any Cesium code executes ─────────────────────
 if (typeof window !== "undefined") {
   (window as any).CESIUM_BASE_URL = "/cesium";
 }
@@ -32,10 +30,10 @@ import * as Cesium from "cesium";
 import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { useCameraLevel } from "./useCameraLevel";
 import { initCityIndex, getCitiesForLevel } from "./cities/cityIndex";
+import DebugOverlay from "./DebugOverlay";
 
-// ─── constants ────────────────────────────────────────────────────────────────
+// ─── types ────────────────────────────────────────────────────────────────────
 
-// Disable Cesium ion (we use OSM / Carto — no token needed)
 Cesium.Ion.defaultAccessToken = "";
 
 export type Basemap = "osmDark" | "osmLight" | "osmStandard";
@@ -46,12 +44,10 @@ export type AtlasLayers = {
   cities: boolean;
   points: boolean;
   routes: boolean;
-  // Power & Energy
   powerHeatmap: boolean;
   powerGeneration: boolean;
   powerCarbon: boolean;
   powerQueue: boolean;
-  // Providers
   linodeRegions: boolean;
 };
 
@@ -60,19 +56,28 @@ export type AtlasMapRef = {
   resetView: () => void;
 };
 
+export type PowerScenario = { targetMw: number; radiusKm: number };
+
+import type { ProviderRegion } from "@/lib/providers/linode/types";
+
+type AtlasMapProps = {
+  selectedId?: string | null;
+  onSelectDc?: (dc: DataCenter | null) => void;
+  highlightIds?: string[] | null;
+  layers: AtlasLayers;
+  basemap: Basemap;
+  powerScenario?: PowerScenario;
+  onMapClick?: (lat: number, lng: number) => void;
+  onSelectLinode?: (region: ProviderRegion | null) => void;
+  selectedLinodeId?: string | null;
+};
+
 type TooltipState = { x: number; y: number; dc: DataCenter } | null;
 
-// ─── imagery providers ────────────────────────────────────────────────────────
+// ─── helpers ──────────────────────────────────────────────────────────────────
 
 function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
-  // Standard 256-px tiles. tileWidth/tileHeight must match the tile server.
-  // DO NOT set them to 512 for these providers — it causes upscaling and blur.
-  const commonOpts = {
-    minimumLevel: 0,
-    tileWidth: 256,
-    tileHeight: 256,
-  } as const;
-
+  const commonOpts = { minimumLevel: 0, tileWidth: 256, tileHeight: 256 } as const;
   switch (basemap) {
     case "osmLight":
       return new Cesium.UrlTemplateImageryProvider({
@@ -101,94 +106,81 @@ function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
   }
 }
 
-/** Whether the current basemap is light (affects marker colour). */
-function isLightBasemap(basemap: Basemap): boolean {
-  return basemap === "osmLight" || basemap === "osmStandard";
+function isLightBasemap(b: Basemap) {
+  return b === "osmLight" || b === "osmStandard";
 }
-
-// ─── tier helpers ─────────────────────────────────────────────────────────────
 
 function tierPixelSize(tier: DataCenter["tier"]): number {
   switch (tier) {
     case "hyperscale": return 13;
-    case "core": return 10;
+    case "core":       return 10;
     case "enterprise": return 9;
-    case "edge": return 8;
-    default: return 9;
+    case "edge":       return 8;
+    default:           return 9;
   }
 }
 
 function tierColor(tier: DataCenter["tier"], light = false): Cesium.Color {
   if (light) {
-    // Darker palette for light basemaps so dots are visible
     switch (tier) {
       case "hyperscale": return Cesium.Color.fromCssColorString("#3e3f7e").withAlpha(0.95);
-      case "core": return Cesium.Color.fromCssColorString("#4c4dac").withAlpha(0.93);
+      case "core":       return Cesium.Color.fromCssColorString("#4c4dac").withAlpha(0.93);
       case "enterprise": return Cesium.Color.fromCssColorString("#5a5bb8").withAlpha(0.9);
-      case "edge": return Cesium.Color.fromCssColorString("#696aac").withAlpha(0.92);
-      default: return Cesium.Color.fromCssColorString("#4c4dac").withAlpha(0.88);
+      case "edge":       return Cesium.Color.fromCssColorString("#696aac").withAlpha(0.92);
+      default:           return Cesium.Color.fromCssColorString("#4c4dac").withAlpha(0.88);
     }
   }
   switch (tier) {
     case "hyperscale": return Cesium.Color.fromCssColorString("#8587e3").withAlpha(0.97);
-    case "core": return Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.93);
+    case "core":       return Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.93);
     case "enterprise": return Cesium.Color.fromCssColorString("#c7c8f2").withAlpha(0.88);
-    case "edge": return Cesium.Color.fromCssColorString("#696aac").withAlpha(0.9);
-    default: return Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.85);
+    case "edge":       return Cesium.Color.fromCssColorString("#696aac").withAlpha(0.9);
+    default:           return Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.85);
   }
+}
+
+function requestRender(viewer: Cesium.Viewer | null) {
+  if (viewer && !viewer.isDestroyed()) viewer.scene.requestRender();
 }
 
 // ─── component ────────────────────────────────────────────────────────────────
 
-export type PowerScenario = {
-  targetMw: number;
-  radiusKm: number;
-};
-
-import type { ProviderRegion } from "@/lib/providers/linode/types";
-
-type AtlasMapProps = {
-  selectedId?: string | null;
-  onSelectDc?: (dc: DataCenter | null) => void;
-  highlightIds?: string[] | null;
-  layers: AtlasLayers;
-  basemap: Basemap;
-  powerScenario?: PowerScenario;
-  /** Called when user clicks the map background — for Site Brief */
-  onMapClick?: (lat: number, lng: number) => void;
-  /** Called when a Linode region marker is clicked */
-  onSelectLinode?: (region: ProviderRegion | null) => void;
-  selectedLinodeId?: string | null;
-};
-
 const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   ({ selectedId, onSelectDc, highlightIds, layers, basemap, powerScenario, onMapClick, onSelectLinode, selectedLinodeId }, ref) => {
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const viewerRef = useRef<Cesium.Viewer | null>(null);
-    const dcSourceRef = useRef<Cesium.CustomDataSource | null>(null);
-    const citySourceRef = useRef<Cesium.CustomDataSource | null>(null);
-    const routeSourceRef = useRef<Cesium.CustomDataSource | null>(null);
-    const routePrimitivesRef = useRef<Cesium.PrimitiveCollection | null>(null);
-    const countrySourceRef = useRef<Cesium.GeoJsonDataSource | null>(null);
-    const stateSourceRef = useRef<Cesium.GeoJsonDataSource | null>(null);
-    const handlerRef = useRef<Cesium.ScreenSpaceEventHandler | null>(null);
-    const layerListenerRef = useRef<Cesium.ImageryLayer | null>(null);
-    // Power layer primitives
-    const powerHeatmapRef = useRef<Cesium.PrimitiveCollection | null>(null);
-    const powerGenSourceRef = useRef<Cesium.CustomDataSource | null>(null);
-    const powerQueueSourceRef = useRef<Cesium.CustomDataSource | null>(null);
-    const powerHeatmapFetchRef = useRef<AbortController | null>(null);
-    // Linode / provider regions
-    const linodeSourceRef = useRef<Cesium.CustomDataSource | null>(null);
-    const linodeRegionsRef = useRef<ProviderRegion[]>([]);
+    const containerRef  = useRef<HTMLDivElement | null>(null);
+    const viewerRef     = useRef<Cesium.Viewer | null>(null);
+
+    // ── Data source refs (one per layer) ──────────────────────────────────
+    const countrySourceRef   = useRef<Cesium.GeoJsonDataSource | null>(null);
+    const stateSourceRef     = useRef<Cesium.GeoJsonDataSource | null>(null);
+    const dcSourceRef        = useRef<Cesium.CustomDataSource | null>(null);
+    const citySourceRef      = useRef<Cesium.CustomDataSource | null>(null);
+    const routePrimRef       = useRef<Cesium.PrimitiveCollection | null>(null);
+    const powerHeatmapRef    = useRef<Cesium.PrimitiveCollection | null>(null);
+    const powerGenSourceRef  = useRef<Cesium.CustomDataSource | null>(null);
+    const powerQueueSourceRef= useRef<Cesium.CustomDataSource | null>(null);
+    const linodeSourceRef    = useRef<Cesium.CustomDataSource | null>(null);
+
+    // ── Request IDs — incremented to discard stale async callbacks ────────
+    // Each async effect has its own counter. When the effect re-runs, it
+    // increments the counter; the old callback compares its captured id
+    // to the ref's current value and silently returns if they differ.
+    const heatmapReqId    = useRef(0);
+    const genReqId        = useRef(0);
+    const queueReqId      = useRef(0);
+    const linodeReqId     = useRef(0);
+    const heatmapAbort    = useRef<AbortController | null>(null);
+
+    // ── Layers ref — so async callbacks can read the CURRENT toggle state
+    // without being stale closures
+    const layersRef = useRef<AtlasLayers>(layers);
+    useEffect(() => { layersRef.current = layers; });
 
     const [tooltip, setTooltip] = useState<TooltipState>(null);
     const [isReady, setIsReady] = useState(false);
-
-    // Camera LOD hook (reads from viewerRef)
     const cameraState = useCameraLevel(viewerRef);
 
-    // ── expose flyTo + resetView via forwarded ref ─────────────────────────
+    // ── expose flyTo + resetView ───────────────────────────────────────────
     useImperativeHandle(ref, () => ({
       flyTo: (pos, durationSeconds = 1.5) => {
         const viewer = viewerRef.current;
@@ -210,199 +202,143 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       },
     }), []);
 
-    // ── initialise Cesium viewer once ──────────────────────────────────────
+    // ── Initialise Cesium viewer ONCE ─────────────────────────────────────
     useEffect(() => {
       const container = containerRef.current;
-      if (!container || viewerRef.current) return;
+      if (!container || viewerRef.current) return; // guard double-init
 
       const viewer = new Cesium.Viewer(container, {
-        // Disable all default Cesium UI chrome
-        animation: false,
-        baseLayerPicker: false,
-        fullscreenButton: false,
-        geocoder: false,
-        homeButton: false,
-        infoBox: false,
-        navigationHelpButton: false,
-        navigationInstructionsInitiallyVisible: false,
-        sceneModePicker: false,
-        selectionIndicator: false,
-        timeline: false,
-        vrButton: false,
-        // Terrain: flat ellipsoid (no paid terrain needed)
+        animation: false, baseLayerPicker: false, fullscreenButton: false,
+        geocoder: false, homeButton: false, infoBox: false,
+        navigationHelpButton: false, navigationInstructionsInitiallyVisible: false,
+        sceneModePicker: false, selectionIndicator: false, timeline: false, vrButton: false,
         terrainProvider: new Cesium.EllipsoidTerrainProvider(),
       });
 
-      // Suppress Cesium ion credit warning
       (viewer.cesiumWidget as any)._creditContainer.style.display = "none";
-
-      // Dark base colour shown while tiles are loading (prevents blank white flash)
-      viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#1a1b2e");
-      // Reduce performance cost — we don't need lighting for a 2D-ish map style
-      viewer.scene.globe.enableLighting = false;
-      // Smooth depth culling
+      viewer.scene.globe.baseColor       = Cesium.Color.fromCssColorString("#1a1b2e");
+      viewer.scene.globe.enableLighting  = false;
       viewer.scene.globe.depthTestAgainstTerrain = false;
-     // Lower SSE = Cesium requests higher-resolution tiles earlier = sharper map.
-     // We use 2 (vs the default 2; previously 4) — safe with minimumZoomDistance=150m.
-     viewer.scene.globe.maximumScreenSpaceError = 2;
-     // Preload ancestor tiles so transitions are seamless.
-     viewer.scene.globe.preloadAncestors = true;
-     // Large tile cache so tiles don't unload on quick camera movements.
-     viewer.scene.globe.tileCacheSize = 1000;
+      viewer.scene.globe.maximumScreenSpaceError = 2;
+      viewer.scene.globe.preloadAncestors = true;
+      viewer.scene.globe.tileCacheSize    = 1000;
+      viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
+      viewer.scene.postProcessStages.fxaa.enabled = true;
+      viewer.scene.fog.enabled = false;
 
-     // ── Render sharpness ──────────────────────────────────────────────────────
-     // Set resolution scale to native DPR (capped at 2 for GPU budget).
-     // Without this, the canvas renders at 1× and gets CSS-upscaled on retina,
-     // producing the "blurry" look the user reported.
-     viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
-
-     // FXAA reduces jagged edges on borders and labels.
-     viewer.scene.postProcessStages.fxaa.enabled = true;
-
-     // Fog makes distant tiles look washed-out / blurry.
-     viewer.scene.fog.enabled = false;
-
-      // ── Zoom limits — prevent camera from getting so close that tiles fail ──
-      // OSM/Carto tiles stop at zoom 20 (~streetview level).  Cesium's camera
-      // height of ~300 m corresponds to tile zoom 18-19 where tiles are fine.
-      // Below ~100 m the tiles are gone and the globe turns black, so we clamp.
       const ctrl = viewer.scene.screenSpaceCameraController;
-      ctrl.minimumZoomDistance = 150;    // metres — never zoom closer than 150 m
-      ctrl.maximumZoomDistance = 2.5e7;  // 25 000 km — match our initial altitude
+      ctrl.minimumZoomDistance = 150;
+      ctrl.maximumZoomDistance = 2.5e7;
 
-      // Remove atmosphere, sky box, sun, moon (matches dark brand / performance)
       if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
       if (viewer.scene.skyBox) (viewer.scene.skyBox as any).show = false;
-      if (viewer.scene.sun) viewer.scene.sun.show = false;
+      if (viewer.scene.sun)  viewer.scene.sun.show  = false;
       if (viewer.scene.moon) viewer.scene.moon.show = false;
       viewer.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
 
-      // ── Prevent the Cesium canvas from propagating wheel events to the page ──
-      // Without this, scrolling over the map also scrolls the browser page.
-     const canvasEl = viewer.scene.canvas;
-     const stopWheel = (e: WheelEvent) => e.stopPropagation();
-     canvasEl.addEventListener("wheel", stopWheel, { passive: true });
-     // Also block context-menu to avoid browser interfering with right-drag
-     canvasEl.addEventListener("contextmenu", (e) => e.preventDefault());
+      // Prevent canvas wheel events from scrolling the page
+      const canvas = viewer.scene.canvas;
+      const stopWheel = (e: WheelEvent) => e.stopPropagation();
+      canvas.addEventListener("wheel", stopWheel, { passive: true });
+      canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
-     // ── Developer sharpness debug (Shift+S) ──────────────────────────────────
-     const onDebugKey = (e: KeyboardEvent) => {
-       if (e.shiftKey && e.key === "S") {
-         const v = viewerRef.current;
-         if (!v || v.isDestroyed()) return;
-         const layer = v.imageryLayers.length > 0 ? v.imageryLayers.get(0) : null;
-         console.group("[Atlas] Sharpness debug");
-         console.log("devicePixelRatio:", window.devicePixelRatio);
-         console.log("viewer.resolutionScale:", v.resolutionScale);
-         console.log("globe.maximumScreenSpaceError:", v.scene.globe.maximumScreenSpaceError);
-         console.log("tileCacheSize:", v.scene.globe.tileCacheSize);
-         console.log("FXAA:", v.scene.postProcessStages.fxaa.enabled);
-         console.log("fog:", v.scene.fog.enabled);
-         if (layer) console.log("imagery.maximumLevel:", (layer.imageryProvider as any).maximumLevel);
-         console.groupEnd();
-       }
-     };
-     window.addEventListener("keydown", onDebugKey);
+      // Sharpness + resize
+      const onDebugKey = (e: KeyboardEvent) => {
+        if (e.shiftKey && e.key === "S") {
+          const v = viewerRef.current;
+          if (!v || v.isDestroyed()) return;
+          console.group("[Atlas] Sharpness debug");
+          console.log("devicePixelRatio:", window.devicePixelRatio);
+          console.log("viewer.resolutionScale:", v.resolutionScale);
+          console.log("globe.maximumScreenSpaceError:", v.scene.globe.maximumScreenSpaceError);
+          console.log("FXAA:", v.scene.postProcessStages.fxaa.enabled);
+          console.log("fog:", v.scene.fog.enabled);
+          console.groupEnd();
+        }
+      };
+      const onResize = () => {
+        if (!viewer.isDestroyed()) {
+          viewer.resize();
+          viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
+        }
+      };
+      window.addEventListener("keydown", onDebugKey);
+      window.addEventListener("resize", onResize);
 
-     // Keep resolutionScale in sync with DPR changes (retina plug-in/out).
-     const onWindowResize = () => {
-       if (!viewer.isDestroyed()) {
-         viewer.resize();
-         viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
-       }
-     };
-     window.addEventListener("resize", onWindowResize);
-
-      // Add initial basemap
-      const provider = makeProvider("osmDark");
-      layerListenerRef.current = viewer.imageryLayers.addImageryProvider(provider);
-
-      // Initial camera position (overview of the world)
-      viewer.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000),
-      });
+      // Initial basemap
+      viewer.imageryLayers.addImageryProvider(makeProvider("osmDark"));
+      viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000) });
 
       viewerRef.current = viewer;
 
-      // Load geo assets + setup layers
-      initCityIndex();
-      setupCountryBorders(viewer);
-      setupStatesBorders(viewer);
-      setupDCMarkers(viewer);
-      setupRoutes(viewer);
-
       // Interaction handler
-      const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-
-      // Click: select DC / Linode region — or fire onMapClick for Site Brief
-      handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
-        const picked = viewer.scene.pick(event.position);
+      const handler = new Cesium.ScreenSpaceEventHandler(canvas);
+      handler.setInputAction((ev: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+        const picked = viewer.scene.pick(ev.position);
         if (picked?.id?.dcData) {
           onSelectDc?.(picked.id.dcData as DataCenter);
           onSelectLinode?.(null);
         } else if (picked?.id?.linodeData) {
-          onSelectLinode?.(picked.id.linodeData as import("@/lib/providers/linode/types").ProviderRegion);
+          onSelectLinode?.(picked.id.linodeData as ProviderRegion);
           onSelectDc?.(null);
           setTooltip(null);
         } else {
           onSelectDc?.(null);
           onSelectLinode?.(null);
           setTooltip(null);
-          // If no entity was clicked, fire map-click for Site Brief
           if (onMapClick) {
-            const cartesian = viewer.camera.pickEllipsoid(event.position, viewer.scene.globe.ellipsoid);
-            if (cartesian) {
-              const carto = Cesium.Cartographic.fromCartesian(cartesian);
-              const lat = Cesium.Math.toDegrees(carto.latitude);
-              const lng = Cesium.Math.toDegrees(carto.longitude);
-              onMapClick(lat, lng);
+            const cart = viewer.camera.pickEllipsoid(ev.position, viewer.scene.globe.ellipsoid);
+            if (cart) {
+              const carto = Cesium.Cartographic.fromCartesian(cart);
+              onMapClick(
+                Cesium.Math.toDegrees(carto.latitude),
+                Cesium.Math.toDegrees(carto.longitude),
+              );
             }
           }
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-      // Hover: tooltip (desktop) — DCs and Linode regions
-      handler.setInputAction((event: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
-        const picked = viewer.scene.pick(event.endPosition);
+      handler.setInputAction((ev: Cesium.ScreenSpaceEventHandler.MotionEvent) => {
+        const picked = viewer.scene.pick(ev.endPosition);
         if (picked?.id?.dcData) {
-          const dc = picked.id.dcData as DataCenter;
-          setTooltip({ x: event.endPosition.x, y: event.endPosition.y, dc });
+          setTooltip({ x: ev.endPosition.x, y: ev.endPosition.y, dc: picked.id.dcData as DataCenter });
         } else if (picked?.id?.linodeData) {
-          const r = picked.id.linodeData as import("@/lib/providers/linode/types").ProviderRegion;
-          // Synthesise a minimal DataCenter-like tooltip
-          const pseudo = {
-            name: r.label,
-            city: r.city ?? "",
-            stateOrRegion: r.metro ?? undefined,
-            country: r.country ?? "",
-            capabilities: r.capabilities,
-          } as DataCenter;
-          setTooltip({ x: event.endPosition.x, y: event.endPosition.y, dc: pseudo });
+          const r = picked.id.linodeData as ProviderRegion;
+          setTooltip({ x: ev.endPosition.x, y: ev.endPosition.y, dc: { name: r.label, city: r.city ?? "", stateOrRegion: r.metro ?? undefined, country: r.country ?? "", capabilities: r.capabilities } as DataCenter });
         } else {
           setTooltip(null);
         }
       }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-      handlerRef.current = handler;
+      // Load all static layers asynchronously
+      initCityIndex();
+      loadCountryBorders(viewer);
+      loadStateBorders(viewer);
+      setupDCMarkers(viewer);
+      loadRoutes(viewer);
+
       setIsReady(true);
 
       return () => {
         window.removeEventListener("keydown", onDebugKey);
-        window.removeEventListener("resize", onWindowResize);
-        if (handlerRef.current && !handlerRef.current.isDestroyed()) {
-          handlerRef.current.destroy();
-        }
-        // PrimitiveCollection is owned by viewer.scene.primitives; destroyed with viewer
-        routePrimitivesRef.current = null;
+        window.removeEventListener("resize", onResize);
+        if (!handler.isDestroyed()) handler.destroy();
+        routePrimRef.current    = null;
+        powerHeatmapRef.current = null;
         if (!viewer.isDestroyed()) viewer.destroy();
         viewerRef.current = null;
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ── helpers ────────────────────────────────────────────────────────────
+    // ── Async static layer loaders ────────────────────────────────────────
+    //
+    // Each loader: loads data, sets its ref, THEN reads layersRef.current
+    // to apply the toggle state that is current at the moment of resolution.
+    // This eliminates the race between async load and early toggle changes.
 
-    async function setupCountryBorders(viewer: Cesium.Viewer) {
+    async function loadCountryBorders(viewer: Cesium.Viewer) {
       try {
         const source = await Cesium.GeoJsonDataSource.load("/geo/countries.geojson", {
           stroke: Cesium.Color.fromCssColorString("#f6f6fd").withAlpha(0.14),
@@ -410,15 +346,20 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           strokeWidth: 1,
           clampToGround: true,
         });
+        if (viewer.isDestroyed()) return;
         countrySourceRef.current = source;
         source.name = "country-borders";
+        // ✅ Apply current toggle state AFTER async load completes
+        source.show = layersRef.current.countryBorders;
         viewer.dataSources.add(source);
+        requestRender(viewer);
+        console.log(`[Layers] render countryBorders show=${source.show} entities=${source.entities.values.length}`);
       } catch (e) {
         console.warn("[AtlasMap] Country borders load failed:", e);
       }
     }
 
-    async function setupStatesBorders(viewer: Cesium.Viewer) {
+    async function loadStateBorders(viewer: Cesium.Viewer) {
       try {
         const source = await Cesium.GeoJsonDataSource.load("/geo/states_provinces.geojson", {
           stroke: Cesium.Color.fromCssColorString("#f6f6fd").withAlpha(0.07),
@@ -426,10 +367,14 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           strokeWidth: 0.6,
           clampToGround: true,
         });
+        if (viewer.isDestroyed()) return;
         stateSourceRef.current = source;
         source.name = "state-borders";
-        source.show = false; // default off
+        // ✅ Apply current toggle state AFTER async load completes
+        source.show = layersRef.current.stateBorders;
         viewer.dataSources.add(source);
+        requestRender(viewer);
+        console.log(`[Layers] render stateBorders show=${source.show}`);
       } catch (e) {
         console.warn("[AtlasMap] State borders load failed:", e);
       }
@@ -438,25 +383,18 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     function setupDCMarkers(viewer: Cesium.Viewer) {
       const source = new Cesium.CustomDataSource("data-centers");
       dcSourceRef.current = source;
-
-      // EntityCluster for WORLD/REGION zoom levels
       source.clustering.enabled = true;
       source.clustering.pixelRange = 45;
       source.clustering.minimumClusterSize = 3;
-
-      // Style the cluster label bubbles
-      source.clustering.clusterEvent.addEventListener(
-        (clustered: Cesium.Entity[], cluster: any) => {
-          cluster.label.show = false;
-          cluster.billboard.show = true;
-          cluster.billboard.image = makeClusterCanvas(clustered.length);
-          cluster.billboard.scale = 1;
-          cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.CENTER;
-          cluster.billboard.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
-          cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-        }
-      );
-
+      source.clustering.clusterEvent.addEventListener((clustered: Cesium.Entity[], cluster: any) => {
+        cluster.label.show = false;
+        cluster.billboard.show = true;
+        cluster.billboard.image = makeClusterCanvas(clustered.length);
+        cluster.billboard.scale = 1;
+        cluster.billboard.verticalOrigin   = Cesium.VerticalOrigin.CENTER;
+        cluster.billboard.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
+        cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+      });
       DATA_CENTERS.forEach((dc) => {
         const entity = source.entities.add({
           position: Cesium.Cartesian3.fromDegrees(dc.lng, dc.lat),
@@ -469,169 +407,158 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
             scaleByDistance: new Cesium.NearFarScalar(200_000, 1.4, 8_000_000, 0.7),
           }),
         });
-        // Attach DC data so it's accessible on pick
         (entity as any).dcData = dc;
       });
-
+      source.show = layersRef.current.points; // ✅ Apply initial toggle state
       viewer.dataSources.add(source);
+      console.log(`[Layers] render datacenters count=${DATA_CENTERS.length} show=${source.show}`);
     }
 
-    async function setupRoutes(viewer: Cesium.Viewer) {
+    async function loadRoutes(viewer: Cesium.Viewer) {
       try {
         const res = await fetch("/geo/submarine-cables.json");
-        if (!res.ok) return;
+        if (!res.ok || viewer.isDestroyed()) return;
         const geo = await res.json();
-
-        // Collect all polyline segment arrays from both LineString and MultiLineString features
         const segments: { positions: Cesium.Cartesian3[]; color: string }[] = [];
-
-        for (const feature of geo?.features ?? []) {
-          const geomType: string = feature.geometry?.type ?? "";
-          const rawColor: string = feature.properties?.color ?? "#696aac";
-
-          let lineArrays: [number, number][][] = [];
-          if (geomType === "LineString") {
-            lineArrays = [feature.geometry.coordinates];
-          } else if (geomType === "MultiLineString") {
-            lineArrays = feature.geometry.coordinates;
-          }
-
-          for (const line of lineArrays) {
+        for (const feat of geo?.features ?? []) {
+          const type   = feat.geometry?.type ?? "";
+          const color  = feat.properties?.color ?? "#696aac";
+          const arrays = type === "LineString"       ? [feat.geometry.coordinates]
+                       : type === "MultiLineString"  ? feat.geometry.coordinates
+                       : [];
+          for (const line of arrays) {
             if (!Array.isArray(line) || line.length < 2) continue;
             const positions = line.map(([lng, lat]: [number, number]) =>
-              Cesium.Cartesian3.fromDegrees(lng, lat, 5000) // 5 km above surface so cables are visible
-            );
-            if (positions.length >= 2) segments.push({ positions, color: rawColor });
+              Cesium.Cartesian3.fromDegrees(lng, lat, 5000));
+            if (positions.length >= 2) segments.push({ positions, color });
           }
         }
-
-        console.info(
-          `[AtlasMap] Fiber routes loaded: ${geo?.features?.length ?? 0} features → ${segments.length} polyline segments`
-        );
-
-        // Use a PolylineCollection (GPU primitive) for performance — much faster than
-        // thousands of individual Entity polylines.
-        const primitiveCollection = new Cesium.PrimitiveCollection();
-        const polylineCollection = new Cesium.PolylineCollection();
-
+        const coll = new Cesium.PrimitiveCollection();
+        const lines = new Cesium.PolylineCollection();
         for (const { positions, color } of segments) {
-          const cesiumColor = Cesium.Color.fromCssColorString(color).withAlpha(0.65);
-          polylineCollection.add({
-            positions,
-            width: 1.5,
-            material: Cesium.Material.fromType("Color", { color: cesiumColor }),
-          });
+          lines.add({ positions, width: 1.5, material: Cesium.Material.fromType("Color", { color: Cesium.Color.fromCssColorString(color).withAlpha(0.65) }) });
         }
-
-        primitiveCollection.add(polylineCollection);
-        primitiveCollection.show = false; // toggled by layer effect below
-
-        // Store on the primitive ref (not a data source this time)
-        routePrimitivesRef.current = primitiveCollection;
-        viewer.scene.primitives.add(primitiveCollection);
-
+        coll.add(lines);
+        // ✅ Apply current toggle state AFTER load
+        coll.show = layersRef.current.routes && cameraState.level !== "WORLD";
+        routePrimRef.current = coll;
+        viewer.scene.primitives.add(coll);
+        requestRender(viewer);
+        console.info(`[Layers] render routes segments=${segments.length} show=${coll.show}`);
       } catch (e) {
         console.warn("[AtlasMap] Routes load failed:", e);
       }
     }
 
-    // Draws a circular canvas for cluster bubbles
     function makeClusterCanvas(count: number): HTMLCanvasElement {
       const size = count > 99 ? 52 : count > 9 ? 46 : 38;
       const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
+      canvas.width = canvas.height = size;
       const ctx = canvas.getContext("2d")!;
       const r = size / 2;
-
-      // Outer glow
-      ctx.beginPath();
-      ctx.arc(r, r, r - 1, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(105,106,172,0.25)";
-      ctx.fill();
-
-      // Inner circle
-      ctx.beginPath();
-      ctx.arc(r, r, r * 0.72, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(105,106,172,0.9)";
-      ctx.fill();
-
-      // Count text
+      ctx.beginPath(); ctx.arc(r, r, r - 1, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(105,106,172,0.25)"; ctx.fill();
+      ctx.beginPath(); ctx.arc(r, r, r * 0.72, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(105,106,172,0.9)"; ctx.fill();
       ctx.fillStyle = "#f6f6fd";
       ctx.font = `bold ${count > 99 ? 12 : 13}px system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(String(count), r, r);
-
       return canvas;
     }
 
-    // ── basemap swap ───────────────────────────────────────────────────────
+    // ── Basemap swap ──────────────────────────────────────────────────────
     useEffect(() => {
       const viewer = viewerRef.current;
       if (!viewer || viewer.isDestroyed()) return;
       viewer.imageryLayers.removeAll();
       viewer.imageryLayers.addImageryProvider(makeProvider(basemap));
+      requestRender(viewer);
     }, [basemap]);
 
-    // ── layer visibility toggles ───────────────────────────────────────────
+    // ── Country borders toggle ─────────────────────────────────────────────
     useEffect(() => {
       const src = countrySourceRef.current;
-      if (src) src.show = layers.countryBorders;
+      if (!src) return; // source not yet loaded — loadCountryBorders applies initial state on resolve
+      src.show = layers.countryBorders;
+      console.log(`[Layers] toggle countryBorders -> ${layers.countryBorders}`);
+      requestRender(viewerRef.current);
     }, [layers.countryBorders]);
 
+    // ── State borders toggle ───────────────────────────────────────────────
     useEffect(() => {
       const src = stateSourceRef.current;
-      if (src) src.show = layers.stateBorders;
+      if (!src) return;
+      src.show = layers.stateBorders;
+      console.log(`[Layers] toggle stateBorders -> ${layers.stateBorders}`);
+      requestRender(viewerRef.current);
     }, [layers.stateBorders]);
 
-    useEffect(() => {
-      const src = dcSourceRef.current;
-      if (src) src.show = layers.points;
-    }, [layers.points]);
-
-    useEffect(() => {
-      // Fiber routes are stored as a PrimitiveCollection (GPU path).
-      // Show at REGION, LOCAL, and CITY zoom (not WORLD — too noisy at planetary scale).
-      const prims = routePrimitivesRef.current;
-      if (prims) {
-        prims.show = layers.routes && cameraState.level !== "WORLD";
-      }
-      // Legacy CustomDataSource path (no-op if routes migrated to primitives)
-      const src = routeSourceRef.current;
-      if (src) {
-        src.show = layers.routes && cameraState.level !== "WORLD";
-      }
-    }, [layers.routes, cameraState.level]);
-
-    // ── cluster toggle based on zoom level ─────────────────────────────────
+    // ── Data centers toggle ────────────────────────────────────────────────
     useEffect(() => {
       const src = dcSourceRef.current;
       if (!src) return;
-      src.clustering.enabled =
-        cameraState.level === "WORLD" || cameraState.level === "REGION";
+      src.show = layers.points;
+      console.log(`[Layers] toggle datacenters -> ${layers.points}`);
+      requestRender(viewerRef.current);
+    }, [layers.points]);
+
+    // ── Clustering by zoom level ───────────────────────────────────────────
+    useEffect(() => {
+      const src = dcSourceRef.current;
+      if (!src) return;
+      src.clustering.enabled = cameraState.level === "WORLD" || cameraState.level === "REGION";
     }, [cameraState.level]);
 
-    // ── city labels (imperative, LOD-driven) ───────────────────────────────
+    // ── Fiber routes toggle + zoom gate ───────────────────────────────────
+    useEffect(() => {
+      const prim = routePrimRef.current;
+      if (!prim) return;
+      // Show only when toggled ON AND not at world zoom
+      const show = layers.routes && cameraState.level !== "WORLD";
+      prim.show = show;
+      console.log(`[Layers] toggle routes -> toggle=${layers.routes} zoom=${cameraState.level} effective=${show}`);
+      requestRender(viewerRef.current);
+    }, [layers.routes, cameraState.level]);
+
+    // ── DC visual (selection + basemap colours) ────────────────────────────
+    useEffect(() => {
+      const source = dcSourceRef.current;
+      if (!source) return;
+      const light = isLightBasemap(basemap);
+      source.entities.values.forEach((entity) => {
+        const dc = (entity as any).dcData as DataCenter | undefined;
+        if (!dc || !entity.point) return;
+        const pt = entity.point;
+        const isSel  = dc.id === selectedId;
+        const isHigh = !highlightIds || highlightIds.includes(dc.id);
+        pt.pixelSize = new Cesium.ConstantProperty(tierPixelSize(dc.tier) + (isSel ? 7 : 0));
+        pt.color     = new Cesium.ConstantProperty(isSel ? Cesium.Color.fromCssColorString("#8587e3") : !isHigh ? tierColor(dc.tier, light).withAlpha(0.25) : tierColor(dc.tier, light));
+        pt.outlineColor = new Cesium.ConstantProperty(isSel ? Cesium.Color.WHITE : light ? Cesium.Color.fromCssColorString("#1a1b2e").withAlpha(0.7) : Cesium.Color.BLACK.withAlpha(0.45));
+        pt.outlineWidth = new Cesium.ConstantProperty(isSel ? 3 : light ? 2 : 1);
+      });
+      requestRender(viewerRef.current);
+    }, [selectedId, highlightIds, basemap]);
+
+    // ── City labels (LOD-driven) ──────────────────────────────────────────
     useEffect(() => {
       const viewer = viewerRef.current;
       if (!viewer || viewer.isDestroyed()) return;
-
       let source = citySourceRef.current;
       if (!source) {
         source = new Cesium.CustomDataSource("cities");
         citySourceRef.current = source;
         viewer.dataSources.add(source);
       }
-
-      // Clear existing city labels
       source.entities.removeAll();
-
-      if (!layers.cities || cameraState.level === "WORLD") return;
-
+      const t0 = performance.now();
+      if (!layers.cities || cameraState.level === "WORLD") {
+        source.show = false;
+        requestRender(viewer);
+        return;
+      }
+      source.show = true;
       const cities = getCitiesForLevel(cameraState);
-      if (cities.length === 0) return;
-
       for (const city of cities) {
         source.entities.add({
           position: Cesium.Cartesian3.fromDegrees(city.lng, city.lat),
@@ -648,224 +575,137 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
             scaleByDistance: new Cesium.NearFarScalar(50_000, 1.3, 3_000_000, 0.65),
             distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 4_000_000),
-            // Scale smaller cities smaller
             scale: city.scalerank <= 1 ? 1.2 : city.scalerank <= 3 ? 1.0 : 0.85,
           }),
           point: city.scalerank <= 3
-            ? new Cesium.PointGraphics({
-                pixelSize: 3,
-                color: Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.7),
-                disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                scaleByDistance: new Cesium.NearFarScalar(50_000, 1.2, 2_000_000, 0.5),
-              })
+            ? new Cesium.PointGraphics({ pixelSize: 3, color: Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.7), disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(50_000, 1.2, 2_000_000, 0.5) })
             : undefined,
         });
       }
-    // Depend on both level and viewRect so CITY level re-filters on pan
+      requestRender(viewer);
+      console.log(`[Layers] render cities count=${cities.length} took=${(performance.now()-t0).toFixed(1)}ms level=${cameraState.level}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layers.cities, cameraState.level, cameraState.viewRect]);
 
-    // ── selected DC visual + basemap-aware colours ─────────────────────────
-    useEffect(() => {
-      const source = dcSourceRef.current;
-      if (!source) return;
-      const light = isLightBasemap(basemap);
-
-      source.entities.values.forEach((entity) => {
-        const dc = (entity as any).dcData as DataCenter | undefined;
-        if (!dc || !entity.point) return;
-        const pt = entity.point;
-        const isSelected = dc.id === selectedId;
-        const isHighlighted = !highlightIds || highlightIds.includes(dc.id);
-
-        pt.pixelSize = new Cesium.ConstantProperty(
-          tierPixelSize(dc.tier) + (isSelected ? 7 : 0)
-        );
-        pt.color = new Cesium.ConstantProperty(
-          isSelected
-            ? Cesium.Color.fromCssColorString("#8587e3")
-            : !isHighlighted
-            ? tierColor(dc.tier, light).withAlpha(0.25)
-            : tierColor(dc.tier, light)
-        );
-        // Stronger outline on light basemaps so dots pop
-        pt.outlineColor = new Cesium.ConstantProperty(
-          isSelected
-            ? Cesium.Color.WHITE
-            : light
-            ? Cesium.Color.fromCssColorString("#1a1b2e").withAlpha(0.7)
-            : Cesium.Color.BLACK.withAlpha(0.45)
-        );
-        pt.outlineWidth = new Cesium.ConstantProperty(
-          isSelected ? 3 : light ? 2 : 1
-        );
-      });
-    }, [selectedId, highlightIds, basemap]);
-
-    // ── power heatmap ──────────────────────────────────────────────────────
-    // Fetches viewport grid scores and renders colored rectangle primitives.
-    // Throttled: only re-fetches when viewRect changes materially.
+    // ── Power heatmap ─────────────────────────────────────────────────────
     useEffect(() => {
       const viewer = viewerRef.current;
       if (!viewer || viewer.isDestroyed()) return;
 
-      // Clear existing heatmap primitives
+      // Clear old primitives
       if (powerHeatmapRef.current) {
-        if (!viewer.scene.primitives.contains(powerHeatmapRef.current)) {
-          // Already removed (e.g. viewer was recreated)
-        } else {
+        if (viewer.scene.primitives.contains(powerHeatmapRef.current)) {
           viewer.scene.primitives.remove(powerHeatmapRef.current);
         }
         powerHeatmapRef.current = null;
       }
 
-      if (!layers.powerHeatmap) return;
-      if (cameraState.level === "WORLD") return; // too zoomed out
+      if (!layers.powerHeatmap || cameraState.level === "WORLD") {
+        requestRender(viewer);
+        return;
+      }
       const rect = cameraState.viewRect;
       if (!rect) return;
 
-      // Abort any in-flight request
-      powerHeatmapFetchRef.current?.abort();
+      heatmapAbort.current?.abort();
       const controller = new AbortController();
-      powerHeatmapFetchRef.current = controller;
-
-      const gridResolution = cameraState.level === "CITY" ? 15 : 10;
-      const mw = powerScenario?.targetMw ?? 100;
-
-      const url = `/api/power/viewport?west=${rect.west.toFixed(4)}&south=${rect.south.toFixed(4)}&east=${rect.east.toFixed(4)}&north=${rect.north.toFixed(4)}&mw=${mw}&grid=${gridResolution}`;
+      heatmapAbort.current = controller;
+      const myReqId = ++heatmapReqId.current;
+      const t0 = performance.now();
+      const grid = cameraState.level === "CITY" ? 15 : 10;
+      const mw   = powerScenario?.targetMw ?? 100;
+      const url  = `/api/power/viewport?west=${rect.west.toFixed(4)}&south=${rect.south.toFixed(4)}&east=${rect.east.toFixed(4)}&north=${rect.north.toFixed(4)}&mw=${mw}&grid=${grid}`;
 
       fetch(url, { signal: controller.signal })
-        .then((r) => r.json())
+        .then(r => r.json())
         .then((data: { cells?: Array<{ west: number; south: number; east: number; north: number; score: number; color: { r: number; g: number; b: number; a: number } }> }) => {
+          // ✅ Discard stale request
+          if (myReqId !== heatmapReqId.current) return;
           if (controller.signal.aborted) return;
+          // ✅ Check toggle still ON when fetch resolves
+          if (!layersRef.current.powerHeatmap) return;
           const vwr = viewerRef.current;
           if (!vwr || vwr.isDestroyed()) return;
 
           const cells = data.cells ?? [];
           if (cells.length === 0) return;
-
-          // ── Batch ALL cells into ONE Primitive — critical for performance.
-          // Creating one Primitive per cell causes WebGL shader storm and is
-          // the root cause of the heatmap not rendering.
           const instances = cells.map(cell => {
             const { r, g, b, a } = cell.color;
             return new Cesium.GeometryInstance({
-              geometry: new Cesium.RectangleGeometry({
-                rectangle: Cesium.Rectangle.fromDegrees(cell.west, cell.south, cell.east, cell.north),
-                height: 200,
-                extrudedHeight: 0,
-              }),
-              attributes: {
-                color: Cesium.ColorGeometryInstanceAttribute.fromColor(
-                  new Cesium.Color(r, g, b, Math.max(a, 0.25)) // ensure minimum visibility
-                ),
-              },
+              geometry: new Cesium.RectangleGeometry({ rectangle: Cesium.Rectangle.fromDegrees(cell.west, cell.south, cell.east, cell.north), height: 200, extrudedHeight: 0 }),
+              attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(r, g, b, Math.max(a, 0.25))) },
             });
           });
-
-          const collection = new Cesium.PrimitiveCollection();
-          collection.add(new Cesium.Primitive({
-            geometryInstances: instances,
-            appearance: new Cesium.PerInstanceColorAppearance({
-              flat: true,
-              translucent: true,
-            }),
-            asynchronous: false,
-            allowPicking: false, // heatmap isn't pickable
-          }));
-
-          powerHeatmapRef.current = collection;
-          vwr.scene.primitives.add(collection);
+          const coll = new Cesium.PrimitiveCollection();
+          coll.add(new Cesium.Primitive({ geometryInstances: instances, appearance: new Cesium.PerInstanceColorAppearance({ flat: true, translucent: true }), asynchronous: false, allowPicking: false }));
+          powerHeatmapRef.current = coll;
+          vwr.scene.primitives.add(coll);
+          requestRender(vwr);
+          console.log(`[Layers] render heatmap cells=${cells.length} took=${(performance.now()-t0).toFixed(1)}ms`);
         })
-        .catch((err) => {
-          if ((err as Error).name !== "AbortError") {
-            console.warn("[AtlasMap] Heatmap fetch failed:", err);
-          }
-        });
+        .catch(e => { if ((e as Error).name !== "AbortError") console.warn("[AtlasMap] Heatmap fetch failed:", e); });
 
       return () => { controller.abort(); };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layers.powerHeatmap, cameraState.level, cameraState.viewRect, powerScenario?.targetMw]);
 
-    // ── power generation layer ──────────────────────────────────────────────
+    // ── Power generation ──────────────────────────────────────────────────
     useEffect(() => {
       const viewer = viewerRef.current;
       if (!viewer || viewer.isDestroyed()) return;
 
-      // Get or create source
       let source = powerGenSourceRef.current;
       if (!source) {
         source = new Cesium.CustomDataSource("power-generation");
         powerGenSourceRef.current = source;
         viewer.dataSources.add(source);
       }
-
       source.entities.removeAll();
       source.show = layers.powerGeneration;
 
-      if (!layers.powerGeneration) return;
-      if (cameraState.level === "WORLD") return;
+      if (!layers.powerGeneration || cameraState.level === "WORLD") {
+        requestRender(viewer);
+        return;
+      }
 
-      // Import static plants and render in view
+      const myReqId = ++genReqId.current;
+      const t0 = performance.now();
+
       import("@/lib/power/staticReferenceData").then(({ STATIC_LARGE_PLANTS }) => {
+        // ✅ Discard stale / cancelled request
+        if (myReqId !== genReqId.current) return;
+        // ✅ Check toggle still ON
+        if (!layersRef.current.powerGeneration) return;
         const src = powerGenSourceRef.current;
         if (!src) return;
-        const rect = cameraState.viewRect;
-        const BUF = 2; // degree buffer
 
+        const rect = cameraState.viewRect;
+        const BUF = 2;
         const visible = rect
-          ? STATIC_LARGE_PLANTS.filter(
-              (p) => p.lat >= rect.south - BUF && p.lat <= rect.north + BUF &&
-                     p.lng >= rect.west - BUF && p.lng <= rect.east + BUF
-            )
+          ? STATIC_LARGE_PLANTS.filter(p =>
+              p.lat >= rect.south-BUF && p.lat <= rect.north+BUF &&
+              p.lng >= rect.west-BUF  && p.lng <= rect.east+BUF)
           : STATIC_LARGE_PLANTS;
 
-        const FUEL_COLORS: Record<string, string> = {
-          NUC: "#60a5fa", WAT: "#34d399", NG: "#f97316", SUN: "#fbbf24",
-          WND: "#a78bfa", COL: "#6b7280", SUB: "#6b7280", BAT: "#ec4899",
-          GEO: "#84cc16",
-        };
-
+        const FUEL_COLORS: Record<string, string> = { NUC:"#60a5fa", WAT:"#34d399", NG:"#f97316", SUN:"#fbbf24", WND:"#a78bfa", COL:"#6b7280", SUB:"#6b7280", BAT:"#ec4899", GEO:"#84cc16" };
         for (const plant of visible) {
           const color = Cesium.Color.fromCssColorString(FUEL_COLORS[plant.fuelType] ?? "#94a3b8");
-          const sizePx = Math.min(16, Math.max(6, Math.sqrt(plant.capacityMw / 100) * 4));
           const entity = src.entities.add({
             position: Cesium.Cartesian3.fromDegrees(plant.lng, plant.lat, 2000),
-            point: new Cesium.PointGraphics({
-              pixelSize: sizePx,
-              color: color.withAlpha(0.85),
-              outlineColor: Cesium.Color.BLACK.withAlpha(0.5),
-              outlineWidth: 1.5,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-              scaleByDistance: new Cesium.NearFarScalar(100_000, 1.4, 5_000_000, 0.5),
-            }),
+            point: new Cesium.PointGraphics({ pixelSize: Math.min(16, Math.max(6, Math.sqrt(plant.capacityMw/100)*4)), color: color.withAlpha(0.85), outlineColor: Cesium.Color.BLACK.withAlpha(0.5), outlineWidth: 1.5, disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(100_000,1.4,5_000_000,0.5) }),
           });
-          const fuelLabel: Record<string, string> = {
-            NUC: "Nuclear", WAT: "Hydro", NG: "Gas", SUN: "Solar",
-            WND: "Wind", COL: "Coal", SUB: "Coal", BAT: "Battery",
-          };
           (entity as any).genData = plant;
-          // Add label for important plants
           if (plant.capacityMw >= 2000) {
-            entity.label = new Cesium.LabelGraphics({
-              text: `${plant.name}\n${Math.round(plant.capacityMw)} MW`,
-              font: "600 11px system-ui, -apple-system, sans-serif",
-              fillColor: color,
-              outlineColor: Cesium.Color.BLACK,
-              outlineWidth: 2,
-              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-              pixelOffset: new Cesium.Cartesian2(0, -20),
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-              distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 3_000_000),
-              scaleByDistance: new Cesium.NearFarScalar(100_000, 1.0, 3_000_000, 0.5),
-            });
+            entity.label = new Cesium.LabelGraphics({ text: `${plant.name}\n${Math.round(plant.capacityMw)} MW`, font: "600 11px system-ui, -apple-system, sans-serif", fillColor: color, outlineColor: Cesium.Color.BLACK, outlineWidth: 2, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0,-20), disableDepthTestDistance: Number.POSITIVE_INFINITY, distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0,3_000_000), scaleByDistance: new Cesium.NearFarScalar(100_000,1.0,3_000_000,0.5) });
           }
         }
+        requestRender(viewerRef.current);
+        console.log(`[Layers] render generation count=${visible.length} took=${(performance.now()-t0).toFixed(1)}ms`);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layers.powerGeneration, cameraState.level, cameraState.viewRect]);
 
-    // ── power queue layer ───────────────────────────────────────────────────
+    // ── Power queue ────────────────────────────────────────────────────────
     useEffect(() => {
       const viewer = viewerRef.current;
       if (!viewer || viewer.isDestroyed()) return;
@@ -878,41 +718,43 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       }
       source.entities.removeAll();
       source.show = layers.powerQueue;
-      if (!layers.powerQueue) return;
-      if (cameraState.level === "WORLD") return;
 
+      if (!layers.powerQueue || cameraState.level === "WORLD") {
+        requestRender(viewer);
+        return;
+      }
       const rect = cameraState.viewRect;
       if (!rect) return;
+
+      const myReqId = ++queueReqId.current;
       const buf = 3;
       const url = `/api/power/queue?west=${(rect.west-buf).toFixed(2)}&south=${(rect.south-buf).toFixed(2)}&east=${(rect.east+buf).toFixed(2)}&north=${(rect.north+buf).toFixed(2)}`;
 
-      fetch(url).then(r => r.json()).then((data: {
-        aggregates?: Array<{ state: string; queuedMw: number; lat: number; lng: number; approximate: boolean }>;
-      }) => {
-        const src = powerQueueSourceRef.current;
-        if (!src) return;
-        for (const agg of data.aggregates ?? []) {
-          if (!agg.queuedMw) continue;
-          const mw = agg.queuedMw;
-          const size = Math.min(18, Math.max(8, Math.sqrt(mw / 5000) * 14));
-          const entity = src.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(agg.lng, agg.lat, 3000),
-            point: new Cesium.PointGraphics({
-              pixelSize: size,
-              color: Cesium.Color.fromCssColorString("#fbbf24").withAlpha(0.65),
-              outlineColor: Cesium.Color.fromCssColorString("#92400e").withAlpha(0.5),
-              outlineWidth: 1.5,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-              scaleByDistance: new Cesium.NearFarScalar(200_000, 1.4, 6_000_000, 0.5),
-            }),
-          });
-          (entity as any).queueData = agg;
-        }
-      }).catch(() => {});
+      fetch(url)
+        .then(r => r.json())
+        .then((data: { aggregates?: Array<{ state: string; queuedMw: number; lat: number; lng: number }> }) => {
+          // ✅ Discard stale
+          if (myReqId !== queueReqId.current) return;
+          // ✅ Check still ON
+          if (!layersRef.current.powerQueue) return;
+          const src = powerQueueSourceRef.current;
+          if (!src) return;
+          for (const agg of data.aggregates ?? []) {
+            if (!agg.queuedMw) continue;
+            const size = Math.min(18, Math.max(8, Math.sqrt(agg.queuedMw/5000)*14));
+            const entity = src.entities.add({
+              position: Cesium.Cartesian3.fromDegrees(agg.lng, agg.lat, 3000),
+              point: new Cesium.PointGraphics({ pixelSize: size, color: Cesium.Color.fromCssColorString("#fbbf24").withAlpha(0.65), outlineColor: Cesium.Color.fromCssColorString("#92400e").withAlpha(0.5), outlineWidth: 1.5, disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(200_000,1.4,6_000_000,0.5) }),
+            });
+            (entity as any).queueData = agg;
+          }
+          requestRender(viewerRef.current);
+        })
+        .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layers.powerQueue, cameraState.level, cameraState.viewRect]);
 
-    // ── Linode / provider regions layer ────────────────────────────────────
+    // ── Linode regions ────────────────────────────────────────────────────
     useEffect(() => {
       const viewer = viewerRef.current;
       if (!viewer || viewer.isDestroyed()) return;
@@ -925,94 +767,96 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       }
       source.entities.removeAll();
       source.show = layers.linodeRegions;
-      if (!layers.linodeRegions) return;
 
-      // Fetch Linode regions (cached server-side for 1 h)
-      fetch("/api/providers/linode/regions").then(r => r.json()).then((data: {
-        regions?: import("@/lib/providers/linode/types").ProviderRegion[];
-      }) => {
-        const src = linodeSourceRef.current;
-        if (!src || viewer.isDestroyed()) return;
-        const regions = (data.regions ?? []).filter(r => r.lat !== null && r.lng !== null);
-        linodeRegionsRef.current = data.regions ?? [];
+      if (!layers.linodeRegions) {
+        requestRender(viewer);
+        return;
+      }
 
-        for (const region of regions) {
-          const isSelected = region.region_id === selectedLinodeId;
-          const entity = src.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(region.lng!, region.lat!, 1000),
-            point: new Cesium.PointGraphics({
-              pixelSize: isSelected ? 16 : 10,
-              color: isSelected
-                ? Cesium.Color.fromCssColorString("#34d399")
-                : Cesium.Color.fromCssColorString("#34d399").withAlpha(0.75),
-              outlineColor: isSelected
-                ? Cesium.Color.WHITE
-                : Cesium.Color.fromCssColorString("#065f46").withAlpha(0.6),
-              outlineWidth: isSelected ? 3 : 2,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-              scaleByDistance: new Cesium.NearFarScalar(200_000, 1.4, 8_000_000, 0.7),
-            }),
-          });
-          (entity as any).linodeData = region;
-        }
-      }).catch(err => console.warn("[AtlasMap] Linode regions fetch failed:", err));
+      const myReqId = ++linodeReqId.current;
+
+      fetch("/api/providers/linode/regions")
+        .then(r => r.json())
+        .then((data: { regions?: ProviderRegion[] }) => {
+          // ✅ Discard stale
+          if (myReqId !== linodeReqId.current) return;
+          // ✅ Check still ON
+          if (!layersRef.current.linodeRegions) return;
+          const src = linodeSourceRef.current;
+          if (!src || viewer.isDestroyed()) return;
+          const regions = (data.regions ?? []).filter(r => r.lat !== null && r.lng !== null);
+          for (const region of regions) {
+            const isSel = region.region_id === selectedLinodeId;
+            const entity = src.entities.add({
+              position: Cesium.Cartesian3.fromDegrees(region.lng!, region.lat!, 1000),
+              point: new Cesium.PointGraphics({ pixelSize: isSel ? 16 : 10, color: isSel ? Cesium.Color.fromCssColorString("#34d399") : Cesium.Color.fromCssColorString("#34d399").withAlpha(0.75), outlineColor: isSel ? Cesium.Color.WHITE : Cesium.Color.fromCssColorString("#065f46").withAlpha(0.6), outlineWidth: isSel ? 3 : 2, disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(200_000,1.4,8_000_000,0.7) }),
+            });
+            (entity as any).linodeData = region;
+          }
+          requestRender(viewerRef.current);
+          console.log(`[Layers] render linodeRegions count=${regions.length}`);
+        })
+        .catch(e => console.warn("[AtlasMap] Linode fetch failed:", e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [layers.linodeRegions, selectedLinodeId]);
 
-    // ── render ─────────────────────────────────────────────────────────────
+    // ── Debug overlay data collector ──────────────────────────────────────
+    const getLayerCounts = useCallback(() => {
+      const viewer = viewerRef.current;
+      const prim = routePrimRef.current;
+      const primLines = prim ? (prim as any)._primitives?.[0] : null;
+      return {
+        countryEntities: countrySourceRef.current?.entities.values.length ?? 0,
+        stateEntities:   stateSourceRef.current?.entities.values.length   ?? 0,
+        cityLabels:      citySourceRef.current?.entities.values.length    ?? 0,
+        dcEntities:      dcSourceRef.current?.entities.values.length      ?? 0,
+        dcClusters:      0, // cluster count is runtime-only
+        fiberSegments:   primLines?._polylines?.length ?? 0,
+        heatmapCells:    powerHeatmapRef.current ? 1 : 0,
+        genPoints:       powerGenSourceRef.current?.entities.values.length  ?? 0,
+        queuePoints:     powerQueueSourceRef.current?.entities.values.length ?? 0,
+        linodePoints:    linodeSourceRef.current?.entities.values.length    ?? 0,
+      };
+    }, []);
+
+    // ── Render ────────────────────────────────────────────────────────────
     return (
-      // overscroll-none + overflow-hidden prevent the map from triggering
-      // elastic scroll or page scroll on desktop and mobile.
       <div className="absolute inset-0 w-full h-full bg-[#020202] overflow-hidden overscroll-none">
-        {/*
-          Minimal Cesium canvas styles. We skip importing the full widgets.css
-          because that file is processed by Cesium's webpack pipeline and
-          conflicts with PayloadCMS's SCSS loader in Next.js.
-        */}
         <style>{`
           .cesium-viewer,.cesium-widget{position:relative;overflow:hidden;width:100%;height:100%;}
           .cesium-widget canvas{width:100%;height:100%;touch-action:none;overscroll-behavior:none;}
           .cesium-viewer-cesiumWidgetContainer{width:100%;height:100%;}
           .cesium-credit-container,.cesium-widget-credits{display:none!important;}
         `}</style>
-        {/* Cesium mounts into this div */}
         <div ref={containerRef} className="absolute inset-0 w-full h-full" />
 
-        {/* Loading veil */}
         {!isReady && (
           <div className="absolute inset-0 flex items-center justify-center bg-[#020202] text-[rgba(246,246,253,0.5)] text-sm z-10">
             Loading map…
           </div>
         )}
 
-        {/* Hover tooltip */}
+        {/* Dev-only debug overlay */}
+        <DebugOverlay cameraState={cameraState} getLayerCounts={getLayerCounts} />
+
         {tooltip && (
           <div
             className="pointer-events-none absolute z-20 bg-[rgba(6,7,15,0.92)] backdrop-blur-sm border border-[rgba(246,246,253,0.1)] rounded-xl px-3 py-2 shadow-lg max-w-[220px]"
             style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
           >
-            <p className="text-sm font-semibold text-[#f6f6fd] leading-snug">
-              {tooltip.dc.name}
-            </p>
+            <p className="text-sm font-semibold text-[#f6f6fd] leading-snug">{tooltip.dc.name}</p>
             <p className="text-xs text-[rgba(246,246,253,0.55)] mt-0.5">
-              {[tooltip.dc.city, tooltip.dc.stateOrRegion, tooltip.dc.country]
-                .filter(Boolean)
-                .join(", ")}
+              {[tooltip.dc.city, tooltip.dc.stateOrRegion, tooltip.dc.country].filter(Boolean).join(", ")}
             </p>
             {tooltip.dc.capabilities.length > 0 && (
               <p className="text-[11px] text-[rgba(162,163,233,0.8)] mt-1">
                 {tooltip.dc.capabilities.slice(0, 3).join(", ")}
               </p>
             )}
-            {tooltip.dc.confidence != null && (
-              <p className="text-[10px] text-[rgba(246,246,253,0.3)] mt-1.5 uppercase tracking-wide">
-                {tooltip.dc.source ?? "curated"} · {tooltip.dc.confidence}% conf.
-              </p>
-            )}
           </div>
         )}
 
-        {/* Attribution bar — bottom-center, always visible */}
+        {/* Attribution */}
         <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-3 py-1 rounded-full bg-[rgba(2,2,2,0.55)] backdrop-blur-sm">
           <span className="text-[10px] text-[rgba(246,246,253,0.45)]">
             © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" className="pointer-events-auto hover:text-[rgba(246,246,253,0.7)] transition-colors">OpenStreetMap</a>
