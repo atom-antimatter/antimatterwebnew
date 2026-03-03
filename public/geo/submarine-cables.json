@@ -1,0 +1,44 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Transatlantic Cable (North)", "color": "#696aac" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-74.006, 40.7128],
+          [-50.0, 45.0],
+          [-20.0, 51.5],
+          [-0.1278, 51.5074]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Transatlantic Cable (South)", "color": "#a2a3e9" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-77.0369, 38.9072],
+          [-40.0, 30.0],
+          [-10.0, 38.7],
+          [2.3522, 48.8566]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Europe–Singapore Fiber", "color": "#8587e3" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-0.1278, 51.5074],
+          [8.6821, 50.1109],
+          [55.0, 25.0],
+          [103.8198, 1.3521]
+        ]
+      }
+    }
+  ]
+}
