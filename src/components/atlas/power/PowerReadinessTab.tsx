@@ -23,9 +23,14 @@ function ScoreRing({ score }: { score: number }) {
         <circle cx="32" cy="32" r={r} fill="none" stroke={color} strokeWidth="5"
           strokeDasharray={`${(score/100)*c} ${c}`} strokeLinecap="round"/>
       </svg>
-      <div className="absolute text-center leading-none">
+      <div className="absolute text-center leading-none px-0.5 w-full">
         <div className="text-lg font-bold text-[#f6f6fd]">{score}</div>
-        <div className="text-[8px] capitalize" style={{color}}>{band}</div>
+        <div
+          className="capitalize leading-tight"
+          style={{ color, fontSize: band.length > 8 ? '6.5px' : '8px' }}
+        >
+          {band}
+        </div>
       </div>
     </div>
   );

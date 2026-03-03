@@ -44,9 +44,16 @@ function ScoreRing({ score }: { score: number }) {
           strokeLinecap="round"
         />
       </svg>
-      <div className="absolute text-center">
+      <div className="absolute text-center px-1 w-full">
         <div className="text-3xl font-bold text-[#f6f6fd] leading-none">{score}</div>
-        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color }}>
+        <div
+          className="uppercase tracking-wide mt-0.5 leading-tight"
+          style={{
+            color,
+            fontSize: band.length > 8 ? '8px' : '10px',
+            letterSpacing: band.length > 8 ? '0.05em' : '0.08em',
+          }}
+        >
           {band}
         </div>
       </div>
