@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { DATA_CENTERS } from "@/data/dataCenters";
 
-// Tiny 1x1 dark texture so we don't need an external asset (BRAND_GUIDE: #020202 background)
-const DARK_TEXTURE_1PX =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
+// Earth-at-night texture so the globe is clearly visible (dark theme).
+const GLOBE_IMAGE_URL =
+  "https://unpkg.com/three-globe/example/img/earth-dark.jpg";
 
 /** Submarine cable (fiber) route: array of [lng, lat] and optional name/color. */
 export type FiberPath = { coords: [number, number][]; name?: string; color?: string };
@@ -110,13 +110,13 @@ export default function DataCenterGlobe({ active = true, globeRef: externalRef }
       controls.dampingFactor = 0.08;
     }
 
-    // BRAND_GUIDE: dark base (#020202), subtle emissive for depth
+    // Slightly darken and tint the globe texture so it fits the page; keep sphere clearly visible
     const mat = globe.globeMaterial?.() as THREE.MeshPhongMaterial | undefined;
     if (mat) {
-      mat.color = new THREE.Color("#020202");
+      mat.color = new THREE.Color("#0c0d18");
       mat.emissive = new THREE.Color("#0a0b14");
-      mat.emissiveIntensity = 0.85;
-      mat.shininess = 0.35;
+      mat.emissiveIntensity = 0.15;
+      mat.shininess = 0.4;
       mat.needsUpdate = true;
     }
 
@@ -141,16 +141,18 @@ export default function DataCenterGlobe({ active = true, globeRef: externalRef }
         height={size.h}
         backgroundColor="rgba(2,2,2,0)"
         rendererConfig={{ antialias: true, alpha: true }}
-        globeImageUrl={DARK_TEXTURE_1PX}
-        bumpImageUrl={DARK_TEXTURE_1PX}
-        showAtmosphere={false}
+        globeImageUrl={GLOBE_IMAGE_URL}
+        bumpImageUrl={null}
+        showAtmosphere={true}
+        atmosphereColor="#696aac"
+        atmosphereAltitude={0.15}
         animateIn={true}
         pointsData={pointsData}
         pointLat="lat"
         pointLng="lng"
-        pointAltitude={0.01}
-        pointColor={() => "rgba(162, 163, 233, 0.9)"}
-        pointRadius={0.35}
+        pointAltitude={0.015}
+        pointColor={() => "rgba(162, 163, 233, 0.95)"}
+        pointRadius={0.5}
         pointLabel={(d: object) => {
           const dc = d as { name: string; city: string; country: string };
           return `${dc.name} — ${dc.city}, ${dc.country}`;
@@ -160,9 +162,9 @@ export default function DataCenterGlobe({ active = true, globeRef: externalRef }
         pathPointLat={(p: [number, number]) => p[1]}
         pathPointLng={(p: [number, number]) => p[0]}
         pathColor={(d: object) => (d as FiberPath).color ?? "#696aac"}
-        pathStroke={1.2}
-        pathDashLength={0.1}
-        pathDashGap={0.008}
+        pathStroke={2}
+        pathDashLength={0.12}
+        pathDashGap={0.006}
         pathDashAnimateTime={reducedMotion ? 0 : 12000}
         pathLabel={(d: object) => (d as FiberPath).name ?? "Fiber route"}
       />
