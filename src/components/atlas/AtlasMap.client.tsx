@@ -156,13 +156,26 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.scene.globe.enableLighting      = false;
     viewer.scene.globe.depthTestAgainstTerrain = false;
     viewer.scene.globe.preloadAncestors    = true;
-    viewer.scene.globe.tileCacheSize       = 1000;
+    viewer.scene.globe.preloadSiblings     = true;
+    viewer.scene.globe.tileCacheSize       = 1500;
+
+    // FXAA applies a blur kernel over the whole frame — disabling it is the
+    // single most impactful change for text / label crispness.
+    viewer.scene.postProcessStages.fxaa.enabled = false;
+
+    // Force Cesium to honour our resolutionScale (not "browser recommended").
+    (viewer as any).useBrowserRecommendedResolution = false;
     viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
-    viewer.scene.postProcessStages.fxaa.enabled = true;
+
+    // Fog + HDR both soften the image.
     viewer.scene.fog.enabled = false;
+    viewer.scene.highDynamicRange = false;
 
     const ctrl = viewer.scene.screenSpaceCameraController;
-    ctrl.minimumZoomDistance = 150;
+    // Carto maxLevel=20 → min height ≈ 140m. Add 30% margin → 182m.
+    // This prevents us from ever zooming past the tile provider's max level
+    // and upscaling blurry tiles.
+    ctrl.minimumZoomDistance = 200;
     ctrl.maximumZoomDistance = 2.5e7;
 
     if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
@@ -360,7 +373,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
-    const SSE: Record<string, number> = { WORLD: 16, REGION: 4, LOCAL: 2, CITY: 1.5 };
+    // Minimum 2: lower pushes tile requests past provider maxLevel → upscaling → blur.
+    const SSE: Record<string, number> = { WORLD: 16, REGION: 4, LOCAL: 2.5, CITY: 2 };
     v.scene.globe.maximumScreenSpaceError = SSE[cameraState.level] ?? 2;
   }, [cameraState.level]);
 
@@ -370,6 +384,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     if (!v || v.isDestroyed()) return;
     v.imageryLayers.removeAll();
     v.imageryLayers.addImageryProvider(makeProvider(basemap));
+    // Update zoom clamp for new basemap (OSM max=19 needs more height than Carto max=20)
+    const ctrl = v.scene.screenSpaceCameraController;
+    ctrl.minimumZoomDistance = basemap === "osmStandard" ? 360 : 200;
     v.scene.requestRender();
   }, [basemap]);
 

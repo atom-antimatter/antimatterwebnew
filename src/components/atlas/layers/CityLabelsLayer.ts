@@ -1,7 +1,6 @@
 import * as Cesium from "cesium";
 import type { ILayer, LayerContext, LayerStats } from "./types";
 
-// Buckets keyed by scalerank threshold
 type CityPoint = { name: string; lat: number; lng: number; scalerank: number };
 
 let _cities: CityPoint[] = [];
@@ -11,7 +10,6 @@ let _loaded  = false;
 async function ensureCitiesLoaded(): Promise<CityPoint[]> {
   if (_loaded)  return _cities;
   if (_loading) {
-    // Wait for in-flight load
     await new Promise<void>(resolve => {
       const id = setInterval(() => { if (_loaded) { clearInterval(id); resolve(); } }, 80);
     });
@@ -49,7 +47,7 @@ function citiesForLevel(cities: CityPoint[], ctx: LayerContext): { list: CityPoi
 
   const maxRank = ctx.cameraLevel === "REGION" ? 2
                 : ctx.cameraLevel === "LOCAL"  ? 5
-                : 9; // CITY
+                : 9;
 
   const maxCount = ctx.cameraLevel === "REGION" ? 200
                  : ctx.cameraLevel === "LOCAL"  ? 1500
@@ -125,34 +123,64 @@ export class CityLabelsLayer implements ILayer {
     }
 
     const isDark = ctx.basemap === "osmDark";
+
+    // High-contrast fill + strong halo outline = crisp on any background.
+    // This is how professional map renderers produce legible labels.
     const fillColor = isDark
-      ? Cesium.Color.fromCssColorString("#e8e9ff")
-      : Cesium.Color.fromCssColorString("#1a1b2e");
+      ? Cesium.Color.fromCssColorString("#f0f0ff")
+      : Cesium.Color.fromCssColorString("#0a0a1a");
     const outlineColor = isDark
-      ? Cesium.Color.fromCssColorString("#020202")
-      : Cesium.Color.fromCssColorString("#f6f6fd");
+      ? new Cesium.Color(0, 0, 0.05, 0.95)
+      : new Cesium.Color(1, 1, 1, 0.95);
 
     for (const city of list) {
+      const isCapital  = city.scalerank <= 1;
+      const isMajor    = city.scalerank <= 3;
+      const fontSize   = isCapital ? 15 : isMajor ? 13 : 11;
+      const fontWeight = isCapital ? "700" : isMajor ? "600" : "500";
+      const haloWidth  = isCapital ? 5 : isMajor ? 4 : 3;
+
       ds.entities.add({
         position: Cesium.Cartesian3.fromDegrees(city.lng, city.lat),
         label: new Cesium.LabelGraphics({
           text:             new Cesium.ConstantProperty(city.name),
-          font:             new Cesium.ConstantProperty("600 13px system-ui, -apple-system, sans-serif"),
+          // System fonts render at native GPU resolution — no texture atlas softness.
+          font:             new Cesium.ConstantProperty(
+            `${fontWeight} ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Arial, sans-serif`
+          ),
           fillColor:        new Cesium.ConstantProperty(fillColor),
           outlineColor:     new Cesium.ConstantProperty(outlineColor),
-          outlineWidth:     new Cesium.ConstantProperty(4),
+          // A thick halo outline is the standard technique for crisp legible
+          // map labels — used by Mapbox, Google Maps, and every major renderer.
+          outlineWidth:     new Cesium.ConstantProperty(haloWidth),
           style:            new Cesium.ConstantProperty(Cesium.LabelStyle.FILL_AND_OUTLINE),
-          pixelOffset:      new Cesium.ConstantProperty(new Cesium.Cartesian2(0, -10)),
+          pixelOffset:      new Cesium.ConstantProperty(new Cesium.Cartesian2(0, -8)),
           horizontalOrigin: new Cesium.ConstantProperty(Cesium.HorizontalOrigin.CENTER),
           verticalOrigin:   new Cesium.ConstantProperty(Cesium.VerticalOrigin.BOTTOM),
           disableDepthTestDistance: new Cesium.ConstantProperty(Number.POSITIVE_INFINITY),
-          scaleByDistance:  new Cesium.ConstantProperty(new Cesium.NearFarScalar(50_000, 1.3, 3_000_000, 0.65)),
-          distanceDisplayCondition: new Cesium.ConstantProperty(new Cesium.DistanceDisplayCondition(0, 4_000_000)),
-          scale:            new Cesium.ConstantProperty(city.scalerank <= 1 ? 1.2 : city.scalerank <= 3 ? 1.0 : 0.85),
+          // Gentle scale-down at distance; never show unreadably tiny text.
+          scaleByDistance:  new Cesium.ConstantProperty(
+            new Cesium.NearFarScalar(30_000, 1.0, 2_000_000, 0.75)
+          ),
+          // Show labels only within legible range — avoids the "pepper noise" of
+          // tiny clustered text at high altitude.
+          distanceDisplayCondition: new Cesium.ConstantProperty(
+            isCapital ? new Cesium.DistanceDisplayCondition(0, 6_000_000)
+            : isMajor ? new Cesium.DistanceDisplayCondition(0, 3_500_000)
+            :           new Cesium.DistanceDisplayCondition(0, 1_500_000)
+          ),
+          scale: new Cesium.ConstantProperty(1.0),
         }),
-        point: city.scalerank <= 3 ? new Cesium.PointGraphics({
-          pixelSize: new Cesium.ConstantProperty(3),
-          color:     new Cesium.ConstantProperty(Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.7)),
+        // Crisp dot marker for capital / major cities
+        point: isMajor ? new Cesium.PointGraphics({
+          pixelSize: new Cesium.ConstantProperty(isCapital ? 5 : 3),
+          color:     new Cesium.ConstantProperty(
+            isDark
+              ? Cesium.Color.fromCssColorString("#a2a3e9").withAlpha(0.9)
+              : Cesium.Color.fromCssColorString("#4c4dac").withAlpha(0.9)
+          ),
+          outlineColor: new Cesium.ConstantProperty(outlineColor),
+          outlineWidth: new Cesium.ConstantProperty(1.5),
           disableDepthTestDistance: new Cesium.ConstantProperty(Number.POSITIVE_INFINITY),
         }) : undefined,
       });
@@ -164,7 +192,7 @@ export class CityLabelsLayer implements ILayer {
       fetchStatus:  "success",
       lastUpdateAt: Date.now(),
       lastError:    null,
-      note:         `${ctx.cameraLevel} level, took ${Date.now()-t0}ms`,
+      note:         `${ctx.cameraLevel}, took ${Date.now()-t0}ms`,
     };
     ctx.viewer.scene.requestRender();
     console.log(`[CityLabelsLayer] rendered ${list.length} labels @ ${ctx.cameraLevel}`);
