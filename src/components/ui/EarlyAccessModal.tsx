@@ -1,9 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { GoArrowUpRight } from "react-icons/go";
 import { useEarlyAccessModal } from "@/store";
+import buttonStyles from "./css/Button.module.css";
+import navButtonStyles from "./css/NavButton.module.css";
 
 const fieldBase =
-  "w-full rounded-xl bg-black/30 border border-white/15 px-4 py-3 text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-violet-500/50";
+  "w-full rounded-2xl border border-white/12 bg-black/35 px-4 py-3.5 text-sm text-white placeholder:text-white/45 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)] focus:outline-none focus:ring-2 focus:ring-[#8587e3]/45";
 
 export default function EarlyAccessModal() {
   const { open, setOpen } = useEarlyAccessModal();
@@ -73,44 +76,56 @@ export default function EarlyAccessModal() {
       />
       <div
         ref={dialogRef}
-        className="relative z-[101] w-[92vw] max-w-[420px] rounded-3xl border border-foreground/20 bg-gradient-to-b from-[#0F0F19] to-[#0A0A12] shadow-2xl overflow-hidden pointer-events-auto"
+        className="relative z-[101] w-[92vw] max-w-[460px] overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(133,135,227,0.18),transparent_32%),linear-gradient(180deg,#10111b_0%,#090a12_100%)] shadow-[0_30px_120px_rgba(0,0,0,0.65),0_0_40px_rgba(105,106,172,0.12)] pointer-events-auto"
       >
-        <div className="p-5 sm:p-7 border-b border-foreground/10 flex items-center justify-between">
-          <h2 id="early-access-title" className="text-lg sm:text-xl font-semibold">
-            Get Early Access
-          </h2>
+        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+        <div className="p-6 sm:p-7 border-b border-white/8 flex items-start justify-between gap-4">
+          <div>
+            <div className="mb-3 inline-flex items-center rounded-full border border-[#8587e3]/30 bg-[#8587e3]/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-[#c9caf7]">
+              Atom Browser
+            </div>
+            <h2 id="early-access-title" className="text-xl sm:text-2xl font-semibold text-white">
+              Get Early Access
+            </h2>
+            <p className="mt-2 max-w-[28rem] text-sm leading-6 text-white/65">
+              Join the waitlist and we&apos;ll notify you as soon as Atom Browser is ready for early users.
+            </p>
+          </div>
           <button
             type="button"
-            className="text-foreground/70 hover:text-foreground text-2xl leading-none"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xl leading-none text-white/65 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
             onClick={close}
             aria-label="Close"
           >
             ×
           </button>
         </div>
-        <div className="p-5 sm:p-7">
+        <div className="p-6 sm:p-7">
           {submitted ? (
-            <div className="text-center py-4">
-              <p className="text-foreground/90 font-medium">You&apos;re on the list.</p>
-              <p className="text-sm text-foreground/70 mt-1">
+            <div className="py-3 text-center">
+              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-[#8587e3]/30 bg-[#8587e3]/12 text-[#d7d8ff] shadow-[0_0_30px_rgba(133,135,227,0.18)]">
+                <GoArrowUpRight className="size-7" />
+              </div>
+              <p className="text-lg font-medium text-white">You&apos;re on the list.</p>
+              <p className="mt-2 text-sm text-white/65">
                 We&apos;ll notify you when Atom Browser is ready.
               </p>
               <button
                 type="button"
                 onClick={close}
-                className="mt-6 px-6 py-2.5 rounded-xl bg-violet-500/20 border border-violet-500/40 text-violet-300 hover:bg-violet-500/30 transition"
+                className={`mt-6 inline-flex items-center justify-center ${buttonStyles.button} ${buttonStyles.fluidBtn}`}
               >
                 Close
               </button>
             </div>
           ) : (
             <>
-              <p className="text-sm text-foreground/70 mb-5">
-                Join the waitlist for Atom Browser. We&apos;ll email you when early access is available.
-              </p>
-              <form onSubmit={onSubmit} className="flex flex-col gap-4">
+              <form onSubmit={onSubmit} className="flex flex-col gap-5">
                 <div className="flex flex-col gap-2">
-                  <label htmlFor="early-access-email" className="text-xs uppercase tracking-wide opacity-70">
+                  <label
+                    htmlFor="early-access-email"
+                    className="text-[11px] uppercase tracking-[0.22em] text-white/55"
+                  >
                     Email
                   </label>
                   <input
@@ -124,12 +139,24 @@ export default function EarlyAccessModal() {
                     required
                   />
                 </div>
+                <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-white/60">
+                  Same Antimatter look, first access to Atom Browser. No spam.
+                </div>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="h-11 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium disabled:opacity-60 disabled:cursor-not-allowed transition"
+                  className={`group relative block w-full rounded-full text-left text-white disabled:cursor-not-allowed disabled:opacity-60 ${buttonStyles.button} ${navButtonStyles.button} ${buttonStyles.fluidBtn}`}
                 >
-                  {submitting ? "Submitting…" : "Get Early Access"}
+                  <span className="relative flex min-h-[56px] items-center rounded-full pl-5 pr-18">
+                    <span className="text-sm font-medium">
+                      {submitting ? "Submitting..." : "Get Early Access"}
+                    </span>
+                    <span
+                      className={`absolute right-0 top-0 flex h-full max-w-14 items-center justify-center rounded-full bg-white text-background ${navButtonStyles.iconBox}`}
+                    >
+                      <GoArrowUpRight className={`size-7 ${navButtonStyles.icon}`} />
+                    </span>
+                  </span>
                 </button>
                 {error && (
                   <p className="text-red-400 text-sm">{error}</p>

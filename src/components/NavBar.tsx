@@ -5,9 +5,12 @@ import { useEarlyAccessModal, useLoading } from "@/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale, HiArrowDownTray } from "react-icons/hi2";
+import { GoArrowUpRight } from "react-icons/go";
+import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
+import buttonStyles from "./ui/css/Button.module.css";
+import navButtonStyles from "./ui/css/NavButton.module.css";
 import NavLinksBg from "./ui/NavLinksBg";
 import TransitionLink from "./ui/TransitionLink";
 
@@ -341,16 +344,25 @@ const AtomBrowserEarlyAccessButton = () => {
     <button
       type="button"
       onClick={() => setEarlyAccessOpen(true)}
-      className="flex w-full items-start gap-4 p-4 rounded-lg border border-violet-500/30 bg-violet-500/5 transition hover:bg-violet-500/15 hover:border-violet-500/50 cursor-pointer group text-left"
+      className="group block w-full text-left"
+      aria-label="Get early access to Atom Browser"
     >
-      <div className="mt-0.5 text-violet-400 group-hover:text-violet-300">
-        <HiArrowDownTray className="size-6" />
-      </div>
-      <div className="flex flex-col flex-1">
-        <h3 className="text-base font-semibold text-foreground">Download Atom Browser</h3>
-        <p className="text-sm text-pretty leading-snug opacity-70">
-          Get early access — we&apos;ll notify you when it&apos;s ready.
-        </p>
+      <div
+        className={`rounded-[28px] border border-[#8a8de8]/35 p-1 backdrop-blur-xl transition duration-300 group-hover:scale-[1.01] ${buttonStyles.button} ${navButtonStyles.button}`}
+      >
+        <div className="relative flex min-h-[58px] items-center rounded-full pl-5 pr-18">
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-white">Get Early Access</span>
+            <span className="text-xs text-white/75">
+              Join the Atom Browser waitlist
+            </span>
+          </div>
+          <div
+            className={`absolute right-0 top-0 flex h-full max-w-14 items-center justify-center rounded-full bg-white text-background ${navButtonStyles.iconBox}`}
+          >
+            <GoArrowUpRight className={`size-7 ${navButtonStyles.icon}`} />
+          </div>
+        </div>
       </div>
     </button>
   );

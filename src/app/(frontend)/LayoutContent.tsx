@@ -22,13 +22,14 @@ export default function LayoutContent({ children }: LayoutContentProps) {
   }
 
   // For non-admin routes, render everything
-  const [NavBar, ProvidersAndChildren, StartProjectModal, Footer] = children;
+  const [NavBar, ProvidersAndChildren, StartProjectModal, EarlyAccessModal, Footer] = children;
   
   return (
     <>
       {NavBar}
       <div className="relative">{ProvidersAndChildren}</div>
       {StartProjectModal}
+      {EarlyAccessModal}
       {Footer}
     </>
   );
