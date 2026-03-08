@@ -5,7 +5,7 @@ import { useLoading } from "@/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale } from "react-icons/hi2";
+import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale, HiArrowDownTray } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
 import NavLinksBg from "./ui/NavLinksBg";
@@ -430,6 +430,26 @@ const AtomAIDropdown = ({ open }: { open: boolean }) => (
             </ProductItemWrapper>
           );
         })}
+        {/* Download Atom Browser CTA */}
+        <div className="mt-3 pt-3 border-t border-foreground/10">
+          <a
+            href="https://github.com/PaulWallaceATL/atom-browser/releases/download/v0.1.0/Atom-Browser_0.1.0_aarch64.zip"
+            download
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-4 rounded-lg border border-violet-500/30 bg-violet-500/5 transition hover:bg-violet-500/15 hover:border-violet-500/50 cursor-pointer group"
+          >
+            <div className="mt-0.5 text-violet-400 group-hover:text-violet-300">
+              <HiArrowDownTray className="size-6" />
+            </div>
+            <div className="flex flex-col flex-1">
+              <h3 className="text-base font-semibold text-foreground">Download Atom Browser</h3>
+              <p className="text-sm text-pretty leading-snug opacity-70">
+                Get the desktop app — one click, no terminal.
+              </p>
+            </div>
+          </a>
+        </div>
       </div>
     </div>
   </div>
