@@ -1,6 +1,7 @@
 import Footer from "@/components/Footer";
 import NavBar from "@/components/NavBar";
 import Providers from "@/components/Providers";
+import EarlyAccessModal from "@/components/ui/EarlyAccessModal";
 import StartProjectModal from "@/components/ui/StartProjectModal";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
@@ -114,6 +115,7 @@ export default function RootLayout({
           <NavBar />
           <Providers>{children}</Providers>
           <StartProjectModal />
+          <EarlyAccessModal />
           <Footer />
         </LayoutContent>
       </body>

@@ -30,6 +30,14 @@ export const useStartProjectModal = create<{
   setOpen: (open: boolean) => set({ open }),
 }));
 
+export const useEarlyAccessModal = create<{
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}>((set) => ({
+  open: false,
+  setOpen: (open: boolean) => set({ open }),
+}));
+
 export const usePageTransition = create<{
   isTransition: boolean;
   setIsTransition: (state: boolean) => void;
