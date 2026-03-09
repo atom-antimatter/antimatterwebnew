@@ -10,7 +10,7 @@ import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale, HiGlobeAmericas } f
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
 import buttonStyles from "./ui/css/Button.module.css";
-import navButtonStyles from "./ui/css/NavButton.module.css";
+
 import NavLinksBg from "./ui/NavLinksBg";
 import TransitionLink from "./ui/TransitionLink";
 
@@ -351,26 +351,11 @@ const AtomBrowserEarlyAccessButton = () => {
     <button
       type="button"
       onClick={() => setEarlyAccessOpen(true)}
-      className="group block w-full text-left"
+      className={`w-full rounded-full text-sm font-medium text-white transition duration-300 hover:scale-[1.01] ${buttonStyles.button}`}
+      style={{ padding: "10px 20px" }}
       aria-label="Get early access to Atom Browser"
     >
-      <div
-        className={`rounded-[28px] border border-[#8a8de8]/35 p-1 backdrop-blur-xl transition duration-300 group-hover:scale-[1.01] ${buttonStyles.button} ${navButtonStyles.button}`}
-      >
-        <div className="relative flex min-h-[58px] items-center rounded-full pl-5 pr-18">
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-white">Get Early Access</span>
-            <span className="text-xs text-white/75">
-              Join the Atom Browser waitlist
-            </span>
-          </div>
-          <div
-            className={`absolute right-0 top-0 flex h-full max-w-14 items-center justify-center rounded-full bg-white text-background ${navButtonStyles.iconBox}`}
-          >
-            <GoArrowUpRight className={`size-7 ${navButtonStyles.icon}`} />
-          </div>
-        </div>
-      </div>
+      Get Early Access
     </button>
   );
 };
@@ -416,12 +401,12 @@ const AtomAIDropdown = ({ open }: { open: boolean }) => (
   >
     <div
       className={`
-        w-[380px] bg-zinc-950 border border-foreground/20 rounded-xl
+        w-[340px] bg-zinc-950 border border-foreground/20 rounded-xl
         transition-all ease-in-out duration-300 overflow-hidden
-        ${open ? "max-h-[600px]" : "max-h-0"}
+        ${open ? "max-h-[700px]" : "max-h-0"}
       `}
     >
-      <div className="p-5">
+      <div className="p-3">
         {atomAIProducts.map((product) => {
           // Explicit conditional rendering for proper type narrowing
           if (product.available) {
@@ -430,16 +415,14 @@ const AtomAIDropdown = ({ open }: { open: boolean }) => (
                 key={product.title}
                 available={true}
                 href={product.href}
-                className="flex items-start gap-4 p-4 rounded-lg border border-transparent transition hover:bg-white/5 hover:border-white/5 cursor-pointer"
+                className="flex items-start gap-3 px-3 py-2.5 rounded-lg border border-transparent transition hover:bg-white/5 hover:border-white/5 cursor-pointer"
               >
                 <div className="mt-0.5 text-white/90">
-                  <product.icon className="size-6" />
+                  <product.icon className="size-5" />
                 </div>
                 <div className="flex flex-col flex-1">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <h3 className="text-base font-semibold">{product.title}</h3>
-                  </div>
-                  <p className="text-sm text-pretty leading-snug opacity-70">
+                  <h3 className="text-sm font-semibold">{product.title}</h3>
+                  <p className="text-xs text-pretty leading-snug opacity-60">
                     {product.desc}
                   </p>
                 </div>
@@ -451,20 +434,20 @@ const AtomAIDropdown = ({ open }: { open: boolean }) => (
             <ProductItemWrapper
               key={product.title}
               available={false}
-              className="flex items-start gap-4 p-4 rounded-lg border border-transparent transition opacity-45 cursor-default"
+              className="flex items-start gap-3 px-3 py-2.5 rounded-lg border border-transparent transition opacity-45 cursor-default"
               title="This module is coming soon"
             >
               <div className="mt-0.5 text-white/50">
-                <product.icon className="size-6" />
+                <product.icon className="size-5" />
               </div>
               <div className="flex flex-col flex-1">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <h3 className="text-base font-semibold">{product.title}</h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold">{product.title}</h3>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-[10px] font-medium text-zinc-400 whitespace-nowrap">
                     Coming soon
                   </span>
                 </div>
-                <p className="text-sm text-pretty leading-snug opacity-50">
+                <p className="text-xs text-pretty leading-snug opacity-50">
                   {product.desc}
                 </p>
               </div>
@@ -472,7 +455,7 @@ const AtomAIDropdown = ({ open }: { open: boolean }) => (
           );
         })}
         {/* Atom Browser early access CTA */}
-        <div className="mt-3 pt-3 border-t border-foreground/10">
+        <div className="mt-2 pt-2 border-t border-foreground/10">
           <AtomBrowserEarlyAccessButton />
         </div>
       </div>
