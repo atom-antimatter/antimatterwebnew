@@ -26,6 +26,7 @@ import { StateBordersLayer }   from "./layers/StateBordersLayer";
 import { CityLabelsLayer }     from "./layers/CityLabelsLayer";
 import { FiberRoutesLayer }    from "./layers/FiberRoutesLayer";
 import { FeasibilityHeatmapLayer } from "./layers/FeasibilityHeatmapLayer";
+import { BuildingsLayer }         from "./layers/BuildingsLayer";
 import type { LayerContext } from "./layers/types";
 import type { ProviderRegion } from "@/lib/providers/linode/types";
 import { getMinimumZoomDistance, heightToTileZoom, BASEMAP_MAX_LEVEL } from "@/lib/map/zoomEstimate";
@@ -33,7 +34,7 @@ import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
 // ─── exported types ────────────────────────────────────────────────────────
 
-Cesium.Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN ?? "";
+Cesium.Ion.defaultAccessToken = "";
 
 export type Basemap = "osmDark" | "osmLight" | "osmStandard";
 
@@ -116,7 +117,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   // DC data source (not managed by LayerManager — simpler because it never changes)
   const dcSourceRef       = useRef<Cesium.CustomDataSource | null>(null);
   const linodeSourceRef   = useRef<Cesium.CustomDataSource | null>(null);
-  const buildingsRef      = useRef<Cesium.Cesium3DTileset | null>(null);
   const linodeReqId     = useRef(0);
   const powerGenReqId   = useRef(0);
   const powerQueueReqId = useRef(0);
@@ -263,6 +263,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     mgr.register(new CityLabelsLayer());
     mgr.register(new FiberRoutesLayer());
     mgr.register(new FeasibilityHeatmapLayer());
+    mgr.register(new BuildingsLayer());
     managerRef.current = mgr;
 
     const makeCtx = (): LayerContext => {
@@ -280,29 +281,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       return { viewer, cameraLevel: level as LayerContext["cameraLevel"], viewRect, heightMeters: h, basemap: basemapRef.current };
     };
     mgr.init(viewer, makeCtx);
-
-    // ── 3D Buildings (Cesium OSM Buildings via Ion) ──────────────────────
-    if (Cesium.Ion.defaultAccessToken) {
-      Cesium.createOsmBuildingsAsync().then(tileset => {
-        if (viewer.isDestroyed()) return;
-        tileset.show = false; // hidden by default; shown at CITY zoom
-        tileset.style = new Cesium.Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${feature['cesium#estimatedHeight']} > 200", "rgba(200,200,220,0.92)"],
-              ["${feature['cesium#estimatedHeight']} > 100", "rgba(180,180,200,0.88)"],
-              ["${feature['cesium#estimatedHeight']} > 50",  "rgba(165,165,185,0.85)"],
-              ["true",                                        "rgba(150,150,170,0.82)"],
-            ],
-          },
-        });
-        viewer.scene.primitives.add(tileset);
-        buildingsRef.current = tileset;
-        console.log("[Atlas] OSM Buildings tileset loaded");
-      }).catch(e => {
-        console.warn("[Atlas] OSM Buildings failed to load (missing Ion token?):", e);
-      });
-    }
 
     // ── DC markers ────────────────────────────────────────────────────────
     const dcDs = new Cesium.CustomDataSource("data-centers");
@@ -473,6 +451,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       stateBorders:   layers.stateBorders,
       cities:         layers.cities,
       routes:         layers.routes,
+      buildings:      layers.buildings,
       powerHeatmap:   layers.powerHeatmap,
     };
 
@@ -480,7 +459,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
   }, [
     layers.countryBorders, layers.stateBorders, layers.cities,
-    layers.routes, layers.powerHeatmap,
+    layers.routes, layers.buildings, layers.powerHeatmap,
     basemap, cameraState.level, cameraState.height, cameraState.viewRect, powerScenario,
   ]);
 
@@ -498,14 +477,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 2;
     v.scene.requestRender();
   }, [cameraState.level]);
-
-  // ── 3D Buildings visibility (CITY zoom only) ─────────────────────────────
-  useEffect(() => {
-    const ts = buildingsRef.current;
-    if (!ts) return;
-    ts.show = layers.buildings && (cameraState.level === "CITY" || cameraState.level === "LOCAL");
-    viewerRef.current?.scene.requestRender();
-  }, [layers.buildings, cameraState.level]);
 
   // ── Basemap swap ──────────────────────────────────────────────────────────
   useEffect(() => {
