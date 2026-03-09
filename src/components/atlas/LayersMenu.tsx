@@ -137,12 +137,20 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-[rgba(105,106,172,0.3)] scrollbar-track-transparent">
 
-            {/* Base map */}
+            {/* Base map — vector (crisp) */}
             <SectionLabel>Base map</SectionLabel>
             <div role="radiogroup" aria-label="Base map selection">
-              <BasemapRadio value="osmDark"     label="Carto Dark"    helper="Recommended · dark theme · retina" checked={basemap === "osmDark"}     onSelect={setBasemap} />
-              <BasemapRadio value="osmLight"    label="Carto Light"   helper="Light theme · retina"             checked={basemap === "osmLight"}    onSelect={setBasemap} />
-              <BasemapRadio value="osmStandard" label="OpenStreetMap" helper="May appear soft on Retina"        checked={basemap === "osmStandard"} onSelect={setBasemap} />
+              <BasemapRadio value="vectorDark"    label="Vector Dark"    helper="Crisp at all zooms · retina native"  checked={basemap === "vectorDark"}    onSelect={setBasemap} />
+              <BasemapRadio value="vectorLight"   label="Vector Light"   helper="Light theme · crisp labels"         checked={basemap === "vectorLight"}   onSelect={setBasemap} />
+              <BasemapRadio value="vectorLiberty" label="Vector Liberty" helper="Classic cartographic · crisp labels" checked={basemap === "vectorLiberty"} onSelect={setBasemap} />
+            </div>
+
+            {/* Raster fallback */}
+            <SectionLabel>Raster (legacy)</SectionLabel>
+            <div role="radiogroup" aria-label="Raster base map">
+              <BasemapRadio value="osmDark"     label="Carto Dark"    helper="Raster tiles"     checked={basemap === "osmDark"}     onSelect={setBasemap} />
+              <BasemapRadio value="osmLight"    label="Carto Light"   helper="Raster tiles"     checked={basemap === "osmLight"}    onSelect={setBasemap} />
+              <BasemapRadio value="osmStandard" label="OpenStreetMap" helper="Raster · may be soft on Retina" checked={basemap === "osmStandard"} onSelect={setBasemap} />
             </div>
 
             {/* Boundaries */}

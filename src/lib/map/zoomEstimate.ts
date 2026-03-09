@@ -42,9 +42,12 @@ export function isOverZoomed(heightMeters: number, providerMaxLevel: number, can
 
 /** Max level per basemap. */
 export const BASEMAP_MAX_LEVEL: Record<string, number> = {
-  osmDark:     20,   // Carto (claims 20)
-  osmLight:    20,   // Carto
-  osmStandard: 19,   // openstreetmap.org
+  vectorDark:    20,
+  vectorLight:   20,
+  vectorLiberty: 20,
+  osmDark:       20,
+  osmLight:      20,
+  osmStandard:   19,
 };
 
 /** Recommended minimumZoomDistance (metres) for each basemap. */

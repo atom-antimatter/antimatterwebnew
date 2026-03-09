@@ -68,7 +68,7 @@ export default function RenderDebugOverlay({
   layerManagerRef, moveSourceRef, isSelectedRef,
 }: Props) {
   const { debugEnabled, toggleDebug, basemap } = useAtlasLayersStore();
-  const { filterDebug } = useAtlasSelectionStore();
+  const { filterDebug, is3DActive } = useAtlasSelectionStore();
 
   const diagState = useRenderDiagnostics({
     enabled: debugEnabled,
@@ -236,6 +236,14 @@ export default function RenderDebugOverlay({
               Test Tile
             </button>
           </div>
+        </Section>
+
+        <Section title="3D Availability">
+          <Row label="camera height" value={`${(cameraState.height / 1000).toFixed(1)} km`} />
+          <Row label="is3DActive" value={String(is3DActive)} warn={is3DActive} />
+          {cameraState.viewRect && (
+            <Row label="bbox" value={`${cameraState.viewRect.west.toFixed(1)},${cameraState.viewRect.south.toFixed(1)},${cameraState.viewRect.east.toFixed(1)},${cameraState.viewRect.north.toFixed(1)}`} />
+          )}
         </Section>
 
         <p className="text-[9px] text-[rgba(246,246,253,0.25)] pt-1">Shift+D to close</p>

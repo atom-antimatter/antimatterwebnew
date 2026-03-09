@@ -26,6 +26,7 @@ import { StateBordersLayer }   from "./layers/StateBordersLayer";
 import { CityLabelsLayer }     from "./layers/CityLabelsLayer";
 import { FiberRoutesLayer }    from "./layers/FiberRoutesLayer";
 import { FeasibilityHeatmapLayer } from "./layers/FeasibilityHeatmapLayer";
+import { BuildingsLayer }         from "./layers/BuildingsLayer";
 import type { LayerContext } from "./layers/types";
 import type { ProviderRegion } from "@/lib/providers/linode/types";
 import { getMinimumZoomDistance, heightToTileZoom, BASEMAP_MAX_LEVEL } from "@/lib/map/zoomEstimate";
@@ -35,7 +36,8 @@ import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
 Cesium.Ion.defaultAccessToken = "";
 
-export type Basemap = "osmDark" | "osmLight" | "osmStandard";
+import type { BasemapId } from "@/lib/map/baseMaps";
+export type Basemap = BasemapId;
 
 export type AtlasLayers = {
   countryBorders: boolean;
@@ -54,6 +56,8 @@ export type AtlasMapRef = {
   resetView:       () => void;
   getCameraCenter: () => { lat: number; lng: number } | null;
   pinCenter:       (cb: (lat: number, lng: number) => void) => void;
+  getCameraHeight: () => number;
+  getViewRect:     () => { west: number; south: number; east: number; north: number } | null;
 };
 
 export type PowerScenario = { targetMw: number; radiusKm: number };
@@ -68,34 +72,40 @@ type AtlasMapProps = {
   onMapClick?:      (lat: number, lng: number) => void;
   onSelectLinode?:  (r: ProviderRegion | null) => void;
   selectedLinodeId?:string | null;
+  is3DActive?:      boolean;
 };
 
 type Tooltip = { x: number; y: number; dc: DataCenter } | null;
 
 // ─── imagery ──────────────────────────────────────────────────────────────
 
-import { BASEMAP_CONFIGS, type BasemapId } from "@/lib/map/baseMaps";
+import { BASEMAP_CONFIGS } from "@/lib/map/baseMaps";
+import { createVectorProvider, type VectorStyleId } from "@/lib/map/vectorBasemap";
 
 const RETINA = typeof window !== "undefined" && window.devicePixelRatio >= 1.5;
 
-function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
-  const cfg = BASEMAP_CONFIGS[basemap as BasemapId] ?? BASEMAP_CONFIGS.osmDark;
+function makeRasterProvider(basemapId: Basemap): Cesium.ImageryProvider {
+  const cfg = BASEMAP_CONFIGS[basemapId] ?? BASEMAP_CONFIGS.osmDark;
   const useRetina = RETINA && cfg.supportsRetina && cfg.retinaTemplate;
-  const url = useRetina ? cfg.retinaTemplate! : cfg.urlTemplate;
-  const tw = useRetina ? cfg.retinaTileWidth : cfg.tileWidth;
-  const th = useRetina ? cfg.retinaTileHeight : cfg.tileHeight;
+  const url = useRetina ? cfg.retinaTemplate! : cfg.urlTemplate!;
+  const tw = useRetina ? (cfg.retinaTileWidth ?? 512) : (cfg.tileWidth ?? 256);
+  const th = useRetina ? (cfg.retinaTileHeight ?? 512) : (cfg.tileHeight ?? 256);
   return new Cesium.UrlTemplateImageryProvider({
     url,
     minimumLevel: cfg.minimumLevel,
     maximumLevel: cfg.maximumLevel,
     tileWidth: tw,
     tileHeight: th,
-    ...(cfg.subdomains.length > 0 ? { subdomains: cfg.subdomains } : {}),
+    ...((cfg.subdomains ?? []).length > 0 ? { subdomains: cfg.subdomains } : {}),
     credit: new Cesium.Credit(cfg.credit),
   });
 }
 
-function isLight(b: Basemap) { return b === "osmLight" || b === "osmStandard"; }
+function isVectorBasemap(id: Basemap): boolean {
+  return (BASEMAP_CONFIGS[id]?.type ?? "raster") === "vector";
+}
+
+function isLight(b: Basemap) { return b === "osmLight" || b === "osmStandard" || b === "vectorLight" || b === "vectorLiberty"; }
 
 function tierSize(t: DataCenter["tier"]) { return t==="hyperscale"?13:t==="core"?10:t==="enterprise"?9:8; }
 function tierColor(t: DataCenter["tier"], light=false): Cesium.Color {
@@ -106,7 +116,7 @@ function tierColor(t: DataCenter["tier"], light=false): Cesium.Color {
 // ─── component ────────────────────────────────────────────────────────────
 
 const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
-  ({ selectedId, onSelectDc, highlightIds, layers, basemap, powerScenario, onMapClick, onSelectLinode, selectedLinodeId }, ref) => {
+  ({ selectedId, onSelectDc, highlightIds, layers, basemap, powerScenario, onMapClick, onSelectLinode, selectedLinodeId, is3DActive }, ref) => {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef    = useRef<Cesium.Viewer | null>(null);
@@ -167,6 +177,21 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       const carto = v.camera.positionCartographic;
       cb(Cesium.Math.toDegrees(carto.latitude), Cesium.Math.toDegrees(carto.longitude));
     },
+    getCameraHeight: () => {
+      const v = viewerRef.current;
+      if (!v||v.isDestroyed()) return 18_000_000;
+      return v.camera.positionCartographic?.height ?? 18_000_000;
+    },
+    getViewRect: () => {
+      const v = viewerRef.current;
+      if (!v||v.isDestroyed()) return null;
+      try {
+        const r = v.camera.computeViewRectangle?.();
+        if (!r) return null;
+        const toDeg = (val: number) => (val * 180) / Math.PI;
+        return { west: toDeg(r.west), south: toDeg(r.south), east: toDeg(r.east), north: toDeg(r.north) };
+      } catch { return null; }
+    },
   }), []);
 
   // ── Init viewer + LayerManager ───────────────────────────────────────────
@@ -219,7 +244,18 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     if (viewer.scene.moon) viewer.scene.moon.show = false;
     viewer.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
 
-    viewer.imageryLayers.addImageryProvider(makeProvider("osmDark"));
+    // Start with raster fallback immediately (fast); then async-swap to vector
+    viewer.imageryLayers.addImageryProvider(makeRasterProvider("osmDark"));
+    // Kick off async vector basemap load for the configured default
+    if (isVectorBasemap(basemapRef.current)) {
+      createVectorProvider(basemapRef.current as VectorStyleId).then(vp => {
+        if (!viewer.isDestroyed()) {
+          viewer.imageryLayers.removeAll();
+          viewer.imageryLayers.addImageryProvider(vp as any);
+          viewer.scene.requestRender();
+        }
+      }).catch(() => console.warn("[Atlas] Vector basemap unavailable, using raster fallback"));
+    }
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000) });
 
     // Wheel + context-menu
@@ -394,9 +430,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           const maxLvl = cfg.maximumLevel;
           const overZoomed = z > maxLvl;
           const useRetina = RETINA && cfg.supportsRetina && cfg.retinaTemplate;
-          const tmpl = useRetina ? cfg.retinaTemplate! : cfg.urlTemplate;
+          const tmpl = useRetina ? cfg.retinaTemplate! : (cfg.urlTemplate ?? "");
           const tileUrl = tmpl
-            .replace("{s}", cfg.subdomains[0] ?? "")
+            .replace("{s}", (cfg.subdomains ?? [])[0] ?? "")
             .replace("{z}", String(Math.min(z, maxLvl)))
             .replace("{x}", "0")
             .replace("{y}", "0");
@@ -451,7 +487,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       stateBorders:   layers.stateBorders,
       cities:         layers.cities,
       routes:         layers.routes,
-
+      buildings:      !!is3DActive,
       powerHeatmap:   layers.powerHeatmap,
     };
 
@@ -461,6 +497,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     layers.countryBorders, layers.stateBorders, layers.cities,
     layers.routes, layers.powerHeatmap,
     basemap, cameraState.level, cameraState.height, cameraState.viewRect, powerScenario,
+    is3DActive,
   ]);
 
   // ── Adaptive SSE ─────────────────────────────────────────────────────────
@@ -482,14 +519,68 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
-    v.imageryLayers.removeAll();
-    v.imageryLayers.addImageryProvider(makeProvider(basemap));
+
     const ctrl = v.scene.screenSpaceCameraController;
     const canvas = v.scene.canvas;
     const cw = canvas?.clientWidth ?? 1280;
     ctrl.minimumZoomDistance = getMinimumZoomDistance(basemap, cw * (v.resolutionScale ?? 1));
-    v.scene.requestRender();
+
+    if (isVectorBasemap(basemap)) {
+      // Async: fetch style JSON, create vector provider, swap imagery
+      createVectorProvider(basemap as VectorStyleId).then(vp => {
+        if (v.isDestroyed()) return;
+        v.imageryLayers.removeAll();
+        v.imageryLayers.addImageryProvider(vp as any);
+        v.scene.requestRender();
+      }).catch(() => {
+        // Fallback to raster if vector fails
+        console.warn("[Atlas] Vector basemap failed, falling back to raster");
+        if (v.isDestroyed()) return;
+        v.imageryLayers.removeAll();
+        v.imageryLayers.addImageryProvider(makeRasterProvider("osmDark"));
+        v.scene.requestRender();
+      });
+    } else {
+      v.imageryLayers.removeAll();
+      v.imageryLayers.addImageryProvider(makeRasterProvider(basemap));
+      v.scene.requestRender();
+    }
   }, [basemap]);
+
+  // ── 3D mode transitions ──────────────────────────────────────────────────
+  const buildingsLayerRef = useRef<BuildingsLayer | null>(null);
+  useEffect(() => {
+    const v = viewerRef.current;
+    const mgr = managerRef.current;
+    if (!v || v.isDestroyed() || !mgr) return;
+
+    if (is3DActive) {
+      // Enable 3D rendering features
+      v.scene.globe.depthTestAgainstTerrain = true;
+      v.scene.globe.enableLighting = true;
+      v.shadows = true;
+      if (v.shadowMap) v.shadowMap.enabled = true;
+      v.scene.light = new Cesium.SunLight();
+      if (v.scene.skyAtmosphere) v.scene.skyAtmosphere.show = true;
+
+      // Register BuildingsLayer if not already
+      if (!buildingsLayerRef.current) {
+        const bl = new BuildingsLayer();
+        buildingsLayerRef.current = bl;
+        mgr.register(bl);
+      }
+    } else {
+      // Revert to flat 2D rendering
+      v.scene.globe.depthTestAgainstTerrain = false;
+      v.scene.globe.enableLighting = false;
+      v.shadows = false;
+      if (v.shadowMap) v.shadowMap.enabled = false;
+      if (v.scene.skyAtmosphere) v.scene.skyAtmosphere.show = false;
+
+      // Disable buildings layer (LayerManager will handle the sync via managed states)
+    }
+    v.scene.requestRender();
+  }, [is3DActive]);
 
   // ── DC visibility + selection + basemap colours ───────────────────────────
   useEffect(() => {

@@ -6,7 +6,7 @@
  * Pure Cesium renderer. Layer state is owned by atlasLayersStore (Zustand).
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -23,6 +23,10 @@ import { useAtlasLayersStore } from "@/state/atlasLayersStore";
 import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 import { useModalStore } from "@/state/modalStore";
 import { useEscapeToCloseModal } from "@/hooks/useEscapeToCloseModal";
+import { use3DAvailability } from "@/hooks/use3DAvailability";
+import ThreeDEntryButton from "@/components/atlas/ThreeDEntryButton";
+import ThreeDExitButton from "@/components/atlas/ThreeDExitButton";
+import { useCameraLevel } from "@/components/atlas/useCameraLevel";
 
 const LinodeCard = dynamic(() => import("@/components/atlas/providers/LinodeCard"), { ssr: false, loading: () => null });
 const AtlasMap   = dynamic(() => import("@/components/atlas/AtlasMap.client"),       { ssr: false, loading: () => null });
@@ -68,11 +72,57 @@ export default function DataCenterMapClient() {
     selectedLinode, setSelectedLinode,
     pinnedPoint, setPinnedPoint,
     setFilterDebug,
+    is3DActive, enter3D, exit3D,
   } = useAtlasSelectionStore();
 
   // ── UI state ────────────────────────────────────────────────────────────
   const [isPanelOpen,  setIsPanelOpen]  = useState(true);
   const [siteBriefPos, setSiteBriefPos] = useState<{ lat: number; lng: number } | null>(null);
+
+  // ── 3D availability ──────────────────────────────────────────────────────
+  // Poll camera state from the ref every 500ms to drive the 3D availability hook.
+  const [polledCameraState, setPolledCameraState] = useState<{ height: number; level: string; viewRect: { west: number; south: number; east: number; north: number } | null }>({
+    height: 18_000_000, level: "WORLD", viewRect: null,
+  });
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const ref = atlasRef.current;
+      if (!ref) return;
+      const height = ref.getCameraHeight();
+      const viewRect = ref.getViewRect();
+      const level = height > 10_000_000 ? "WORLD" : height > 3_500_000 ? "REGION" : height > 900_000 ? "LOCAL" : "CITY";
+      setPolledCameraState(prev => {
+        if (prev.height === height && prev.viewRect?.west === viewRect?.west) return prev;
+        return { height, level, viewRect };
+      });
+    }, 500);
+    return () => clearInterval(id);
+  }, []);
+
+  const threeDAvail = use3DAvailability(
+    polledCameraState as any,
+    !is3DActive,
+  );
+
+  const handleEnter3D = useCallback(() => {
+    const ref = atlasRef.current;
+    if (!ref) return;
+    const center = ref.getCameraCenter();
+    const height = ref.getCameraHeight();
+    if (center) {
+      enter3D({ lat: center.lat, lng: center.lng, height });
+      ref.flyTo({ lat: threeDAvail.centerLat || center.lat, lng: threeDAvail.centerLng || center.lng, height: 2500 }, 1.5);
+    }
+  }, [enter3D, threeDAvail.centerLat, threeDAvail.centerLng]);
+
+  const handleExit3D = useCallback(() => {
+    const pre = useAtlasSelectionStore.getState().pre3DCameraState;
+    exit3D();
+    if (pre && atlasRef.current) {
+      atlasRef.current.flyTo({ lat: pre.lat, lng: pre.lng, height: pre.height }, 1.5);
+    }
+  }, [exit3D]);
 
   // ── Search state ────────────────────────────────────────────────────────
   const [results,          setResults]          = useState<DataCenter[] | null>(null);
@@ -256,6 +306,7 @@ export default function DataCenterMapClient() {
           if (r) { setSelectedDc(null); setSiteBriefPos(null); setPinnedPoint(null); openModal("linode"); }
         }}
         selectedLinodeId={selectedLinode?.region_id ?? null}
+        is3DActive={is3DActive}
         onMapClick={(lat, lng) => {
           setPinnedPoint({ lat, lng });
           openModal("power");
@@ -307,6 +358,14 @@ export default function DataCenterMapClient() {
       {siteBriefPos && (
         <SiteBrief lat={siteBriefPos.lat} lng={siteBriefPos.lng} targetMw={powerScenario.targetMw} radiusKm={powerScenario.radiusKm} onClose={() => setSiteBriefPos(null)} />
       )}
+
+      {/* 3D entry / exit */}
+      <ThreeDEntryButton
+        visible={threeDAvail.is3DAvailable && !is3DActive}
+        buildingCount={threeDAvail.buildingCount}
+        onClick={handleEnter3D}
+      />
+      <ThreeDExitButton visible={is3DActive} onClick={handleExit3D} />
 
       {/* Layers menu — reads/writes store directly */}
       <LayersMenu onResetView={() => atlasRef.current?.flyTo({ lat: 25, lng: -20, height: PREFERRED_HEIGHT_RESET }, 2)} />

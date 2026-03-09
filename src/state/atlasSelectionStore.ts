@@ -2,9 +2,10 @@
  * atlasSelectionStore — single source of truth for what is "selected" on the map.
  *
  * Consumers:
- *  - AtlasMap: reads selectedId, highlights DC markers
+ *  - AtlasMap: reads selectedId, highlights DC markers, manages 3D mode
  *  - PowerReadinessTab: reads pinnedPoint or selectedDc for power assessment
  *  - DataCenterMapClient: reads/writes all fields
+ *  - ThreeDEntryButton / ThreeDExitButton: reads/writes 3D state
  */
 import { create } from "zustand";
 import type { DataCenter } from "@/data/dataCenters";
@@ -23,14 +24,19 @@ export type FilterDebugState = {
   mode: "idle" | "browse" | "geocode" | "text";
 };
 
+export type Pre3DCameraState = { lat: number; lng: number; height: number };
+
 interface AtlasSelectionState {
   selectedDc:     DataCenter     | null;
   selectedLinode: ProviderRegion | null;
   pinnedPoint:    PinnedPoint    | null;
   powerPanelOpen: boolean;
   cameraLevel:    AtlasCameraLevel;
-  /** Filter pipeline state for the debug overlay. */
   filterDebug:    FilterDebugState;
+
+  // 3D mode
+  is3DActive:       boolean;
+  pre3DCameraState: Pre3DCameraState | null;
 
   setSelectedDc:     (dc: DataCenter | null)         => void;
   setSelectedLinode: (r: ProviderRegion | null)       => void;
@@ -40,17 +46,21 @@ interface AtlasSelectionState {
   setFilterDebug:    (fd: FilterDebugState)           => void;
   clearAll:          () => void;
 
-  /** Convenience: the lat/lng to use for power assessment */
+  enter3D: (saveCam: Pre3DCameraState) => void;
+  exit3D:  () => void;
+
   readonly powerTarget: PinnedPoint | null;
 }
 
 export const useAtlasSelectionStore = create<AtlasSelectionState>((set, get) => ({
-  selectedDc:     null,
-  selectedLinode: null,
-  pinnedPoint:    null,
-  powerPanelOpen: false,
-  cameraLevel:    "WORLD",
-  filterDebug:    { rawQuery: "", geocodedPos: null, capabilities: [], tier: null, resultCount: 0, mode: "idle" },
+  selectedDc:       null,
+  selectedLinode:   null,
+  pinnedPoint:      null,
+  powerPanelOpen:   false,
+  cameraLevel:      "WORLD",
+  filterDebug:      { rawQuery: "", geocodedPos: null, capabilities: [], tier: null, resultCount: 0, mode: "idle" },
+  is3DActive:       false,
+  pre3DCameraState: null,
 
   setSelectedDc: (dc) => set({ selectedDc: dc }),
   setSelectedLinode: (r) => set({ selectedLinode: r }),
@@ -59,6 +69,9 @@ export const useAtlasSelectionStore = create<AtlasSelectionState>((set, get) => 
   setCameraLevel: (level) => set({ cameraLevel: level }),
   setFilterDebug: (fd) => set({ filterDebug: fd }),
   clearAll: () => set({ selectedDc: null, selectedLinode: null, pinnedPoint: null }),
+
+  enter3D: (saveCam) => set({ is3DActive: true, pre3DCameraState: saveCam }),
+  exit3D: () => set({ is3DActive: false, pre3DCameraState: null }),
 
   get powerTarget() {
     const s = get();

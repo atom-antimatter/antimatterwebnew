@@ -5,32 +5,68 @@
  * and max zoom levels. Used by AtlasMap, LayersMenu, and the debug overlay.
  */
 
-export type BasemapId = "osmDark" | "osmLight" | "osmStandard";
+export type RasterBasemapId = "osmDark" | "osmLight" | "osmStandard";
+export type VectorBasemapId = "vectorDark" | "vectorLight" | "vectorLiberty";
+export type BasemapId = RasterBasemapId | VectorBasemapId;
 
 export type BasemapConfig = {
   id: BasemapId;
   label: string;
   helper: string;
-  urlTemplate: string;
-  retinaTemplate: string | null;
+  type: "raster" | "vector";
   maximumLevel: number;
   minimumLevel: number;
-  tileWidth: number;
-  tileHeight: number;
-  retinaTileWidth: number;
-  retinaTileHeight: number;
-  supportsRetina: boolean;
-  subdomains: string[];
   credit: string;
-  /** "high" = Carto retina; "medium" = Carto non-retina; "fallback" = OSM */
-  qualityTier: "high" | "medium" | "fallback";
+  qualityTier: "vector" | "high" | "medium" | "fallback";
+  // Raster-only fields (undefined for vector)
+  urlTemplate?: string;
+  retinaTemplate?: string | null;
+  tileWidth?: number;
+  tileHeight?: number;
+  retinaTileWidth?: number;
+  retinaTileHeight?: number;
+  supportsRetina?: boolean;
+  subdomains?: string[];
 };
 
 export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
+  // ── Vector basemaps (OpenFreeMap — crisp at all DPIs) ─────────────────────
+  vectorDark: {
+    id: "vectorDark",
+    label: "Vector Dark",
+    helper: "Crisp at all zoom levels · retina native",
+    type: "vector",
+    maximumLevel: 20,
+    minimumLevel: 0,
+    credit: "OpenFreeMap, OpenMapTiles, OpenStreetMap",
+    qualityTier: "vector",
+  },
+  vectorLight: {
+    id: "vectorLight",
+    label: "Vector Light",
+    helper: "Light theme · crisp labels",
+    type: "vector",
+    maximumLevel: 20,
+    minimumLevel: 0,
+    credit: "OpenFreeMap, OpenMapTiles, OpenStreetMap",
+    qualityTier: "vector",
+  },
+  vectorLiberty: {
+    id: "vectorLiberty",
+    label: "Vector Liberty",
+    helper: "Classic cartographic style · crisp labels",
+    type: "vector",
+    maximumLevel: 20,
+    minimumLevel: 0,
+    credit: "OpenFreeMap, OpenMapTiles, OpenStreetMap",
+    qualityTier: "vector",
+  },
+  // ── Raster basemaps (legacy fallback) ─────────────────────────────────────
   osmDark: {
     id: "osmDark",
-    label: "Carto Dark",
-    helper: "Recommended · dark theme · retina support",
+    label: "Carto Dark (raster)",
+    helper: "Raster tiles · may appear soft on Retina",
+    type: "raster",
     urlTemplate: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
     retinaTemplate: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
     maximumLevel: 20,
@@ -46,8 +82,9 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
   },
   osmLight: {
     id: "osmLight",
-    label: "Carto Light",
-    helper: "Light theme · retina support",
+    label: "Carto Light (raster)",
+    helper: "Raster tiles · may appear soft on Retina",
+    type: "raster",
     urlTemplate: "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png",
     retinaTemplate: "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
     maximumLevel: 20,
@@ -63,8 +100,9 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
   },
   osmStandard: {
     id: "osmStandard",
-    label: "OpenStreetMap",
-    helper: "Standard tiles · may appear soft on Retina displays",
+    label: "OpenStreetMap (raster)",
+    helper: "Standard tiles · may appear soft on Retina",
+    type: "raster",
     urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     retinaTemplate: null,
     maximumLevel: 19,
@@ -81,3 +119,5 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
 };
 
 export const BASEMAP_LIST = Object.values(BASEMAP_CONFIGS);
+export const VECTOR_BASEMAPS = BASEMAP_LIST.filter(b => b.type === "vector");
+export const RASTER_BASEMAPS = BASEMAP_LIST.filter(b => b.type === "raster");

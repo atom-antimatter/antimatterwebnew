@@ -161,11 +161,33 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid bbox values" }, { status: 400 });
   }
 
+  // Fast path: countOnly returns estimated building count without fetching full GeoJSON.
+  // Used by use3DAvailability to check density before entering 3D mode.
+  const countOnly = searchParams.get("countOnly") === "true";
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   try {
     const quadkeys = bboxToQuadKeys(west, south, east, north, MS_BUILDING_QUADKEY_ZOOM);
+
+    if (countOnly) {
+      // Quick density check: just see which quadkeys have data in the manifest
+      const manifest = await loadManifest();
+      let estimatedCount = 0;
+      for (const qk of quadkeys) {
+        if (manifest.has(qk)) estimatedCount += 500; // avg buildings per quadkey tile
+        if (supabaseUrl && serviceKey) {
+          const cached = await getCachedTile(supabaseUrl, serviceKey, qk);
+          if (cached) { estimatedCount = estimatedCount - 500 + cached.length; }
+        }
+      }
+      return NextResponse.json(
+        { count: estimatedCount, quadkeys: quadkeys.length },
+        { headers: { "Cache-Control": "public, max-age=60" } },
+      );
+    }
+
     console.log(`[buildings] bbox ${bboxStr} → ${quadkeys.length} quadkeys: ${quadkeys.slice(0, 5).join(",")}`);
 
     const manifest = await loadManifest();

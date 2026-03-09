@@ -7,6 +7,7 @@
  */
 import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
+import type { BasemapId } from "@/lib/map/baseMaps";
 
 // ─── Layer keys ────────────────────────────────────────────────────────────────
 
@@ -24,30 +25,18 @@ export type PowerLayerKey =
 
 export type ProviderLayerKey = "linodeRegions";
 
-export type Basemap = "osmDark" | "osmLight" | "osmStandard";
+export type Basemap = BasemapId;
 
 // ─── Store shape ───────────────────────────────────────────────────────────────
 
 export interface AtlasLayersState {
-  // Basemap
   basemap: Basemap;
-
-  // Overlay toggles
   overlays: Record<OverlayKey, boolean>;
-
-  // Power layer toggles
   power: Record<PowerLayerKey, boolean>;
-
-  // Provider layer toggles
   providers: Record<ProviderLayerKey, boolean>;
-
-  // Power scenario
   powerScenario: { targetMw: number; radiusKm: number };
-
-  // Debug mode
   debugEnabled: boolean;
 
-  // ── Actions ──────────────────────────────────────────────────────────────
   setBasemap: (b: Basemap) => void;
   toggleOverlay: (key: OverlayKey) => void;
   setOverlay: (key: OverlayKey, value: boolean) => void;
@@ -63,7 +52,7 @@ export interface AtlasLayersState {
 // ─── Defaults ──────────────────────────────────────────────────────────────────
 
 const DEFAULT_OVERLAYS: Record<OverlayKey, boolean> = {
-  countryBorders: true,
+  countryBorders: false,
   stateBorders: false,
   cities: false,
   points: true,
@@ -86,7 +75,7 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
   devtools(
     persist(
       (set) => ({
-        basemap: "osmDark",
+        basemap: "vectorDark" as Basemap,
         overlays: { ...DEFAULT_OVERLAYS },
         power: { ...DEFAULT_POWER },
         providers: { ...DEFAULT_PROVIDERS },
@@ -142,14 +131,14 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
           }),
         resetToDefaults: () =>
           set({
+            basemap: "vectorDark" as Basemap,
             overlays: { ...DEFAULT_OVERLAYS },
             power: { ...DEFAULT_POWER },
             providers: { ...DEFAULT_PROVIDERS },
           }),
       }),
       {
-        name: "atlas-layers-v1",
-        // Only persist toggles + basemap; skip debugEnabled (use URL param instead)
+        name: "atlas-layers-v2",
         partialize: (s) => ({
           basemap: s.basemap,
           overlays: s.overlays,
@@ -162,8 +151,6 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
     { name: "AtlasLayers" }
   )
 );
-
-// ─── Derived flat shape (for AtlasMap props compatibility) ────────────────────
 
 export function flattenLayers(s: AtlasLayersState) {
   return {
