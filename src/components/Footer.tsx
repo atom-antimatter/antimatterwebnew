@@ -68,6 +68,9 @@ const Footer = () => {
                 <Link href={"/resources/vendor-matrix"}>
                   Compare Atom
                 </Link>
+                <TransitionLink href={"/data-center-map"}>
+                  Atom GIS
+                </TransitionLink>
               </div>
             </div>
             <div>

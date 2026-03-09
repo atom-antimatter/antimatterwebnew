@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { GoArrowUpRight } from "react-icons/go";
-import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale } from "react-icons/hi2";
+import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale, HiGlobeAmericas } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
 import buttonStyles from "./ui/css/Button.module.css";
@@ -333,6 +333,13 @@ const atomAIProducts: AtomProduct[] = [
     title: "Compare Atom",
     desc: "See how Atom stacks up against enterprise AI vendors",
     href: "/resources/vendor-matrix",
+    available: true as const,
+  },
+  {
+    icon: HiGlobeAmericas,
+    title: "Atom GIS",
+    desc: "Infrastructure atlas with global data center intelligence",
+    href: "/data-center-map",
     available: true as const,
   },
 ];
