@@ -31,6 +31,7 @@ import type { LayerContext } from "./layers/types";
 import type { ProviderRegion } from "@/lib/providers/linode/types";
 import { getMinimumZoomDistance, heightToTileZoom, BASEMAP_MAX_LEVEL } from "@/lib/map/zoomEstimate";
 import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
+import { useAtlasLayersStore } from "@/state/atlasLayersStore";
 
 // ─── exported types ────────────────────────────────────────────────────────
 
@@ -134,6 +135,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   const isSelectedRef   = useRef(false);
 
   const { setCameraLevel } = useAtlasSelectionStore();
+  const invertZoom = useAtlasLayersStore((s) => s.invertZoom);
 
   const [tooltip,   setTooltip]   = useState<Tooltip>(null);
   const [isReady,   setIsReady]   = useState(false);
@@ -168,6 +170,14 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     src.show = cameraState.height >= CELESTIAL_VISIBLE_HEIGHT;
     viewerRef.current?.scene.requestRender();
   }, [cameraState.height]);
+
+  // Apply invert zoom when user toggles it in Layers menu
+  useEffect(() => {
+    const v = viewerRef.current;
+    if (!v || v.isDestroyed()) return;
+    const ctrl = v.scene.screenSpaceCameraController;
+    (ctrl as any).zoomFactor = invertZoom ? -5 : 5;
+  }, [invertZoom]);
 
   // ── Expose flyTo / resetView ─────────────────────────────────────────────
   useImperativeHandle(ref, () => ({
@@ -316,6 +326,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     ctrl.minimumZoomDistance = 200;
     // Allow zooming out to see Moon (~384M m) and beyond for orbit view
     ctrl.maximumZoomDistance = 500_000_000;
+    // Invert zoom direction for users whose trackpad/scroll feels reversed (e.g. some Macs)
+    const invert = typeof window !== "undefined" && localStorage.getItem("atlasInvertZoom") === "true";
+    (ctrl as any).zoomFactor = invert ? -5 : 5;
 
     if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
     if (viewer.scene.skyBox) (viewer.scene.skyBox as any).show = false;

@@ -94,6 +94,7 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
     overlays, toggleOverlay,
     power, togglePower,
     providers, toggleProvider,
+    invertZoom, setInvertZoom,
   } = useAtlasLayersStore();
   const { cameraLevel } = useAtlasSelectionStore();
 
@@ -214,6 +215,16 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
                   item.description,
                 )
               )}
+            </div>
+
+            <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
+              <SectionLabel>Controls</SectionLabel>
+              <SwitchRow
+                label="Invert zoom direction"
+                helper="If zoom feels reversed (e.g. some Mac trackpads)"
+                checked={invertZoom}
+                onToggle={() => setInvertZoom(!invertZoom)}
+              />
             </div>
           </div>
 

@@ -24,6 +24,7 @@ import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 import { useModalStore } from "@/state/modalStore";
 import { useEscapeToCloseModal } from "@/hooks/useEscapeToCloseModal";
 import { use3DAvailability } from "@/hooks/use3DAvailability";
+import { useIsMobile } from "@/app/hooks/useIsMobile";
 import ThreeDEntryButton from "@/components/atlas/ThreeDEntryButton";
 import ThreeDExitButton from "@/components/atlas/ThreeDExitButton";
 
@@ -43,8 +44,12 @@ const PREFERRED_HEIGHT_RESET  = 18_000_000; // world view
 
 // ─── component ────────────────────────────────────────────────────────────────
 
+/** Breakpoint below which we show the mobile fallback (no Cesium) to avoid crashes. */
+const ATLAS_MOBILE_BREAKPOINT = 768;
+
 export default function DataCenterMapClient() {
   const atlasRef = useRef<AtlasMapRef | null>(null);
+  const isMobile = useIsMobile(ATLAS_MOBILE_BREAKPOINT);
 
   const { activeModal, openModal, closeModal } = useModalStore();
   useEscapeToCloseModal();
@@ -286,6 +291,28 @@ export default function DataCenterMapClient() {
   }, [setSelectedDc]);
 
   // ── Render ────────────────────────────────────────────────────────────────
+
+  // Mobile: do not load Cesium (causes "a problem repeatedly occurred" crash on many devices)
+  if (isMobile) {
+    return (
+      <div className="h-[100dvh] w-full bg-[#020202] overflow-hidden overscroll-none relative flex flex-col items-center justify-center p-6">
+        <Link
+          href="/"
+          className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-[rgba(6,7,15,0.82)] backdrop-blur-md border border-[rgba(246,246,253,0.12)] text-[rgba(246,246,253,0.75)] hover:text-[#f6f6fd] hover:border-[rgba(246,246,253,0.25)] transition-colors shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#696aac]"
+          aria-label="Back to Antimatter AI"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Antimatter AI</span>
+        </Link>
+        <div className="text-center max-w-sm">
+          <h1 className="text-lg font-semibold text-[#f6f6fd] mb-2">Infrastructure Atlas</h1>
+          <p className="text-sm text-[rgba(246,246,253,0.6)] leading-relaxed">
+            For the best experience, open the atlas on a desktop or tablet. Mobile support is coming soon.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[100dvh] w-full bg-[#020202] overflow-hidden overscroll-none relative">

@@ -36,6 +36,8 @@ export interface AtlasLayersState {
   providers: Record<ProviderLayerKey, boolean>;
   powerScenario: { targetMw: number; radiusKm: number };
   debugEnabled: boolean;
+  /** If true, scroll-up zooms in (fixes reversed zoom on some Mac trackpads). */
+  invertZoom: boolean;
 
   setBasemap: (b: Basemap) => void;
   toggleOverlay: (key: OverlayKey) => void;
@@ -46,6 +48,7 @@ export interface AtlasLayersState {
   setProvider: (key: ProviderLayerKey, value: boolean) => void;
   setPowerScenario: (s: { targetMw: number; radiusKm: number }) => void;
   toggleDebug: () => void;
+  setInvertZoom: (v: boolean) => void;
   resetToDefaults: () => void;
 }
 
@@ -85,6 +88,8 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
             ? (window.location.search.includes("debug=1") ||
                localStorage.getItem("atlasDebug") === "true")
             : false,
+        invertZoom:
+          typeof window !== "undefined" && localStorage.getItem("atlasInvertZoom") === "true",
 
         setBasemap: (b) => {
           console.log(`[Layers] basemap -> ${b}`);
@@ -121,6 +126,10 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
           set((s) => ({ providers: { ...s.providers, [key]: value } }));
         },
         setPowerScenario: (s) => set({ powerScenario: s }),
+        setInvertZoom: (v) => {
+          if (typeof window !== "undefined") localStorage.setItem("atlasInvertZoom", v ? "true" : "false");
+          set({ invertZoom: v });
+        },
         toggleDebug: () =>
           set((s) => {
             const next = !s.debugEnabled;
@@ -145,6 +154,7 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
           power: s.power,
           providers: s.providers,
           powerScenario: s.powerScenario,
+          invertZoom: s.invertZoom,
         }),
       }
     ),
