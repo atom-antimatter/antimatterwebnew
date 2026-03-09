@@ -112,14 +112,22 @@ export default function DataCenterMapClient() {
     const center = ref.getCameraCenter();
     const height = ref.getCameraHeight();
     if (center) {
+      // Store pre-3D state for exit restoration
       enter3D({ lat: center.lat, lng: center.lng, height });
-      ref.flyTo({ lat: threeDAvail.centerLat || center.lat, lng: threeDAvail.centerLng || center.lng, height: 2500 }, 1.5);
+      // Atomic: fly + enable lighting + load buildings (all inside the map ref)
+      ref.enter3DMode(
+        threeDAvail.centerLat || center.lat,
+        threeDAvail.centerLng || center.lng,
+      );
     }
   }, [enter3D, threeDAvail.centerLat, threeDAvail.centerLng]);
 
   const handleExit3D = useCallback(() => {
     const pre = useAtlasSelectionStore.getState().pre3DCameraState;
+    // Atomic: revert lighting + disable buildings
+    atlasRef.current?.exit3DMode();
     exit3D();
+    // Fly back to pre-3D camera position
     if (pre && atlasRef.current) {
       atlasRef.current.flyTo({ lat: pre.lat, lng: pre.lng, height: pre.height }, 1.5);
     }

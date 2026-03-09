@@ -23,7 +23,6 @@
     "@crayonai/react-ui": "^0.8.27",
     "@crayonai/stream": "^0.6.4",
     "@google/genai": "^1.0.1",
-    "@macrostrat/cesium-vector-provider": "^2.0.2",
     "@mozilla/readability": "^0.6.0",
     "@payloadcms/db-postgres": "3.62.1",
     "@payloadcms/next": "3.62.1",

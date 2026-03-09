@@ -58,6 +58,8 @@ export type AtlasMapRef = {
   pinCenter:       (cb: (lat: number, lng: number) => void) => void;
   getCameraHeight: () => number;
   getViewRect:     () => { west: number; south: number; east: number; north: number } | null;
+  enter3DMode:     (centerLat: number, centerLng: number) => void;
+  exit3DMode:      () => void;
 };
 
 export type PowerScenario = { targetMw: number; radiusKm: number };
@@ -142,6 +144,21 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   const [isReady,   setIsReady]   = useState(false);
   const cameraState = useCameraLevel(viewerRef);
 
+  // Refs used by both useImperativeHandle and effects for 3D mode
+  const buildingsLayerRef = useRef<BuildingsLayer | null>(null);
+  const makeCtxRef = useRef<(() => LayerContext) | null>(null);
+
+  // Helper: current managed layer states (read from latest props via closure)
+  const layersRef = useRef(layers);
+  layersRef.current = layers;
+  const getManagedStates = (): Record<string, boolean> => ({
+    countryBorders: layersRef.current.countryBorders,
+    stateBorders:   layersRef.current.stateBorders,
+    cities:         layersRef.current.cities,
+    routes:         layersRef.current.routes,
+    powerHeatmap:   layersRef.current.powerHeatmap,
+  });
+
   // Keep basemapRef current so the makeCtx factory always reads the latest value
   useEffect(() => { basemapRef.current = basemap; }, [basemap]);
 
@@ -201,6 +218,61 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         const toDeg = (val: number) => (val * 180) / Math.PI;
         return { west: toDeg(r.west), south: toDeg(r.south), east: toDeg(r.east), north: toDeg(r.north) };
       } catch { return null; }
+    },
+    enter3DMode: (centerLat: number, centerLng: number) => {
+      const v = viewerRef.current;
+      const mgr = managerRef.current;
+      if (!v || v.isDestroyed() || !mgr) return;
+
+      // Enable 3D scene features
+      v.scene.globe.depthTestAgainstTerrain = true;
+      v.scene.globe.enableLighting = true;
+      v.shadows = true;
+      if (v.shadowMap) v.shadowMap.enabled = true;
+      v.scene.light = new Cesium.SunLight();
+      if (v.scene.skyAtmosphere) v.scene.skyAtmosphere.show = true;
+
+      // Register BuildingsLayer if not already
+      if (!buildingsLayerRef.current) {
+        const bl = new BuildingsLayer();
+        buildingsLayerRef.current = bl;
+        mgr.register(bl);
+      }
+
+      // Fly to city altitude, then sync buildings after arrival
+      v.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(centerLng, centerLat, 2500),
+        duration: 1.5,
+        easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+        complete: () => {
+          if (v.isDestroyed()) return;
+          // Force a fresh sync now that camera is at 2500m
+          const ctx = makeCtxRef.current?.();
+          if (ctx) {
+            mgr.sync({ ...getManagedStates(), buildings: true }, ctx);
+          }
+          v.scene.requestRender();
+        },
+      });
+    },
+    exit3DMode: () => {
+      const v = viewerRef.current;
+      const mgr = managerRef.current;
+      if (!v || v.isDestroyed()) return;
+
+      // Revert 3D features
+      v.scene.globe.depthTestAgainstTerrain = false;
+      v.scene.globe.enableLighting = false;
+      v.shadows = false;
+      if (v.shadowMap) v.shadowMap.enabled = false;
+      if (v.scene.skyAtmosphere) v.scene.skyAtmosphere.show = false;
+
+      // Disable buildings in the layer sync
+      if (mgr) {
+        const ctx = makeCtxRef.current?.();
+        if (ctx) mgr.sync({ ...getManagedStates(), buildings: false }, ctx);
+      }
+      v.scene.requestRender();
     },
   }), []);
 
@@ -323,6 +395,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       return { viewer, cameraLevel: level as LayerContext["cameraLevel"], viewRect, heightMeters: h, basemap: basemapRef.current };
     };
     mgr.init(viewer, makeCtx);
+    makeCtxRef.current = makeCtx;
 
     // ── DC markers ────────────────────────────────────────────────────────
     const dcDs = new Cesium.CustomDataSource("data-centers");
@@ -600,39 +673,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   }, [basemap]);
 
   // ── 3D mode transitions ──────────────────────────────────────────────────
-  const buildingsLayerRef = useRef<BuildingsLayer | null>(null);
-  useEffect(() => {
-    const v = viewerRef.current;
-    const mgr = managerRef.current;
-    if (!v || v.isDestroyed() || !mgr) return;
-
-    if (is3DActive) {
-      // Enable 3D rendering features
-      v.scene.globe.depthTestAgainstTerrain = true;
-      v.scene.globe.enableLighting = true;
-      v.shadows = true;
-      if (v.shadowMap) v.shadowMap.enabled = true;
-      v.scene.light = new Cesium.SunLight();
-      if (v.scene.skyAtmosphere) v.scene.skyAtmosphere.show = true;
-
-      // Register BuildingsLayer if not already
-      if (!buildingsLayerRef.current) {
-        const bl = new BuildingsLayer();
-        buildingsLayerRef.current = bl;
-        mgr.register(bl);
-      }
-    } else {
-      // Revert to flat 2D rendering
-      v.scene.globe.depthTestAgainstTerrain = false;
-      v.scene.globe.enableLighting = false;
-      v.shadows = false;
-      if (v.shadowMap) v.shadowMap.enabled = false;
-      if (v.scene.skyAtmosphere) v.scene.skyAtmosphere.show = false;
-
-      // Disable buildings layer (LayerManager will handle the sync via managed states)
-    }
-    v.scene.requestRender();
-  }, [is3DActive]);
+  // The actual 3D enter/exit logic lives in the imperative ref methods
+  // (enter3DMode / exit3DMode) which handle flyTo, scene settings, and
+  // buildings layer sync atomically. This effect is intentionally empty.
 
   // ── DC visibility + selection + basemap colours ───────────────────────────
   useEffect(() => {
