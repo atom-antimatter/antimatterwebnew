@@ -5,10 +5,11 @@
  * No local layer state here — the Zustand store is the single source of truth.
  */
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Layers, X } from "lucide-react";
 import { useAtlasLayersStore, type OverlayKey, type PowerLayerKey, type ProviderLayerKey, type Basemap } from "@/state/atlasLayersStore";
 import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
+import { useModalStore } from "@/state/modalStore";
 import styles from "@/components/ui/css/Button.module.css";
 
 // ── Re-export types that the parent component still references ───────────────
@@ -91,7 +92,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 // ─── main component ───────────────────────────────────────────────────────────
 
 export default function LayersMenu({ onResetView }: LayersMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const { activeModal, openModal, closeModal } = useModalStore();
+  const isOpen = activeModal === "layers";
   const panelRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -118,14 +120,14 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
             border border-[rgba(246,246,253,0.1)]
             shadow-2xl
             flex flex-col
-            max-h-[calc(100dvh-100px)] overflow-hidden
+            max-h-[80vh]
             animate-in fade-in slide-in-from-bottom-3 duration-200
           "
         >
           {/* Header */}
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-[rgba(246,246,253,0.07)]">
             <p className="text-sm font-semibold text-[#f6f6fd]">Layers</p>
-            <button type="button" onClick={() => setIsOpen(false)} aria-label="Close layers panel" className="w-7 h-7 flex items-center justify-center rounded-lg text-[rgba(246,246,253,0.5)] hover:text-[#f6f6fd] hover:bg-white/[0.06] transition-colors focus:outline-none">
+            <button type="button" onClick={closeModal} aria-label="Close layers panel" className="w-7 h-7 flex items-center justify-center rounded-lg text-[rgba(246,246,253,0.5)] hover:text-[#f6f6fd] hover:bg-white/[0.06] transition-colors focus:outline-none">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -156,8 +158,8 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
                 onToggle={() => toggleOverlay("stateBorders")}
               />
               <SwitchRow
-                label="City labels"
-                helper="Your own overlay — GPS-accurate"
+                label="Extra city labels"
+                helper="Additional overlay labels — basemap already includes place names"
                 zoomNote={overlays.cities && isGlobal ? "Zoom in to see" : undefined}
                 checked={overlays.cities}
                 onToggle={() => toggleOverlay("cities")}
@@ -223,7 +225,7 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
           {/* Footer */}
           {onResetView && (
             <div className="flex-shrink-0 border-t border-[rgba(246,246,253,0.07)] p-3">
-              <button type="button" onClick={() => { onResetView(); setIsOpen(false); }}
+              <button type="button" onClick={() => { onResetView(); closeModal(); }}
                 className={`${styles.button} inverted w-full text-sm`} style={{ padding: "8px 0" }}>
                 Reset view
               </button>
@@ -233,7 +235,7 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
       )}
 
       {/* FAB */}
-      <button type="button" onClick={() => setIsOpen(o => !o)}
+      <button type="button" onClick={() => isOpen ? closeModal() : openModal("layers")}
         aria-label={isOpen ? "Close layers panel" : "Open layers panel"}
         aria-expanded={isOpen} aria-haspopup="dialog"
         className={`w-11 h-11 rounded-full flex items-center justify-center border transition-colors duration-200 shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#696aac] ${isOpen ? "bg-[#696aac] border-[#696aac] text-white" : "bg-[rgba(6,7,15,0.88)] border-[rgba(105,106,172,0.4)] text-[rgba(162,163,233,0.85)] hover:bg-[rgba(105,106,172,0.2)] hover:text-[#f6f6fd] hover:border-[rgba(105,106,172,0.6)]"}`}>

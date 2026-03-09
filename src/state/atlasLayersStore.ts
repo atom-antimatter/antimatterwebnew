@@ -65,9 +65,9 @@ export interface AtlasLayersState {
 const DEFAULT_OVERLAYS: Record<OverlayKey, boolean> = {
   countryBorders: true,
   stateBorders: false,
-  cities: true,
+  cities: false, // basemap tiles now include labels; custom labels are opt-in
   points: true,
-  routes: false, // opt-in — avoids 1,200-entity load on first mount
+  routes: false,
 };
 
 const DEFAULT_POWER: Record<PowerLayerKey, boolean> = {

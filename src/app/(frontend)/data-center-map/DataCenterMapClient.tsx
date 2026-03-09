@@ -21,6 +21,8 @@ import { runSearchPipeline } from "@/lib/search/searchPipeline";
 import type { GazetteerResult } from "@/lib/search/gazetteer";
 import { useAtlasLayersStore } from "@/state/atlasLayersStore";
 import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
+import { useModalStore } from "@/state/modalStore";
+import { useEscapeToCloseModal } from "@/hooks/useEscapeToCloseModal";
 
 const LinodeCard = dynamic(() => import("@/components/atlas/providers/LinodeCard"), { ssr: false, loading: () => null });
 const AtlasMap   = dynamic(() => import("@/components/atlas/AtlasMap.client"),       { ssr: false, loading: () => null });
@@ -40,6 +42,9 @@ const PREFERRED_HEIGHT_RESET  = 18_000_000; // world view
 
 export default function DataCenterMapClient() {
   const atlasRef = useRef<AtlasMapRef | null>(null);
+
+  const { activeModal, openModal, closeModal } = useModalStore();
+  useEscapeToCloseModal();
 
   // ── Layer state from store (single source of truth) ────────────────────
   const { overlays, power, providers, basemap, powerScenario } = useAtlasLayersStore();
@@ -61,7 +66,6 @@ export default function DataCenterMapClient() {
     selectedDc, setSelectedDc,
     selectedLinode, setSelectedLinode,
     pinnedPoint, setPinnedPoint,
-    powerPanelOpen, setPowerPanelOpen,
     setFilterDebug,
   } = useAtlasSelectionStore();
 
@@ -85,9 +89,12 @@ export default function DataCenterMapClient() {
     setSelectedDc(dc);
     if (dc) {
       setSelectedLinode(null);
+      openModal("datacenter");
       atlasRef.current?.flyTo({ lat: dc.lat, lng: dc.lng, height: PREFERRED_HEIGHT_DC }, 1.2);
+    } else {
+      if (activeModal === "datacenter") closeModal();
     }
-  }, [setSelectedDc, setSelectedLinode]);
+  }, [setSelectedDc, setSelectedLinode, openModal, closeModal, activeModal]);
 
   /**
    * Unified filter pipeline. Three modes:
@@ -245,12 +252,12 @@ export default function DataCenterMapClient() {
         powerScenario={powerScenario}
         onSelectLinode={r => {
           setSelectedLinode(r);
-          if (r) { setSelectedDc(null); setSiteBriefPos(null); setPinnedPoint(null); }
+          if (r) { setSelectedDc(null); setSiteBriefPos(null); setPinnedPoint(null); openModal("linode"); }
         }}
         selectedLinodeId={selectedLinode?.region_id ?? null}
         onMapClick={(lat, lng) => {
           setPinnedPoint({ lat, lng });
-          setPowerPanelOpen(true);
+          openModal("power");
           setSelectedDc(null);
           setSelectedLinode(null);
           setSiteBriefPos(null);
@@ -278,26 +285,23 @@ export default function DataCenterMapClient() {
       />
 
       <PowerFeasibilityPanel
-        isOpen={powerPanelOpen}
-        onOpen={() => setPowerPanelOpen(true)}
-        onClose={() => setPowerPanelOpen(false)}
         selectedDc={selectedDc}
         pinnedPoint={pinnedPoint}
         onPinCenter={() => {
           const centre = atlasRef.current?.getCameraCenter?.();
           if (centre) {
             setPinnedPoint(centre);
-            setPowerPanelOpen(true);
+            openModal("power");
           }
         }}
         onClearPin={() => setPinnedPoint(null)}
       />
 
-      {selectedDc && !siteBriefPos && !selectedLinode && (
-        <DetailCard dc={selectedDc} onClose={() => setSelectedDc(null)} />
+      {selectedDc && activeModal === "datacenter" && !siteBriefPos && (
+        <DetailCard dc={selectedDc} onClose={() => { setSelectedDc(null); closeModal(); }} />
       )}
-      {selectedLinode && !siteBriefPos && (
-        <LinodeCard region={selectedLinode} onClose={() => setSelectedLinode(null)} />
+      {selectedLinode && activeModal === "linode" && !siteBriefPos && (
+        <LinodeCard region={selectedLinode} onClose={() => { setSelectedLinode(null); closeModal(); }} />
       )}
       {siteBriefPos && (
         <SiteBrief lat={siteBriefPos.lat} lng={siteBriefPos.lng} targetMw={powerScenario.targetMw} radiusKm={powerScenario.radiusKm} onClose={() => setSiteBriefPos(null)} />

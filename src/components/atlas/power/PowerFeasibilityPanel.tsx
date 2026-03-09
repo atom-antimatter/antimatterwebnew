@@ -2,12 +2,10 @@
 
 import { X, Zap } from "lucide-react";
 import type { DataCenter } from "@/data/dataCenters";
+import { useModalStore } from "@/state/modalStore";
 import PowerReadinessTab from "./PowerReadinessTab";
 
 type PowerFeasibilityPanelProps = {
-  isOpen: boolean;
-  onOpen: () => void;
-  onClose: () => void;
   selectedDc?: DataCenter | null;
   pinnedPoint?: { lat: number; lng: number } | null;
   onPinCenter?: () => void;
@@ -15,14 +13,14 @@ type PowerFeasibilityPanelProps = {
 };
 
 export default function PowerFeasibilityPanel({
-  isOpen,
-  onOpen,
-  onClose,
   selectedDc,
   pinnedPoint,
   onPinCenter,
   onClearPin,
 }: PowerFeasibilityPanelProps) {
+  const { activeModal, openModal, closeModal } = useModalStore();
+  const isOpen = activeModal === "power";
+
   return (
     <div className="fixed right-5 bottom-20 z-40 flex flex-col items-end gap-3">
       {isOpen && (
@@ -48,7 +46,7 @@ export default function PowerFeasibilityPanel({
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               aria-label="Close power feasibility panel"
               className="flex h-8 w-8 items-center justify-center rounded-lg text-[rgba(246,246,253,0.5)] transition-colors hover:bg-white/[0.06] hover:text-[#f6f6fd]"
             >
@@ -68,7 +66,7 @@ export default function PowerFeasibilityPanel({
       {!isOpen && (
         <button
           type="button"
-          onClick={onOpen}
+          onClick={() => openModal("power")}
           className="
             flex h-11 items-center gap-2 rounded-full border
             border-[rgba(105,106,172,0.4)] bg-[rgba(6,7,15,0.88)]
