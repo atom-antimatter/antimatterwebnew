@@ -82,7 +82,8 @@ type Tooltip = { x: number; y: number; dc: DataCenter } | null;
 // ─── imagery ──────────────────────────────────────────────────────────────
 
 import { BASEMAP_CONFIGS } from "@/lib/map/baseMaps";
-import { createVectorProvider, type VectorStyleId } from "@/lib/map/vectorBasemap";
+import VectorBasemap from "./VectorBasemap";
+import type { VectorStyleId } from "@/lib/map/vectorBasemap";
 
 const RETINA = typeof window !== "undefined" && window.devicePixelRatio >= 1.5;
 
@@ -635,6 +636,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   }, [cameraState.level]);
 
   // ── Basemap swap ──────────────────────────────────────────────────────────
+  const vectorActive = isVectorBasemap(basemap);
+
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
@@ -644,33 +647,30 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const cw = canvas?.clientWidth ?? 1280;
     ctrl.minimumZoomDistance = getMinimumZoomDistance(basemap, cw * (v.resolutionScale ?? 1));
 
-    // Temporarily enable continuous rendering so new tiles load immediately
-    // (requestRenderMode blocks tile fetching if no scene changes detected).
+    // Temporarily enable continuous rendering so tiles load after swap
     v.scene.requestRenderMode = false;
     const reEnableTimer = setTimeout(() => {
       if (!v.isDestroyed()) v.scene.requestRenderMode = true;
     }, 3000);
 
-    const applyProvider = (provider: Cesium.ImageryProvider) => {
-      if (v.isDestroyed()) return;
+    if (vectorActive) {
+      // Vector mode: MapLibre overlay provides the basemap.
+      // Remove Cesium imagery and make globe transparent so MapLibre shows through.
       v.imageryLayers.removeAll();
-      v.imageryLayers.addImageryProvider(provider);
-      v.scene.requestRender();
-    };
-
-    if (isVectorBasemap(basemap)) {
-      createVectorProvider(basemap as VectorStyleId).then(vp => {
-        applyProvider(vp as any);
-      }).catch((err) => {
-        console.warn("[Atlas] Vector basemap failed:", err, "— falling back to raster");
-        applyProvider(makeRasterProvider("osmDark"));
-      });
+      v.scene.globe.baseColor = Cesium.Color.TRANSPARENT;
+      v.scene.globe.showGroundAtmosphere = false;
+      v.scene.backgroundColor = Cesium.Color.TRANSPARENT;
     } else {
-      applyProvider(makeRasterProvider(basemap));
+      // Raster mode: Cesium renders imagery tiles normally.
+      v.scene.globe.baseColor = Cesium.Color.fromCssColorString("#1a1b2e");
+      v.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
+      v.imageryLayers.removeAll();
+      v.imageryLayers.addImageryProvider(makeRasterProvider(basemap));
     }
+    v.scene.requestRender();
 
     return () => clearTimeout(reEnableTimer);
-  }, [basemap]);
+  }, [basemap, vectorActive]);
 
   // ── 3D mode transitions ──────────────────────────────────────────────────
   // The actual 3D enter/exit logic lives in the imperative ref methods
@@ -790,7 +790,14 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         </div>
       )}
 
-      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none" }} />
+      {/* Vector basemap: MapLibre overlay behind Cesium for crisp labels */}
+      <VectorBasemap
+        styleId={(vectorActive ? basemap : "vectorDark") as VectorStyleId}
+        viewerRef={viewerRef}
+        visible={vectorActive}
+      />
+
+      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none", zIndex: 1 }} />
 
       {!isReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#020202] text-[rgba(246,246,253,0.5)] text-sm z-10">Loading map…</div>
