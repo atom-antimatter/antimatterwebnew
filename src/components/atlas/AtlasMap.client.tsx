@@ -260,11 +260,10 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.imageryLayers.addImageryProvider(makeRasterProvider("osmDark"));
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000) });
 
-    // Wheel: prevent page scroll when over map so Cesium receives zoom (desktop)
+    // Wheel: prevent page scroll when over map; do not stopPropagation so Cesium canvas still receives zoom
     if (container) {
       const onWheel = (e: WheelEvent) => {
         e.preventDefault();
-        e.stopPropagation();
       };
       container.addEventListener("wheel", onWheel, { capture: true, passive: false });
       const wheelCleanup = () => container.removeEventListener("wheel", onWheel, { capture: true });
