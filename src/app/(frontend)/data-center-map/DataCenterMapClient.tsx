@@ -15,16 +15,19 @@ import CommandPanel, { type SearchStatus } from "@/components/dataCenterGlobe/Co
 import DetailCard from "@/components/dataCenterGlobe/DetailCard";
 import LayersMenu from "@/components/atlas/LayersMenu";
 import type { AtlasMapRef, AtlasLayers } from "@/components/atlas/AtlasMap.client";
+import type { CityMapRef } from "@/components/atlas/CityMap.client";
 import PowerFeasibilityPanel from "@/components/atlas/power/PowerFeasibilityPanel";
 import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { filterDataCenters } from "@/lib/search/filterDataCenters";
 import { runSearchPipeline } from "@/lib/search/searchPipeline";
 import type { GazetteerResult } from "@/lib/search/gazetteer";
+import { heightToMapLibreZoom, TRANSITION_HEIGHT } from "@/lib/map/cameraSync";
 import { useAtlasLayersStore } from "@/state/atlasLayersStore";
 import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
 const LinodeCard = dynamic(() => import("@/components/atlas/providers/LinodeCard"), { ssr: false, loading: () => null });
 const AtlasMap   = dynamic(() => import("@/components/atlas/AtlasMap.client"),       { ssr: false, loading: () => null });
+const CityMap    = dynamic(() => import("@/components/atlas/CityMap.client"),        { ssr: false, loading: () => null });
 const SiteBrief  = dynamic(() => import("@/components/atlas/power/SiteBrief"),       { ssr: false, loading: () => null });
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -39,6 +42,12 @@ const FLY_HEIGHT_DC     =   800_000;
 
 export default function DataCenterMapClient() {
   const atlasRef = useRef<AtlasMapRef | null>(null);
+  const cityRef  = useRef<CityMapRef | null>(null);
+
+  type MapMode = "globe" | "city";
+  const [mapMode, setMapMode] = useState<MapMode>("globe");
+  const [cityCenter, setCityCenter] = useState<{ lat: number; lng: number }>({ lat: 33.75, lng: -84.39 });
+  const [cityZoom, setCityZoom]     = useState(8);
 
   // ── Layer state from store (single source of truth) ────────────────────
   const { overlays, power, providers, basemap, powerScenario } = useAtlasLayersStore();
@@ -83,9 +92,9 @@ export default function DataCenterMapClient() {
     setSelectedDc(dc);
     if (dc) {
       setSelectedLinode(null);
-      atlasRef.current?.flyTo({ lat: dc.lat, lng: dc.lng, height: FLY_HEIGHT_DC }, 1.2);
+      flyToAny({ lat: dc.lat, lng: dc.lng, height: FLY_HEIGHT_DC }, 1.2);
     }
-  }, [setSelectedDc, setSelectedLinode]);
+  }, [setSelectedDc, setSelectedLinode, flyToAny]);
 
   /**
    * Unified filter pipeline. Supports three modes:
@@ -152,9 +161,9 @@ export default function DataCenterMapClient() {
       const bbox = pipelineResult.location?.bbox;
       if (bbox) {
         const [w, s, e, n] = bbox;
-        atlasRef.current?.flyTo({ lat: (s+n)/2, lng: (w+e)/2, height: FLY_HEIGHT_SEARCH }, 1.5);
+        flyToAny({ lat: (s+n)/2, lng: (w+e)/2, height: FLY_HEIGHT_SEARCH }, 1.5);
       } else {
-        atlasRef.current?.flyTo({ lat: pos.lat, lng: pos.lng, height: FLY_HEIGHT_SEARCH }, 1.5);
+        flyToAny({ lat: pos.lat, lng: pos.lng, height: FLY_HEIGHT_SEARCH }, 1.5);
       }
     }
     if (pipelineResult.location?.kind === "facility" && pipelineResult.location.dc) {
@@ -170,8 +179,8 @@ export default function DataCenterMapClient() {
     });
     setResults(filtered);
     setSearchStatus(filtered.length === 0 ? (pos ? "no-dc" : "no-results") : "idle");
-    if (!pos && filtered.length > 0) atlasRef.current?.flyTo({ lat: filtered[0].lat, lng: filtered[0].lng, height: FLY_HEIGHT_SEARCH }, 1.5);
-  }, [capabilityFilters, tierFilter, radiusKm, handleSelectDc]);
+    if (!pos && filtered.length > 0) flyToAny({ lat: filtered[0].lat, lng: filtered[0].lng, height: FLY_HEIGHT_SEARCH }, 1.5);
+  }, [capabilityFilters, tierFilter, radiusKm, handleSelectDc, flyToAny]);
 
   const handleSelectSuggestion = useCallback((r: GazetteerResult) => {
     if (r.kind === "facility" && r.dc) {
@@ -182,9 +191,9 @@ export default function DataCenterMapClient() {
     }
     const pos = { lat: r.lat, lng: r.lng };
     setGeocodedPos(pos);
-    atlasRef.current?.flyTo({ lat: r.lat, lng: r.lng, height: FLY_HEIGHT_SEARCH }, 1.2);
+    flyToAny({ lat: r.lat, lng: r.lng, height: FLY_HEIGHT_SEARCH }, 1.2);
     computeVisibleResults({ rawQuery: lastRawQuery, pos, caps: capabilityFilters, tier: tierFilter, radius: radiusKm });
-  }, [radiusKm, capabilityFilters, tierFilter, lastRawQuery, handleSelectDc, computeVisibleResults]);
+  }, [radiusKm, capabilityFilters, tierFilter, lastRawQuery, handleSelectDc, computeVisibleResults, flyToAny]);
 
   const handleToggleCapability = useCallback((cap: string) => {
     const next = capabilityFilters.includes(cap) ? capabilityFilters.filter(c => c !== cap) : [...capabilityFilters, cap];
@@ -209,6 +218,43 @@ export default function DataCenterMapClient() {
     setLastRawQuery(""); setSelectedDc(null);
   }, [setSelectedDc]);
 
+  const flyToAny = useCallback((pos: { lat: number; lng: number; height?: number }, dur = 1.5) => {
+    const h = pos.height ?? FLY_HEIGHT_SEARCH;
+    if (h < TRANSITION_HEIGHT && mapMode === "globe") {
+      const center = atlasRef.current?.getCameraCenter() ?? { lat: pos.lat, lng: pos.lng };
+      setCityCenter(center);
+      setCityZoom(heightToMapLibreZoom(h));
+      setMapMode("city");
+      setTimeout(() => cityRef.current?.flyTo(pos, dur), 150);
+    } else if (h >= TRANSITION_HEIGHT && mapMode === "city") {
+      setMapMode("globe");
+      setTimeout(() => atlasRef.current?.flyTo(pos, dur), 150);
+    } else if (mapMode === "city") {
+      cityRef.current?.flyTo(pos, dur);
+    } else {
+      atlasRef.current?.flyTo(pos, dur);
+    }
+  }, [mapMode]);
+
+  const handleTransitionToCity = useCallback(() => {
+    const center = atlasRef.current?.getCameraCenter();
+    if (center) {
+      setCityCenter(center);
+      setCityZoom(heightToMapLibreZoom(TRANSITION_HEIGHT * 0.8));
+      setMapMode("city");
+    }
+  }, []);
+
+  const handleTransitionToGlobe = useCallback(() => {
+    const center = cityRef.current?.getCameraCenter();
+    if (center) {
+      setMapMode("globe");
+      setTimeout(() => {
+        atlasRef.current?.flyTo({ lat: center.lat, lng: center.lng, height: TRANSITION_HEIGHT * 1.2 }, 1.0);
+      }, 100);
+    }
+  }, []);
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -223,29 +269,57 @@ export default function DataCenterMapClient() {
         <span>Antimatter AI</span>
       </Link>
 
-      {/* Cesium map */}
-      <AtlasMap
-        ref={atlasRef}
-        selectedId={selectedDc?.id ?? null}
-        onSelectDc={dc => { handleSelectDc(dc); if (dc) setSelectedLinode(null); }}
-        highlightIds={highlightIds}
-        layers={layers}
-        basemap={basemap}
-        powerScenario={powerScenario}
-        onSelectLinode={r => {
-          setSelectedLinode(r);
-          if (r) { setSelectedDc(null); setSiteBriefPos(null); setPinnedPoint(null); }
-        }}
-        selectedLinodeId={selectedLinode?.region_id ?? null}
-        onMapClick={(lat, lng) => {
-          // Pin the point + open the standalone power panel.
-          setPinnedPoint({ lat, lng });
-          setPowerPanelOpen(true);
-          setSelectedDc(null);
-          setSelectedLinode(null);
-          setSiteBriefPos(null);
-        }}
-      />
+      {/* Globe mode (Cesium) */}
+      <div
+        className="absolute inset-0 transition-opacity duration-500"
+        style={{ opacity: mapMode === "globe" ? 1 : 0, pointerEvents: mapMode === "globe" ? "auto" : "none" }}
+      >
+        <AtlasMap
+          ref={atlasRef}
+          selectedId={selectedDc?.id ?? null}
+          onSelectDc={dc => { handleSelectDc(dc); if (dc) setSelectedLinode(null); }}
+          highlightIds={highlightIds}
+          layers={layers}
+          basemap={basemap}
+          powerScenario={powerScenario}
+          onSelectLinode={r => {
+            setSelectedLinode(r);
+            if (r) { setSelectedDc(null); setSiteBriefPos(null); setPinnedPoint(null); }
+          }}
+          selectedLinodeId={selectedLinode?.region_id ?? null}
+          onMapClick={(lat, lng) => {
+            setPinnedPoint({ lat, lng });
+            setPowerPanelOpen(true);
+            setSelectedDc(null);
+            setSelectedLinode(null);
+            setSiteBriefPos(null);
+          }}
+        />
+      </div>
+
+      {/* City mode (MapLibre vector tiles) */}
+      <div
+        className="absolute inset-0 transition-opacity duration-500"
+        style={{ opacity: mapMode === "city" ? 1 : 0, pointerEvents: mapMode === "city" ? "auto" : "none" }}
+      >
+        <CityMap
+          ref={cityRef}
+          selectedId={selectedDc?.id ?? null}
+          onSelectDc={dc => { handleSelectDc(dc); if (dc) setSelectedLinode(null); }}
+          highlightIds={highlightIds}
+          onMapClick={(lat, lng) => {
+            setPinnedPoint({ lat, lng });
+            setPowerPanelOpen(true);
+            setSelectedDc(null);
+            setSelectedLinode(null);
+            setSiteBriefPos(null);
+          }}
+          onZoomOut={handleTransitionToGlobe}
+          initialCenter={cityCenter}
+          initialZoom={cityZoom}
+          visible={mapMode === "city"}
+        />
+      </div>
 
       {/* Left search / filter panel */}
       <CommandPanel
@@ -274,7 +348,9 @@ export default function DataCenterMapClient() {
         selectedDc={selectedDc}
         pinnedPoint={pinnedPoint}
         onPinCenter={() => {
-          const centre = atlasRef.current?.getCameraCenter?.();
+          const centre = mapMode === "city"
+            ? cityRef.current?.getCameraCenter?.()
+            : atlasRef.current?.getCameraCenter?.();
           if (centre) {
             setPinnedPoint(centre);
             setPowerPanelOpen(true);
@@ -294,7 +370,10 @@ export default function DataCenterMapClient() {
       )}
 
       {/* Layers menu — reads/writes store directly */}
-      <LayersMenu onResetView={() => atlasRef.current?.resetView()} />
+      <LayersMenu onResetView={() => {
+        setMapMode("globe");
+        setTimeout(() => atlasRef.current?.resetView(), 100);
+      }} />
     </div>
   );
 }

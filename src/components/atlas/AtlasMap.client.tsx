@@ -81,11 +81,20 @@ function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
   const suffix = RETINA ? "@2x.png" : ".png";
   switch (basemap) {
     case "osmLight":
-      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, ...tile, url: `https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}${suffix}`, subdomains: CARTO_SUBS, credit: CARTO_CREDIT, maximumLevel: 20 });
+      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, ...tile, url: `https://{s}.basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}${suffix}`, subdomains: CARTO_SUBS, credit: CARTO_CREDIT, maximumLevel: 20 });
     case "osmStandard":
       return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, tileWidth: 256, tileHeight: 256, url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", credit: new Cesium.Credit("OpenStreetMap contributors"), maximumLevel: 19 });
     case "osmDark": default:
-      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, ...tile, url: `https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}${suffix}`, subdomains: CARTO_SUBS, credit: CARTO_CREDIT, maximumLevel: 20 });
+      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, ...tile, url: `https://{s}.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}${suffix}`, subdomains: CARTO_SUBS, credit: CARTO_CREDIT, maximumLevel: 20 });
+  }
+}
+
+function tileUrlTemplate(basemap: Basemap): string {
+  const suffix = RETINA ? "@2x.png" : ".png";
+  switch (basemap) {
+    case "osmLight": return `cartocdn.com/rastertiles/light_nolabels/…${suffix}`;
+    case "osmStandard": return "tile.openstreetmap.org/…/.png";
+    default: return `cartocdn.com/rastertiles/dark_nolabels/…${suffix}`;
   }
 }
 
@@ -354,8 +363,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           const maxLvl = BASEMAP_MAX_LEVEL[basemap] ?? 20;
           const overZoomed = z > maxLvl;
           const tileUrl = RETINA
-            ? `https://a.basemaps.cartocdn.com/dark_nolabels/${Math.min(z, maxLvl)}/0/0@2x.png`
-            : `https://a.basemaps.cartocdn.com/dark_nolabels/${Math.min(z, maxLvl)}/0/0.png`;
+            ? `https://a.basemaps.cartocdn.com/rastertiles/dark_nolabels/${Math.min(z, maxLvl)}/0/0@2x.png`
+            : `https://a.basemaps.cartocdn.com/rastertiles/dark_nolabels/${Math.min(z, maxLvl)}/0/0.png`;
           console.group("[Atlas] Tile Sample");
           console.log("camera height:", h.toFixed(0), "m");
           console.log("est. tile zoom:", z, "| basemap maxLevel:", maxLvl);
@@ -423,8 +432,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
     // Minimum 2: lower pushes tile requests past provider maxLevel → upscaling → blur.
-    const SSE: Record<string, number> = { WORLD: 12, REGION: 3, LOCAL: 2, CITY: 1.5 };
-    v.scene.globe.maximumScreenSpaceError = SSE[cameraState.level] ?? 2;
+    const baseSse: Record<string, number> = { WORLD: 8, REGION: 2, LOCAL: 1.5, CITY: 1.25 };
+    const scale = v.resolutionScale ?? 1;
+    v.scene.globe.maximumScreenSpaceError = (baseSse[cameraState.level] ?? 2) * scale;
   }, [cameraState.level]);
 
   // ── Basemap swap ──────────────────────────────────────────────────────────

@@ -130,6 +130,7 @@ export default function DebugPanel({ cameraState, viewerReady, layerManager, vie
           <p className="text-[9px] uppercase tracking-widest text-[rgba(162,163,233,0.7)] mb-1">Tiles</p>
           <Row label="basemap"          value={basemap} />
           <Row label="retina (@2x)"    value={typeof window !== "undefined" && window.devicePixelRatio >= 1.5 ? "YES" : "no"} />
+          <Row label="tile URL"         value={basemap === "osmStandard" ? "osm/…/.png" : `carto/rastertiles/…${typeof window !== "undefined" && window.devicePixelRatio >= 1.5 ? "@2x" : ""}.png`} />
           <Row label="provider maxLevel" value={maxLevel} />
           <Row label="est. tile zoom"   value={tileZoom} />
           <Row
