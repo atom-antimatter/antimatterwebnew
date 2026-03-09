@@ -347,16 +347,27 @@ const atomAIProducts: AtomProduct[] = [
 /* Atom Browser early access — opens Get Early Access modal */
 const AtomBrowserEarlyAccessButton = () => {
   const setEarlyAccessOpen = useEarlyAccessModal((s) => s.setOpen);
+
+  function handleMouseMove(e: React.MouseEvent<HTMLButtonElement>) {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty("--reflextX", `${(e.clientX - rect.left) * 0.7}px`);
+  }
+
   return (
-    <button
-      type="button"
-      onClick={() => setEarlyAccessOpen(true)}
-      className={`w-full rounded-full text-sm font-medium text-white transition duration-300 hover:scale-[1.01] ${buttonStyles.button}`}
-      style={{ padding: "10px 20px" }}
-      aria-label="Get early access to Atom Browser"
-    >
-      Get Early Access
-    </button>
+    <div className="flex flex-col gap-2">
+      <p className="px-1 text-[11px] uppercase tracking-widest text-white/35">Atom Browser</p>
+      <button
+        type="button"
+        onClick={() => setEarlyAccessOpen(true)}
+        onMouseMove={handleMouseMove}
+        className={`w-full text-sm font-medium text-white ${buttonStyles.button}`}
+        style={{ padding: "10px 20px" }}
+        aria-label="Get early access to Atom Browser"
+      >
+        Get Early Access
+      </button>
+    </div>
   );
 };
 
