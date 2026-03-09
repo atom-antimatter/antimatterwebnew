@@ -52,7 +52,7 @@ export interface AtlasLayersState {
 // ─── Defaults ──────────────────────────────────────────────────────────────────
 
 const DEFAULT_OVERLAYS: Record<OverlayKey, boolean> = {
-  countryBorders: false,
+  countryBorders: true,
   stateBorders: false,
   cities: false,
   points: true,
@@ -75,7 +75,7 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
   devtools(
     persist(
       (set) => ({
-        basemap: "vectorDark" as Basemap,
+        basemap: "osmDark" as Basemap,
         overlays: { ...DEFAULT_OVERLAYS },
         power: { ...DEFAULT_POWER },
         providers: { ...DEFAULT_PROVIDERS },
@@ -131,7 +131,7 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
           }),
         resetToDefaults: () =>
           set({
-            basemap: "vectorDark" as Basemap,
+            basemap: "osmDark" as Basemap,
             overlays: { ...DEFAULT_OVERLAYS },
             power: { ...DEFAULT_POWER },
             providers: { ...DEFAULT_PROVIDERS },

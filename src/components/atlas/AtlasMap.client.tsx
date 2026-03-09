@@ -244,18 +244,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     if (viewer.scene.moon) viewer.scene.moon.show = false;
     viewer.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
 
-    // Start with raster fallback immediately (fast); then async-swap to vector
+    // Always start with raster (instant render). The basemap swap effect
+    // will upgrade to vector if the store says vectorDark/Light/Liberty.
     viewer.imageryLayers.addImageryProvider(makeRasterProvider("osmDark"));
-    // Kick off async vector basemap load for the configured default
-    if (isVectorBasemap(basemapRef.current)) {
-      createVectorProvider(basemapRef.current as VectorStyleId).then(vp => {
-        if (!viewer.isDestroyed()) {
-          viewer.imageryLayers.removeAll();
-          viewer.imageryLayers.addImageryProvider(vp as any);
-          viewer.scene.requestRender();
-        }
-      }).catch(() => console.warn("[Atlas] Vector basemap unavailable, using raster fallback"));
-    }
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000) });
 
     // Wheel + context-menu
