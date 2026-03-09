@@ -189,8 +189,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.scene.globe.enableLighting      = false;
     viewer.scene.globe.depthTestAgainstTerrain = false;
     viewer.scene.globe.showGroundAtmosphere = false;
-    viewer.scene.globe.preloadAncestors    = false;
-    viewer.scene.globe.preloadSiblings     = false;
+    viewer.scene.globe.preloadAncestors    = true;
+    viewer.scene.globe.preloadSiblings     = true;
     viewer.scene.globe.tileCacheSize       = 2000;
 
     // FXAA applies a blur kernel over the whole frame — disabling it is the
@@ -494,8 +494,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
-    const sse: Record<string, number> = { WORLD: 4, REGION: 1.5, LOCAL: 1, CITY: 0.75 };
-    v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 1.5;
+    const sse: Record<string, number> = { WORLD: 6, REGION: 2, LOCAL: 1.5, CITY: 1.25 };
+    v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 2;
     v.scene.requestRender();
   }, [cameraState.level]);
 

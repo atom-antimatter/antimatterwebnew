@@ -108,21 +108,22 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
   const isGlobal = cameraLevel === "WORLD" || cameraLevel === "REGION";
 
   return (
-    <div className="fixed bottom-6 right-5 z-40 flex flex-col items-end gap-2">
-      {/* Panel card */}
+    <>
+      {/* Panel card — anchored top-right so it gets full scroll height */}
       {isOpen && (
         <div
           ref={panelRef}
           role="dialog"
           aria-label="Map layers"
           className="
+            fixed top-16 right-4 z-40
             w-[300px] rounded-2xl
             bg-[rgba(6,7,15,0.94)] backdrop-blur-xl
             border border-[rgba(246,246,253,0.1)]
             shadow-2xl
             flex flex-col
-            max-h-[80vh]
-            animate-in fade-in slide-in-from-bottom-3 duration-200
+            max-h-[calc(100dvh-90px)]
+            animate-in fade-in slide-in-from-right-3 duration-200
           "
         >
           {/* Header */}
@@ -242,13 +243,15 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
         </div>
       )}
 
-      {/* FAB */}
-      <button type="button" onClick={() => isOpen ? closeModal() : openModal("layers")}
-        aria-label={isOpen ? "Close layers panel" : "Open layers panel"}
-        aria-expanded={isOpen} aria-haspopup="dialog"
-        className={`w-11 h-11 rounded-full flex items-center justify-center border transition-colors duration-200 shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#696aac] ${isOpen ? "bg-[#696aac] border-[#696aac] text-white" : "bg-[rgba(6,7,15,0.88)] border-[rgba(105,106,172,0.4)] text-[rgba(162,163,233,0.85)] hover:bg-[rgba(105,106,172,0.2)] hover:text-[#f6f6fd] hover:border-[rgba(105,106,172,0.6)]"}`}>
-        <Layers className="w-4.5 h-4.5" />
-      </button>
-    </div>
+      {/* FAB — fixed bottom-right */}
+      <div className="fixed bottom-6 right-5 z-40">
+        <button type="button" onClick={() => isOpen ? closeModal() : openModal("layers")}
+          aria-label={isOpen ? "Close layers panel" : "Open layers panel"}
+          aria-expanded={isOpen} aria-haspopup="dialog"
+          className={`w-11 h-11 rounded-full flex items-center justify-center border transition-colors duration-200 shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#696aac] ${isOpen ? "bg-[#696aac] border-[#696aac] text-white" : "bg-[rgba(6,7,15,0.88)] border-[rgba(105,106,172,0.4)] text-[rgba(162,163,233,0.85)] hover:bg-[rgba(105,106,172,0.2)] hover:text-[#f6f6fd] hover:border-[rgba(105,106,172,0.6)]"}`}>
+          <Layers className="w-4.5 h-4.5" />
+        </button>
+      </div>
+    </>
   );
 }
