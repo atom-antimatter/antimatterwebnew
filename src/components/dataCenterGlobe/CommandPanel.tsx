@@ -10,6 +10,7 @@ import { searchGazetteer, initGazetteer, type GazetteerResult } from "@/lib/sear
 // ─── types ────────────────────────────────────────────────────────────────────
 
 export type SearchStatus = "idle" | "loading" | "no-results" | "no-dc";
+type TierFilter = NonNullable<DataCenter["tier"]> | null;
 
 export type CommandPanelProps = {
   isOpen: boolean;
@@ -23,8 +24,8 @@ export type CommandPanelProps = {
   searchStatus: SearchStatus;
   capabilityFilters: string[];
   onToggleCapability: (cap: string) => void;
-  tierFilter: string | null;
-  onSetTier: (tier: string | null) => void;
+  tierFilter: TierFilter;
+  onSetTier: (tier: TierFilter) => void;
   radiusKm: number;
   onSetRadius: (km: number) => void;
   showRadius: boolean;
@@ -41,8 +42,8 @@ const RADIUS_OPTIONS: { label: string; km: number }[] = [
   { label: "2 500 km", km: 2500 },
 ];
 
-const TIER_OPTIONS: { label: string; value: DataCenter["tier"] }[] = [
-  { label: "All tiers", value: undefined },
+const TIER_OPTIONS: { label: string; value: TierFilter }[] = [
+  { label: "All tiers", value: null },
   { label: "Hyperscale", value: "hyperscale" },
   { label: "Core", value: "core" },
   { label: "Enterprise", value: "enterprise" },
@@ -439,12 +440,12 @@ export default function CommandPanel({
           </p>
           <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Filter by tier">
             {TIER_OPTIONS.map((opt) => {
-              const active = tierFilter === (opt.value ?? null);
+              const active = tierFilter === opt.value;
               return (
                 <button
                   key={opt.label}
                   type="button"
-                  onClick={() => onSetTier(opt.value ?? null)}
+                  onClick={() => onSetTier(opt.value)}
                   aria-pressed={active}
                   className={`
                     px-2.5 py-1 text-[11px] rounded-md border transition-colors

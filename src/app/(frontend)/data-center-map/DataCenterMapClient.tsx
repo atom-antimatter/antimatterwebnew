@@ -30,6 +30,7 @@ const SiteBrief  = dynamic(() => import("@/components/atlas/power/SiteBrief"),  
 // ─── constants ────────────────────────────────────────────────────────────────
 
 type GeocodedPos = { lat: number; lng: number } | null;
+type TierFilter = NonNullable<DataCenter["tier"]> | null;
 
 const FLY_HEIGHT_SEARCH = 1_800_000;
 const FLY_HEIGHT_DC     =   800_000;
@@ -71,7 +72,7 @@ export default function DataCenterMapClient() {
   const [results,          setResults]          = useState<DataCenter[] | null>(null);
   const [searchStatus,     setSearchStatus]     = useState<SearchStatus>("idle");
   const [capabilityFilters,setCapabilityFilters]= useState<string[]>([]);
-  const [tierFilter,       setTierFilter]       = useState<DataCenter["tier"] | null>(null);
+  const [tierFilter,       setTierFilter]       = useState<TierFilter>(null);
   const [radiusKm,         setRadiusKm]         = useState(500);
   const [geocodedPos,      setGeocodedPos]      = useState<GeocodedPos>(null);
   const [lastRawQuery,     setLastRawQuery]     = useState("");
@@ -87,7 +88,7 @@ export default function DataCenterMapClient() {
   }, [setSelectedDc, setSelectedLinode]);
 
   const handleFilterChange = useCallback(
-    (newCaps: string[], newTier: DataCenter["tier"] | null, newRadius: number) => {
+    (newCaps: string[], newTier: TierFilter, newRadius: number) => {
       if (!lastRawQuery && !geocodedPos) return;
       const filtered = filterDataCenters(DATA_CENTERS, {
         geocodedPos: geocodedPos ?? undefined, radiusKm: newRadius,
@@ -108,7 +109,7 @@ export default function DataCenterMapClient() {
     const pipelineResult = await runSearchPipeline(query, { useNLP: true, defaultRadiusKm: radiusKm });
 
     const mergedCaps   = Array.from(new Set([...capabilityFilters, ...pipelineResult.filters.capabilities]));
-    const mergedTier: DataCenter["tier"] | null = pipelineResult.filters.tier ?? tierFilter ?? null;
+    const mergedTier: TierFilter = pipelineResult.filters.tier ?? tierFilter ?? null;
     const mergedRadius = pipelineResult.filters.radiusKm ?? radiusKm;
     setCapabilityFilters(mergedCaps);
     setTierFilter(mergedTier);
@@ -154,7 +155,7 @@ export default function DataCenterMapClient() {
     handleFilterChange(next, tierFilter, radiusKm);
   }, [capabilityFilters, tierFilter, radiusKm, handleFilterChange]);
 
-  const handleSetTier = useCallback((tier: DataCenter["tier"] | null) => {
+  const handleSetTier = useCallback((tier: TierFilter) => {
     setTierFilter(tier);
     handleFilterChange(capabilityFilters, tier, radiusKm);
   }, [capabilityFilters, radiusKm, handleFilterChange]);
