@@ -261,7 +261,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000) });
 
     // Wheel: prevent page scroll when over map so Cesium receives zoom (desktop)
-    const container = containerRef.current;
     if (container) {
       const onWheel = (e: WheelEvent) => {
         e.preventDefault();
