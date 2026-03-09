@@ -88,6 +88,24 @@ export default function DataCenterMapClient() {
 
   const highlightIds = results && results.length > 0 ? results.map(d => d.id) : null;
 
+  const flyToAny = useCallback((pos: { lat: number; lng: number; height?: number }, dur = 1.5) => {
+    const h = pos.height ?? FLY_HEIGHT_SEARCH;
+    if (h < TRANSITION_HEIGHT && mapMode === "globe") {
+      const center = atlasRef.current?.getCameraCenter() ?? { lat: pos.lat, lng: pos.lng };
+      setCityCenter(center);
+      setCityZoom(heightToMapLibreZoom(h));
+      setMapMode("city");
+      setTimeout(() => cityRef.current?.flyTo(pos, dur), 150);
+    } else if (h >= TRANSITION_HEIGHT && mapMode === "city") {
+      setMapMode("globe");
+      setTimeout(() => atlasRef.current?.flyTo(pos, dur), 150);
+    } else if (mapMode === "city") {
+      cityRef.current?.flyTo(pos, dur);
+    } else {
+      atlasRef.current?.flyTo(pos, dur);
+    }
+  }, [mapMode]);
+
   const handleSelectDc = useCallback((dc: DataCenter | null) => {
     setSelectedDc(dc);
     if (dc) {
@@ -217,33 +235,6 @@ export default function DataCenterMapClient() {
     setRadiusKm(500); setGeocodedPos(null);
     setLastRawQuery(""); setSelectedDc(null);
   }, [setSelectedDc]);
-
-  const flyToAny = useCallback((pos: { lat: number; lng: number; height?: number }, dur = 1.5) => {
-    const h = pos.height ?? FLY_HEIGHT_SEARCH;
-    if (h < TRANSITION_HEIGHT && mapMode === "globe") {
-      const center = atlasRef.current?.getCameraCenter() ?? { lat: pos.lat, lng: pos.lng };
-      setCityCenter(center);
-      setCityZoom(heightToMapLibreZoom(h));
-      setMapMode("city");
-      setTimeout(() => cityRef.current?.flyTo(pos, dur), 150);
-    } else if (h >= TRANSITION_HEIGHT && mapMode === "city") {
-      setMapMode("globe");
-      setTimeout(() => atlasRef.current?.flyTo(pos, dur), 150);
-    } else if (mapMode === "city") {
-      cityRef.current?.flyTo(pos, dur);
-    } else {
-      atlasRef.current?.flyTo(pos, dur);
-    }
-  }, [mapMode]);
-
-  const handleTransitionToCity = useCallback(() => {
-    const center = atlasRef.current?.getCameraCenter();
-    if (center) {
-      setCityCenter(center);
-      setCityZoom(heightToMapLibreZoom(TRANSITION_HEIGHT * 0.8));
-      setMapMode("city");
-    }
-  }, []);
 
   const handleTransitionToGlobe = useCallback(() => {
     const center = cityRef.current?.getCameraCenter();

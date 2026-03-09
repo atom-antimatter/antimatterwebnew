@@ -56,7 +56,7 @@ function dcToGeoJSON(dcs: readonly DataCenter[], highlightIds: string[] | null):
 }
 
 const CityMap = forwardRef<CityMapRef, CityMapProps>(
-  ({ selectedId, onSelectDc, highlightIds, onMapClick, onZoomOut, initialCenter, initialZoom, visible }, ref) => {
+  ({ onSelectDc, highlightIds, onMapClick, onZoomOut, initialCenter, initialZoom, visible }, ref) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<InstanceType<typeof import("maplibre-gl").Map> | null>(null);

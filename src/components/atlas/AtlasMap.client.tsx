@@ -89,15 +89,6 @@ function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
   }
 }
 
-function tileUrlTemplate(basemap: Basemap): string {
-  const suffix = RETINA ? "@2x.png" : ".png";
-  switch (basemap) {
-    case "osmLight": return `cartocdn.com/rastertiles/light_nolabels/…${suffix}`;
-    case "osmStandard": return "tile.openstreetmap.org/…/.png";
-    default: return `cartocdn.com/rastertiles/dark_nolabels/…${suffix}`;
-  }
-}
-
 function isLight(b: Basemap) { return b === "osmLight" || b === "osmStandard"; }
 
 function tierSize(t: DataCenter["tier"]) { return t==="hyperscale"?13:t==="core"?10:t==="enterprise"?9:8; }
