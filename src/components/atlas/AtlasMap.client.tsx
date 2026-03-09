@@ -124,6 +124,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
   // DC data source (not managed by LayerManager — simpler because it never changes)
   const dcSourceRef       = useRef<Cesium.CustomDataSource | null>(null);
+  const celestialSourceRef = useRef<Cesium.CustomDataSource | null>(null);
   const linodeSourceRef   = useRef<Cesium.CustomDataSource | null>(null);
   const linodeReqId     = useRef(0);
   const powerGenReqId   = useRef(0);
@@ -146,6 +147,15 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
   // Sync camera level to the selection store so LayersMenu can read it
   useEffect(() => { setCameraLevel(cameraState.level); }, [cameraState.level, setCameraLevel]);
+
+  // Celestial bodies: show when zoomed out (planets "come into orbit")
+  const CELESTIAL_VISIBLE_HEIGHT = 14_000_000;
+  useEffect(() => {
+    const src = celestialSourceRef.current;
+    if (!src) return;
+    src.show = cameraState.height >= CELESTIAL_VISIBLE_HEIGHT;
+    viewerRef.current?.scene.requestRender();
+  }, [cameraState.height]);
 
   // ── Expose flyTo / resetView ─────────────────────────────────────────────
   useImperativeHandle(ref, () => ({
@@ -236,7 +246,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     // This prevents us from ever zooming past the tile provider's max level
     // and upscaling blurry tiles.
     ctrl.minimumZoomDistance = 200;
-    ctrl.maximumZoomDistance = 2.5e7;
+    // Allow zooming out to see Moon (~384M m) and beyond for orbit view
+    ctrl.maximumZoomDistance = 500_000_000;
 
     if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
     if (viewer.scene.skyBox) (viewer.scene.skyBox as any).show = false;
@@ -249,9 +260,19 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.imageryLayers.addImageryProvider(makeRasterProvider("osmDark"));
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000) });
 
-    // Wheel + context-menu
+    // Wheel: prevent page scroll when over map so Cesium receives zoom (desktop)
+    const container = containerRef.current;
+    if (container) {
+      const onWheel = (e: WheelEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+      };
+      container.addEventListener("wheel", onWheel, { capture: true, passive: false });
+      const wheelCleanup = () => container.removeEventListener("wheel", onWheel, { capture: true });
+      // Keep reference for cleanup below
+      (viewer as any).__atlasWheelCleanup = wheelCleanup;
+    }
     const canvas = viewer.scene.canvas;
-    canvas.addEventListener("wheel", (e) => e.stopPropagation(), { passive: true });
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
     // Resize / DPR — also poll every 2s for Mac display changes that shift DPR
@@ -329,6 +350,46 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       (e as any).dcData = dc;
     });
     viewer.dataSources.add(dcDs);
+
+    // ── Celestial bodies (realistic sizes; Earth = globe). Visible when zoomed out ─
+    const EARTH_RADIUS_M = 6_371_000;
+    const celestialDs = new Cesium.CustomDataSource("celestial");
+    celestialSourceRef.current = celestialDs;
+    // Moon: real distance 384,400 km, radius 1,737 km
+    const moonHeight = 384_400_000 - EARTH_RADIUS_M;
+    celestialDs.entities.add({
+      name: "Moon",
+      position: Cesium.Cartesian3.fromDegrees(0, 0, moonHeight),
+      ellipsoid: {
+        radii: new Cesium.Cartesian3(1_737_000, 1_737_000, 1_737_000),
+        material: Cesium.Color.fromCssColorString("#c0c0c5"),
+        outline: false,
+      },
+    });
+    // Venus: compressed distance for orbit view; real radius 6,052 km
+    const venusHeight = 420_000_000 - EARTH_RADIUS_M;
+    celestialDs.entities.add({
+      name: "Venus",
+      position: Cesium.Cartesian3.fromDegrees(120, 5, venusHeight),
+      ellipsoid: {
+        radii: new Cesium.Cartesian3(6_052_000, 6_052_000, 6_052_000),
+        material: Cesium.Color.fromCssColorString("#e6c229"),
+        outline: false,
+      },
+    });
+    // Mars: compressed distance; real radius 3,390 km
+    const marsHeight = 480_000_000 - EARTH_RADIUS_M;
+    celestialDs.entities.add({
+      name: "Mars",
+      position: Cesium.Cartesian3.fromDegrees(-80, -10, marsHeight),
+      ellipsoid: {
+        radii: new Cesium.Cartesian3(3_390_000, 3_390_000, 3_390_000),
+        material: Cesium.Color.fromCssColorString("#c1440e"),
+        outline: false,
+      },
+    });
+    celestialDs.show = false;
+    viewer.dataSources.add(celestialDs);
 
     // ── Interaction handler ────────────────────────────────────────────────
     const handler = new Cesium.ScreenSpaceEventHandler(canvas);
@@ -446,6 +507,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     }
 
     return () => {
+      const wc = (viewer as any).__atlasWheelCleanup;
+      if (typeof wc === "function") wc();
       clearInterval(dprPollId);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("keydown", onKey);
