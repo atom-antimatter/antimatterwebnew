@@ -186,12 +186,29 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
     (viewer.cesiumWidget as any)._creditContainer.style.display = "none";
     viewer.scene.globe.baseColor           = Cesium.Color.fromCssColorString("#1a1b2e");
-    viewer.scene.globe.enableLighting      = false;
-    viewer.scene.globe.depthTestAgainstTerrain = false;
+    // Open-source global terrain (AWS Open Data); fallback to flat if URL format unsupported
+    const terrainUrl = "https://terrain-tiles.s3.amazonaws.com/";
+    const openTerrain = new Cesium.CesiumTerrainProvider({ url: terrainUrl });
+    openTerrain.readyPromise.then(() => {
+      if (!viewer.isDestroyed()) {
+        viewer.terrainProvider = openTerrain;
+        viewer.scene.requestRender();
+      }
+    }).catch(() => {
+      if (!viewer.isDestroyed()) console.warn("[Atlas] Open terrain unavailable, using flat ellipsoid.");
+    });
+
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    viewer.scene.globe.enableLighting = true;
     viewer.scene.globe.showGroundAtmosphere = false;
     viewer.scene.globe.preloadAncestors    = true;
     viewer.scene.globe.preloadSiblings     = true;
     viewer.scene.globe.tileCacheSize       = 2000;
+
+    // Realistic shadows and sun-based lighting for 3D cities
+    viewer.shadows = true;
+    if (viewer.shadowMap) viewer.shadowMap.enabled = true;
+    viewer.scene.light = new Cesium.SunLight();
 
     // FXAA applies a blur kernel over the whole frame — disabling it is the
     // single most impactful change for text / label crispness.
@@ -201,9 +218,13 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     (viewer as any).useBrowserRecommendedResolution = false;
     viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
 
-    // Fog + HDR both soften the image.
-    viewer.scene.fog.enabled = false;
+    // Atmospheric depth: fog for distant geometry (open-source, no Ion)
+    viewer.scene.fog.enabled = true;
+    viewer.scene.fog.density = 0.0002;
     viewer.scene.highDynamicRange = false;
+
+    // Reduce GPU load when idle; layers call requestRender() on updates
+    viewer.scene.requestRenderMode = true;
 
     const ctrl = viewer.scene.screenSpaceCameraController;
     // Carto maxLevel=20 → min height ≈ 140m. Add 30% margin → 182m.
@@ -212,7 +233,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     ctrl.minimumZoomDistance = 200;
     ctrl.maximumZoomDistance = 2.5e7;
 
-    if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
+    if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = true;
     if (viewer.scene.skyBox) (viewer.scene.skyBox as any).show = false;
     if (viewer.scene.sun)  viewer.scene.sun.show  = false;
     if (viewer.scene.moon) viewer.scene.moon.show = false;

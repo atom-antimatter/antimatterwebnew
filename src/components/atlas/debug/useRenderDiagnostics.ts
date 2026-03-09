@@ -73,6 +73,11 @@ export type RenderSnapshot = {
   cssAudit: CssDiagnostic[];
   // Layer stats
   layerStats: Record<string, LayerStats>;
+  // 3D rendering
+  terrainLoaded: boolean;
+  shadowMapEnabled: boolean;
+  primitiveCount: number;
+  buildingsRendered: number;
   // Timestamps
   capturedAt: number;
 };
@@ -164,6 +169,11 @@ export function useRenderDiagnostics(opts: {
 
       const cssAudit = auditCss(canvasContainerRef?.current ?? canvas?.parentElement ?? null);
       const layerStats = layerManagerRef.current?.getStats() ?? {};
+      const terrainProvider = v?.terrainProvider as { url?: string } | undefined;
+      const terrainLoaded = !!(terrainProvider && "url" in terrainProvider && typeof terrainProvider.url === "string");
+      const shadowMapEnabled = !!(v?.shadowMap?.enabled ?? (v?.scene as any)?.shadowMap?.enabled);
+      const primitiveCount = (v?.scene?.primitives?.length ?? 0) as number;
+      const buildingsRendered = layerStats.buildings?.entityCount ?? 0;
 
       return {
         cameraHeight: cameraState.height,
@@ -188,6 +198,10 @@ export function useRenderDiagnostics(opts: {
         tile,
         cssAudit,
         layerStats,
+        terrainLoaded,
+        shadowMapEnabled,
+        primitiveCount,
+        buildingsRendered,
         capturedAt: Date.now(),
       };
     };

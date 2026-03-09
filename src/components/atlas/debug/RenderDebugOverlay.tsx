@@ -125,12 +125,20 @@ export default function RenderDebugOverlay({
         <Section title="Cesium Render">
           <Row label="FXAA" value={s.fxaa ? "ON ⚠" : "off ✓"} warn={s.fxaa} />
           <Row label="HDR" value={s.hdr ? "ON ⚠" : "off ✓"} warn={s.hdr} />
-          <Row label="fog" value={s.fogEnabled ? "ON ⚠" : "off ✓"} warn={s.fogEnabled} />
+          <Row label="fog" value={s.fogEnabled ? "ON" : "off"} />
           <Row label="SSE" value={s.sse.toFixed(2)} />
           <Row label="tileCache" value={s.tileCacheSize} />
           <Row label="imagery layers" value={s.imageryLayerCount} />
           <Row label="requestRenderMode" value={String(s.requestRenderMode)} />
           <Row label="MSAA samples" value={s.msaaSamples} />
+        </Section>
+
+        <Section title="3D Rendering">
+          <Row label="terrain" value={s.terrainLoaded ? "loaded ✓" : "flat (fallback)"} />
+          <Row label="shadow map" value={s.shadowMapEnabled ? "ON" : "off"} />
+          <Row label="primitives" value={s.primitiveCount} />
+          <Row label="buildings" value={s.buildingsRendered} />
+          <Row label="camera height" value={`${(s.cameraHeight / 1000).toFixed(1)} km`} />
         </Section>
 
         <Section title="Basemap / Tiles">
