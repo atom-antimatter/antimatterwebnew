@@ -133,7 +133,7 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
             <div role="radiogroup" aria-label="Base map selection">
               <BasemapRadio value="osmDark"     label="Carto Dark"      helper="Default, matches dark theme" checked={basemap === "osmDark"}     onSelect={setBasemap} />
               <BasemapRadio value="osmLight"    label="Carto Light"     checked={basemap === "osmLight"}    onSelect={setBasemap} />
-              <BasemapRadio value="osmStandard" label="OpenStreetMap"   helper="Standard colour tiles"      checked={basemap === "osmStandard"} onSelect={setBasemap} />
+              <BasemapRadio value="osmStandard" label="OpenStreetMap"   helper="Standard tiles (may appear soft on Retina)" checked={basemap === "osmStandard"} onSelect={setBasemap} />
             </div>
 
             {/* Overlays */}

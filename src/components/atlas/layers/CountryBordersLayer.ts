@@ -81,9 +81,12 @@ export class CountryBordersLayer implements ILayer {
   }
 
   update(ctx: LayerContext) {
-    // Borders don't need per-frame viewport filtering.
-    // But recolour if basemap changed.
-    if (this.ds) this.recolour(ctx.basemap);
+    if (!this.ds) return;
+    this.recolour(ctx.basemap);
+    const w = ctx.cameraLevel === "WORLD" || ctx.cameraLevel === "REGION" ? 1.4 : 0.9;
+    for (const e of this.ds.entities.values) {
+      if (e.polyline) e.polyline.width = new Cesium.ConstantProperty(w);
+    }
   }
 
   dispose(ctx: LayerContext) {

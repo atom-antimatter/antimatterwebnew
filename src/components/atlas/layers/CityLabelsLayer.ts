@@ -148,9 +148,9 @@ export class CityLabelsLayer implements ILayer {
     for (const city of list) {
       const isCapital  = city.scalerank <= 1;
       const isMajor    = city.scalerank <= 3;
-      const fontSize   = isCapital ? 17 : isMajor ? 14 : 12;
+      const fontSize   = isCapital ? 20 : isMajor ? 16 : 13;
       const fontWeight = isCapital ? "700" : isMajor ? "600" : "500";
-      const haloWidth  = isCapital ? 6 : isMajor ? 4.5 : 3.5;
+      const haloWidth  = isCapital ? 7 : isMajor ? 5 : 4;
       const farDistance = isCapital ? 7_500_000 : isMajor ? 4_500_000 : 2_200_000;
       const nearDistance = ctx.cameraLevel === "REGION" ? 120_000 : 60_000;
 
@@ -174,7 +174,7 @@ export class CityLabelsLayer implements ILayer {
           disableDepthTestDistance: new Cesium.ConstantProperty(Number.POSITIVE_INFINITY),
           // Preserve legibility at altitude without shrinking into fuzzy micro-text.
           scaleByDistance:  new Cesium.ConstantProperty(
-            new Cesium.NearFarScalar(nearDistance, 1.08, farDistance, 0.9)
+            new Cesium.NearFarScalar(nearDistance, 1.05, farDistance, 0.95)
           ),
           translucencyByDistance: new Cesium.ConstantProperty(
             new Cesium.NearFarScalar(nearDistance, 1.0, farDistance, 0.72)

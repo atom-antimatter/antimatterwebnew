@@ -129,11 +129,12 @@ export default function DebugPanel({ cameraState, viewerReady, layerManager, vie
         <section>
           <p className="text-[9px] uppercase tracking-widest text-[rgba(162,163,233,0.7)] mb-1">Tiles</p>
           <Row label="basemap"          value={basemap} />
+          <Row label="retina (@2x)"    value={typeof window !== "undefined" && window.devicePixelRatio >= 1.5 ? "YES" : "no"} />
           <Row label="provider maxLevel" value={maxLevel} />
           <Row label="est. tile zoom"   value={tileZoom} />
           <Row
-            label={overZoomed ? "WARNING: UPSCALING" : "zoom status"}
-            value={overZoomed ? `z${tileZoom} > max${maxLevel} -> blurry!` : "within range OK"}
+            label={overZoomed ? "⚠ UPSCALE WARNING" : "zoom status"}
+            value={overZoomed ? `z${tileZoom} > max${maxLevel} → blurry!` : "within range OK"}
             highlight={overZoomed}
           />
         </section>

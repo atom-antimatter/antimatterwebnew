@@ -87,18 +87,49 @@ export default function DataCenterMapClient() {
     }
   }, [setSelectedDc, setSelectedLinode]);
 
-  const handleFilterChange = useCallback(
-    (newCaps: string[], newTier: TierFilter, newRadius: number) => {
-      if (!lastRawQuery && !geocodedPos) return;
+  /**
+   * Unified filter pipeline. Supports three modes:
+   *  1. Search mode: geocodedPos exists -> radius + capability/tier
+   *  2. Text mode: rawQuery exists, no geocodedPos -> text match + filters
+   *  3. Browse mode: no query -> filter all DCs by capability/tier
+   */
+  const computeVisibleResults = useCallback(
+    (opts: { rawQuery: string; pos: GeocodedPos; caps: string[]; tier: TierFilter; radius: number }) => {
+      const { rawQuery, pos, caps, tier, radius } = opts;
+      const hasFilters = caps.length > 0 || tier !== null;
+      const hasQuery = !!rawQuery;
+
+      if (!pos && !hasQuery && !hasFilters) {
+        setResults(null);
+        setSearchStatus("idle");
+        return;
+      }
+
       const filtered = filterDataCenters(DATA_CENTERS, {
-        geocodedPos: geocodedPos ?? undefined, radiusKm: newRadius,
-        capabilities: newCaps, tier: newTier,
-        textQuery: geocodedPos ? undefined : lastRawQuery,
+        geocodedPos: pos ?? undefined,
+        radiusKm: radius,
+        capabilities: caps,
+        tier,
+        textQuery: pos ? undefined : rawQuery || undefined,
       });
       setResults(filtered);
-      setSearchStatus(filtered.length === 0 ? (geocodedPos ? "no-dc" : "no-results") : "idle");
+
+      if (filtered.length === 0) {
+        if (pos) setSearchStatus("no-dc");
+        else if (hasQuery) setSearchStatus("no-results");
+        else setSearchStatus("no-results");
+      } else {
+        setSearchStatus("idle");
+      }
     },
-    [lastRawQuery, geocodedPos]
+    []
+  );
+
+  const handleFilterChange = useCallback(
+    (newCaps: string[], newTier: TierFilter, newRadius: number) => {
+      computeVisibleResults({ rawQuery: lastRawQuery, pos: geocodedPos, caps: newCaps, tier: newTier, radius: newRadius });
+    },
+    [lastRawQuery, geocodedPos, computeVisibleResults]
   );
 
   const handleSearch = useCallback(async (query: string) => {
@@ -127,7 +158,9 @@ export default function DataCenterMapClient() {
       }
     }
     if (pipelineResult.location?.kind === "facility" && pipelineResult.location.dc) {
-      handleSelectDc(pipelineResult.location.dc);
+      const dc = pipelineResult.location.dc;
+      handleSelectDc(dc);
+      setResults([dc]);
       setSearchStatus("idle");
       return;
     }
@@ -138,16 +171,20 @@ export default function DataCenterMapClient() {
     setResults(filtered);
     setSearchStatus(filtered.length === 0 ? (pos ? "no-dc" : "no-results") : "idle");
     if (!pos && filtered.length > 0) atlasRef.current?.flyTo({ lat: filtered[0].lat, lng: filtered[0].lng, height: FLY_HEIGHT_SEARCH }, 1.5);
-  }, [capabilityFilters, tierFilter, radiusKm]);
+  }, [capabilityFilters, tierFilter, radiusKm, handleSelectDc]);
 
   const handleSelectSuggestion = useCallback((r: GazetteerResult) => {
+    if (r.kind === "facility" && r.dc) {
+      handleSelectDc(r.dc);
+      setResults([r.dc]);
+      setSearchStatus("idle");
+      return;
+    }
     const pos = { lat: r.lat, lng: r.lng };
     setGeocodedPos(pos);
     atlasRef.current?.flyTo({ lat: r.lat, lng: r.lng, height: FLY_HEIGHT_SEARCH }, 1.2);
-    const filtered = filterDataCenters(DATA_CENTERS, { geocodedPos: pos, radiusKm, capabilities: capabilityFilters, tier: tierFilter });
-    setResults(filtered);
-    setSearchStatus(filtered.length === 0 ? "no-dc" : "idle");
-  }, [radiusKm, capabilityFilters, tierFilter]);
+    computeVisibleResults({ rawQuery: lastRawQuery, pos, caps: capabilityFilters, tier: tierFilter, radius: radiusKm });
+  }, [radiusKm, capabilityFilters, tierFilter, lastRawQuery, handleSelectDc, computeVisibleResults]);
 
   const handleToggleCapability = useCallback((cap: string) => {
     const next = capabilityFilters.includes(cap) ? capabilityFilters.filter(c => c !== cap) : [...capabilityFilters, cap];

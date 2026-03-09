@@ -499,7 +499,7 @@ export default function CommandPanel({
               className="flex items-center gap-1.5 text-[11px] text-[rgba(162,163,233,0.7)] hover:text-[rgba(162,163,233,1)] transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
-              Reset filters
+              Clear all
             </button>
           )}
           </div>
@@ -522,12 +522,18 @@ export default function CommandPanel({
           {results && results.length === 0 && searchStatus !== "loading" && (
             <div className="px-5 py-6">
               <p className="text-sm text-[rgba(246,246,253,0.5)] mb-1">
-                {searchStatus === "no-results"
-                  ? "No matching data centers found."
-                  : "No data centers in this area."}
+                {searchStatus === "no-dc"
+                  ? "No data centers in this area."
+                  : query.trim()
+                    ? "No matching data centers found."
+                    : "No data centers match these filters."}
               </p>
               <p className="text-xs text-[rgba(246,246,253,0.3)]">
-                Try broadening the radius, removing filters, or searching a different location.
+                {searchStatus === "no-dc"
+                  ? "Try increasing the radius or removing filters."
+                  : query.trim()
+                    ? "Try a different location or broadening your filters."
+                    : "Try selecting different capabilities or tiers."}
               </p>
             </div>
           )}

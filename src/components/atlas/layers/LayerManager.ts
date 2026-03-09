@@ -6,27 +6,27 @@
  *  - enable() adds it to the viewer; disable() removes it entirely.
  *  - requestRender() is called on EVERY state change.
  *  - Camera move is debounced (250ms) to avoid flooding update().
- *  - No React state is touched here — this is pure Cesium lifecycle code.
+ *  - Context is always computed fresh via a factory callback so layers
+ *    never operate on stale camera state.
  */
 import * as Cesium from "cesium";
 import type { ILayer, LayerContext, LayerStats } from "./types";
 
+export type CtxFactory = () => LayerContext;
+
 export class LayerManager {
-  private viewer:   Cesium.Viewer | null = null;
-  private layers:   Map<string, ILayer>  = new Map();
-  private enabled:  Set<string>          = new Set();
-  private ctx:      LayerContext | null  = null;
+  private viewer:     Cesium.Viewer | null = null;
+  private layers:     Map<string, ILayer>  = new Map();
+  private enabled:    Set<string>          = new Set();
+  private ctxFactory: CtxFactory | null    = null;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // ── Setup ──────────────────────────────────────────────────────────────────
+  init(viewer: Cesium.Viewer, ctxFactory: CtxFactory) {
+    this.viewer     = viewer;
+    this.ctxFactory = ctxFactory;
 
-  init(viewer: Cesium.Viewer, ctx: LayerContext) {
-    this.viewer = viewer;
-    this.ctx    = ctx;
-
-    // Re-request a render after every camera move so REGION/LOCAL layers repaint.
     viewer.camera.moveEnd.addEventListener(() => {
-      if (this.ctx) this.onCameraChange(this.ctx);
+      this.onCameraChange();
     });
   }
 
@@ -34,14 +34,8 @@ export class LayerManager {
     this.layers.set(layer.name, layer);
   }
 
-  // ── Toggle ────────────────────────────────────────────────────────────────
-
   /** Called whenever a layer toggle or context value changes. */
-  sync(
-    layerStates: Record<string, boolean>,
-    ctx: LayerContext,
-  ) {
-    this.ctx = ctx;
+  sync(layerStates: Record<string, boolean>, ctx: LayerContext) {
     if (!this.viewer || this.viewer.isDestroyed()) return;
 
     for (const [name, layer] of this.layers) {
@@ -50,14 +44,11 @@ export class LayerManager {
 
       if (shouldEnable && !isEnabled) {
         this.enabled.add(name);
-        console.log(`[LayerManager] enable ${name}`);
         layer.enable(ctx);
       } else if (!shouldEnable && isEnabled) {
         this.enabled.delete(name);
-        console.log(`[LayerManager] disable ${name}`);
         layer.disable(ctx);
       } else if (shouldEnable && isEnabled) {
-        // Context changed (e.g. basemap swap) — update visuals
         layer.update(ctx);
       }
     }
@@ -65,23 +56,19 @@ export class LayerManager {
     this.requestRender();
   }
 
-  // ── Camera change ─────────────────────────────────────────────────────────
-
-  onCameraChange(ctx: LayerContext) {
-    this.ctx = ctx;
-    // Debounce so rapid pan/zoom doesn't flood update()
+  /** Debounced handler for Cesium camera.moveEnd. Computes fresh ctx. */
+  private onCameraChange() {
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
-      if (!this.viewer || this.viewer.isDestroyed()) return;
+      if (!this.viewer || this.viewer.isDestroyed() || !this.ctxFactory) return;
+      const ctx = this.ctxFactory();
       for (const name of this.enabled) {
         const layer = this.layers.get(name);
         if (layer) layer.update(ctx);
       }
       this.requestRender();
-    }, 250);
+    }, 200);
   }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
 
   requestRender() {
     if (this.viewer && !this.viewer.isDestroyed()) {
@@ -99,9 +86,10 @@ export class LayerManager {
 
   dispose() {
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
-    if (!this.viewer || this.viewer.isDestroyed() || !this.ctx) return;
+    if (!this.viewer || this.viewer.isDestroyed() || !this.ctxFactory) return;
+    const ctx = this.ctxFactory();
     for (const layer of this.layers.values()) {
-      layer.dispose(this.ctx);
+      layer.dispose(ctx);
     }
     this.layers.clear();
     this.enabled.clear();

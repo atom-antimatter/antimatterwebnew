@@ -27,6 +27,7 @@ import { FiberRoutesLayer }    from "./layers/FiberRoutesLayer";
 import { FeasibilityHeatmapLayer } from "./layers/FeasibilityHeatmapLayer";
 import type { LayerContext } from "./layers/types";
 import type { ProviderRegion } from "@/lib/providers/linode/types";
+import { getMinimumZoomDistance, heightToTileZoom, BASEMAP_MAX_LEVEL } from "@/lib/map/zoomEstimate";
 
 // ─── exported types ────────────────────────────────────────────────────────
 
@@ -71,15 +72,20 @@ type Tooltip = { x: number; y: number; dc: DataCenter } | null;
 
 // ─── imagery ──────────────────────────────────────────────────────────────
 
+const RETINA = typeof window !== "undefined" && window.devicePixelRatio >= 1.5;
+const CARTO_SUBS = ["a", "b", "c", "d"];
+const CARTO_CREDIT = new Cesium.Credit("Carto, OSM");
+
 function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
-  const common = { minimumLevel: 0, tileWidth: 256, tileHeight: 256 } as const;
+  const tile = RETINA ? { tileWidth: 512, tileHeight: 512 } : { tileWidth: 256, tileHeight: 256 };
+  const suffix = RETINA ? "@2x.png" : ".png";
   switch (basemap) {
     case "osmLight":
-      return new Cesium.UrlTemplateImageryProvider({ ...common, url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", subdomains: ["a","b","c","d"], credit: new Cesium.Credit("Carto, OSM"), maximumLevel: 20 });
+      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, ...tile, url: `https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}${suffix}`, subdomains: CARTO_SUBS, credit: CARTO_CREDIT, maximumLevel: 20 });
     case "osmStandard":
-      return new Cesium.UrlTemplateImageryProvider({ ...common, url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", credit: new Cesium.Credit("OpenStreetMap contributors"), maximumLevel: 19 });
+      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, tileWidth: 256, tileHeight: 256, url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", credit: new Cesium.Credit("OpenStreetMap contributors"), maximumLevel: 19 });
     case "osmDark": default:
-      return new Cesium.UrlTemplateImageryProvider({ ...common, url: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png", subdomains: ["a","b","c","d"], credit: new Cesium.Credit("Carto, OSM"), maximumLevel: 20 });
+      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, ...tile, url: `https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}${suffix}`, subdomains: CARTO_SUBS, credit: CARTO_CREDIT, maximumLevel: 20 });
   }
 }
 
@@ -104,6 +110,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   const dcSourceRef     = useRef<Cesium.CustomDataSource | null>(null);
   const linodeSourceRef = useRef<Cesium.CustomDataSource | null>(null);
   const linodeReqId     = useRef(0);
+  const powerGenReqId   = useRef(0);
+  const powerQueueReqId = useRef(0);
   const powerGenRef     = useRef<Cesium.CustomDataSource | null>(null);
   const powerQueueRef   = useRef<Cesium.CustomDataSource | null>(null);
 
@@ -223,9 +231,21 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     mgr.register(new FeasibilityHeatmapLayer());
     managerRef.current = mgr;
 
-    // Pass an initial context (layer states will be synced in the sync effect below)
-    const ctx: LayerContext = { viewer, cameraLevel: "WORLD", viewRect: null, heightMeters: 18_000_000, basemap: "osmDark" };
-    mgr.init(viewer, ctx);
+    const makeCtx = (): LayerContext => {
+      const cam = viewer.camera;
+      const h = cam.positionCartographic?.height ?? 18_000_000;
+      let viewRect: LayerContext["viewRect"] = null;
+      try {
+        const r = cam.computeViewRectangle?.();
+        if (r) {
+          const toDeg = (v: number) => (v * 180) / Math.PI;
+          viewRect = { west: toDeg(r.west), south: toDeg(r.south), east: toDeg(r.east), north: toDeg(r.north) };
+        }
+      } catch { /* underground camera */ }
+      const level = h > 10_000_000 ? "WORLD" : h > 3_500_000 ? "REGION" : h > 900_000 ? "LOCAL" : "CITY";
+      return { viewer, cameraLevel: level as LayerContext["cameraLevel"], viewRect, heightMeters: h, basemap: "osmDark" };
+    };
+    mgr.init(viewer, makeCtx);
 
     // ── DC markers ────────────────────────────────────────────────────────
     const dcDs = new Cesium.CustomDataSource("data-centers");
@@ -323,6 +343,37 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
     setIsReady(true);
 
+    if (process.env.NODE_ENV === "development") {
+      (window as any).__atlas = {
+        logTileSample: () => {
+          const v = viewerRef.current;
+          if (!v || v.isDestroyed()) { console.warn("Viewer not ready"); return; }
+          const h = v.camera.positionCartographic.height;
+          const cw = v.scene.canvas.clientWidth * (v.resolutionScale ?? 1);
+          const z = heightToTileZoom(h, cw);
+          const maxLvl = BASEMAP_MAX_LEVEL[basemap] ?? 20;
+          const overZoomed = z > maxLvl;
+          const tileUrl = RETINA
+            ? `https://a.basemaps.cartocdn.com/dark_nolabels/${Math.min(z, maxLvl)}/0/0@2x.png`
+            : `https://a.basemaps.cartocdn.com/dark_nolabels/${Math.min(z, maxLvl)}/0/0.png`;
+          console.group("[Atlas] Tile Sample");
+          console.log("camera height:", h.toFixed(0), "m");
+          console.log("est. tile zoom:", z, "| basemap maxLevel:", maxLvl);
+          console.log("UPSCALE:", overZoomed ? "YES — blurry!" : "no");
+          console.log("retina:", RETINA);
+          fetch(tileUrl).then(async r => {
+            const blob = await r.blob();
+            console.log("content-type:", r.headers.get("content-type"));
+            console.log("size:", (blob.size / 1024).toFixed(1), "KB");
+            const bmp = await createImageBitmap(blob);
+            console.log("bitmap:", bmp.width, "x", bmp.height);
+            bmp.close();
+          }).catch(e => console.error("fetch failed:", e));
+          console.groupEnd();
+        },
+      };
+    }
+
     return () => {
       clearInterval(dprPollId);
       window.removeEventListener("resize", onResize);
@@ -361,11 +412,10 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
     mgr.sync(managed, ctx);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     layers.countryBorders, layers.stateBorders, layers.cities,
     layers.routes, layers.powerHeatmap,
-    basemap, cameraState.level, cameraState.viewRect, powerScenario,
+    basemap, cameraState.level, cameraState.height, cameraState.viewRect, powerScenario,
   ]);
 
   // ── Adaptive SSE ─────────────────────────────────────────────────────────
@@ -373,7 +423,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
     // Minimum 2: lower pushes tile requests past provider maxLevel → upscaling → blur.
-    const SSE: Record<string, number> = { WORLD: 14, REGION: 3.5, LOCAL: 2.25, CITY: 1.75 };
+    const SSE: Record<string, number> = { WORLD: 12, REGION: 3, LOCAL: 2, CITY: 1.5 };
     v.scene.globe.maximumScreenSpaceError = SSE[cameraState.level] ?? 2;
   }, [cameraState.level]);
 
@@ -383,9 +433,10 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     if (!v || v.isDestroyed()) return;
     v.imageryLayers.removeAll();
     v.imageryLayers.addImageryProvider(makeProvider(basemap));
-    // Update zoom clamp for new basemap (OSM max=19 needs more height than Carto max=20)
     const ctrl = v.scene.screenSpaceCameraController;
-    ctrl.minimumZoomDistance = basemap === "osmStandard" ? 360 : 200;
+    const canvas = v.scene.canvas;
+    const cw = canvas?.clientWidth ?? 1280;
+    ctrl.minimumZoomDistance = getMinimumZoomDistance(basemap, cw * (v.resolutionScale ?? 1));
     v.scene.requestRender();
   }, [basemap]);
 
@@ -418,9 +469,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     src.entities.removeAll();
     src.show = layers.powerGeneration;
     if (!layers.powerGeneration||cameraState.level==="WORLD") { viewer.scene.requestRender(); return; }
-    const reqId = ++linodeReqId.current;
+    const reqId = ++powerGenReqId.current;
     import("@/lib/power/staticReferenceData").then(({ STATIC_LARGE_PLANTS }) => {
-      if (reqId !== linodeReqId.current) return;
+      if (reqId !== powerGenReqId.current) return;
       if (!src) return;
       const rect = cameraState.viewRect;
       const visible = rect ? STATIC_LARGE_PLANTS.filter(p=>p.lat>=rect.south-2&&p.lat<=rect.north+2&&p.lng>=rect.west-2&&p.lng<=rect.east+2) : STATIC_LARGE_PLANTS;
@@ -445,9 +496,10 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     if (!layers.powerQueue||cameraState.level==="WORLD") { viewer.scene.requestRender(); return; }
     const rect = cameraState.viewRect; if (!rect) return;
     const buf=3;
+    const myQueueId = ++powerQueueReqId.current;
     fetch(`/api/power/queue?west=${(rect.west-buf).toFixed(2)}&south=${(rect.south-buf).toFixed(2)}&east=${(rect.east+buf).toFixed(2)}&north=${(rect.north+buf).toFixed(2)}`)
       .then(r=>r.json()).then((data:{aggregates?:Array<{lat:number;lng:number;queuedMw:number}>}) => {
-        if (!src) return;
+        if (!src || myQueueId !== powerQueueReqId.current) return;
         for (const a of data.aggregates??[]) {
           if (!a.queuedMw) continue;
           const sz = Math.min(18,Math.max(8,Math.sqrt(a.queuedMw/5000)*14));
