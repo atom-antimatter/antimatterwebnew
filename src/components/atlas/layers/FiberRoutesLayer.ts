@@ -3,13 +3,13 @@ import type { ILayer, LayerContext, LayerStats } from "./types";
 
 // ─── Data cache ────────────────────────────────────────────────────────────
 
-type Segment = { positions: Cesium.Cartesian3[]; color: string };
-let _segments: Segment[] = [];
+type RawSegment = { coords: [number, number][]; color: string };
+let _segments: RawSegment[] = [];
 let _loaded   = false;
 let _loading  = false;
 let _loadError: string | null = null;
 
-async function loadSegments(): Promise<{ segments: Segment[]; error: string | null }> {
+async function loadSegments(): Promise<{ segments: RawSegment[]; error: string | null }> {
   if (_loaded) return { segments: _segments, error: _loadError };
   if (_loading) {
     await new Promise<void>(r => { const id = setInterval(() => { if (_loaded) { clearInterval(id); r(); } }, 80); });
@@ -20,21 +20,19 @@ async function loadSegments(): Promise<{ segments: Segment[]; error: string | nu
     const res = await fetch("/geo/submarine-cables.json");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const geo  = await res.json();
-    const segs: Segment[] = [];
+    const segs: RawSegment[] = [];
 
     for (const feat of geo?.features ?? []) {
       const type  = feat.geometry?.type ?? "";
       const color = feat.properties?.color ?? "#696aac";
-      const arrays: [number,number][][] =
+      const arrays: [number, number][][] =
         type === "LineString"      ? [feat.geometry.coordinates]
         : type === "MultiLineString" ? feat.geometry.coordinates
         : [];
 
       for (const line of arrays) {
         if (!Array.isArray(line) || line.length < 2) continue;
-        const positions = line.map(([lon, lat]: [number, number]) =>
-          Cesium.Cartesian3.fromDegrees(lon, lat, 5000));
-        if (positions.length >= 2) segs.push({ positions, color });
+        segs.push({ coords: line, color });
       }
     }
     _segments = segs;
@@ -50,35 +48,31 @@ async function loadSegments(): Promise<{ segments: Segment[]; error: string | nu
   return { segments: _segments, error: _loadError };
 }
 
+// Slight elevation above terrain to prevent depth fighting
+const ROUTE_HEIGHT = 200;
+const MAX_SEGMENTS = 1200;
+
 // ─── Layer ─────────────────────────────────────────────────────────────────
 
 export class FiberRoutesLayer implements ILayer {
   readonly name = "routes";
-  private ds:    Cesium.CustomDataSource | null = null;
+  private primitive: Cesium.PrimitiveCollection | null = null;
   private stats: LayerStats = { enabled: false, entityCount: 0, fetchStatus: "idle", lastUpdateAt: null, lastError: null };
   private renderReqId = 0;
+  private lastRenderKey = "";
 
   async enable(ctx: LayerContext) {
-    const { viewer } = ctx;
-    if (!this.ds) {
-      this.ds = new Cesium.CustomDataSource("fiber-routes");
-      viewer.dataSources.add(this.ds);
-    } else if (!viewer.dataSources.contains(this.ds)) {
-      viewer.dataSources.add(this.ds);
-    }
     await this.render(ctx);
   }
 
   disable(ctx: LayerContext) {
-    if (this.ds && ctx.viewer.dataSources.contains(this.ds)) {
-      ctx.viewer.dataSources.remove(this.ds, false);
-    }
+    this.removePrimitives(ctx);
+    this.lastRenderKey = "";
   }
 
   async update(ctx: LayerContext) {
     if (ctx.cameraLevel === "WORLD") {
-      // Gated — clear entities
-      if (this.ds) this.ds.entities.removeAll();
+      this.removePrimitives(ctx);
       this.stats = { ...this.stats, entityCount: 0, note: "gated: zoom in past WORLD" };
       ctx.viewer.scene.requestRender();
       return;
@@ -87,81 +81,113 @@ export class FiberRoutesLayer implements ILayer {
   }
 
   dispose(ctx: LayerContext) {
-    if (this.ds) {
-      if (ctx.viewer.dataSources.contains(this.ds)) ctx.viewer.dataSources.remove(this.ds, true);
-      this.ds = null;
-    }
+    this.removePrimitives(ctx);
   }
 
   getStats(): LayerStats { return this.stats; }
 
+  private removePrimitives(ctx: LayerContext) {
+    if (this.primitive && ctx.viewer.scene.primitives.contains(this.primitive)) {
+      ctx.viewer.scene.primitives.remove(this.primitive);
+    }
+    this.primitive = null;
+    ctx.viewer.scene.requestRender();
+  }
+
   private async render(ctx: LayerContext) {
-    if (!this.ds) return;
     if (ctx.cameraLevel === "WORLD") {
-      this.ds.entities.removeAll();
+      this.removePrimitives(ctx);
       this.stats = { ...this.stats, entityCount: 0, note: "gated: zoom in past WORLD" };
       ctx.viewer.scene.requestRender();
       return;
     }
 
+    // Dedupe renders for the same viewport
+    const renderKey = `${ctx.cameraLevel}-${ctx.viewRect?.west?.toFixed(1)}-${ctx.viewRect?.south?.toFixed(1)}`;
+    if (renderKey === this.lastRenderKey && this.stats.entityCount > 0) return;
+
     const myId = ++this.renderReqId;
     this.stats = { ...this.stats, fetchStatus: "loading" };
-    const ds = this.ds;
 
     const { segments, error } = await loadSegments();
-
-    // Stale render check — a newer render was triggered while we were loading
     if (myId !== this.renderReqId) return;
-    ds.entities.removeAll();
 
     if (error) {
       this.stats = { ...this.stats, fetchStatus: "error", lastError: error };
       return;
     }
 
-    // Viewport filter at LOCAL/CITY for performance
+    // Viewport filter for performance
     let visible = segments;
     if (ctx.viewRect && (ctx.cameraLevel === "LOCAL" || ctx.cameraLevel === "CITY")) {
       const buf = 5;
       const { west, east, south, north } = ctx.viewRect;
       visible = segments.filter(seg =>
-        seg.positions.some(pos => {
-          const c = Cesium.Cartographic.fromCartesian(pos);
-          const lon = Cesium.Math.toDegrees(c.longitude);
-          const lat = Cesium.Math.toDegrees(c.latitude);
-          return lon >= west - buf && lon <= east + buf && lat >= south - buf && lat <= north + buf;
-        })
+        seg.coords.some(([lon, lat]) =>
+          lon >= west - buf && lon <= east + buf &&
+          lat >= south - buf && lat <= north + buf
+        )
       );
     }
+    if (visible.length > MAX_SEGMENTS) visible = visible.slice(0, MAX_SEGMENTS);
 
-    // Cap for performance
-    const MAX = 1200;
-    if (visible.length > MAX) visible = visible.slice(0, MAX);
+    this.removePrimitives(ctx);
 
-    for (const { positions, color } of visible) {
-      const alpha = ctx.basemap === "osmDark" ? 0.55 : 0.45;
-      ds.entities.add({
-        polyline: new Cesium.PolylineGraphics({
-          positions:     new Cesium.ConstantProperty(positions),
-          width:         new Cesium.ConstantProperty(1.8),
-          material:      new Cesium.ColorMaterialProperty(
+    const collection = new Cesium.PrimitiveCollection();
+    const isDark = ctx.basemap === "osmDark" || ctx.basemap === "vectorDark";
+    const alpha = isDark ? 0.6 : 0.5;
+    let count = 0;
+
+    for (const { coords, color } of visible) {
+      if (coords.length < 2) continue;
+
+      // Build positions with height to avoid depth fighting
+      const flat: number[] = [];
+      for (const [lon, lat] of coords) {
+        flat.push(lon, lat, ROUTE_HEIGHT);
+      }
+      const positions = Cesium.Cartesian3.fromDegreesArrayHeights(flat);
+      if (positions.length < 2) continue;
+
+      try {
+        const geometry = new Cesium.PolylineGeometry({
+          positions,
+          width: 3.0,
+          arcType: Cesium.ArcType.NONE,
+          vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+          colors: Array(positions.length).fill(
             Cesium.Color.fromCssColorString(color).withAlpha(alpha)
           ),
-          clampToGround: new Cesium.ConstantProperty(false),
-          arcType:       new Cesium.ConstantProperty(Cesium.ArcType.GEODESIC),
-        }),
-      });
+          colorsPerVertex: true,
+        });
+
+        collection.add(new Cesium.Primitive({
+          geometryInstances: new Cesium.GeometryInstance({ geometry }),
+          appearance: new Cesium.PolylineColorAppearance(),
+          asynchronous: false,
+          allowPicking: false,
+        }));
+        count++;
+      } catch {
+        // Skip malformed segments
+      }
     }
 
+    if (count > 0) {
+      ctx.viewer.scene.primitives.add(collection);
+      this.primitive = collection;
+    }
+
+    this.lastRenderKey = renderKey;
     this.stats = {
       enabled:      true,
-      entityCount:  visible.length,
+      entityCount:  count,
       fetchStatus:  "success",
       lastUpdateAt: Date.now(),
       lastError:    null,
-      note:         `${visible.length}/${segments.length} segs @ ${ctx.cameraLevel}`,
+      note:         `${count}/${segments.length} segs @ ${ctx.cameraLevel} (GPU primitives)`,
     };
     ctx.viewer.scene.requestRender();
-    console.log(`[FiberRoutesLayer] rendered ${visible.length} segments @ ${ctx.cameraLevel}`);
+    console.log(`[FiberRoutesLayer] rendered ${count} segments as GPU primitives @ ${ctx.cameraLevel}`);
   }
 }
