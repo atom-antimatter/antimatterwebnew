@@ -295,6 +295,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.scene.globe.depthTestAgainstTerrain = false;
     viewer.scene.globe.enableLighting      = false;
     viewer.scene.globe.showGroundAtmosphere = false;
+    viewer.scene.globe.show = true;
     viewer.scene.globe.preloadAncestors    = true;
     viewer.scene.globe.preloadSiblings     = true;
     viewer.scene.globe.tileCacheSize       = 2000;
@@ -630,7 +631,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
-    const sse: Record<string, number> = { WORLD: 4, REGION: 1.5, LOCAL: 1.2, CITY: 1 };
+    const sse: Record<string, number> = { WORLD: 6, REGION: 2, LOCAL: 1.5, CITY: 1.5 };
     v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 2;
     v.scene.requestRender();
   }, [cameraState.level]);

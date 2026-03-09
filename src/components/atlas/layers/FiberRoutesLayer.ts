@@ -53,7 +53,6 @@ async function loadSegments(): Promise<{ segments: RawSegment[]; error: string |
   return { segments: _segments, error: _loadError };
 }
 
-// Slight elevation above terrain to prevent depth fighting
 const ROUTE_HEIGHT = 200;
 const MAX_SEGMENTS = 2000;
 
@@ -63,24 +62,25 @@ export class FiberRoutesLayer implements ILayer {
   readonly name = "routes";
   private primitive: Cesium.PrimitiveCollection | null = null;
   private stats: LayerStats = { enabled: false, entityCount: 0, fetchStatus: "idle", lastUpdateAt: null, lastError: null };
-  private renderReqId = 0;
-  private lastRenderKey = "";
+  private rendered = false;
 
   async enable(ctx: LayerContext) {
-    await this.render(ctx);
+    if (!this.rendered) await this.render(ctx);
   }
 
   disable(ctx: LayerContext) {
     this.removePrimitives(ctx);
-    this.lastRenderKey = "";
+    this.rendered = false;
   }
 
-  async update(ctx: LayerContext) {
-    await this.render(ctx);
+  async update(_ctx: LayerContext) {
+    // Fiber routes are global and don't change with camera position.
+    // Once rendered, keep them stable until disabled.
   }
 
   dispose(ctx: LayerContext) {
     this.removePrimitives(ctx);
+    this.rendered = false;
   }
 
   getStats(): LayerStats { return this.stats; }
@@ -94,48 +94,27 @@ export class FiberRoutesLayer implements ILayer {
   }
 
   private async render(ctx: LayerContext) {
-    // Dedupe renders for the same viewport
-    const renderKey = `${ctx.cameraLevel}-${ctx.viewRect?.west?.toFixed(1)}-${ctx.viewRect?.south?.toFixed(1)}`;
-    if (renderKey === this.lastRenderKey && this.stats.entityCount > 0) return;
-
-    const myId = ++this.renderReqId;
     this.stats = { ...this.stats, fetchStatus: "loading" };
 
     const { segments, error } = await loadSegments();
-    if (myId !== this.renderReqId) return;
 
     if (error) {
       this.stats = { ...this.stats, fetchStatus: "error", lastError: error };
       return;
     }
 
-    // Viewport filter for performance
-    let visible = segments;
-    if (ctx.viewRect && (ctx.cameraLevel === "LOCAL" || ctx.cameraLevel === "CITY")) {
-      const buf = 5;
-      const { west, east, south, north } = ctx.viewRect;
-      visible = segments.filter(seg =>
-        seg.coords.some(([lon, lat]) =>
-          lon >= west - buf && lon <= east + buf &&
-          lat >= south - buf && lat <= north + buf
-        )
-      );
-    }
-    if (visible.length > MAX_SEGMENTS) visible = visible.slice(0, MAX_SEGMENTS);
-
+    // Remove old primitives before adding new ones
     this.removePrimitives(ctx);
 
+    const visible = segments.slice(0, MAX_SEGMENTS);
     const collection = new Cesium.PrimitiveCollection();
     const isDark = ctx.basemap === "osmDark" || ctx.basemap === "vectorDark";
-    const isWorldOrRegion = ctx.cameraLevel === "WORLD" || ctx.cameraLevel === "REGION";
-    const alpha = isWorldOrRegion ? (isDark ? 0.4 : 0.35) : (isDark ? 0.6 : 0.5);
-    const lineWidth = isWorldOrRegion ? 1.5 : 3.0;
+    const alpha = isDark ? 0.5 : 0.4;
     let count = 0;
 
     for (const { coords, color } of visible) {
       if (coords.length < 2) continue;
 
-      // Build positions with height to avoid depth fighting
       const flat: number[] = [];
       for (const [lon, lat] of coords) {
         flat.push(lon, lat, ROUTE_HEIGHT);
@@ -146,7 +125,7 @@ export class FiberRoutesLayer implements ILayer {
       try {
         const geometry = new Cesium.PolylineGeometry({
           positions,
-          width: lineWidth,
+          width: 2.0,
           arcType: Cesium.ArcType.NONE,
           vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT,
           colors: Array(positions.length).fill(
@@ -172,21 +151,21 @@ export class FiberRoutesLayer implements ILayer {
       this.primitive = collection;
     }
 
-    this.lastRenderKey = renderKey;
+    this.rendered = true;
     this.stats = {
       enabled:      true,
       entityCount:  count,
       fetchStatus:  "success",
       lastUpdateAt: Date.now(),
       lastError:    null,
-      note:         `${count}/${segments.length} segs @ ${ctx.cameraLevel} (GPU primitives)`,
+      note:         `${count}/${segments.length} segments (persistent)`,
     };
     ctx.viewer.scene.requestRender();
-    console.log(`[FiberRoutesLayer] rendered ${count} segments as GPU primitives @ ${ctx.cameraLevel}`);
+    console.log(`[FiberRoutesLayer] rendered ${count} persistent segments`);
   }
 }
 
-/** Unique cable names + colors, available after first load for legend rendering. */
+/** Unique cable names + colors for legend rendering. Available after first load. */
 export function getFiberCableList(): Array<{ name: string; color: string; id: string }> {
   const seen = new Map<string, { name: string; color: string; id: string }>();
   for (const seg of _segments) {
