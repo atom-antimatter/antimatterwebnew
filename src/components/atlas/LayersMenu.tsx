@@ -21,20 +21,14 @@ export type LayersState = {
   routes: boolean;
   powerHeatmap: boolean;
   powerGeneration: boolean;
-  powerCarbon: boolean;
   powerQueue: boolean;
   linodeRegions: boolean;
 };
-
-export type PowerScenario = { targetMw: number; radiusKm: number };
 
 export type LayersMenuProps = {
   /** Called when user clicks "Reset view" — camera only, NOT layer state */
   onResetView?: () => void;
 };
-
-const MW_OPTIONS: PowerScenario["targetMw"][]   = [25, 50, 100, 200];
-const RADIUS_OPTIONS: PowerScenario["radiusKm"][] = [25, 50, 80, 120];
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
@@ -103,11 +97,7 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
     overlays, toggleOverlay,
     power,    togglePower,
     providers, toggleProvider,
-    powerScenario, setPowerScenario,
   } = useAtlasLayersStore();
-
-  const anyPowerOn = power.powerHeatmap || power.powerGeneration || power.powerQueue;
-  const scenario = powerScenario;
 
   return (
     <div className="fixed bottom-6 right-5 z-40 flex flex-col items-end gap-2">
@@ -167,11 +157,10 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
             {/* Power & Energy */}
             <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
               <SectionLabel>Power &amp; Energy</SectionLabel>
-              {(["powerHeatmap","powerGeneration","powerCarbon","powerQueue"] as PowerLayerKey[]).map(key => {
+              {(["powerHeatmap","powerGeneration","powerQueue"] as PowerLayerKey[]).map(key => {
                 const META: Record<PowerLayerKey, { label: string; helper?: string }> = {
                   powerHeatmap:    { label: "Feasibility heatmap",     helper: "Score grid by electricity cost, carbon, generation, queue" },
                   powerGeneration: { label: "Nearby generation",       helper: "EIA-860 plant points sized by MW" },
-                  powerCarbon:     { label: "Grid carbon intensity",   helper: "EPA eGRID annual avg lb CO₂/MWh" },
                   powerQueue:      { label: "Interconnection queue",   helper: "Queued MW proxy — not available capacity" },
                 };
                 const { label, helper } = META[key];
@@ -179,32 +168,6 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
                   <SwitchRow key={key} label={label} helper={helper} checked={power[key]} onToggle={() => togglePower(key)} />
                 );
               })}
-
-              {anyPowerOn && (
-                <div className="px-4 py-3 bg-[rgba(246,246,253,0.03)] border-t border-[rgba(246,246,253,0.06)]">
-                  <p className="text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.35)] mb-2">Scenario</p>
-                  <p className="text-[11px] text-[rgba(246,246,253,0.5)] mb-1">Target load (MW)</p>
-                  <div className="flex gap-1.5 flex-wrap mb-2" role="group" aria-label="Target MW">
-                    {MW_OPTIONS.map(mw => (
-                      <button key={mw} type="button" aria-pressed={scenario.targetMw === mw}
-                        onClick={() => setPowerScenario({ ...scenario, targetMw: mw })}
-                        className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${scenario.targetMw === mw ? "bg-[#696aac] text-white border-[#696aac]" : "bg-[rgba(105,106,172,0.1)] text-[rgba(162,163,233,0.8)] border-[rgba(105,106,172,0.2)] hover:border-[rgba(105,106,172,0.4)]"}`}>
-                        {mw} MW
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-[rgba(246,246,253,0.5)] mb-1">Search radius</p>
-                  <div className="flex gap-1.5 flex-wrap" role="group" aria-label="Search radius">
-                    {RADIUS_OPTIONS.map(r => (
-                      <button key={r} type="button" aria-pressed={scenario.radiusKm === r}
-                        onClick={() => setPowerScenario({ ...scenario, radiusKm: r })}
-                        className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${scenario.radiusKm === r ? "bg-[#696aac] text-white border-[#696aac]" : "bg-[rgba(105,106,172,0.1)] text-[rgba(162,163,233,0.8)] border-[rgba(105,106,172,0.2)] hover:border-[rgba(105,106,172,0.4)]"}`}>
-                        {r} km
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Providers */}

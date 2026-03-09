@@ -16,13 +16,13 @@ interface AtlasSelectionState {
   selectedDc:     DataCenter     | null;
   selectedLinode: ProviderRegion | null;
   pinnedPoint:    PinnedPoint    | null;
-  /** Which left-panel tab is active */
-  leftTab: "filters" | "power";
+  /** Whether the standalone power panel is open. */
+  powerPanelOpen: boolean;
 
   setSelectedDc:     (dc: DataCenter | null)         => void;
   setSelectedLinode: (r: ProviderRegion | null)       => void;
   setPinnedPoint:    (p: PinnedPoint | null)          => void;
-  setLeftTab:        (t: "filters" | "power")         => void;
+  setPowerPanelOpen: (open: boolean)                  => void;
   clearAll:          () => void;
 
   /** Convenience: the lat/lng to use for power assessment */
@@ -33,12 +33,12 @@ export const useAtlasSelectionStore = create<AtlasSelectionState>((set, get) => 
   selectedDc:     null,
   selectedLinode: null,
   pinnedPoint:    null,
-  leftTab:        "filters",
+  powerPanelOpen: false,
 
   setSelectedDc: (dc) => set({ selectedDc: dc }),
   setSelectedLinode: (r) => set({ selectedLinode: r }),
   setPinnedPoint: (p) => set({ pinnedPoint: p }),
-  setLeftTab: (t) => set({ leftTab: t }),
+  setPowerPanelOpen: (open) => set({ powerPanelOpen: open }),
   clearAll: () => set({ selectedDc: null, selectedLinode: null, pinnedPoint: null }),
 
   get powerTarget() {

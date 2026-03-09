@@ -42,7 +42,6 @@ export type AtlasLayers = {
   routes:         boolean;
   powerHeatmap:   boolean;
   powerGeneration:boolean;
-  powerCarbon:    boolean;
   powerQueue:     boolean;
   linodeRegions:  boolean;
 };
@@ -374,7 +373,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
     // Minimum 2: lower pushes tile requests past provider maxLevel → upscaling → blur.
-    const SSE: Record<string, number> = { WORLD: 16, REGION: 4, LOCAL: 2.5, CITY: 2 };
+    const SSE: Record<string, number> = { WORLD: 14, REGION: 3.5, LOCAL: 2.25, CITY: 1.75 };
     v.scene.globe.maximumScreenSpaceError = SSE[cameraState.level] ?? 2;
   }, [cameraState.level]);
 

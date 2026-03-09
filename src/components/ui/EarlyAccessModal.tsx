@@ -65,7 +65,7 @@ export default function EarlyAccessModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="early-access-title"
@@ -76,7 +76,7 @@ export default function EarlyAccessModal() {
       />
       <div
         ref={dialogRef}
-        className="relative z-[101] w-[92vw] max-w-[460px] overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(133,135,227,0.18),transparent_32%),linear-gradient(180deg,#10111b_0%,#090a12_100%)] shadow-[0_30px_120px_rgba(0,0,0,0.65),0_0_40px_rgba(105,106,172,0.12)] pointer-events-auto"
+        className="relative z-[101] flex max-h-[min(90vh,720px)] w-[92vw] max-w-[460px] flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(133,135,227,0.18),transparent_32%),linear-gradient(180deg,#10111b_0%,#090a12_100%)] shadow-[0_30px_120px_rgba(0,0,0,0.65),0_0_40px_rgba(105,106,172,0.12)] pointer-events-auto"
       >
         <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
         <div className="p-6 sm:p-7 border-b border-white/8 flex items-start justify-between gap-4">
@@ -100,7 +100,7 @@ export default function EarlyAccessModal() {
             ×
           </button>
         </div>
-        <div className="p-6 sm:p-7">
+        <div className="overflow-y-auto p-6 sm:p-7">
           {submitted ? (
             <div className="py-3 text-center">
               <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-[#8587e3]/30 bg-[#8587e3]/12 text-[#d7d8ff] shadow-[0_0_30px_rgba(133,135,227,0.18)]">
@@ -113,14 +113,22 @@ export default function EarlyAccessModal() {
               <button
                 type="button"
                 onClick={close}
-                className={`mt-6 inline-flex items-center justify-center ${buttonStyles.button} ${buttonStyles.fluidBtn}`}
+                className={`group relative mx-auto mt-6 block w-full max-w-[240px] rounded-full text-left text-white ${buttonStyles.button} ${navButtonStyles.button} ${buttonStyles.fluidBtn}`}
+                style={{ padding: 0 }}
               >
-                Close
+                <span className="relative flex min-h-[54px] items-center rounded-full pl-5 pr-18">
+                  <span className="text-sm font-medium">Close</span>
+                  <span
+                    className={`absolute right-0 top-0 flex h-full max-w-14 items-center justify-center rounded-full bg-white text-background ${navButtonStyles.iconBox}`}
+                  >
+                    <GoArrowUpRight className={`size-7 ${navButtonStyles.icon}`} />
+                  </span>
+                </span>
               </button>
             </div>
           ) : (
             <>
-              <form onSubmit={onSubmit} className="flex flex-col gap-5">
+              <form onSubmit={onSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
                   <label
                     htmlFor="early-access-email"
@@ -139,15 +147,16 @@ export default function EarlyAccessModal() {
                     required
                   />
                 </div>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-white/60">
-                  Same Antimatter look, first access to Atom Browser. No spam.
-                </div>
+                <p className="px-1 text-xs leading-5 text-white/50">
+                  Product updates and early access invites. No spam.
+                </p>
                 <button
                   type="submit"
                   disabled={submitting}
                   className={`group relative block w-full rounded-full text-left text-white disabled:cursor-not-allowed disabled:opacity-60 ${buttonStyles.button} ${navButtonStyles.button} ${buttonStyles.fluidBtn}`}
+                  style={{ padding: 0 }}
                 >
-                  <span className="relative flex min-h-[56px] items-center rounded-full pl-5 pr-18">
+                  <span className="relative flex min-h-[54px] items-center rounded-full pl-5 pr-18">
                     <span className="text-sm font-medium">
                       {submitting ? "Submitting..." : "Get Early Access"}
                     </span>

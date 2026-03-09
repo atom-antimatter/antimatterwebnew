@@ -25,10 +25,10 @@ export type CameraState = {
 
 // ─── thresholds (metres) ──────────────────────────────────────────────────────
 
-const HEIGHT_WORLD = 8_000_000;   // > 8 000 km  → no cities, clusters only
-const HEIGHT_REGION = 2_000_000;  // 2–8 000 km  → major cities (scalerank ≤ 2)
-const HEIGHT_LOCAL = 400_000;     // 400 km–2000 km → more cities (scalerank ≤ 5)
-// below 400 km                   → CITY — dense labels in viewport only
+const HEIGHT_WORLD = 10_000_000;  // > 10 000 km → no cities, clusters only
+const HEIGHT_REGION = 3_500_000;  // 3.5–10 000 km → only top-tier metros
+const HEIGHT_LOCAL = 900_000;     // 900 km–3 500 km → regional city labels
+// below 900 km                   → CITY — viewport-only labels with higher density
 
 function heightToLevel(h: number): CameraLevel {
   if (h > HEIGHT_WORLD) return "WORLD";

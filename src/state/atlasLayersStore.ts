@@ -20,7 +20,6 @@ export type OverlayKey =
 export type PowerLayerKey =
   | "powerHeatmap"
   | "powerGeneration"
-  | "powerCarbon"
   | "powerQueue";
 
 export type ProviderLayerKey = "linodeRegions";
@@ -74,7 +73,6 @@ const DEFAULT_OVERLAYS: Record<OverlayKey, boolean> = {
 const DEFAULT_POWER: Record<PowerLayerKey, boolean> = {
   powerHeatmap: false,
   powerGeneration: false,
-  powerCarbon: false,
   powerQueue: false,
 };
 

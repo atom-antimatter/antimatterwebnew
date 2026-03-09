@@ -45,18 +45,30 @@ async function ensureCitiesLoaded(): Promise<CityPoint[]> {
 function citiesForLevel(cities: CityPoint[], ctx: LayerContext): { list: CityPoint[]; gated: boolean } {
   if (ctx.cameraLevel === "WORLD") return { list: [], gated: true };
 
-  const maxRank = ctx.cameraLevel === "REGION" ? 2
-                : ctx.cameraLevel === "LOCAL"  ? 5
-                : 9;
+  const height = ctx.heightMeters;
+  const maxRank =
+    height > 3_500_000 ? 1 :
+    height > 1_500_000 ? 2 :
+    height > 700_000 ? 4 :
+    height > 250_000 ? 6 :
+    9;
 
-  const maxCount = ctx.cameraLevel === "REGION" ? 200
-                 : ctx.cameraLevel === "LOCAL"  ? 1500
-                 : 3000;
+  const maxCount =
+    height > 3_500_000 ? 40 :
+    height > 1_500_000 ? 90 :
+    height > 700_000 ? 180 :
+    height > 250_000 ? 260 :
+    340;
 
   let list = cities.filter(c => c.scalerank <= maxRank);
 
-  if (ctx.viewRect && ctx.cameraLevel !== "REGION") {
-    const buf = 2;
+  if (ctx.viewRect) {
+    const buf =
+      height > 3_500_000 ? 10 :
+      height > 1_500_000 ? 6 :
+      height > 700_000 ? 4 :
+      height > 250_000 ? 2 :
+      1.2;
     const { west, east, south, north } = ctx.viewRect;
     list = list.filter(c =>
       c.lng >= west - buf && c.lng <= east + buf &&
@@ -136,9 +148,11 @@ export class CityLabelsLayer implements ILayer {
     for (const city of list) {
       const isCapital  = city.scalerank <= 1;
       const isMajor    = city.scalerank <= 3;
-      const fontSize   = isCapital ? 15 : isMajor ? 13 : 11;
+      const fontSize   = isCapital ? 17 : isMajor ? 14 : 12;
       const fontWeight = isCapital ? "700" : isMajor ? "600" : "500";
-      const haloWidth  = isCapital ? 5 : isMajor ? 4 : 3;
+      const haloWidth  = isCapital ? 6 : isMajor ? 4.5 : 3.5;
+      const farDistance = isCapital ? 7_500_000 : isMajor ? 4_500_000 : 2_200_000;
+      const nearDistance = ctx.cameraLevel === "REGION" ? 120_000 : 60_000;
 
       ds.entities.add({
         position: Cesium.Cartesian3.fromDegrees(city.lng, city.lat),
@@ -158,16 +172,16 @@ export class CityLabelsLayer implements ILayer {
           horizontalOrigin: new Cesium.ConstantProperty(Cesium.HorizontalOrigin.CENTER),
           verticalOrigin:   new Cesium.ConstantProperty(Cesium.VerticalOrigin.BOTTOM),
           disableDepthTestDistance: new Cesium.ConstantProperty(Number.POSITIVE_INFINITY),
-          // Gentle scale-down at distance; never show unreadably tiny text.
+          // Preserve legibility at altitude without shrinking into fuzzy micro-text.
           scaleByDistance:  new Cesium.ConstantProperty(
-            new Cesium.NearFarScalar(30_000, 1.0, 2_000_000, 0.75)
+            new Cesium.NearFarScalar(nearDistance, 1.08, farDistance, 0.9)
           ),
-          // Show labels only within legible range — avoids the "pepper noise" of
-          // tiny clustered text at high altitude.
+          translucencyByDistance: new Cesium.ConstantProperty(
+            new Cesium.NearFarScalar(nearDistance, 1.0, farDistance, 0.72)
+          ),
+          // Show labels only within a legible range — avoids pepper-noise at altitude.
           distanceDisplayCondition: new Cesium.ConstantProperty(
-            isCapital ? new Cesium.DistanceDisplayCondition(0, 6_000_000)
-            : isMajor ? new Cesium.DistanceDisplayCondition(0, 3_500_000)
-            :           new Cesium.DistanceDisplayCondition(0, 1_500_000)
+            new Cesium.DistanceDisplayCondition(0, farDistance)
           ),
           scale: new Cesium.ConstantProperty(1.0),
         }),
@@ -182,6 +196,9 @@ export class CityLabelsLayer implements ILayer {
           outlineColor: new Cesium.ConstantProperty(outlineColor),
           outlineWidth: new Cesium.ConstantProperty(1.5),
           disableDepthTestDistance: new Cesium.ConstantProperty(Number.POSITIVE_INFINITY),
+          scaleByDistance: new Cesium.ConstantProperty(
+            new Cesium.NearFarScalar(nearDistance, 1.05, farDistance, 0.8)
+          ),
         }) : undefined,
       });
     }

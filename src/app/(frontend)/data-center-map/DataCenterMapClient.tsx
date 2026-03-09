@@ -15,6 +15,7 @@ import CommandPanel, { type SearchStatus } from "@/components/dataCenterGlobe/Co
 import DetailCard from "@/components/dataCenterGlobe/DetailCard";
 import LayersMenu from "@/components/atlas/LayersMenu";
 import type { AtlasMapRef, AtlasLayers } from "@/components/atlas/AtlasMap.client";
+import PowerFeasibilityPanel from "@/components/atlas/power/PowerFeasibilityPanel";
 import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { filterDataCenters } from "@/lib/search/filterDataCenters";
 import { runSearchPipeline } from "@/lib/search/searchPipeline";
@@ -51,7 +52,6 @@ export default function DataCenterMapClient() {
     routes:          overlays.routes,
     powerHeatmap:    power.powerHeatmap,
     powerGeneration: power.powerGeneration,
-    powerCarbon:     power.powerCarbon,
     powerQueue:      power.powerQueue,
     linodeRegions:   providers.linodeRegions,
   };
@@ -61,7 +61,7 @@ export default function DataCenterMapClient() {
     selectedDc, setSelectedDc,
     selectedLinode, setSelectedLinode,
     pinnedPoint, setPinnedPoint,
-    setLeftTab,
+    powerPanelOpen, setPowerPanelOpen,
   } = useAtlasSelectionStore();
 
   // ── UI state (not persisted) ────────────────────────────────────────────
@@ -96,7 +96,7 @@ export default function DataCenterMapClient() {
         textQuery: geocodedPos ? undefined : lastRawQuery,
       });
       setResults(filtered);
-      setSearchStatus(filtered.length === 0 ? (geocodedPos ? "no-dc" : "geocode-none") : "idle");
+      setSearchStatus(filtered.length === 0 ? (geocodedPos ? "no-dc" : "no-results") : "idle");
     },
     [lastRawQuery, geocodedPos]
   );
@@ -111,6 +111,9 @@ export default function DataCenterMapClient() {
     const mergedCaps   = Array.from(new Set([...capabilityFilters, ...pipelineResult.filters.capabilities]));
     const mergedTier   = (pipelineResult.filters.tier ?? tierFilter) as DataCenter["tier"] | null;
     const mergedRadius = pipelineResult.filters.radiusKm ?? radiusKm;
+    setCapabilityFilters(mergedCaps);
+    setTierFilter(mergedTier);
+    setRadiusKm(mergedRadius);
 
     const pos = pipelineResult.location ? { lat: pipelineResult.location.lat, lng: pipelineResult.location.lng } : null;
     if (pos) {
@@ -133,7 +136,7 @@ export default function DataCenterMapClient() {
       capabilities: mergedCaps, tier: mergedTier, textQuery: pos ? undefined : query,
     });
     setResults(filtered);
-    setSearchStatus(filtered.length === 0 ? (pos ? "no-dc" : "geocode-none") : "idle");
+    setSearchStatus(filtered.length === 0 ? (pos ? "no-dc" : "no-results") : "idle");
     if (!pos && filtered.length > 0) atlasRef.current?.flyTo({ lat: filtered[0].lat, lng: filtered[0].lng, height: FLY_HEIGHT_SEARCH }, 1.5);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capabilityFilters, tierFilter, radiusKm]);
@@ -200,9 +203,9 @@ export default function DataCenterMapClient() {
         }}
         selectedLinodeId={selectedLinode?.region_id ?? null}
         onMapClick={(lat, lng) => {
-          // Pin the point + open Power tab in left panel
+          // Pin the point + open the standalone power panel.
           setPinnedPoint({ lat, lng });
-          setLeftTab("power");
+          setPowerPanelOpen(true);
           setSelectedDc(null);
           setSelectedLinode(null);
           setSiteBriefPos(null);
@@ -227,10 +230,22 @@ export default function DataCenterMapClient() {
         showRadius={geocodedPos !== null}
         onReset={handleReset}
         onSelectSuggestion={handleSelectSuggestion}
-        onPinMapCenter={() => {
+      />
+
+      <PowerFeasibilityPanel
+        isOpen={powerPanelOpen}
+        onOpen={() => setPowerPanelOpen(true)}
+        onClose={() => setPowerPanelOpen(false)}
+        selectedDc={selectedDc}
+        pinnedPoint={pinnedPoint}
+        onPinCenter={() => {
           const centre = atlasRef.current?.getCameraCenter?.();
-          if (centre) { setPinnedPoint(centre); setLeftTab("power"); }
+          if (centre) {
+            setPinnedPoint(centre);
+            setPowerPanelOpen(true);
+          }
         }}
+        onClearPin={() => setPinnedPoint(null)}
       />
 
       {selectedDc && !siteBriefPos && !selectedLinode && (

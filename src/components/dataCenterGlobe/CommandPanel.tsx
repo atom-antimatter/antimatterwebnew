@@ -1,17 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Search, X, RotateCcw, MapPin, Building2, Hash, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, X, RotateCcw, MapPin, Building2, Hash } from "lucide-react";
 import styles from "@/components/ui/css/Button.module.css";
 import type { DataCenter } from "@/data/dataCenters";
 import { FEATURED_CAPABILITIES, capabilityShortLabel } from "@/data/capabilityCatalog";
 import { searchGazetteer, initGazetteer, type GazetteerResult } from "@/lib/search/gazetteer";
-import PowerReadinessTab from "@/components/atlas/power/PowerReadinessTab";
-import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
-export type SearchStatus = "idle" | "loading" | "geocode-none" | "no-dc";
+export type SearchStatus = "idle" | "loading" | "no-results" | "no-dc";
 
 export type CommandPanelProps = {
   isOpen: boolean;
@@ -31,8 +29,6 @@ export type CommandPanelProps = {
   onSetRadius: (km: number) => void;
   showRadius: boolean;
   onReset: () => void;
-  /** Called when user wants to use current map centre as power target */
-  onPinMapCenter?: () => void;
 };
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -143,9 +139,7 @@ export default function CommandPanel({
   onSetRadius,
   showRadius,
   onReset,
-  onPinMapCenter,
 }: CommandPanelProps) {
-  const { selectedDc, pinnedPoint, setPinnedPoint, leftTab, setLeftTab } = useAtlasSelectionStore();
   const [query, setQuery] = useState("");
   const [exampleIdx, setExampleIdx] = useState(0);
   const [suggestions, setSuggestions] = useState<GazetteerResult[]>([]);
@@ -295,30 +289,6 @@ export default function CommandPanel({
           </div>
         </div>
 
-        {/* Tabs: Filters | Power */}
-        <div className="flex border-b border-[rgba(246,246,253,0.07)] flex-shrink-0">
-          {(["filters","power"] as const).map(t => (
-            <button key={t} type="button" onClick={() => setLeftTab(t)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors border-b-2 ${leftTab===t ? "text-[#f6f6fd] border-[#696aac]" : "text-[rgba(246,246,253,0.45)] border-transparent hover:text-[rgba(246,246,253,0.7)]"}`}>
-              {t==="power" && <Zap className="w-3 h-3"/>}
-              {t==="filters" ? "Filters" : "Power"}
-            </button>
-          ))}
-        </div>
-
-        {/* Power Readiness Tab */}
-        {leftTab === "power" && (
-          <PowerReadinessTab
-            selectedDc={selectedDc}
-            pinnedPoint={pinnedPoint}
-            onPinCenter={onPinMapCenter}
-            onClearPin={() => setPinnedPoint(null)}
-          />
-        )}
-
-        {/* Filters Tab content */}
-        {leftTab === "filters" && (<>
-
         {/* Search */}
         <div className="px-4 py-3 border-b border-[rgba(246,246,253,0.07)]">
           <form onSubmit={handleSubmit} role="search" aria-label="Search data centers">
@@ -437,6 +407,9 @@ export default function CommandPanel({
           <p className="text-[10px] uppercase tracking-widest text-[rgba(246,246,253,0.4)] mb-2">
             Capabilities
           </p>
+          <p className="mb-2 text-[11px] leading-relaxed text-[rgba(246,246,253,0.45)]">
+            All selected capabilities must match.
+          </p>
           <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Filter by capability">
             {FEATURED_CAPABILITIES.map((cap) => {
               const active = capabilityFilters.includes(cap);
@@ -549,8 +522,8 @@ export default function CommandPanel({
           {results && results.length === 0 && searchStatus !== "loading" && (
             <div className="px-5 py-6">
               <p className="text-sm text-[rgba(246,246,253,0.5)] mb-1">
-                {searchStatus === "geocode-none"
-                  ? "Location not found."
+                {searchStatus === "no-results"
+                  ? "No matching data centers found."
                   : "No data centers in this area."}
               </p>
               <p className="text-xs text-[rgba(246,246,253,0.3)]">
@@ -616,7 +589,6 @@ export default function CommandPanel({
             </div>
           )}
         </div>
-        </>)}
       </div>
 
       {/* Toggle tab (always visible on desktop when panel closed) */}
