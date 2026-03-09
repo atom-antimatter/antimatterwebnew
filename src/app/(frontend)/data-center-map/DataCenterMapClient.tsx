@@ -87,11 +87,11 @@ export default function DataCenterMapClient() {
   }, [setSelectedDc, setSelectedLinode]);
 
   const handleFilterChange = useCallback(
-    (newCaps: string[], newTier: string | null, newRadius: number) => {
+    (newCaps: string[], newTier: DataCenter["tier"] | null, newRadius: number) => {
       if (!lastRawQuery && !geocodedPos) return;
       const filtered = filterDataCenters(DATA_CENTERS, {
         geocodedPos: geocodedPos ?? undefined, radiusKm: newRadius,
-        capabilities: newCaps, tier: newTier as DataCenter["tier"] | null,
+        capabilities: newCaps, tier: newTier,
         textQuery: geocodedPos ? undefined : lastRawQuery,
       });
       setResults(filtered);
@@ -137,14 +137,13 @@ export default function DataCenterMapClient() {
     setResults(filtered);
     setSearchStatus(filtered.length === 0 ? (pos ? "no-dc" : "no-results") : "idle");
     if (!pos && filtered.length > 0) atlasRef.current?.flyTo({ lat: filtered[0].lat, lng: filtered[0].lng, height: FLY_HEIGHT_SEARCH }, 1.5);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capabilityFilters, tierFilter, radiusKm]);
 
   const handleSelectSuggestion = useCallback((r: GazetteerResult) => {
     const pos = { lat: r.lat, lng: r.lng };
     setGeocodedPos(pos);
     atlasRef.current?.flyTo({ lat: r.lat, lng: r.lng, height: FLY_HEIGHT_SEARCH }, 1.2);
-    const filtered = filterDataCenters(DATA_CENTERS, { geocodedPos: pos, radiusKm, capabilities: capabilityFilters, tier: tierFilter as DataCenter["tier"] | null });
+    const filtered = filterDataCenters(DATA_CENTERS, { geocodedPos: pos, radiusKm, capabilities: capabilityFilters, tier: tierFilter });
     setResults(filtered);
     setSearchStatus(filtered.length === 0 ? "no-dc" : "idle");
   }, [radiusKm, capabilityFilters, tierFilter]);
@@ -155,7 +154,7 @@ export default function DataCenterMapClient() {
     handleFilterChange(next, tierFilter, radiusKm);
   }, [capabilityFilters, tierFilter, radiusKm, handleFilterChange]);
 
-  const handleSetTier = useCallback((tier: string | null) => {
+  const handleSetTier = useCallback((tier: DataCenter["tier"] | null) => {
     setTierFilter(tier);
     handleFilterChange(capabilityFilters, tier, radiusKm);
   }, [capabilityFilters, radiusKm, handleFilterChange]);
@@ -170,7 +169,6 @@ export default function DataCenterMapClient() {
     setCapabilityFilters([]); setTierFilter(null);
     setRadiusKm(500); setGeocodedPos(null);
     setLastRawQuery(""); setSelectedDc(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setSelectedDc]);
 
   // ── Render ────────────────────────────────────────────────────────────────
