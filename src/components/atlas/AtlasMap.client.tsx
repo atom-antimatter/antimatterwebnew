@@ -188,15 +188,16 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.scene.globe.baseColor           = Cesium.Color.fromCssColorString("#1a1b2e");
     // Open-source global terrain (AWS Open Data); fallback to flat if URL format unsupported
     const terrainUrl = "https://terrain-tiles.s3.amazonaws.com/";
-    const openTerrain = new Cesium.CesiumTerrainProvider({ url: terrainUrl });
-    openTerrain.readyPromise.then(() => {
-      if (!viewer.isDestroyed()) {
-        viewer.terrainProvider = openTerrain;
-        viewer.scene.requestRender();
-      }
-    }).catch(() => {
-      if (!viewer.isDestroyed()) console.warn("[Atlas] Open terrain unavailable, using flat ellipsoid.");
-    });
+    Cesium.CesiumTerrainProvider.fromUrl(terrainUrl)
+      .then((openTerrain) => {
+        if (!viewer.isDestroyed()) {
+          viewer.terrainProvider = openTerrain;
+          viewer.scene.requestRender();
+        }
+      })
+      .catch(() => {
+        if (!viewer.isDestroyed()) console.warn("[Atlas] Open terrain unavailable, using flat ellipsoid.");
+      });
 
     viewer.scene.globe.depthTestAgainstTerrain = true;
     viewer.scene.globe.enableLighting = true;
