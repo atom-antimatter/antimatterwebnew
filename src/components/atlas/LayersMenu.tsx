@@ -5,16 +5,14 @@
  * No local layer state here — the Zustand store is the single source of truth.
  */
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Layers, X } from "lucide-react";
-import { useAtlasLayersStore, type OverlayKey, type PowerLayerKey, type ProviderLayerKey, type Basemap } from "@/state/atlasLayersStore";
+import { useAtlasLayersStore, type Basemap } from "@/state/atlasLayersStore";
 import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 import { useModalStore } from "@/state/modalStore";
+import { BASEMAP_REGISTRY, LAYER_REGISTRY } from "@/lib/layers/layerRegistry";
 import styles from "@/components/ui/css/Button.module.css";
 
-// ── Re-export types that the parent component still references ───────────────
-
-/** Flat shape used as AtlasMap's `layers` prop — derived from store. */
 export type LayersState = {
   countryBorders: boolean;
   stateBorders: boolean;
@@ -28,11 +26,8 @@ export type LayersState = {
 };
 
 export type LayersMenuProps = {
-  /** Called when user clicks "Reset view" — camera only, NOT layer state */
   onResetView?: () => void;
 };
-
-// ─── sub-components ──────────────────────────────────────────────────────────
 
 function SwitchRow({
   label, helper, zoomNote, checked, onToggle,
@@ -89,8 +84,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── main component ───────────────────────────────────────────────────────────
-
 export default function LayersMenu({ onResetView }: LayersMenuProps) {
   const { activeModal, openModal, closeModal } = useModalStore();
   const isOpen = activeModal === "layers";
@@ -99,16 +92,44 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
   const {
     basemap, setBasemap,
     overlays, toggleOverlay,
-    power,    togglePower,
+    power, togglePower,
     providers, toggleProvider,
   } = useAtlasLayersStore();
   const { cameraLevel } = useAtlasSelectionStore();
 
   const isGlobal = cameraLevel === "WORLD" || cameraLevel === "REGION";
 
+  const boundaries = useMemo(() => LAYER_REGISTRY.filter(l => l.section === "boundaries"), []);
+  const infrastructure = useMemo(() => LAYER_REGISTRY.filter(l => l.section === "infrastructure"), []);
+  const powerLayers = useMemo(() => LAYER_REGISTRY.filter(l => l.section === "power"), []);
+  const providerLayers = useMemo(() => LAYER_REGISTRY.filter(l => l.section === "providers"), []);
+
+  const renderLayerRow = (id: string, title: string, description: string, note?: string) => {
+    const checked =
+      id in overlays ? overlays[id as keyof typeof overlays]
+      : id in power ? power[id as keyof typeof power]
+      : providers[id as keyof typeof providers];
+
+    const onToggle = () => {
+      if (id in overlays) toggleOverlay(id as keyof typeof overlays);
+      else if (id in power) togglePower(id as keyof typeof power);
+      else toggleProvider(id as keyof typeof providers);
+    };
+
+    return (
+      <SwitchRow
+        key={id}
+        label={title}
+        helper={description}
+        zoomNote={isGlobal ? note : undefined}
+        checked={!!checked}
+        onToggle={onToggle}
+      />
+    );
+  };
+
   return (
     <>
-      {/* Panel card — anchored top-right so it gets full scroll height */}
       {isOpen && (
         <div
           ref={panelRef}
@@ -126,7 +147,6 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
             animate-in fade-in slide-in-from-right-3 duration-200
           "
         >
-          {/* Header */}
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-[rgba(246,246,253,0.07)]">
             <p className="text-sm font-semibold text-[#f6f6fd]">Layers</p>
             <button type="button" onClick={closeModal} aria-label="Close layers panel" className="w-7 h-7 flex items-center justify-center rounded-lg text-[rgba(246,246,253,0.5)] hover:text-[#f6f6fd] hover:bg-white/[0.06] transition-colors focus:outline-none">
@@ -134,110 +154,77 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
             </button>
           </div>
 
-          {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-[rgba(105,106,172,0.3)] scrollbar-track-transparent">
-
-            {/* Base map — vector (crisp) */}
             <SectionLabel>Base map</SectionLabel>
             <div role="radiogroup" aria-label="Base map selection">
-              <BasemapRadio value="vectorDark"    label="Vector Dark"    helper="Crisp at all zooms · retina native"  checked={basemap === "vectorDark"}    onSelect={setBasemap} />
-              <BasemapRadio value="vectorLight"   label="Vector Light"   helper="Light theme · crisp labels"         checked={basemap === "vectorLight"}   onSelect={setBasemap} />
-              <BasemapRadio value="vectorLiberty" label="Vector Liberty" helper="Classic cartographic · crisp labels" checked={basemap === "vectorLiberty"} onSelect={setBasemap} />
+              {BASEMAP_REGISTRY.map((item) => (
+                <BasemapRadio
+                  key={item.id}
+                  value={item.id}
+                  label={item.label}
+                  helper={item.helper}
+                  checked={basemap === item.id}
+                  onSelect={setBasemap}
+                />
+              ))}
             </div>
 
-            {/* Raster fallback */}
-            <SectionLabel>Raster (legacy)</SectionLabel>
-            <div role="radiogroup" aria-label="Raster base map">
-              <BasemapRadio value="osmDark"     label="Carto Dark"    helper="Raster tiles"     checked={basemap === "osmDark"}     onSelect={setBasemap} />
-              <BasemapRadio value="osmLight"    label="Carto Light"   helper="Raster tiles"     checked={basemap === "osmLight"}    onSelect={setBasemap} />
-              <BasemapRadio value="osmStandard" label="OpenStreetMap" helper="Raster · may be soft on Retina" checked={basemap === "osmStandard"} onSelect={setBasemap} />
-            </div>
-
-            {/* Boundaries */}
             <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
               <SectionLabel>Boundaries</SectionLabel>
-              <SwitchRow
-                label="Country borders"
-                checked={overlays.countryBorders}
-                onToggle={() => toggleOverlay("countryBorders")}
-              />
-              <SwitchRow
-                label="State / province borders"
-                helper="110 m simplified"
-                checked={overlays.stateBorders}
-                onToggle={() => toggleOverlay("stateBorders")}
-              />
-              <SwitchRow
-                label="Extra city labels"
-                helper="Additional overlay labels — basemap already includes place names"
-                zoomNote={overlays.cities && isGlobal ? "Zoom in to see" : undefined}
-                checked={overlays.cities}
-                onToggle={() => toggleOverlay("cities")}
-              />
+              {boundaries.map((item) =>
+                renderLayerRow(
+                  item.id,
+                  item.title,
+                  item.description,
+                  item.minCameraLevel ? `Best from ${item.minCameraLevel.toLowerCase()} zoom` : undefined,
+                )
+              )}
             </div>
 
-            {/* Infrastructure */}
             <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
               <SectionLabel>Infrastructure</SectionLabel>
-              <SwitchRow
-                label="Data centers"
-                checked={overlays.points}
-                onToggle={() => toggleOverlay("points")}
-              />
-
-              <SwitchRow
-                label="Fiber routes"
-                helper="Geolocated routes · may be approximate"
-                zoomNote={overlays.routes && isGlobal ? "Zoom in to see" : undefined}
-                checked={overlays.routes}
-                onToggle={() => toggleOverlay("routes")}
-              />
-              <SwitchRow
-                label="Nearby generation"
-                helper="EIA-860 plant data · sized by MW"
-                zoomNote={overlays.routes && isGlobal && power.powerGeneration ? "Zoom in to see" : undefined}
-                checked={power.powerGeneration}
-                onToggle={() => togglePower("powerGeneration")}
-              />
+              {infrastructure.map((item) =>
+                renderLayerRow(
+                  item.id,
+                  item.title,
+                  item.description,
+                  item.minCameraLevel ? `Best from ${item.minCameraLevel.toLowerCase()} zoom` : undefined,
+                )
+              )}
             </div>
 
-            {/* Power */}
             <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
               <SectionLabel>Power &amp; Energy</SectionLabel>
-              <SwitchRow
-                label="Feasibility heatmap"
-                helper="Scored by cost, carbon, generation, queue"
-                zoomNote={power.powerHeatmap && isGlobal ? "Zoom in to see" : undefined}
-                checked={power.powerHeatmap}
-                onToggle={() => togglePower("powerHeatmap")}
-              />
-              <SwitchRow
-                label="Interconnection queue"
-                helper="Queued MW proxy · not available capacity"
-                zoomNote={power.powerQueue && isGlobal ? "Zoom in to see" : undefined}
-                checked={power.powerQueue}
-                onToggle={() => togglePower("powerQueue")}
-              />
+              {powerLayers.map((item) =>
+                renderLayerRow(
+                  item.id,
+                  item.title,
+                  item.description,
+                  item.confidenceNote,
+                )
+              )}
             </div>
 
-            {/* Providers */}
             <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
               <SectionLabel>Providers</SectionLabel>
-              <SwitchRow
-                label="Akamai / Linode regions"
-                helper="Cloud computing regions"
-                checked={providers.linodeRegions}
-                onToggle={() => toggleProvider("linodeRegions")}
-              />
+              {providerLayers.map((item) =>
+                renderLayerRow(
+                  item.id,
+                  item.title,
+                  item.description,
+                )
+              )}
             </div>
+          </div>
 
-          </div>{/* end scrollable body */}
-
-          {/* Footer */}
           {onResetView && (
             <div className="flex-shrink-0 border-t border-[rgba(246,246,253,0.07)] p-3">
-              <button type="button" onClick={() => { onResetView(); closeModal(); }}
-                className={`${styles.button} inverted w-full text-sm`} style={{ padding: "8px 0" }}>
+              <button
+                type="button"
+                onClick={() => { onResetView(); closeModal(); }}
+                className={`${styles.button} inverted w-full text-sm`}
+                style={{ padding: "8px 0" }}
+              >
                 Reset view
               </button>
             </div>
@@ -245,12 +232,15 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
         </div>
       )}
 
-      {/* FAB — fixed bottom-right */}
       <div className="fixed bottom-6 right-5 z-40">
-        <button type="button" onClick={() => isOpen ? closeModal() : openModal("layers")}
+        <button
+          type="button"
+          onClick={() => isOpen ? closeModal() : openModal("layers")}
           aria-label={isOpen ? "Close layers panel" : "Open layers panel"}
-          aria-expanded={isOpen} aria-haspopup="dialog"
-          className={`w-11 h-11 rounded-full flex items-center justify-center border transition-colors duration-200 shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#696aac] ${isOpen ? "bg-[#696aac] border-[#696aac] text-white" : "bg-[rgba(6,7,15,0.88)] border-[rgba(105,106,172,0.4)] text-[rgba(162,163,233,0.85)] hover:bg-[rgba(105,106,172,0.2)] hover:text-[#f6f6fd] hover:border-[rgba(105,106,172,0.6)]"}`}>
+          aria-expanded={isOpen}
+          aria-haspopup="dialog"
+          className={`w-11 h-11 rounded-full flex items-center justify-center border transition-colors duration-200 shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#696aac] ${isOpen ? "bg-[#696aac] border-[#696aac] text-white" : "bg-[rgba(6,7,15,0.88)] border-[rgba(105,106,172,0.4)] text-[rgba(162,163,233,0.85)] hover:bg-[rgba(105,106,172,0.2)] hover:text-[#f6f6fd] hover:border-[rgba(105,106,172,0.6)]"}`}
+        >
           <Layers className="w-4.5 h-4.5" />
         </button>
       </div>

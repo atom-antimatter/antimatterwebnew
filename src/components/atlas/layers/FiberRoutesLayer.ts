@@ -108,7 +108,7 @@ export class FiberRoutesLayer implements ILayer {
 
     const visible = segments.slice(0, MAX_SEGMENTS);
     const collection = new Cesium.PrimitiveCollection();
-    const isDark = ctx.basemap === "osmDark" || ctx.basemap === "vectorDark";
+    const isDark = ctx.basemap === "osmDark";
     const alpha = isDark ? 0.5 : 0.4;
     let count = 0;
 

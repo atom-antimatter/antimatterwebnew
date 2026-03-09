@@ -5,67 +5,34 @@
  * and max zoom levels. Used by AtlasMap, LayersMenu, and the debug overlay.
  */
 
-export type RasterBasemapId = "osmDark" | "osmLight" | "osmStandard";
-export type VectorBasemapId = "vectorDark" | "vectorLight" | "vectorLiberty";
-export type BasemapId = RasterBasemapId | VectorBasemapId;
+export type BasemapId = "osmDark" | "osmLight" | "osmStandard";
 
 export type BasemapConfig = {
   id: BasemapId;
   label: string;
   helper: string;
-  type: "raster" | "vector";
+  type: "raster";
   maximumLevel: number;
   minimumLevel: number;
   credit: string;
-  qualityTier: "vector" | "high" | "medium" | "fallback";
-  // Raster-only fields (undefined for vector)
-  urlTemplate?: string;
-  retinaTemplate?: string | null;
-  tileWidth?: number;
-  tileHeight?: number;
-  retinaTileWidth?: number;
-  retinaTileHeight?: number;
-  supportsRetina?: boolean;
-  subdomains?: string[];
+  qualityTier: "high" | "medium" | "fallback";
+  urlTemplate: string;
+  retinaTemplate: string | null;
+  tileWidth: number;
+  tileHeight: number;
+  retinaTileWidth: number;
+  retinaTileHeight: number;
+  supportsRetina: boolean;
+  subdomains: string[];
+  notes: string;
+  maxUsefulZoom: number;
 };
 
 export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
-  // ── Vector basemaps (OpenFreeMap — crisp at all DPIs) ─────────────────────
-  vectorDark: {
-    id: "vectorDark",
-    label: "Vector Dark",
-    helper: "Crisp at all zoom levels · retina native",
-    type: "vector",
-    maximumLevel: 20,
-    minimumLevel: 0,
-    credit: "OpenFreeMap, OpenMapTiles, OpenStreetMap",
-    qualityTier: "vector",
-  },
-  vectorLight: {
-    id: "vectorLight",
-    label: "Vector Light",
-    helper: "Light theme · crisp labels",
-    type: "vector",
-    maximumLevel: 20,
-    minimumLevel: 0,
-    credit: "OpenFreeMap, OpenMapTiles, OpenStreetMap",
-    qualityTier: "vector",
-  },
-  vectorLiberty: {
-    id: "vectorLiberty",
-    label: "Vector Liberty",
-    helper: "Classic cartographic style · crisp labels",
-    type: "vector",
-    maximumLevel: 20,
-    minimumLevel: 0,
-    credit: "OpenFreeMap, OpenMapTiles, OpenStreetMap",
-    qualityTier: "vector",
-  },
-  // ── Raster basemaps (legacy fallback) ─────────────────────────────────────
   osmDark: {
     id: "osmDark",
-    label: "Carto Dark (raster)",
-    helper: "Raster tiles · may appear soft on Retina",
+    label: "Carto Dark",
+    helper: "Recommended default · strongest contrast",
     type: "raster",
     urlTemplate: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
     retinaTemplate: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
@@ -79,11 +46,13 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
     subdomains: ["a", "b", "c", "d"],
     credit: "Carto, OSM",
     qualityTier: "high",
+    notes: "Best overall clarity on dark UI; 512px retina tiles available.",
+    maxUsefulZoom: 20,
   },
   osmLight: {
     id: "osmLight",
-    label: "Carto Light (raster)",
-    helper: "Raster tiles · may appear soft on Retina",
+    label: "Carto Light",
+    helper: "Light basemap for contrast checks",
     type: "raster",
     urlTemplate: "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png",
     retinaTemplate: "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
@@ -97,11 +66,13 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
     subdomains: ["a", "b", "c", "d"],
     credit: "Carto, OSM",
     qualityTier: "high",
+    notes: "Useful for validating dark overlay contrast; 512px retina tiles available.",
+    maxUsefulZoom: 20,
   },
   osmStandard: {
     id: "osmStandard",
-    label: "OpenStreetMap (raster)",
-    helper: "Standard tiles · may appear soft on Retina",
+    label: "OpenStreetMap",
+    helper: "Fallback public raster tiles",
     type: "raster",
     urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     retinaTemplate: null,
@@ -115,9 +86,10 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
     subdomains: [],
     credit: "OpenStreetMap contributors",
     qualityTier: "fallback",
+    notes: "No retina tile variant; keep as fallback only.",
+    maxUsefulZoom: 19,
   },
 };
 
 export const BASEMAP_LIST = Object.values(BASEMAP_CONFIGS);
-export const VECTOR_BASEMAPS = BASEMAP_LIST.filter(b => b.type === "vector");
-export const RASTER_BASEMAPS = BASEMAP_LIST.filter(b => b.type === "raster");
+export const RASTER_BASEMAPS = BASEMAP_LIST;

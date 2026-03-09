@@ -83,7 +83,10 @@ export class CountryBordersLayer implements ILayer {
   update(ctx: LayerContext) {
     if (!this.ds) return;
     this.recolour(ctx.basemap);
-    const w = ctx.cameraLevel === "WORLD" || ctx.cameraLevel === "REGION" ? 1.4 : 0.9;
+    const w =
+      ctx.cameraLevel === "WORLD" ? 1.0
+      : ctx.cameraLevel === "REGION" ? 1.2
+      : 0.9;
     for (const e of this.ds.entities.values) {
       if (e.polyline) e.polyline.width = new Cesium.ConstantProperty(w);
     }

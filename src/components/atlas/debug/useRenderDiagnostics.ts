@@ -157,12 +157,12 @@ export function useRenderDiagnostics(opts: {
       const tile: TileDiagnostic | null = bmCfg ? {
         basemapId: basemap,
         label: bmCfg.label,
-        urlTemplate: bmCfg.urlTemplate ?? "(vector)",
+        urlTemplate: bmCfg.urlTemplate,
         maximumLevel: bmCfg.maximumLevel,
-        tileWidth: bmCfg.tileWidth ?? 512,
-        tileHeight: bmCfg.tileHeight ?? 512,
-        supportsRetina: bmCfg.supportsRetina ?? (bmCfg.type === "vector"),
-        retina: dpr >= 1.5 && (bmCfg.supportsRetina ?? bmCfg.type === "vector"),
+        tileWidth: bmCfg.tileWidth,
+        tileHeight: bmCfg.tileHeight,
+        supportsRetina: bmCfg.supportsRetina,
+        retina: dpr >= 1.5 && bmCfg.supportsRetina,
         inferredZoom,
         overZoomed: inferredZoom > maxLevel,
       } : null;
@@ -242,7 +242,6 @@ export function useRenderDiagnostics(opts: {
 export async function testTileFetch(basemap: BasemapId, zoom: number): Promise<void> {
   const cfg = BASEMAP_CONFIGS[basemap];
   if (!cfg) return;
-  if (cfg.type === "vector") { console.log("[Atlas Debug] Vector basemap — no raster tile to fetch"); return; }
   const retina = window.devicePixelRatio >= 1.5 && cfg.supportsRetina && cfg.retinaTemplate;
   const tmpl = retina ? cfg.retinaTemplate! : (cfg.urlTemplate ?? "");
   const url = tmpl

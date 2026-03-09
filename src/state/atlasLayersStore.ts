@@ -138,7 +138,7 @@ export const useAtlasLayersStore = create<AtlasLayersState>()(
           }),
       }),
       {
-        name: "atlas-layers-v2",
+        name: "atlas-layers-v3",
         partialize: (s) => ({
           basemap: s.basemap,
           overlays: s.overlays,

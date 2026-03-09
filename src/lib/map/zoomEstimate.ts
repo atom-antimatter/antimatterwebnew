@@ -42,9 +42,6 @@ export function isOverZoomed(heightMeters: number, providerMaxLevel: number, can
 
 /** Max level per basemap. */
 export const BASEMAP_MAX_LEVEL: Record<string, number> = {
-  vectorDark:    20,
-  vectorLight:   20,
-  vectorLiberty: 20,
   osmDark:       20,
   osmLight:      20,
   osmStandard:   19,

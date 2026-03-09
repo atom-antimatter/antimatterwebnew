@@ -82,8 +82,6 @@ type Tooltip = { x: number; y: number; dc: DataCenter } | null;
 // ─── imagery ──────────────────────────────────────────────────────────────
 
 import { BASEMAP_CONFIGS } from "@/lib/map/baseMaps";
-import VectorBasemap from "./VectorBasemap";
-import type { VectorStyleId } from "@/lib/map/vectorBasemap";
 
 const RETINA = typeof window !== "undefined" && window.devicePixelRatio >= 1.5;
 
@@ -104,11 +102,7 @@ function makeRasterProvider(basemapId: Basemap): Cesium.ImageryProvider {
   });
 }
 
-function isVectorBasemap(id: Basemap): boolean {
-  return (BASEMAP_CONFIGS[id]?.type ?? "raster") === "vector";
-}
-
-function isLight(b: Basemap) { return b === "osmLight" || b === "osmStandard" || b === "vectorLight" || b === "vectorLiberty"; }
+function isLight(b: Basemap) { return b === "osmLight" || b === "osmStandard"; }
 
 function tierSize(t: DataCenter["tier"]) { return t==="hyperscale"?13:t==="core"?10:t==="enterprise"?9:8; }
 function tierColor(t: DataCenter["tier"], light=false): Cesium.Color {
@@ -288,12 +282,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       navigationHelpButton:false, navigationInstructionsInitiallyVisible:false,
       sceneModePicker:false, selectionIndicator:false, timeline:false, vrButton:false,
       terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-      contextOptions: {
-        webgl: {
-          alpha: true,
-          premultipliedAlpha: true,
-        },
-      },
     });
 
     (viewer.cesiumWidget as any)._creditContainer.style.display = "none";
@@ -335,8 +323,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     if (viewer.scene.moon) viewer.scene.moon.show = false;
     viewer.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
 
-    // Always start with raster (instant render). The basemap swap effect
-    // will upgrade to vector if the store says vectorDark/Light/Liberty.
+    // Always start with the default Cesium imagery basemap; the basemap swap
+    // effect below keeps runtime changes predictable and explicit.
     viewer.imageryLayers.addImageryProvider(makeRasterProvider("osmDark"));
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000) });
 
@@ -643,8 +631,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   }, [cameraState.level]);
 
   // ── Basemap swap ──────────────────────────────────────────────────────────
-  const vectorActive = isVectorBasemap(basemap);
-
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
@@ -654,32 +640,21 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const cw = canvas?.clientWidth ?? 1280;
     ctrl.minimumZoomDistance = getMinimumZoomDistance(basemap, cw * (v.resolutionScale ?? 1));
 
-    // Temporarily enable continuous rendering so tiles load after swap
+    // Temporarily enable continuous rendering so the new imagery loads immediately.
     v.scene.requestRenderMode = false;
     const reEnableTimer = setTimeout(() => {
       if (!v.isDestroyed()) v.scene.requestRenderMode = true;
-    }, 3000);
+    }, 2000);
 
-    if (vectorActive) {
-      // Vector mode: MapLibre overlay ON TOP provides the full basemap.
-      // Hide Cesium's globe entirely so the canvas is transparent and
-      // MapLibre's rendering shows through from below. Cesium entities
-      // (DC markers, overlays) still render on the transparent canvas.
-      v.imageryLayers.removeAll();
-      v.scene.globe.show = false;
-      v.scene.backgroundColor = Cesium.Color.TRANSPARENT;
-    } else {
-      // Raster mode: Cesium renders imagery tiles normally.
-      v.scene.globe.show = true;
-      v.scene.globe.baseColor = Cesium.Color.fromCssColorString("#1a1b2e");
-      v.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
-      v.imageryLayers.removeAll();
-      v.imageryLayers.addImageryProvider(makeRasterProvider(basemap));
-    }
+    v.scene.globe.show = true;
+    v.scene.globe.baseColor = Cesium.Color.fromCssColorString("#1a1b2e");
+    v.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
+    v.imageryLayers.removeAll();
+    v.imageryLayers.addImageryProvider(makeRasterProvider(basemap));
     v.scene.requestRender();
 
     return () => clearTimeout(reEnableTimer);
-  }, [basemap, vectorActive]);
+  }, [basemap]);
 
   // ── 3D mode transitions ──────────────────────────────────────────────────
   // The actual 3D enter/exit logic lives in the imperative ref methods
@@ -781,7 +756,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   // ── Render ─────────────────────────────────────────────────────────────────
   const isWorldView = cameraState.level === "WORLD";
   return (
-    <div className={`absolute inset-0 w-full h-full overflow-hidden overscroll-none ${vectorActive ? "atlas-vector-mode" : "bg-[#020202]"}`}>
+    <div className="absolute inset-0 w-full h-full overflow-hidden overscroll-none bg-[#020202]">
       <style>{`
         .cesium-viewer,.cesium-widget{position:relative;overflow:hidden;width:100%;height:100%;}
         .cesium-widget canvas{width:100%;height:100%;touch-action:none;overscroll-behavior:none;image-rendering:auto;}
@@ -789,11 +764,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         .cesium-credit-container,.cesium-widget-credits{display:none!important;}
         @keyframes atlas-fadein{from{opacity:0}to{opacity:1}}
         .atlas-world-bg{animation:atlas-fadein 0.8s ease-out forwards;}
-        /* Vector mode: all Cesium wrappers must be transparent so MapLibre shows through */
-        .atlas-vector-mode .cesium-viewer,
-        .atlas-vector-mode .cesium-widget,
-        .atlas-vector-mode .cesium-viewer-cesiumWidgetContainer,
-        .atlas-vector-mode .cesium-viewer-bottom{background:transparent!important;}
       `}</style>
 
       {/* "ATOM AI" background text when fully zoomed out */}
@@ -804,14 +774,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         </div>
       )}
 
-      {/* Vector basemap: MapLibre overlay behind Cesium for crisp labels */}
-      <VectorBasemap
-        styleId={(vectorActive ? basemap : "vectorDark") as VectorStyleId}
-        viewerRef={viewerRef}
-        visible={vectorActive}
-      />
-
-      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none", zIndex: 3, background: vectorActive ? "transparent" : undefined }} />
+      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none", zIndex: 3 }} />
 
 
 

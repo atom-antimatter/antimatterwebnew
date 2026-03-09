@@ -1,5 +1,4 @@
 "use client";
-import "maplibre-gl/dist/maplibre-gl.css";
 
 /**
  * DataCenterMapClient — orchestrates the Infrastructure Atlas.
@@ -27,7 +26,6 @@ import { useEscapeToCloseModal } from "@/hooks/useEscapeToCloseModal";
 import { use3DAvailability } from "@/hooks/use3DAvailability";
 import ThreeDEntryButton from "@/components/atlas/ThreeDEntryButton";
 import ThreeDExitButton from "@/components/atlas/ThreeDExitButton";
-import { useCameraLevel } from "@/components/atlas/useCameraLevel";
 
 const LinodeCard = dynamic(() => import("@/components/atlas/providers/LinodeCard"), { ssr: false, loading: () => null });
 const AtlasMap   = dynamic(() => import("@/components/atlas/AtlasMap.client"),       { ssr: false, loading: () => null });
