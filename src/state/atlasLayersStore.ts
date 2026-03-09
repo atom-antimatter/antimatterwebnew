@@ -15,7 +15,8 @@ export type OverlayKey =
   | "stateBorders"
   | "cities"
   | "points"
-  | "routes";
+  | "routes"
+  | "buildings";
 
 export type PowerLayerKey =
   | "powerHeatmap"
@@ -65,9 +66,10 @@ export interface AtlasLayersState {
 const DEFAULT_OVERLAYS: Record<OverlayKey, boolean> = {
   countryBorders: true,
   stateBorders: false,
-  cities: false, // basemap tiles now include labels; custom labels are opt-in
+  cities: false,
   points: true,
   routes: false,
+  buildings: true,
 };
 
 const DEFAULT_POWER: Record<PowerLayerKey, boolean> = {

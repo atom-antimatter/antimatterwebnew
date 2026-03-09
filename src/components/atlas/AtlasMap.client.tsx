@@ -33,7 +33,7 @@ import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
 // ─── exported types ────────────────────────────────────────────────────────
 
-Cesium.Ion.defaultAccessToken = "";
+Cesium.Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN ?? "";
 
 export type Basemap = "osmDark" | "osmLight" | "osmStandard";
 
@@ -43,6 +43,7 @@ export type AtlasLayers = {
   cities:         boolean;
   points:         boolean;
   routes:         boolean;
+  buildings:      boolean;
   powerHeatmap:   boolean;
   powerGeneration:boolean;
   powerQueue:     boolean;
@@ -113,8 +114,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   const managerRef   = useRef<LayerManager | null>(null);
 
   // DC data source (not managed by LayerManager — simpler because it never changes)
-  const dcSourceRef     = useRef<Cesium.CustomDataSource | null>(null);
-  const linodeSourceRef = useRef<Cesium.CustomDataSource | null>(null);
+  const dcSourceRef       = useRef<Cesium.CustomDataSource | null>(null);
+  const linodeSourceRef   = useRef<Cesium.CustomDataSource | null>(null);
+  const buildingsRef      = useRef<Cesium.Cesium3DTileset | null>(null);
   const linodeReqId     = useRef(0);
   const powerGenReqId   = useRef(0);
   const powerQueueReqId = useRef(0);
@@ -278,6 +280,29 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       return { viewer, cameraLevel: level as LayerContext["cameraLevel"], viewRect, heightMeters: h, basemap: basemapRef.current };
     };
     mgr.init(viewer, makeCtx);
+
+    // ── 3D Buildings (Cesium OSM Buildings via Ion) ──────────────────────
+    if (Cesium.Ion.defaultAccessToken) {
+      Cesium.createOsmBuildingsAsync().then(tileset => {
+        if (viewer.isDestroyed()) return;
+        tileset.show = false; // hidden by default; shown at CITY zoom
+        tileset.style = new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${feature['cesium#estimatedHeight']} > 200", "rgba(200,200,220,0.92)"],
+              ["${feature['cesium#estimatedHeight']} > 100", "rgba(180,180,200,0.88)"],
+              ["${feature['cesium#estimatedHeight']} > 50",  "rgba(165,165,185,0.85)"],
+              ["true",                                        "rgba(150,150,170,0.82)"],
+            ],
+          },
+        });
+        viewer.scene.primitives.add(tileset);
+        buildingsRef.current = tileset;
+        console.log("[Atlas] OSM Buildings tileset loaded");
+      }).catch(e => {
+        console.warn("[Atlas] OSM Buildings failed to load (missing Ion token?):", e);
+      });
+    }
 
     // ── DC markers ────────────────────────────────────────────────────────
     const dcDs = new Cesium.CustomDataSource("data-centers");
@@ -473,6 +498,14 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 1.5;
     v.scene.requestRender();
   }, [cameraState.level]);
+
+  // ── 3D Buildings visibility (CITY zoom only) ─────────────────────────────
+  useEffect(() => {
+    const ts = buildingsRef.current;
+    if (!ts) return;
+    ts.show = layers.buildings && (cameraState.level === "CITY" || cameraState.level === "LOCAL");
+    viewerRef.current?.scene.requestRender();
+  }, [layers.buildings, cameraState.level]);
 
   // ── Basemap swap ──────────────────────────────────────────────────────────
   useEffect(() => {
