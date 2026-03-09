@@ -260,17 +260,13 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.imageryLayers.addImageryProvider(makeRasterProvider("osmDark"));
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(-20, 25, 18_000_000) });
 
-    // Wheel: prevent page scroll when over map; do not stopPropagation so Cesium canvas still receives zoom
-    if (container) {
-      const onWheel = (e: WheelEvent) => {
-        e.preventDefault();
-      };
-      container.addEventListener("wheel", onWheel, { capture: true, passive: false });
-      const wheelCleanup = () => container.removeEventListener("wheel", onWheel, { capture: true });
-      // Keep reference for cleanup below
-      (viewer as any).__atlasWheelCleanup = wheelCleanup;
-    }
     const canvas = viewer.scene.canvas;
+    // Prevent wheel from bubbling past the map (stops page scroll) — bubble phase
+    // so Cesium's own handler fires first for zoom.
+    canvas.addEventListener("wheel", (e) => e.stopPropagation(), { passive: true });
+    // Block touch-based page navigation (pull-to-refresh, swipe-back, pinch-zoom
+    // of the page) so all gestures go to Cesium instead.
+    canvas.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
     // Resize / DPR — also poll every 2s for Mac display changes that shift DPR
@@ -505,8 +501,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     }
 
     return () => {
-      const wc = (viewer as any).__atlasWheelCleanup;
-      if (typeof wc === "function") wc();
       clearInterval(dprPollId);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("keydown", onKey);
@@ -753,7 +747,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         </div>
       )}
 
-      <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none" }} />
 
       {!isReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#020202] text-[rgba(246,246,253,0.5)] text-sm z-10">Loading map…</div>
