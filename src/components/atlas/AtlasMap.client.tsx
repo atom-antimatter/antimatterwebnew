@@ -516,26 +516,32 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const cw = canvas?.clientWidth ?? 1280;
     ctrl.minimumZoomDistance = getMinimumZoomDistance(basemap, cw * (v.resolutionScale ?? 1));
 
+    // Temporarily enable continuous rendering so new tiles load immediately
+    // (requestRenderMode blocks tile fetching if no scene changes detected).
+    v.scene.requestRenderMode = false;
+    const reEnableTimer = setTimeout(() => {
+      if (!v.isDestroyed()) v.scene.requestRenderMode = true;
+    }, 3000);
+
+    const applyProvider = (provider: Cesium.ImageryProvider) => {
+      if (v.isDestroyed()) return;
+      v.imageryLayers.removeAll();
+      v.imageryLayers.addImageryProvider(provider);
+      v.scene.requestRender();
+    };
+
     if (isVectorBasemap(basemap)) {
-      // Async: fetch style JSON, create vector provider, swap imagery
       createVectorProvider(basemap as VectorStyleId).then(vp => {
-        if (v.isDestroyed()) return;
-        v.imageryLayers.removeAll();
-        v.imageryLayers.addImageryProvider(vp as any);
-        v.scene.requestRender();
-      }).catch(() => {
-        // Fallback to raster if vector fails
-        console.warn("[Atlas] Vector basemap failed, falling back to raster");
-        if (v.isDestroyed()) return;
-        v.imageryLayers.removeAll();
-        v.imageryLayers.addImageryProvider(makeRasterProvider("osmDark"));
-        v.scene.requestRender();
+        applyProvider(vp as any);
+      }).catch((err) => {
+        console.warn("[Atlas] Vector basemap failed:", err, "— falling back to raster");
+        applyProvider(makeRasterProvider("osmDark"));
       });
     } else {
-      v.imageryLayers.removeAll();
-      v.imageryLayers.addImageryProvider(makeRasterProvider(basemap));
-      v.scene.requestRender();
+      applyProvider(makeRasterProvider(basemap));
     }
+
+    return () => clearTimeout(reEnableTimer);
   }, [basemap]);
 
   // ── 3D mode transitions ──────────────────────────────────────────────────
