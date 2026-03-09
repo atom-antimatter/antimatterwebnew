@@ -307,7 +307,6 @@ export default function CommandPanel({
                   autoComplete="off"
                   aria-label="Search locations and capabilities"
                   aria-autocomplete="list"
-                  aria-expanded={showSuggestions}
                   aria-controls="search-suggestions"
                   className="
                     w-full h-10 pl-8 pr-10 rounded-xl text-sm

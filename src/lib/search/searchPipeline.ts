@@ -13,7 +13,7 @@
  */
 
 import { parseSearchQuery, type ParsedQuery } from "./parseSearchQuery";
-import { searchGazetteer, type GazetteerResult } from "./gazetteer";
+import { searchGazetteer } from "./gazetteer";
 import { normalise } from "./normalize";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

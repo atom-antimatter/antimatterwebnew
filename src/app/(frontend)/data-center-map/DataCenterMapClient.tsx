@@ -20,7 +20,6 @@ import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { filterDataCenters } from "@/lib/search/filterDataCenters";
 import { runSearchPipeline } from "@/lib/search/searchPipeline";
 import type { GazetteerResult } from "@/lib/search/gazetteer";
-import type { ProviderRegion } from "@/lib/providers/linode/types";
 import { useAtlasLayersStore } from "@/state/atlasLayersStore";
 import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
@@ -72,7 +71,7 @@ export default function DataCenterMapClient() {
   const [results,          setResults]          = useState<DataCenter[] | null>(null);
   const [searchStatus,     setSearchStatus]     = useState<SearchStatus>("idle");
   const [capabilityFilters,setCapabilityFilters]= useState<string[]>([]);
-  const [tierFilter,       setTierFilter]       = useState<string | null>(null);
+  const [tierFilter,       setTierFilter]       = useState<DataCenter["tier"] | null>(null);
   const [radiusKm,         setRadiusKm]         = useState(500);
   const [geocodedPos,      setGeocodedPos]      = useState<GeocodedPos>(null);
   const [lastRawQuery,     setLastRawQuery]     = useState("");
@@ -109,7 +108,7 @@ export default function DataCenterMapClient() {
     const pipelineResult = await runSearchPipeline(query, { useNLP: true, defaultRadiusKm: radiusKm });
 
     const mergedCaps   = Array.from(new Set([...capabilityFilters, ...pipelineResult.filters.capabilities]));
-    const mergedTier   = (pipelineResult.filters.tier ?? tierFilter) as DataCenter["tier"] | null;
+    const mergedTier: DataCenter["tier"] | null = pipelineResult.filters.tier ?? tierFilter ?? null;
     const mergedRadius = pipelineResult.filters.radiusKm ?? radiusKm;
     setCapabilityFilters(mergedCaps);
     setTierFilter(mergedTier);
