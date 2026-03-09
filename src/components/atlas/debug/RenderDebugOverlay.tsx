@@ -69,6 +69,17 @@ export default function RenderDebugOverlay({
 }: Props) {
   const { debugEnabled, toggleDebug, basemap } = useAtlasLayersStore();
   const { filterDebug, is3DActive } = useAtlasSelectionStore();
+  const { basemap: currentBasemap } = useAtlasLayersStore();
+  const isVectorBasemap = currentBasemap.startsWith("vector");
+
+  // Read Cesium alpha and globe state from viewer
+  const viewer = viewerRef.current as any;
+  const cesiumAlpha = viewer && !viewer.isDestroyed?.()
+    ? (viewer.scene?.context?._gl?.getContextAttributes?.()?.alpha ?? "unknown")
+    : "n/a";
+  const globeShow = viewer && !viewer.isDestroyed?.()
+    ? String(viewer.scene?.globe?.show ?? "unknown")
+    : "n/a";
 
   const diagState = useRenderDiagnostics({
     enabled: debugEnabled,
@@ -244,6 +255,12 @@ export default function RenderDebugOverlay({
           {cameraState.viewRect && (
             <Row label="bbox" value={`${cameraState.viewRect.west.toFixed(1)},${cameraState.viewRect.south.toFixed(1)},${cameraState.viewRect.east.toFixed(1)},${cameraState.viewRect.north.toFixed(1)}`} />
           )}
+        </Section>
+
+        <Section title="Vector Basemap">
+          <Row label="vectorActive" value={String(isVectorBasemap)} warn={!isVectorBasemap} />
+          <Row label="cesium alpha" value={String(cesiumAlpha)} />
+          <Row label="globe.show" value={String(globeShow)} />
         </Section>
 
         <p className="text-[9px] text-[rgba(246,246,253,0.25)] pt-1">Shift+D to close</p>

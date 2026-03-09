@@ -288,6 +288,12 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       navigationHelpButton:false, navigationInstructionsInitiallyVisible:false,
       sceneModePicker:false, selectionIndicator:false, timeline:false, vrButton:false,
       terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      contextOptions: {
+        webgl: {
+          alpha: true,
+          premultipliedAlpha: true,
+        },
+      },
     });
 
     (viewer.cesiumWidget as any)._creditContainer.style.display = "none";
@@ -661,7 +667,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       // (DC markers, overlays) still render on the transparent canvas.
       v.imageryLayers.removeAll();
       v.scene.globe.show = false;
-      v.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202").withAlpha(0);
+      v.scene.backgroundColor = Cesium.Color.TRANSPARENT;
     } else {
       // Raster mode: Cesium renders imagery tiles normally.
       v.scene.globe.show = true;

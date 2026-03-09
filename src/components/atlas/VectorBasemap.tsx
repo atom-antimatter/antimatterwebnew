@@ -1,14 +1,12 @@
 "use client";
 /**
  * VectorBasemap — renders crisp vector tiles via MapLibre GL as a canvas
- * positioned ON TOP of the Cesium canvas with pointer-events: none.
+ * behind the Cesium canvas (which has alpha: true for transparency).
  *
- * When active, MapLibre provides the full basemap (roads, water, labels,
- * borders) rendered with SDF text at native device pixel ratio. Cesium's
- * raster imagery is removed and only its data overlays (DC markers, power
- * layers, fiber routes) remain — those are rendered as HTML tooltips or
- * Cesium entities that the user interacts with through the MapLibre layer
- * via pointer-events: none passthrough.
+ * When active, Cesium's globe is hidden and its canvas becomes transparent.
+ * MapLibre provides the full basemap (roads, water, labels, borders) rendered
+ * with SDF text at native device pixel ratio. Cesium entities (DC markers,
+ * fiber routes, overlays) render on the transparent canvas above MapLibre.
  */
 import { useEffect, useRef, useCallback } from "react";
 import maplibregl from "maplibre-gl";
@@ -22,15 +20,17 @@ type Props = {
 };
 
 /**
- * Convert Cesium camera height (metres) to MapLibre zoom level.
+ * Convert Cesium camera height (metres) to MapLibre zoom level,
+ * corrected for latitude (ground resolution varies by cos(lat)).
  *
- * Standard Web Mercator: at zoom z, ground resolution at equator =
- * 78271.484 / 2^z metres/pixel. For a 512px viewport:
- * height ≈ groundRes * 512 / 2 = 78271.484 * 256 / 2^z
- * → z = log2(78271.484 * 256 / height)
+ * At zoom z, ground resolution = (78271.484 * cos(lat)) / 2^z metres/pixel.
+ * For a ~512px viewport: height ~ groundRes * 256
+ * => z = log2((78271.484 * cos(lat) * 256) / height)
  */
-function heightToMapLibreZoom(heightM: number): number {
-  const z = Math.log2((78271.484 * 256) / Math.max(heightM, 1));
+function heightToMapLibreZoom(heightM: number, latDeg: number): number {
+  const latRad = (Math.abs(latDeg) * Math.PI) / 180;
+  const cosLat = Math.max(0.01, Math.cos(latRad));
+  const z = Math.log2((78271.484 * cosLat * 256) / Math.max(heightM, 1));
   return Math.max(0, Math.min(22, z));
 }
 
@@ -47,7 +47,6 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
     const styleUrl = VECTOR_STYLE_URLS[styleId];
     if (!styleUrl) return;
 
-    // If style changed, destroy old map
     if (mapRef.current && prevStyleRef.current !== styleId) {
       mapRef.current.remove();
       mapRef.current = null;
@@ -67,7 +66,8 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
     });
 
     map.on("load", () => {
-      console.log("[VectorBasemap] MapLibre loaded:", styleId);
+      console.log("[VectorBasemap] MapLibre loaded:", styleId,
+        "layers:", map.getStyle()?.layers?.length ?? 0);
     });
 
     map.on("error", (e) => {
@@ -85,7 +85,7 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [styleId]);
 
-  // Camera sync: Cesium → MapLibre (every frame)
+  // Camera sync: Cesium -> MapLibre (every frame)
   const syncCamera = useCallback(() => {
     const viewer = viewerRef.current as any;
     const map = mapRef.current;
@@ -100,17 +100,21 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
       const lng = (carto.longitude * 180) / Math.PI;
       const height = carto.height;
       const heading = (cam.heading * 180) / Math.PI;
+      // Cesium pitch: 0 = looking at horizon, -PI/2 = looking straight down
+      const cesiumPitchDeg = (cam.pitch * 180) / Math.PI;
 
-      const zoom = heightToMapLibreZoom(height);
+      const zoom = heightToMapLibreZoom(height, lat);
       const bearing = -heading;
+      // MapLibre pitch: 0 = top-down, 60 = tilted. Cesium pitch: -90 = top-down, 0 = horizon.
+      const mapLibrePitch = Math.max(0, Math.min(85, 90 + cesiumPitchDeg));
 
-      map.jumpTo({ center: [lng, lat], zoom, bearing });
+      map.jumpTo({ center: [lng, lat], zoom, bearing, pitch: mapLibrePitch });
     } catch {
       // Camera not ready yet
     }
   }, [viewerRef]);
 
-  // Sync loop — runs at display refresh rate when visible
+  // Sync loop at display refresh rate when visible
   useEffect(() => {
     if (!visible) {
       if (syncFrameRef.current !== null) {
