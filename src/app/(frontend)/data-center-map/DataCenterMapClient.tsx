@@ -62,6 +62,7 @@ export default function DataCenterMapClient() {
     selectedLinode, setSelectedLinode,
     pinnedPoint, setPinnedPoint,
     powerPanelOpen, setPowerPanelOpen,
+    setFilterDebug,
   } = useAtlasSelectionStore();
 
   // ── UI state ────────────────────────────────────────────────────────────
@@ -100,9 +101,15 @@ export default function DataCenterMapClient() {
       const hasFilters = caps.length > 0 || tier !== null;
       const hasQuery = !!rawQuery;
 
-      if (!pos && !hasQuery && !hasFilters) {
+      const mode = pos ? "geocode" as const
+        : hasQuery ? "text" as const
+        : hasFilters ? "browse" as const
+        : "idle" as const;
+
+      if (mode === "idle") {
         setResults(null);
         setSearchStatus("idle");
+        setFilterDebug({ rawQuery, geocodedPos: pos, capabilities: caps, tier, resultCount: 0, mode });
         return;
       }
 
@@ -114,6 +121,7 @@ export default function DataCenterMapClient() {
         textQuery: pos ? undefined : rawQuery || undefined,
       });
       setResults(filtered);
+      setFilterDebug({ rawQuery, geocodedPos: pos, capabilities: caps, tier, resultCount: filtered.length, mode });
 
       if (filtered.length === 0) {
         if (pos) setSearchStatus("no-dc");
@@ -123,7 +131,7 @@ export default function DataCenterMapClient() {
         setSearchStatus("idle");
       }
     },
-    []
+    [setFilterDebug]
   );
 
   const handleFilterChange = useCallback(

@@ -74,21 +74,25 @@ type Tooltip = { x: number; y: number; dc: DataCenter } | null;
 
 // ─── imagery ──────────────────────────────────────────────────────────────
 
+import { BASEMAP_CONFIGS, type BasemapId } from "@/lib/map/baseMaps";
+
 const RETINA = typeof window !== "undefined" && window.devicePixelRatio >= 1.5;
-const CARTO_SUBS = ["a", "b", "c", "d"];
-const CARTO_CREDIT = new Cesium.Credit("Carto, OSM");
 
 function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
-  const tile = RETINA ? { tileWidth: 512, tileHeight: 512 } : { tileWidth: 256, tileHeight: 256 };
-  const suffix = RETINA ? "@2x.png" : ".png";
-  switch (basemap) {
-    case "osmLight":
-      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, ...tile, url: `https://{s}.basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}${suffix}`, subdomains: CARTO_SUBS, credit: CARTO_CREDIT, maximumLevel: 20 });
-    case "osmStandard":
-      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, tileWidth: 256, tileHeight: 256, url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", credit: new Cesium.Credit("OpenStreetMap contributors"), maximumLevel: 19 });
-    case "osmDark": default:
-      return new Cesium.UrlTemplateImageryProvider({ minimumLevel: 0, ...tile, url: `https://{s}.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}${suffix}`, subdomains: CARTO_SUBS, credit: CARTO_CREDIT, maximumLevel: 20 });
-  }
+  const cfg = BASEMAP_CONFIGS[basemap as BasemapId] ?? BASEMAP_CONFIGS.osmDark;
+  const useRetina = RETINA && cfg.supportsRetina && cfg.retinaTemplate;
+  const url = useRetina ? cfg.retinaTemplate! : cfg.urlTemplate;
+  const tw = useRetina ? cfg.retinaTileWidth : cfg.tileWidth;
+  const th = useRetina ? cfg.retinaTileHeight : cfg.tileHeight;
+  return new Cesium.UrlTemplateImageryProvider({
+    url,
+    minimumLevel: cfg.minimumLevel,
+    maximumLevel: cfg.maximumLevel,
+    tileWidth: tw,
+    tileHeight: th,
+    ...(cfg.subdomains.length > 0 ? { subdomains: cfg.subdomains } : {}),
+    credit: new Cesium.Credit(cfg.credit),
+  });
 }
 
 function isLight(b: Basemap) { return b === "osmLight" || b === "osmStandard"; }
@@ -182,9 +186,10 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     viewer.scene.globe.baseColor           = Cesium.Color.fromCssColorString("#1a1b2e");
     viewer.scene.globe.enableLighting      = false;
     viewer.scene.globe.depthTestAgainstTerrain = false;
-    viewer.scene.globe.preloadAncestors    = true;
-    viewer.scene.globe.preloadSiblings     = true;
-    viewer.scene.globe.tileCacheSize       = 1500;
+    viewer.scene.globe.showGroundAtmosphere = false;
+    viewer.scene.globe.preloadAncestors    = false;
+    viewer.scene.globe.preloadSiblings     = false;
+    viewer.scene.globe.tileCacheSize       = 2000;
 
     // FXAA applies a blur kernel over the whole frame — disabling it is the
     // single most impactful change for text / label crispness.
@@ -382,11 +387,16 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
           const h = v.camera.positionCartographic.height;
           const cw = v.scene.canvas.clientWidth * (v.resolutionScale ?? 1);
           const z = heightToTileZoom(h, cw);
-          const maxLvl = BASEMAP_MAX_LEVEL[basemap] ?? 20;
+          const cfg = BASEMAP_CONFIGS[basemapRef.current as BasemapId] ?? BASEMAP_CONFIGS.osmDark;
+          const maxLvl = cfg.maximumLevel;
           const overZoomed = z > maxLvl;
-          const tileUrl = RETINA
-            ? `https://a.basemaps.cartocdn.com/rastertiles/dark_nolabels/${Math.min(z, maxLvl)}/0/0@2x.png`
-            : `https://a.basemaps.cartocdn.com/rastertiles/dark_nolabels/${Math.min(z, maxLvl)}/0/0.png`;
+          const useRetina = RETINA && cfg.supportsRetina && cfg.retinaTemplate;
+          const tmpl = useRetina ? cfg.retinaTemplate! : cfg.urlTemplate;
+          const tileUrl = tmpl
+            .replace("{s}", cfg.subdomains[0] ?? "")
+            .replace("{z}", String(Math.min(z, maxLvl)))
+            .replace("{x}", "0")
+            .replace("{y}", "0");
           console.group("[Atlas] Tile Sample");
           console.log("camera height:", h.toFixed(0), "m");
           console.log("est. tile zoom:", z, "| basemap maxLevel:", maxLvl);
@@ -450,14 +460,18 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   ]);
 
   // ── Adaptive SSE ─────────────────────────────────────────────────────────
+  // SSE (screen-space error) controls which tile zoom level Cesium loads.
+  // Lower SSE = finer tiles = sharper imagery, but more network/GPU load.
+  // Cesium already factors in resolutionScale when computing error, so on
+  // a 2x retina display it naturally requests finer tiles. But the default
+  // SSE of 2 is still too high for crisp city-level rendering.
+  // We use aggressive values at LOCAL/CITY to force the sharpest available tiles.
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
-    // Minimum 2: lower pushes tile requests past provider maxLevel → upscaling → blur.
-    // Fixed SSE values — do NOT multiply by resolutionScale (CesiumJS issue #8082:
-    // resolutionScale already compensates for DPR; multiplying causes tile overload).
-    const sse: Record<string, number> = { WORLD: 16, REGION: 4, LOCAL: 2, CITY: 1.5 };
-    v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 2;
+    const sse: Record<string, number> = { WORLD: 4, REGION: 1.5, LOCAL: 1, CITY: 0.75 };
+    v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 1.5;
+    v.scene.requestRender();
   }, [cameraState.level]);
 
   // ── Basemap swap ──────────────────────────────────────────────────────────
@@ -571,7 +585,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     <div className="absolute inset-0 w-full h-full bg-[#020202] overflow-hidden overscroll-none">
       <style>{`
         .cesium-viewer,.cesium-widget{position:relative;overflow:hidden;width:100%;height:100%;}
-        .cesium-widget canvas{width:100%;height:100%;touch-action:none;overscroll-behavior:none;}
+        .cesium-widget canvas{width:100%;height:100%;touch-action:none;overscroll-behavior:none;image-rendering:auto;}
         .cesium-viewer-cesiumWidgetContainer{width:100%;height:100%;}
         .cesium-credit-container,.cesium-widget-credits{display:none!important;}
         @keyframes atlas-fadein{from{opacity:0}to{opacity:1}}
@@ -596,6 +610,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         cameraState={cameraState}
         viewerReady={isReady}
         viewerRef={viewerRef as React.RefObject<unknown>}
+        canvasContainerRef={containerRef}
         layerManagerRef={managerRef}
         moveSourceRef={moveSourceRef}
         isSelectedRef={isSelectedRef}

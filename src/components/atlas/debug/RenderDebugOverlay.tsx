@@ -6,13 +6,14 @@
  */
 import { useCallback, useEffect, type RefObject } from "react";
 import { useAtlasLayersStore } from "@/state/atlasLayersStore";
+import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 import type { CameraState } from "../useCameraLevel";
 import type { LayerStats } from "../layers/types";
 import type { LayerManager } from "../layers/LayerManager";
 import type { BasemapId } from "@/lib/map/baseMaps";
 import {
   useRenderDiagnostics, testTileFetch,
-  type MoveSource, type RenderSnapshot,
+  type MoveSource,
 } from "./useRenderDiagnostics";
 
 type Props = {
@@ -67,6 +68,7 @@ export default function RenderDebugOverlay({
   layerManagerRef, moveSourceRef, isSelectedRef,
 }: Props) {
   const { debugEnabled, toggleDebug, basemap } = useAtlasLayersStore();
+  const { filterDebug } = useAtlasSelectionStore();
 
   const diagState = useRenderDiagnostics({
     enabled: debugEnabled,
@@ -178,6 +180,15 @@ export default function RenderDebugOverlay({
             <Row label="selected over-zoomed" value={diagState.selectedSnapshot?.tile?.overZoomed ? "YES ⚠" : "no"} warn={!!diagState.selectedSnapshot?.tile?.overZoomed} />
           </Section>
         )}
+
+        <Section title="Filter Pipeline">
+          <Row label="mode" value={filterDebug.mode} />
+          <Row label="query" value={filterDebug.rawQuery || "(none)"} />
+          <Row label="geocodedPos" value={filterDebug.geocodedPos ? `${filterDebug.geocodedPos.lat.toFixed(2)}, ${filterDebug.geocodedPos.lng.toFixed(2)}` : "none"} />
+          <Row label="capabilities" value={filterDebug.capabilities.length > 0 ? filterDebug.capabilities.join(", ") : "(none)"} />
+          <Row label="tier" value={filterDebug.tier ?? "(all)"} />
+          <Row label="results" value={filterDebug.resultCount} />
+        </Section>
 
         <Section title="Dev Actions">
           <div className="flex flex-wrap gap-1.5">

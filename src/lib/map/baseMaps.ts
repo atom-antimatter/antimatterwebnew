@@ -20,6 +20,8 @@ export type BasemapConfig = {
   retinaTileWidth: number;
   retinaTileHeight: number;
   supportsRetina: boolean;
+  subdomains: string[];
+  credit: string;
   /** "high" = Carto retina; "medium" = Carto non-retina; "fallback" = OSM */
   qualityTier: "high" | "medium" | "fallback";
 };
@@ -38,6 +40,8 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
     retinaTileWidth: 512,
     retinaTileHeight: 512,
     supportsRetina: true,
+    subdomains: ["a", "b", "c", "d"],
+    credit: "Carto, OSM",
     qualityTier: "high",
   },
   osmLight: {
@@ -53,6 +57,8 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
     retinaTileWidth: 512,
     retinaTileHeight: 512,
     supportsRetina: true,
+    subdomains: ["a", "b", "c", "d"],
+    credit: "Carto, OSM",
     qualityTier: "high",
   },
   osmStandard: {
@@ -68,6 +74,8 @@ export const BASEMAP_CONFIGS: Record<BasemapId, BasemapConfig> = {
     retinaTileWidth: 256,
     retinaTileHeight: 256,
     supportsRetina: false,
+    subdomains: [],
+    credit: "OpenStreetMap contributors",
     qualityTier: "fallback",
   },
 };

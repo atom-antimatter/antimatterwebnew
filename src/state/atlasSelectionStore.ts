@@ -14,20 +14,30 @@ export type PinnedPoint = { lat: number; lng: number };
 
 export type AtlasCameraLevel = "WORLD" | "REGION" | "LOCAL" | "CITY";
 
+export type FilterDebugState = {
+  rawQuery: string;
+  geocodedPos: { lat: number; lng: number } | null;
+  capabilities: string[];
+  tier: string | null;
+  resultCount: number;
+  mode: "idle" | "browse" | "geocode" | "text";
+};
+
 interface AtlasSelectionState {
   selectedDc:     DataCenter     | null;
   selectedLinode: ProviderRegion | null;
   pinnedPoint:    PinnedPoint    | null;
-  /** Whether the standalone power panel is open. */
   powerPanelOpen: boolean;
-  /** Current camera level, updated by AtlasMap for menus that need it. */
   cameraLevel:    AtlasCameraLevel;
+  /** Filter pipeline state for the debug overlay. */
+  filterDebug:    FilterDebugState;
 
   setSelectedDc:     (dc: DataCenter | null)         => void;
   setSelectedLinode: (r: ProviderRegion | null)       => void;
   setPinnedPoint:    (p: PinnedPoint | null)          => void;
   setPowerPanelOpen: (open: boolean)                  => void;
   setCameraLevel:    (level: AtlasCameraLevel)        => void;
+  setFilterDebug:    (fd: FilterDebugState)           => void;
   clearAll:          () => void;
 
   /** Convenience: the lat/lng to use for power assessment */
@@ -40,12 +50,14 @@ export const useAtlasSelectionStore = create<AtlasSelectionState>((set, get) => 
   pinnedPoint:    null,
   powerPanelOpen: false,
   cameraLevel:    "WORLD",
+  filterDebug:    { rawQuery: "", geocodedPos: null, capabilities: [], tier: null, resultCount: 0, mode: "idle" },
 
   setSelectedDc: (dc) => set({ selectedDc: dc }),
   setSelectedLinode: (r) => set({ selectedLinode: r }),
   setPinnedPoint: (p) => set({ pinnedPoint: p }),
   setPowerPanelOpen: (open) => set({ powerPanelOpen: open }),
   setCameraLevel: (level) => set({ cameraLevel: level }),
+  setFilterDebug: (fd) => set({ filterDebug: fd }),
   clearAll: () => set({ selectedDc: null, selectedLinode: null, pinnedPoint: null }),
 
   get powerTarget() {
