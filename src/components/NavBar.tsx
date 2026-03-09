@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { GoArrowUpRight } from "react-icons/go";
-import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale, HiGlobeAmericas } from "react-icons/hi2";
+import { HiBuildingOffice2, HiCpuChip, HiLightBulb, HiScale, HiGlobeAmericas, HiWindow } from "react-icons/hi2";
 import HamMenu from "./ui/HamMenu";
 import NavButton from "./ui/NavButton";
 import buttonStyles from "./ui/css/Button.module.css";
@@ -355,8 +355,14 @@ const AtomBrowserEarlyAccessButton = () => {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="px-1 text-[11px] uppercase tracking-widest text-white/35">Atom Browser</p>
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-2.5 px-1">
+        <HiWindow className="size-4 text-[#a2a3e9]" />
+        <div>
+          <p className="text-xs font-semibold text-white/90">Atom Browser</p>
+          <p className="text-[11px] text-white/45">The AI-Native Browser</p>
+        </div>
+      </div>
       <button
         type="button"
         onClick={() => setEarlyAccessOpen(true)}
