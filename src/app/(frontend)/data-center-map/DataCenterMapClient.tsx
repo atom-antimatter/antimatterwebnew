@@ -55,7 +55,7 @@ export default function DataCenterMapClient() {
     cities:          overlays.cities,
     points:          overlays.points,
     routes:          overlays.routes,
-    buildings:       overlays.buildings,
+
     powerHeatmap:    power.powerHeatmap,
     powerGeneration: power.powerGeneration,
     powerQueue:      power.powerQueue,

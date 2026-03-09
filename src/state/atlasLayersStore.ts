@@ -15,8 +15,7 @@ export type OverlayKey =
   | "stateBorders"
   | "cities"
   | "points"
-  | "routes"
-  | "buildings";
+  | "routes";
 
 export type PowerLayerKey =
   | "powerHeatmap"
@@ -69,7 +68,6 @@ const DEFAULT_OVERLAYS: Record<OverlayKey, boolean> = {
   cities: false,
   points: true,
   routes: false,
-  buildings: true,
 };
 
 const DEFAULT_POWER: Record<PowerLayerKey, boolean> = {

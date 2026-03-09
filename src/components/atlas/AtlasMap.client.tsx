@@ -26,7 +26,6 @@ import { StateBordersLayer }   from "./layers/StateBordersLayer";
 import { CityLabelsLayer }     from "./layers/CityLabelsLayer";
 import { FiberRoutesLayer }    from "./layers/FiberRoutesLayer";
 import { FeasibilityHeatmapLayer } from "./layers/FeasibilityHeatmapLayer";
-import { BuildingsLayer }         from "./layers/BuildingsLayer";
 import type { LayerContext } from "./layers/types";
 import type { ProviderRegion } from "@/lib/providers/linode/types";
 import { getMinimumZoomDistance, heightToTileZoom, BASEMAP_MAX_LEVEL } from "@/lib/map/zoomEstimate";
@@ -44,7 +43,6 @@ export type AtlasLayers = {
   cities:         boolean;
   points:         boolean;
   routes:         boolean;
-  buildings:      boolean;
   powerHeatmap:   boolean;
   powerGeneration:boolean;
   powerQueue:     boolean;
@@ -186,30 +184,12 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
     (viewer.cesiumWidget as any)._creditContainer.style.display = "none";
     viewer.scene.globe.baseColor           = Cesium.Color.fromCssColorString("#1a1b2e");
-    // Open-source global terrain (AWS Open Data); fallback to flat if URL format unsupported
-    const terrainUrl = "https://terrain-tiles.s3.amazonaws.com/";
-    Cesium.CesiumTerrainProvider.fromUrl(terrainUrl)
-      .then((openTerrain) => {
-        if (!viewer.isDestroyed()) {
-          viewer.terrainProvider = openTerrain;
-          viewer.scene.requestRender();
-        }
-      })
-      .catch(() => {
-        if (!viewer.isDestroyed()) console.warn("[Atlas] Open terrain unavailable, using flat ellipsoid.");
-      });
-
-    viewer.scene.globe.depthTestAgainstTerrain = true;
-    viewer.scene.globe.enableLighting = true;
+    viewer.scene.globe.depthTestAgainstTerrain = false;
+    viewer.scene.globe.enableLighting      = false;
     viewer.scene.globe.showGroundAtmosphere = false;
     viewer.scene.globe.preloadAncestors    = true;
     viewer.scene.globe.preloadSiblings     = true;
     viewer.scene.globe.tileCacheSize       = 2000;
-
-    // Realistic shadows and sun-based lighting for 3D cities
-    viewer.shadows = true;
-    if (viewer.shadowMap) viewer.shadowMap.enabled = true;
-    viewer.scene.light = new Cesium.SunLight();
 
     // FXAA applies a blur kernel over the whole frame — disabling it is the
     // single most impactful change for text / label crispness.
@@ -219,9 +199,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     (viewer as any).useBrowserRecommendedResolution = false;
     viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 2);
 
-    // Atmospheric depth: fog for distant geometry (open-source, no Ion)
-    viewer.scene.fog.enabled = true;
-    viewer.scene.fog.density = 0.0002;
+    // Fog and HDR both soften the image.
+    viewer.scene.fog.enabled = false;
     viewer.scene.highDynamicRange = false;
 
     // Reduce GPU load when idle; layers call requestRender() on updates
@@ -234,7 +213,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     ctrl.minimumZoomDistance = 200;
     ctrl.maximumZoomDistance = 2.5e7;
 
-    if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = true;
+    if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
     if (viewer.scene.skyBox) (viewer.scene.skyBox as any).show = false;
     if (viewer.scene.sun)  viewer.scene.sun.show  = false;
     if (viewer.scene.moon) viewer.scene.moon.show = false;
@@ -285,7 +264,6 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     mgr.register(new CityLabelsLayer());
     mgr.register(new FiberRoutesLayer());
     mgr.register(new FeasibilityHeatmapLayer());
-    mgr.register(new BuildingsLayer());
     managerRef.current = mgr;
 
     const makeCtx = (): LayerContext => {
@@ -473,7 +451,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       stateBorders:   layers.stateBorders,
       cities:         layers.cities,
       routes:         layers.routes,
-      buildings:      layers.buildings,
+
       powerHeatmap:   layers.powerHeatmap,
     };
 
@@ -481,7 +459,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
   }, [
     layers.countryBorders, layers.stateBorders, layers.cities,
-    layers.routes, layers.buildings, layers.powerHeatmap,
+    layers.routes, layers.powerHeatmap,
     basemap, cameraState.level, cameraState.height, cameraState.viewRect, powerScenario,
   ]);
 
@@ -495,7 +473,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
-    const sse: Record<string, number> = { WORLD: 6, REGION: 2, LOCAL: 1.5, CITY: 1.25 };
+    const sse: Record<string, number> = { WORLD: 8, REGION: 2.5, LOCAL: 2, CITY: 2 };
     v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 2;
     v.scene.requestRender();
   }, [cameraState.level]);

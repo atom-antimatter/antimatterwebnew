@@ -21,7 +21,6 @@ export type LayersState = {
   cities: boolean;
   points: boolean;
   routes: boolean;
-  buildings: boolean;
   powerHeatmap: boolean;
   powerGeneration: boolean;
   powerQueue: boolean;
@@ -115,6 +114,7 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
           ref={panelRef}
           role="dialog"
           aria-label="Map layers"
+          onWheel={(e) => e.stopPropagation()}
           className="
             fixed top-16 right-4 z-40
             w-[300px] rounded-2xl
@@ -176,13 +176,7 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
                 checked={overlays.points}
                 onToggle={() => toggleOverlay("points")}
               />
-              <SwitchRow
-                label="3D Buildings"
-                helper="OSM Buildings · visible at city zoom"
-                zoomNote={overlays.buildings && isGlobal ? "Zoom in to see" : undefined}
-                checked={overlays.buildings}
-                onToggle={() => toggleOverlay("buildings")}
-              />
+
               <SwitchRow
                 label="Fiber routes"
                 helper="Geolocated routes · may be approximate"
