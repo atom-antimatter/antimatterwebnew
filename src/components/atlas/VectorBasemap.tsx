@@ -1,14 +1,14 @@
 "use client";
 /**
  * VectorBasemap — renders crisp vector tiles via MapLibre GL as a canvas
- * positioned BEHIND the Cesium canvas. Camera is synced from Cesium → MapLibre
- * on every frame.
+ * positioned ON TOP of the Cesium canvas with pointer-events: none.
  *
- * Architecture:
- *  - MapLibre renders labels, roads, borders with SDF text (retina-native)
- *  - Cesium renders markers, overlays, 3D buildings on top
- *  - Cesium's globe base color is set to transparent so MapLibre shows through
- *  - pointer-events: none on MapLibre so all interaction goes to Cesium
+ * When active, MapLibre provides the full basemap (roads, water, labels,
+ * borders) rendered with SDF text at native device pixel ratio. Cesium's
+ * raster imagery is removed and only its data overlays (DC markers, power
+ * layers, fiber routes) remain — those are rendered as HTML tooltips or
+ * Cesium entities that the user interacts with through the MapLibre layer
+ * via pointer-events: none passthrough.
  */
 import { useEffect, useRef, useCallback } from "react";
 import maplibregl from "maplibre-gl";
@@ -21,12 +21,16 @@ type Props = {
   visible: boolean;
 };
 
-/** Convert Cesium camera height (metres) to approximate MapLibre zoom level. */
+/**
+ * Convert Cesium camera height (metres) to MapLibre zoom level.
+ *
+ * Standard Web Mercator: at zoom z, ground resolution at equator =
+ * 78271.484 / 2^z metres/pixel. For a 512px viewport:
+ * height ≈ groundRes * 512 / 2 = 78271.484 * 256 / 2^z
+ * → z = log2(78271.484 * 256 / height)
+ */
 function heightToMapLibreZoom(heightM: number): number {
-  // At zoom 0, one pixel ≈ 156543m. zoom = log2(156543 / metersPerPixel)
-  // metersPerPixel ≈ heightM / (canvasHeight/2)
-  // Simplified: zoom ≈ log2(156543 * 512 / heightM) - 1
-  const z = Math.log2((156543 * 512) / Math.max(heightM, 1)) - 1;
+  const z = Math.log2((78271.484 * 256) / Math.max(heightM, 1));
   return Math.max(0, Math.min(22, z));
 }
 
@@ -48,7 +52,7 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
       mapRef.current.remove();
       mapRef.current = null;
     }
-    if (mapRef.current) return; // already initialized with this style
+    if (mapRef.current) return;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -58,7 +62,8 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
       interactive: false,
       attributionControl: false,
       fadeDuration: 0,
-      maxPitch: 0,
+      pixelRatio: window.devicePixelRatio,
+      maxPitch: 85,
     });
 
     map.on("load", () => {
@@ -80,7 +85,7 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [styleId]);
 
-  // Camera sync: Cesium → MapLibre
+  // Camera sync: Cesium → MapLibre (every frame)
   const syncCamera = useCallback(() => {
     const viewer = viewerRef.current as any;
     const map = mapRef.current;
@@ -97,20 +102,15 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
       const heading = (cam.heading * 180) / Math.PI;
 
       const zoom = heightToMapLibreZoom(height);
-      // MapLibre bearing is negative of Cesium heading
       const bearing = -heading;
 
-      map.jumpTo({
-        center: [lng, lat],
-        zoom,
-        bearing,
-      });
+      map.jumpTo({ center: [lng, lat], zoom, bearing });
     } catch {
       // Camera not ready yet
     }
   }, [viewerRef]);
 
-  // Start camera sync loop when visible
+  // Sync loop — runs at display refresh rate when visible
   useEffect(() => {
     if (!visible) {
       if (syncFrameRef.current !== null) {
@@ -148,7 +148,7 @@ export default function VectorBasemap({ styleId, viewerRef, visible }: Props) {
       ref={containerRef}
       className="absolute inset-0 w-full h-full"
       style={{
-        zIndex: 0,
+        zIndex: 1,
         pointerEvents: "none",
         visibility: visible ? "visible" : "hidden",
       }}

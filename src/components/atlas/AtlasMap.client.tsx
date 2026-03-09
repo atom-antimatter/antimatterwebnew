@@ -630,7 +630,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   useEffect(() => {
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
-    const sse: Record<string, number> = { WORLD: 8, REGION: 2.5, LOCAL: 2, CITY: 2 };
+    const sse: Record<string, number> = { WORLD: 4, REGION: 1.5, LOCAL: 1.2, CITY: 1 };
     v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 2;
     v.scene.requestRender();
   }, [cameraState.level]);
@@ -654,14 +654,16 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     }, 3000);
 
     if (vectorActive) {
-      // Vector mode: MapLibre overlay provides the basemap.
-      // Remove Cesium imagery and make globe transparent so MapLibre shows through.
+      // Vector mode: MapLibre overlay ON TOP provides the full basemap.
+      // Hide Cesium's globe entirely so the canvas is transparent and
+      // MapLibre's rendering shows through from below. Cesium entities
+      // (DC markers, overlays) still render on the transparent canvas.
       v.imageryLayers.removeAll();
-      v.scene.globe.baseColor = Cesium.Color.TRANSPARENT;
-      v.scene.globe.showGroundAtmosphere = false;
-      v.scene.backgroundColor = Cesium.Color.TRANSPARENT;
+      v.scene.globe.show = false;
+      v.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202").withAlpha(0);
     } else {
       // Raster mode: Cesium renders imagery tiles normally.
+      v.scene.globe.show = true;
       v.scene.globe.baseColor = Cesium.Color.fromCssColorString("#1a1b2e");
       v.scene.backgroundColor = Cesium.Color.fromCssColorString("#020202");
       v.imageryLayers.removeAll();
@@ -797,7 +799,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         visible={vectorActive}
       />
 
-      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none", zIndex: 1 }} />
+      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none", zIndex: 3 }} />
 
       {!isReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#020202] text-[rgba(246,246,253,0.5)] text-sm z-10">Loading map…</div>
