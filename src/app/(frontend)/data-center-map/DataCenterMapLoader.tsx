@@ -7,9 +7,7 @@ const DataCenterMapClient = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="min-h-screen w-full bg-[#020202] flex items-center justify-center text-[#f6f6fd]/70">
-        Loading globe…
-      </div>
+      <div className="h-[100dvh] w-full bg-[#020202]" />
     ),
   }
 );

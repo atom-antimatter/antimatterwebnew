@@ -801,9 +801,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
 
       <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none", zIndex: 3 }} />
 
-      {!isReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#020202] text-[rgba(246,246,253,0.5)] text-sm z-10">Loading map…</div>
-      )}
+
 
       <RenderDebugOverlay
         cameraState={cameraState}
