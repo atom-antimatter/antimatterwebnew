@@ -56,6 +56,7 @@ export class FiberRoutesLayer implements ILayer {
   readonly name = "routes";
   private ds:    Cesium.CustomDataSource | null = null;
   private stats: LayerStats = { enabled: false, entityCount: 0, fetchStatus: "idle", lastUpdateAt: null, lastError: null };
+  private renderReqId = 0;
 
   async enable(ctx: LayerContext) {
     const { viewer } = ctx;
@@ -103,11 +104,16 @@ export class FiberRoutesLayer implements ILayer {
       return;
     }
 
+    const myId = ++this.renderReqId;
     this.stats = { ...this.stats, fetchStatus: "loading" };
     const ds = this.ds;
-    ds.entities.removeAll();
 
     const { segments, error } = await loadSegments();
+
+    // Stale render check — a newer render was triggered while we were loading
+    if (myId !== this.renderReqId) return;
+    ds.entities.removeAll();
+
     if (error) {
       this.stats = { ...this.stats, fetchStatus: "error", lastError: error };
       return;

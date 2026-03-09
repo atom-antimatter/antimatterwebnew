@@ -82,6 +82,7 @@ export class CityLabelsLayer implements ILayer {
   readonly name = "cities";
   private ds:    Cesium.CustomDataSource | null = null;
   private stats: LayerStats = { enabled: false, entityCount: 0, fetchStatus: "idle", lastUpdateAt: null, lastError: null };
+  private renderReqId = 0;
 
   async enable(ctx: LayerContext) {
     const { viewer } = ctx;
@@ -113,9 +114,9 @@ export class CityLabelsLayer implements ILayer {
 
   private async render(ctx: LayerContext) {
     if (!this.ds) return;
+    const myId = ++this.renderReqId;
     this.stats = { ...this.stats, fetchStatus: "loading" };
     const ds = this.ds;
-    ds.entities.removeAll();
 
     const t0 = Date.now();
     let cities: CityPoint[];
@@ -125,6 +126,10 @@ export class CityLabelsLayer implements ILayer {
       this.stats = { ...this.stats, fetchStatus: "error", lastError: (e as Error).message };
       return;
     }
+
+    // Stale render check — a newer render was triggered while we were loading
+    if (myId !== this.renderReqId) return;
+    ds.entities.removeAll();
 
     const { list, gated } = citiesForLevel(cities, ctx);
 

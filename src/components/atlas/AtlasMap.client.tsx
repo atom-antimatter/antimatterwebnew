@@ -18,7 +18,8 @@ import * as Cesium from "cesium";
 
 import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { useCameraLevel }    from "./useCameraLevel";
-import DebugPanel            from "./DebugPanel";
+import RenderDebugOverlay    from "./debug/RenderDebugOverlay";
+import type { MoveSource }   from "./debug/useRenderDiagnostics";
 import { LayerManager }      from "./layers/LayerManager";
 import { CountryBordersLayer } from "./layers/CountryBordersLayer";
 import { StateBordersLayer }   from "./layers/StateBordersLayer";
@@ -28,6 +29,7 @@ import { FeasibilityHeatmapLayer } from "./layers/FeasibilityHeatmapLayer";
 import type { LayerContext } from "./layers/types";
 import type { ProviderRegion } from "@/lib/providers/linode/types";
 import { getMinimumZoomDistance, heightToTileZoom, BASEMAP_MAX_LEVEL } from "@/lib/map/zoomEstimate";
+import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
 // ─── exported types ────────────────────────────────────────────────────────
 
@@ -115,20 +117,38 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   const powerGenRef     = useRef<Cesium.CustomDataSource | null>(null);
   const powerQueueRef   = useRef<Cesium.CustomDataSource | null>(null);
 
+  const basemapRef      = useRef<Basemap>(basemap);
+  const moveSourceRef   = useRef<MoveSource>("free-nav");
+  const isSelectedRef   = useRef(false);
+
+  const { setCameraLevel } = useAtlasSelectionStore();
+
   const [tooltip,   setTooltip]   = useState<Tooltip>(null);
   const [isReady,   setIsReady]   = useState(false);
   const cameraState = useCameraLevel(viewerRef);
+
+  // Keep basemapRef current so the makeCtx factory always reads the latest value
+  useEffect(() => { basemapRef.current = basemap; }, [basemap]);
+
+  // Sync camera level to the selection store so LayersMenu can read it
+  useEffect(() => { setCameraLevel(cameraState.level); }, [cameraState.level, setCameraLevel]);
 
   // ── Expose flyTo / resetView ─────────────────────────────────────────────
   useImperativeHandle(ref, () => ({
     flyTo: (pos, dur=1.5) => {
       const v = viewerRef.current;
       if (!v||v.isDestroyed()) return;
-      v.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, pos.height??1_500_000), duration: dur, easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT });
+      v.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(pos.lng, pos.lat, pos.height ?? 1_500_000),
+        duration: dur,
+        easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+        complete: () => { v.scene.requestRender(); },
+      });
     },
     resetView: () => {
       const v = viewerRef.current;
       if (!v||v.isDestroyed()) return;
+      moveSourceRef.current = "reset-view";
       v.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(-20,25,18_000_000), duration: 2, easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT });
     },
     getCameraCenter: () => {
@@ -200,7 +220,13 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
     // Resize / DPR — also poll every 2s for Mac display changes that shift DPR
-    const onResize = () => { if (!viewer.isDestroyed()) { viewer.resize(); viewer.resolutionScale = Math.min(window.devicePixelRatio||1, 2); } };
+    const onResize = () => {
+      if (!viewer.isDestroyed()) {
+        viewer.resize();
+        viewer.resolutionScale = Math.min(window.devicePixelRatio||1, 2);
+        viewer.scene.requestRender();
+      }
+    };
     window.addEventListener("resize", onResize);
     let lastDPR = window.devicePixelRatio;
     const dprPollId = setInterval(() => {
@@ -208,8 +234,9 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         lastDPR = window.devicePixelRatio;
         viewer.resolutionScale = Math.min(lastDPR, 2);
         viewer.resize();
+        viewer.scene.requestRender();
       }
-    }, 2000);
+    }, 1500);
 
     // Debug shortcut
     const onKey = (e: KeyboardEvent) => {
@@ -243,7 +270,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         }
       } catch { /* underground camera */ }
       const level = h > 10_000_000 ? "WORLD" : h > 3_500_000 ? "REGION" : h > 900_000 ? "LOCAL" : "CITY";
-      return { viewer, cameraLevel: level as LayerContext["cameraLevel"], viewRect, heightMeters: h, basemap: "osmDark" };
+      return { viewer, cameraLevel: level as LayerContext["cameraLevel"], viewRect, heightMeters: h, basemap: basemapRef.current };
     };
     mgr.init(viewer, makeCtx);
 
@@ -279,7 +306,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       const lat    = Cesium.Math.toDegrees(carto.latitude);
       const lng    = Cesium.Math.toDegrees(carto.longitude);
       const curH   = viewer.camera.positionCartographic.height;
-      const newH   = Math.max(curH * 0.45, 80_000); // zoom in 55%, min 80km
+      const newH   = Math.max(curH * 0.45, 60_000); // zoom in 55%, min 60km (crisp CITY band)
+      moveSourceRef.current = "cluster-click";
       viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(lng, lat, newH),
         duration: 0.8,
@@ -292,7 +320,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       const picked = viewer.scene.pick(ev.position);
 
       if (picked?.id?.dcData) {
-        // Individual DC marker
+        moveSourceRef.current = "dc-selection";
+        isSelectedRef.current = true;
         onSelectDc?.(picked.id.dcData as DataCenter);
         onSelectLinode?.(null);
       } else if (picked?.id?.linodeData) {
@@ -307,6 +336,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       ) {
         zoomIntoCluster(picked.id as Cesium.Entity);
       } else {
+        moveSourceRef.current = "free-nav";
+        isSelectedRef.current = false;
         onSelectDc?.(null); onSelectLinode?.(null); setTooltip(null);
         if (onMapClick) {
           const cart = viewer.camera.pickEllipsoid(ev.position, viewer.scene.globe.ellipsoid);
@@ -423,9 +454,10 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     const v = viewerRef.current;
     if (!v || v.isDestroyed()) return;
     // Minimum 2: lower pushes tile requests past provider maxLevel → upscaling → blur.
-    const baseSse: Record<string, number> = { WORLD: 8, REGION: 2, LOCAL: 1.5, CITY: 1.25 };
-    const scale = v.resolutionScale ?? 1;
-    v.scene.globe.maximumScreenSpaceError = (baseSse[cameraState.level] ?? 2) * scale;
+    // Fixed SSE values — do NOT multiply by resolutionScale (CesiumJS issue #8082:
+    // resolutionScale already compensates for DPR; multiplying causes tile overload).
+    const sse: Record<string, number> = { WORLD: 16, REGION: 4, LOCAL: 2, CITY: 1.5 };
+    v.scene.globe.maximumScreenSpaceError = sse[cameraState.level] ?? 2;
   }, [cameraState.level]);
 
   // ── Basemap swap ──────────────────────────────────────────────────────────
@@ -560,7 +592,14 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         <div className="absolute inset-0 flex items-center justify-center bg-[#020202] text-[rgba(246,246,253,0.5)] text-sm z-10">Loading map…</div>
       )}
 
-      <DebugPanel cameraState={cameraState} viewerReady={isReady} layerManager={managerRef} viewerRef={viewerRef} />
+      <RenderDebugOverlay
+        cameraState={cameraState}
+        viewerReady={isReady}
+        viewerRef={viewerRef as React.RefObject<unknown>}
+        layerManagerRef={managerRef}
+        moveSourceRef={moveSourceRef}
+        isSelectedRef={isSelectedRef}
+      />
 
       {tooltip && (
         <div className="pointer-events-none absolute z-20 bg-[rgba(6,7,15,0.92)] backdrop-blur-sm border border-[rgba(246,246,253,0.1)] rounded-xl px-3 py-2 shadow-lg max-w-[220px]" style={{ left:tooltip.x+14, top:tooltip.y-10 }}>

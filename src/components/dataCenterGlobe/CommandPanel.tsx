@@ -9,7 +9,7 @@ import { searchGazetteer, initGazetteer, type GazetteerResult } from "@/lib/sear
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
-export type SearchStatus = "idle" | "loading" | "no-results" | "no-dc";
+export type SearchStatus = "idle" | "loading" | "no-results" | "no-dc" | "no-filter-match";
 type TierFilter = NonNullable<DataCenter["tier"]> | null;
 
 export type CommandPanelProps = {
@@ -524,16 +524,16 @@ export default function CommandPanel({
               <p className="text-sm text-[rgba(246,246,253,0.5)] mb-1">
                 {searchStatus === "no-dc"
                   ? "No data centers in this area."
-                  : query.trim()
-                    ? "No matching data centers found."
-                    : "No data centers match these filters."}
+                  : searchStatus === "no-filter-match"
+                    ? "No data centers match these filters."
+                    : "No matching data centers found."}
               </p>
               <p className="text-xs text-[rgba(246,246,253,0.3)]">
                 {searchStatus === "no-dc"
                   ? "Try increasing the radius or removing filters."
-                  : query.trim()
-                    ? "Try a different location or broadening your filters."
-                    : "Try selecting different capabilities or tiers."}
+                  : searchStatus === "no-filter-match"
+                    ? "Try selecting different capabilities or tiers."
+                    : "Try a different location or broadening your filters."}
               </p>
             </div>
           )}

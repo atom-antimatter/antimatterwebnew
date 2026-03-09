@@ -8,6 +8,7 @@
 import { useRef, useState } from "react";
 import { Layers, X } from "lucide-react";
 import { useAtlasLayersStore, type OverlayKey, type PowerLayerKey, type ProviderLayerKey, type Basemap } from "@/state/atlasLayersStore";
+import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 import styles from "@/components/ui/css/Button.module.css";
 
 // ── Re-export types that the parent component still references ───────────────
@@ -33,9 +34,9 @@ export type LayersMenuProps = {
 // ─── sub-components ──────────────────────────────────────────────────────────
 
 function SwitchRow({
-  label, helper, checked, onToggle,
+  label, helper, zoomNote, checked, onToggle,
 }: {
-  label: string; helper?: string; checked: boolean; onToggle: () => void;
+  label: string; helper?: string; zoomNote?: string; checked: boolean; onToggle: () => void;
 }) {
   return (
     <button
@@ -48,6 +49,7 @@ function SwitchRow({
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-[#f6f6fd] leading-snug">{label}</p>
         {helper && <p className="text-[11px] text-[rgba(246,246,253,0.4)] mt-0.5 leading-tight">{helper}</p>}
+        {zoomNote && <p className="text-[11px] text-[rgba(162,163,233,0.55)] mt-0.5 leading-tight italic">{zoomNote}</p>}
       </div>
       <div className={`relative w-10 h-5 rounded-full flex-shrink-0 transition-colors duration-200 ${checked ? "bg-[#696aac]" : "bg-[rgba(246,246,253,0.14)]"}`}>
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${checked ? "translate-x-5" : "translate-x-0"}`} />
@@ -98,6 +100,9 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
     power,    togglePower,
     providers, toggleProvider,
   } = useAtlasLayersStore();
+  const { cameraLevel } = useAtlasSelectionStore();
+
+  const isGlobal = cameraLevel === "WORLD" || cameraLevel === "REGION";
 
   return (
     <div className="fixed bottom-6 right-5 z-40 flex flex-col items-end gap-2">
@@ -131,51 +136,86 @@ export default function LayersMenu({ onResetView }: LayersMenuProps) {
             {/* Base map */}
             <SectionLabel>Base map</SectionLabel>
             <div role="radiogroup" aria-label="Base map selection">
-              <BasemapRadio value="osmDark"     label="Carto Dark"      helper="Default, matches dark theme" checked={basemap === "osmDark"}     onSelect={setBasemap} />
-              <BasemapRadio value="osmLight"    label="Carto Light"     checked={basemap === "osmLight"}    onSelect={setBasemap} />
-              <BasemapRadio value="osmStandard" label="OpenStreetMap"   helper="Standard tiles (may appear soft on Retina)" checked={basemap === "osmStandard"} onSelect={setBasemap} />
+              <BasemapRadio value="osmDark"     label="Carto Dark"    helper="Recommended · dark theme · retina" checked={basemap === "osmDark"}     onSelect={setBasemap} />
+              <BasemapRadio value="osmLight"    label="Carto Light"   helper="Light theme · retina"             checked={basemap === "osmLight"}    onSelect={setBasemap} />
+              <BasemapRadio value="osmStandard" label="OpenStreetMap" helper="May appear soft on Retina"        checked={basemap === "osmStandard"} onSelect={setBasemap} />
             </div>
 
-            {/* Overlays */}
+            {/* Boundaries */}
             <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
-              <SectionLabel>Overlays</SectionLabel>
-              {(["countryBorders", "stateBorders", "cities", "points", "routes"] as OverlayKey[]).map(key => {
-                const META: Record<OverlayKey, { label: string; helper?: string }> = {
-                  countryBorders: { label: "Country borders" },
-                  stateBorders:   { label: "State / province borders", helper: "110 m simplified" },
-                  cities:         { label: "City labels",              helper: "Appear as you zoom in" },
-                  points:         { label: "Data centers" },
-                  routes:         { label: "Fiber routes",             helper: "Visible at local zoom" },
-                };
-                const { label, helper } = META[key];
-                return (
-                  <SwitchRow key={key} label={label} helper={helper} checked={overlays[key]} onToggle={() => toggleOverlay(key)} />
-                );
-              })}
+              <SectionLabel>Boundaries</SectionLabel>
+              <SwitchRow
+                label="Country borders"
+                checked={overlays.countryBorders}
+                onToggle={() => toggleOverlay("countryBorders")}
+              />
+              <SwitchRow
+                label="State / province borders"
+                helper="110 m simplified"
+                checked={overlays.stateBorders}
+                onToggle={() => toggleOverlay("stateBorders")}
+              />
+              <SwitchRow
+                label="City labels"
+                helper="Your own overlay — GPS-accurate"
+                zoomNote={overlays.cities && isGlobal ? "Zoom in to see" : undefined}
+                checked={overlays.cities}
+                onToggle={() => toggleOverlay("cities")}
+              />
             </div>
 
-            {/* Power & Energy */}
+            {/* Infrastructure */}
+            <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
+              <SectionLabel>Infrastructure</SectionLabel>
+              <SwitchRow
+                label="Data centers"
+                checked={overlays.points}
+                onToggle={() => toggleOverlay("points")}
+              />
+              <SwitchRow
+                label="Fiber routes"
+                helper="Geolocated routes · may be approximate"
+                zoomNote={overlays.routes && isGlobal ? "Zoom in to see" : undefined}
+                checked={overlays.routes}
+                onToggle={() => toggleOverlay("routes")}
+              />
+              <SwitchRow
+                label="Nearby generation"
+                helper="EIA-860 plant data · sized by MW"
+                zoomNote={overlays.routes && isGlobal && power.powerGeneration ? "Zoom in to see" : undefined}
+                checked={power.powerGeneration}
+                onToggle={() => togglePower("powerGeneration")}
+              />
+            </div>
+
+            {/* Power */}
             <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
               <SectionLabel>Power &amp; Energy</SectionLabel>
-              {(["powerHeatmap","powerGeneration","powerQueue"] as PowerLayerKey[]).map(key => {
-                const META: Record<PowerLayerKey, { label: string; helper?: string }> = {
-                  powerHeatmap:    { label: "Feasibility heatmap",     helper: "Score grid by electricity cost, carbon, generation, queue" },
-                  powerGeneration: { label: "Nearby generation",       helper: "EIA-860 plant points sized by MW" },
-                  powerQueue:      { label: "Interconnection queue",   helper: "Queued MW proxy — not available capacity" },
-                };
-                const { label, helper } = META[key];
-                return (
-                  <SwitchRow key={key} label={label} helper={helper} checked={power[key]} onToggle={() => togglePower(key)} />
-                );
-              })}
+              <SwitchRow
+                label="Feasibility heatmap"
+                helper="Scored by cost, carbon, generation, queue"
+                zoomNote={power.powerHeatmap && isGlobal ? "Zoom in to see" : undefined}
+                checked={power.powerHeatmap}
+                onToggle={() => togglePower("powerHeatmap")}
+              />
+              <SwitchRow
+                label="Interconnection queue"
+                helper="Queued MW proxy · not available capacity"
+                zoomNote={power.powerQueue && isGlobal ? "Zoom in to see" : undefined}
+                checked={power.powerQueue}
+                onToggle={() => togglePower("powerQueue")}
+              />
             </div>
 
             {/* Providers */}
             <div className="border-t border-[rgba(246,246,253,0.07)] mt-1">
               <SectionLabel>Providers</SectionLabel>
-              {(["linodeRegions"] as ProviderLayerKey[]).map(key => (
-                <SwitchRow key={key} label="Akamai / Linode regions" helper="Cloud computing regions from Linode API" checked={providers[key]} onToggle={() => toggleProvider(key)} />
-              ))}
+              <SwitchRow
+                label="Akamai / Linode regions"
+                helper="Cloud computing regions"
+                checked={providers.linodeRegions}
+                onToggle={() => toggleProvider("linodeRegions")}
+              />
             </div>
 
           </div>{/* end scrollable body */}

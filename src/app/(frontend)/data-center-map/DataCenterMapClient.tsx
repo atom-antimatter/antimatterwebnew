@@ -3,8 +3,7 @@
 /**
  * DataCenterMapClient — orchestrates the Infrastructure Atlas.
  *
- * Layer state is now owned by atlasLayersStore (Zustand).
- * This component no longer has local useState for layers/basemap/powerScenario.
+ * Pure Cesium renderer. Layer state is owned by atlasLayersStore (Zustand).
  */
 
 import { useCallback, useRef, useState } from "react";
@@ -15,19 +14,16 @@ import CommandPanel, { type SearchStatus } from "@/components/dataCenterGlobe/Co
 import DetailCard from "@/components/dataCenterGlobe/DetailCard";
 import LayersMenu from "@/components/atlas/LayersMenu";
 import type { AtlasMapRef, AtlasLayers } from "@/components/atlas/AtlasMap.client";
-import type { CityMapRef } from "@/components/atlas/CityMap.client";
 import PowerFeasibilityPanel from "@/components/atlas/power/PowerFeasibilityPanel";
 import { DATA_CENTERS, type DataCenter } from "@/data/dataCenters";
 import { filterDataCenters } from "@/lib/search/filterDataCenters";
 import { runSearchPipeline } from "@/lib/search/searchPipeline";
 import type { GazetteerResult } from "@/lib/search/gazetteer";
-import { heightToMapLibreZoom, TRANSITION_HEIGHT } from "@/lib/map/cameraSync";
 import { useAtlasLayersStore } from "@/state/atlasLayersStore";
 import { useAtlasSelectionStore } from "@/state/atlasSelectionStore";
 
 const LinodeCard = dynamic(() => import("@/components/atlas/providers/LinodeCard"), { ssr: false, loading: () => null });
 const AtlasMap   = dynamic(() => import("@/components/atlas/AtlasMap.client"),       { ssr: false, loading: () => null });
-const CityMap    = dynamic(() => import("@/components/atlas/CityMap.client"),        { ssr: false, loading: () => null });
 const SiteBrief  = dynamic(() => import("@/components/atlas/power/SiteBrief"),       { ssr: false, loading: () => null });
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -35,24 +31,19 @@ const SiteBrief  = dynamic(() => import("@/components/atlas/power/SiteBrief"),  
 type GeocodedPos = { lat: number; lng: number } | null;
 type TierFilter = NonNullable<DataCenter["tier"]> | null;
 
-const FLY_HEIGHT_SEARCH = 1_800_000;
-const FLY_HEIGHT_DC     =   800_000;
+// Deliberate camera heights — land in crisp zoom bands, not arbitrary altitudes.
+const PREFERRED_HEIGHT_DC     =  120_000; // 120 km — CITY band, crisp Cesium labels
+const PREFERRED_HEIGHT_SEARCH =  800_000; // 800 km — LOCAL band, readable
+const PREFERRED_HEIGHT_RESET  = 18_000_000; // world view
 
 // ─── component ────────────────────────────────────────────────────────────────
 
 export default function DataCenterMapClient() {
   const atlasRef = useRef<AtlasMapRef | null>(null);
-  const cityRef  = useRef<CityMapRef | null>(null);
-
-  type MapMode = "globe" | "city";
-  const [mapMode, setMapMode] = useState<MapMode>("globe");
-  const [cityCenter, setCityCenter] = useState<{ lat: number; lng: number }>({ lat: 33.75, lng: -84.39 });
-  const [cityZoom, setCityZoom]     = useState(8);
 
   // ── Layer state from store (single source of truth) ────────────────────
   const { overlays, power, providers, basemap, powerScenario } = useAtlasLayersStore();
 
-  // Flatten into the shape AtlasMap expects
   const layers: AtlasLayers = {
     countryBorders:  overlays.countryBorders,
     stateBorders:    overlays.stateBorders,
@@ -65,7 +56,7 @@ export default function DataCenterMapClient() {
     linodeRegions:   providers.linodeRegions,
   };
 
-  // ── Selection store (replaces local DC/Linode/pin state) ───────────────
+  // ── Selection store ─────────────────────────────────────────────────────
   const {
     selectedDc, setSelectedDc,
     selectedLinode, setSelectedLinode,
@@ -73,7 +64,7 @@ export default function DataCenterMapClient() {
     powerPanelOpen, setPowerPanelOpen,
   } = useAtlasSelectionStore();
 
-  // ── UI state (not persisted) ────────────────────────────────────────────
+  // ── UI state ────────────────────────────────────────────────────────────
   const [isPanelOpen,  setIsPanelOpen]  = useState(true);
   const [siteBriefPos, setSiteBriefPos] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -88,37 +79,20 @@ export default function DataCenterMapClient() {
 
   const highlightIds = results && results.length > 0 ? results.map(d => d.id) : null;
 
-  const flyToAny = useCallback((pos: { lat: number; lng: number; height?: number }, dur = 1.5) => {
-    const h = pos.height ?? FLY_HEIGHT_SEARCH;
-    if (h < TRANSITION_HEIGHT && mapMode === "globe") {
-      const center = atlasRef.current?.getCameraCenter() ?? { lat: pos.lat, lng: pos.lng };
-      setCityCenter(center);
-      setCityZoom(heightToMapLibreZoom(h));
-      setMapMode("city");
-      setTimeout(() => cityRef.current?.flyTo(pos, dur), 150);
-    } else if (h >= TRANSITION_HEIGHT && mapMode === "city") {
-      setMapMode("globe");
-      setTimeout(() => atlasRef.current?.flyTo(pos, dur), 150);
-    } else if (mapMode === "city") {
-      cityRef.current?.flyTo(pos, dur);
-    } else {
-      atlasRef.current?.flyTo(pos, dur);
-    }
-  }, [mapMode]);
-
+  // ── DC selection — always flies to a deliberate crisp height ───────────
   const handleSelectDc = useCallback((dc: DataCenter | null) => {
     setSelectedDc(dc);
     if (dc) {
       setSelectedLinode(null);
-      flyToAny({ lat: dc.lat, lng: dc.lng, height: FLY_HEIGHT_DC }, 1.2);
+      atlasRef.current?.flyTo({ lat: dc.lat, lng: dc.lng, height: PREFERRED_HEIGHT_DC }, 1.2);
     }
-  }, [setSelectedDc, setSelectedLinode, flyToAny]);
+  }, [setSelectedDc, setSelectedLinode]);
 
   /**
-   * Unified filter pipeline. Supports three modes:
-   *  1. Search mode: geocodedPos exists -> radius + capability/tier
-   *  2. Text mode: rawQuery exists, no geocodedPos -> text match + filters
-   *  3. Browse mode: no query -> filter all DCs by capability/tier
+   * Unified filter pipeline. Three modes:
+   *  1. Search/geocode: geocodedPos exists → radius + capability/tier
+   *  2. Text: rawQuery but no geocodedPos → fuzzy match + filters
+   *  3. Browse: no query → filter all DCs immediately
    */
   const computeVisibleResults = useCallback(
     (opts: { rawQuery: string; pos: GeocodedPos; caps: string[]; tier: TierFilter; radius: number }) => {
@@ -144,7 +118,7 @@ export default function DataCenterMapClient() {
       if (filtered.length === 0) {
         if (pos) setSearchStatus("no-dc");
         else if (hasQuery) setSearchStatus("no-results");
-        else setSearchStatus("no-results");
+        else setSearchStatus("no-filter-match");
       } else {
         setSearchStatus("idle");
       }
@@ -179,9 +153,9 @@ export default function DataCenterMapClient() {
       const bbox = pipelineResult.location?.bbox;
       if (bbox) {
         const [w, s, e, n] = bbox;
-        flyToAny({ lat: (s+n)/2, lng: (w+e)/2, height: FLY_HEIGHT_SEARCH }, 1.5);
+        atlasRef.current?.flyTo({ lat: (s+n)/2, lng: (w+e)/2, height: PREFERRED_HEIGHT_SEARCH }, 1.5);
       } else {
-        flyToAny({ lat: pos.lat, lng: pos.lng, height: FLY_HEIGHT_SEARCH }, 1.5);
+        atlasRef.current?.flyTo({ lat: pos.lat, lng: pos.lng, height: PREFERRED_HEIGHT_SEARCH }, 1.5);
       }
     }
     if (pipelineResult.location?.kind === "facility" && pipelineResult.location.dc) {
@@ -197,8 +171,10 @@ export default function DataCenterMapClient() {
     });
     setResults(filtered);
     setSearchStatus(filtered.length === 0 ? (pos ? "no-dc" : "no-results") : "idle");
-    if (!pos && filtered.length > 0) flyToAny({ lat: filtered[0].lat, lng: filtered[0].lng, height: FLY_HEIGHT_SEARCH }, 1.5);
-  }, [capabilityFilters, tierFilter, radiusKm, handleSelectDc, flyToAny]);
+    if (!pos && filtered.length > 0) {
+      atlasRef.current?.flyTo({ lat: filtered[0].lat, lng: filtered[0].lng, height: PREFERRED_HEIGHT_SEARCH }, 1.5);
+    }
+  }, [capabilityFilters, tierFilter, radiusKm, handleSelectDc]);
 
   const handleSelectSuggestion = useCallback((r: GazetteerResult) => {
     if (r.kind === "facility" && r.dc) {
@@ -209,9 +185,9 @@ export default function DataCenterMapClient() {
     }
     const pos = { lat: r.lat, lng: r.lng };
     setGeocodedPos(pos);
-    flyToAny({ lat: r.lat, lng: r.lng, height: FLY_HEIGHT_SEARCH }, 1.2);
+    atlasRef.current?.flyTo({ lat: r.lat, lng: r.lng, height: PREFERRED_HEIGHT_SEARCH }, 1.2);
     computeVisibleResults({ rawQuery: lastRawQuery, pos, caps: capabilityFilters, tier: tierFilter, radius: radiusKm });
-  }, [radiusKm, capabilityFilters, tierFilter, lastRawQuery, handleSelectDc, computeVisibleResults, flyToAny]);
+  }, [radiusKm, capabilityFilters, tierFilter, lastRawQuery, handleSelectDc, computeVisibleResults]);
 
   const handleToggleCapability = useCallback((cap: string) => {
     const next = capabilityFilters.includes(cap) ? capabilityFilters.filter(c => c !== cap) : [...capabilityFilters, cap];
@@ -236,16 +212,6 @@ export default function DataCenterMapClient() {
     setLastRawQuery(""); setSelectedDc(null);
   }, [setSelectedDc]);
 
-  const handleTransitionToGlobe = useCallback(() => {
-    const center = cityRef.current?.getCameraCenter();
-    if (center) {
-      setMapMode("globe");
-      setTimeout(() => {
-        atlasRef.current?.flyTo({ lat: center.lat, lng: center.lng, height: TRANSITION_HEIGHT * 1.2 }, 1.0);
-      }, 100);
-    }
-  }, []);
-
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -260,57 +226,28 @@ export default function DataCenterMapClient() {
         <span>Antimatter AI</span>
       </Link>
 
-      {/* Globe mode (Cesium) */}
-      <div
-        className="absolute inset-0 transition-opacity duration-500"
-        style={{ opacity: mapMode === "globe" ? 1 : 0, pointerEvents: mapMode === "globe" ? "auto" : "none" }}
-      >
-        <AtlasMap
-          ref={atlasRef}
-          selectedId={selectedDc?.id ?? null}
-          onSelectDc={dc => { handleSelectDc(dc); if (dc) setSelectedLinode(null); }}
-          highlightIds={highlightIds}
-          layers={layers}
-          basemap={basemap}
-          powerScenario={powerScenario}
-          onSelectLinode={r => {
-            setSelectedLinode(r);
-            if (r) { setSelectedDc(null); setSiteBriefPos(null); setPinnedPoint(null); }
-          }}
-          selectedLinodeId={selectedLinode?.region_id ?? null}
-          onMapClick={(lat, lng) => {
-            setPinnedPoint({ lat, lng });
-            setPowerPanelOpen(true);
-            setSelectedDc(null);
-            setSelectedLinode(null);
-            setSiteBriefPos(null);
-          }}
-        />
-      </div>
-
-      {/* City mode (MapLibre vector tiles) */}
-      <div
-        className="absolute inset-0 transition-opacity duration-500"
-        style={{ opacity: mapMode === "city" ? 1 : 0, pointerEvents: mapMode === "city" ? "auto" : "none" }}
-      >
-        <CityMap
-          ref={cityRef}
-          selectedId={selectedDc?.id ?? null}
-          onSelectDc={dc => { handleSelectDc(dc); if (dc) setSelectedLinode(null); }}
-          highlightIds={highlightIds}
-          onMapClick={(lat, lng) => {
-            setPinnedPoint({ lat, lng });
-            setPowerPanelOpen(true);
-            setSelectedDc(null);
-            setSelectedLinode(null);
-            setSiteBriefPos(null);
-          }}
-          onZoomOut={handleTransitionToGlobe}
-          initialCenter={cityCenter}
-          initialZoom={cityZoom}
-          visible={mapMode === "city"}
-        />
-      </div>
+      {/* Cesium map — full-screen, no opacity wrapper */}
+      <AtlasMap
+        ref={atlasRef}
+        selectedId={selectedDc?.id ?? null}
+        onSelectDc={dc => { handleSelectDc(dc); if (dc) setSelectedLinode(null); }}
+        highlightIds={highlightIds}
+        layers={layers}
+        basemap={basemap}
+        powerScenario={powerScenario}
+        onSelectLinode={r => {
+          setSelectedLinode(r);
+          if (r) { setSelectedDc(null); setSiteBriefPos(null); setPinnedPoint(null); }
+        }}
+        selectedLinodeId={selectedLinode?.region_id ?? null}
+        onMapClick={(lat, lng) => {
+          setPinnedPoint({ lat, lng });
+          setPowerPanelOpen(true);
+          setSelectedDc(null);
+          setSelectedLinode(null);
+          setSiteBriefPos(null);
+        }}
+      />
 
       {/* Left search / filter panel */}
       <CommandPanel
@@ -339,9 +276,7 @@ export default function DataCenterMapClient() {
         selectedDc={selectedDc}
         pinnedPoint={pinnedPoint}
         onPinCenter={() => {
-          const centre = mapMode === "city"
-            ? cityRef.current?.getCameraCenter?.()
-            : atlasRef.current?.getCameraCenter?.();
+          const centre = atlasRef.current?.getCameraCenter?.();
           if (centre) {
             setPinnedPoint(centre);
             setPowerPanelOpen(true);
@@ -361,10 +296,7 @@ export default function DataCenterMapClient() {
       )}
 
       {/* Layers menu — reads/writes store directly */}
-      <LayersMenu onResetView={() => {
-        setMapMode("globe");
-        setTimeout(() => atlasRef.current?.resetView(), 100);
-      }} />
+      <LayersMenu onResetView={() => atlasRef.current?.flyTo({ lat: 25, lng: -20, height: PREFERRED_HEIGHT_RESET }, 2)} />
     </div>
   );
 }

@@ -67,7 +67,7 @@ const DEFAULT_OVERLAYS: Record<OverlayKey, boolean> = {
   stateBorders: false,
   cities: true,
   points: true,
-  routes: true,
+  routes: false, // opt-in — avoids 1,200-entity load on first mount
 };
 
 const DEFAULT_POWER: Record<PowerLayerKey, boolean> = {
