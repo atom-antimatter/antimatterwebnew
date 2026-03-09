@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { GoArrowUpRight } from "react-icons/go";
 import { useEarlyAccessModal } from "@/store";
 import buttonStyles from "./css/Button.module.css";
-import navButtonStyles from "./css/NavButton.module.css";
 
 const fieldBase =
   "w-full rounded-2xl border border-white/12 bg-black/35 px-4 py-3.5 text-sm text-white placeholder:text-white/45 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)] focus:outline-none focus:ring-2 focus:ring-[#8587e3]/45";
@@ -93,7 +92,7 @@ export default function EarlyAccessModal() {
           </div>
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xl leading-none text-white/65 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+            className="text-xl leading-none text-white/65 transition hover:text-white"
             onClick={close}
             aria-label="Close"
           >
@@ -113,15 +112,15 @@ export default function EarlyAccessModal() {
               <button
                 type="button"
                 onClick={close}
-                className={`group relative mx-auto mt-6 block w-full max-w-[240px] rounded-full text-left text-white ${buttonStyles.button} ${navButtonStyles.button} ${buttonStyles.fluidBtn}`}
+                className={`group relative mx-auto mt-6 block w-full max-w-[240px] rounded-full text-left text-white ${buttonStyles.button} ${buttonStyles.fluidBtn}`}
                 style={{ padding: 0 }}
               >
-                <span className="relative flex min-h-[54px] items-center rounded-full pl-5 pr-18">
+                <span className="relative flex min-h-[54px] items-center rounded-full pl-5 pr-20">
                   <span className="text-sm font-medium">Close</span>
-                  <span
-                    className={`absolute right-0 top-0 flex h-full max-w-14 items-center justify-center rounded-full bg-white text-background ${navButtonStyles.iconBox}`}
-                  >
-                    <GoArrowUpRight className={`size-7 ${navButtonStyles.icon}`} />
+                  <span className="absolute right-1 top-1 bottom-1 rounded-full border border-white/20 bg-background/20 p-0.5">
+                    <span className="flex h-full w-12 items-center justify-center rounded-full bg-white text-background transition-[width,transform] duration-500 ease-out group-hover:w-16">
+                      <GoArrowUpRight className="size-7 transition-transform duration-300 group-hover:rotate-45" />
+                    </span>
                   </span>
                 </span>
               </button>
@@ -153,17 +152,17 @@ export default function EarlyAccessModal() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className={`group relative block w-full rounded-full text-left text-white disabled:cursor-not-allowed disabled:opacity-60 ${buttonStyles.button} ${navButtonStyles.button} ${buttonStyles.fluidBtn}`}
+                  className={`group relative block w-full rounded-full text-left text-white disabled:cursor-not-allowed disabled:opacity-60 ${buttonStyles.button} ${buttonStyles.fluidBtn}`}
                   style={{ padding: 0 }}
                 >
-                  <span className="relative flex min-h-[54px] items-center rounded-full pl-5 pr-18">
+                  <span className="relative flex min-h-[54px] items-center rounded-full pl-5 pr-20">
                     <span className="text-sm font-medium">
                       {submitting ? "Submitting..." : "Get Early Access"}
                     </span>
-                    <span
-                      className={`absolute right-0 top-0 flex h-full max-w-14 items-center justify-center rounded-full bg-white text-background ${navButtonStyles.iconBox}`}
-                    >
-                      <GoArrowUpRight className={`size-7 ${navButtonStyles.icon}`} />
+                    <span className="absolute right-1 top-1 bottom-1 rounded-full border border-white/20 bg-background/20 p-0.5">
+                      <span className="flex h-full w-12 items-center justify-center rounded-full bg-white text-background transition-[width,transform] duration-500 ease-out group-hover:w-16">
+                        <GoArrowUpRight className="size-7 transition-transform duration-300 group-hover:rotate-45" />
+                      </span>
                     </span>
                   </span>
                 </button>

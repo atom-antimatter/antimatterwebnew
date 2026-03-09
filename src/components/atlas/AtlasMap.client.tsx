@@ -75,11 +75,11 @@ function makeProvider(basemap: Basemap): Cesium.ImageryProvider {
   const common = { minimumLevel: 0, tileWidth: 256, tileHeight: 256 } as const;
   switch (basemap) {
     case "osmLight":
-      return new Cesium.UrlTemplateImageryProvider({ ...common, url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png", subdomains: ["a","b","c","d"], credit: new Cesium.Credit("Carto, OSM"), maximumLevel: 20 });
+      return new Cesium.UrlTemplateImageryProvider({ ...common, url: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png", subdomains: ["a","b","c","d"], credit: new Cesium.Credit("Carto, OSM"), maximumLevel: 20 });
     case "osmStandard":
       return new Cesium.UrlTemplateImageryProvider({ ...common, url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", credit: new Cesium.Credit("OpenStreetMap contributors"), maximumLevel: 19 });
     case "osmDark": default:
-      return new Cesium.UrlTemplateImageryProvider({ ...common, url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png", subdomains: ["a","b","c","d"], credit: new Cesium.Credit("Carto, OSM"), maximumLevel: 20 });
+      return new Cesium.UrlTemplateImageryProvider({ ...common, url: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png", subdomains: ["a","b","c","d"], credit: new Cesium.Credit("Carto, OSM"), maximumLevel: 20 });
   }
 }
 

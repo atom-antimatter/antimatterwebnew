@@ -203,9 +203,10 @@ function LocationSearch({
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
       const data = await res.json();
-      if (data.lat && data.lng) {
-        onSelect(Number(data.lat), Number(data.lng), data.displayName ?? q);
-        setQuery(data.displayName ?? q);
+      const first = Array.isArray(data.results) ? data.results[0] : null;
+      if (first?.lat && first?.lng) {
+        onSelect(Number(first.lat), Number(first.lng), first.displayName ?? q);
+        setQuery(first.displayName ?? q);
       }
     } catch {
       // silently ignore
