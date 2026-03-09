@@ -781,7 +781,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
   // ── Render ─────────────────────────────────────────────────────────────────
   const isWorldView = cameraState.level === "WORLD";
   return (
-    <div className="absolute inset-0 w-full h-full bg-[#020202] overflow-hidden overscroll-none">
+    <div className={`absolute inset-0 w-full h-full overflow-hidden overscroll-none ${vectorActive ? "atlas-vector-mode" : "bg-[#020202]"}`}>
       <style>{`
         .cesium-viewer,.cesium-widget{position:relative;overflow:hidden;width:100%;height:100%;}
         .cesium-widget canvas{width:100%;height:100%;touch-action:none;overscroll-behavior:none;image-rendering:auto;}
@@ -789,6 +789,11 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         .cesium-credit-container,.cesium-widget-credits{display:none!important;}
         @keyframes atlas-fadein{from{opacity:0}to{opacity:1}}
         .atlas-world-bg{animation:atlas-fadein 0.8s ease-out forwards;}
+        /* Vector mode: all Cesium wrappers must be transparent so MapLibre shows through */
+        .atlas-vector-mode .cesium-viewer,
+        .atlas-vector-mode .cesium-widget,
+        .atlas-vector-mode .cesium-viewer-cesiumWidgetContainer,
+        .atlas-vector-mode .cesium-viewer-bottom{background:transparent!important;}
       `}</style>
 
       {/* "ATOM AI" background text when fully zoomed out */}
@@ -806,7 +811,7 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
         visible={vectorActive}
       />
 
-      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none", zIndex: 3 }} />
+      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none", zIndex: 3, background: vectorActive ? "transparent" : undefined }} />
 
 
 
