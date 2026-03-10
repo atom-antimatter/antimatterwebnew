@@ -65,6 +65,8 @@ export default function DataCenterMapClient() {
     routes:          overlays.routes,
 
     powerHeatmap:    power.powerHeatmap,
+    powerMarketStates: overlays.powerMarketStates,
+    powerMarketFacilities: overlays.powerMarketFacilities,
     powerGeneration: power.powerGeneration,
     powerQueue:      power.powerQueue,
     linodeRegions:   providers.linodeRegions,

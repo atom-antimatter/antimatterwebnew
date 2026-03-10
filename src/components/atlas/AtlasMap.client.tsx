@@ -26,6 +26,8 @@ import { StateBordersLayer }   from "./layers/StateBordersLayer";
 import { CityLabelsLayer }     from "./layers/CityLabelsLayer";
 import { FiberRoutesLayer }    from "./layers/FiberRoutesLayer";
 import { FeasibilityHeatmapLayer } from "./layers/FeasibilityHeatmapLayer";
+import { PowerMarketStatesLayer } from "./layers/PowerMarketStatesLayer";
+import { PowerMarketFacilitiesLayer } from "./layers/PowerMarketFacilitiesLayer";
 import { BuildingsLayer }         from "./layers/BuildingsLayer";
 import type { LayerContext } from "./layers/types";
 import type { ProviderRegion } from "@/lib/providers/linode/types";
@@ -47,6 +49,8 @@ export type AtlasLayers = {
   points:         boolean;
   routes:         boolean;
   powerHeatmap:   boolean;
+  powerMarketStates: boolean;
+  powerMarketFacilities: boolean;
   powerGeneration:boolean;
   powerQueue:     boolean;
   linodeRegions:  boolean;
@@ -154,6 +158,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     cities:         layersRef.current.cities,
     routes:         layersRef.current.routes,
     powerHeatmap:   layersRef.current.powerHeatmap,
+    powerMarketStates: layersRef.current.powerMarketStates,
+    powerMarketFacilities: layersRef.current.powerMarketFacilities,
   });
 
   // Keep basemapRef current so the makeCtx factory always reads the latest value
@@ -387,6 +393,8 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
     mgr.register(new CityLabelsLayer());
     mgr.register(new FiberRoutesLayer());
     mgr.register(new FeasibilityHeatmapLayer());
+    mgr.register(new PowerMarketStatesLayer());
+    mgr.register(new PowerMarketFacilitiesLayer());
     managerRef.current = mgr;
 
     const makeCtx = (): LayerContext => {
@@ -617,13 +625,15 @@ const AtlasMap = forwardRef<AtlasMapRef, AtlasMapProps>(
       routes:         layers.routes,
       buildings:      !!is3DActive,
       powerHeatmap:   layers.powerHeatmap,
+      powerMarketStates: layers.powerMarketStates,
+      powerMarketFacilities: layers.powerMarketFacilities,
     };
 
     mgr.sync(managed, ctx);
 
   }, [
     layers.countryBorders, layers.stateBorders, layers.cities,
-    layers.routes, layers.powerHeatmap,
+    layers.routes, layers.powerHeatmap, layers.powerMarketStates, layers.powerMarketFacilities,
     basemap, cameraState.level, cameraState.height, cameraState.viewRect, powerScenario,
     is3DActive,
   ]);

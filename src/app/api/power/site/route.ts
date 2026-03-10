@@ -10,6 +10,7 @@
  */
 import { NextResponse } from "next/server";
 import { scorePowerFeasibility, type PowerFeasibilityResult } from "@/lib/power/scorePowerFeasibility";
+import { enrichWithMarketData, findNearestFacility } from "@/lib/power/powerMarketEnrichment";
 
 // ── Simple in-process cache (24 h) ─────────────────────────────────────────────
 const CACHE = new Map<string, { result: PowerFeasibilityResult; at: number }>();
@@ -55,9 +56,35 @@ export async function GET(request: Request) {
   //     .order(...) ...
   //   if (rates?.length) { ... override rateProxy ... }
 
-  CACHE.set(key, { result, at: Date.now() });
+  // Enrich with power market intelligence if available
+  const marketEnrichment = result.state ? enrichWithMarketData(result.state) : null;
+  const nearestFacility = findNearestFacility(lat, lon);
 
-  return NextResponse.json(result, {
+  const enrichedResult = {
+    ...result,
+    marketIntelligence: marketEnrichment ? {
+      stateRank: marketEnrichment.stateRank,
+      stateTier: marketEnrichment.stateData?.tier ?? null,
+      stateIndustrialRate: marketEnrichment.stateData?.industrial_rate_kwh ?? null,
+      stateFeasibilityScore: marketEnrichment.stateData?.power_feasibility_score ?? null,
+      stateCapacityMw: marketEnrichment.stateData?.dc_capacity_mw ?? null,
+      keyMarkets: marketEnrichment.stateData?.key_markets ?? null,
+      facilitiesInState: marketEnrichment.nearbyFacilities.length,
+      nearestFacility: nearestFacility ? {
+        provider: nearestFacility.provider,
+        name: nearestFacility.facility_name,
+        city: nearestFacility.city,
+        state: nearestFacility.state,
+        pue: nearestFacility.pue,
+        renewableEnergyPct: nearestFacility.renewable_energy_pct,
+        estRateKwh: nearestFacility.est_rate_kwh,
+      } : null,
+    } : null,
+  };
+
+  CACHE.set(key, { result: enrichedResult as PowerFeasibilityResult, at: Date.now() });
+
+  return NextResponse.json(enrichedResult, {
     headers: {
       "X-Cache": "MISS",
       "Cache-Control": "public, max-age=86400",
