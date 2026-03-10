@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import styles from "@/components/ui/css/Button.module.css";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -131,7 +132,7 @@ function DiscoverySidebar({ onPromptSelect }: { onPromptSelect: (label: string) 
                   <button
                     key={opt}
                     onClick={() => setSelections(s => ({ ...s, [sec.id]: active ? "" : opt }))}
-                    className={`px-2.5 py-1 text-[11px] rounded-lg border transition-colors ${active ? "bg-accent text-black border-accent" : "bg-foreground/5 text-foreground/70 border-foreground/10 hover:border-foreground/25"}`}
+                    className={`px-2.5 py-1 text-[11px] rounded-lg border transition-colors ${active ? "bg-accent text-white border-accent" : "bg-foreground/5 text-foreground/70 border-foreground/10 hover:border-foreground/25"}`}
                   >
                     {opt}
                   </button>
@@ -309,6 +310,91 @@ function UseCaseCards() {
   );
 }
 
+// ─── Hero with mouse-tracking radial glow ─────────────────────────────────────
+
+function HeroSection({ demoRef }: { demoRef: React.RefObject<HTMLDivElement | null> }) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const handler = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      setMouse({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    };
+    el.addEventListener("mousemove", handler);
+    return () => el.removeEventListener("mousemove", handler);
+  }, []);
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden border-b border-foreground/5"
+      style={{
+        background: `radial-gradient(600px circle at ${mouse.x}px ${mouse.y}px, rgba(162, 163, 233, 0.15), transparent 40%)`,
+      }}
+    >
+      <div className="max-w-5xl mx-auto px-5 py-16 md:py-24 text-center">
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-[10px] uppercase tracking-[0.2em] text-accent font-semibold mb-3"
+        >
+          Atom IntentIQ
+        </motion.p>
+
+        <motion.h2
+          initial={{ opacity: 0, filter: "blur(8px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4"
+        >
+          ICC AI FAQs, Code Search<br className="hidden sm:block" /> &amp; Research Reports
+        </motion.h2>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          className="text-sm md:text-base text-foreground/60 max-w-2xl mx-auto leading-relaxed mb-8"
+        >
+          A citation-backed AI workspace for proposal guidance, code search, and structured research across ICC codebooks and lifecycle documents.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="flex flex-wrap justify-center gap-2 text-xs text-foreground/50 mb-8"
+        >
+          {["RAG over FAQs & codebooks", "Proposal lifecycle guidance", "Citation-backed code search", "Research report generation"].map((t) => (
+            <span key={t} className="px-3 py-1.5 rounded-full border border-foreground/10 bg-foreground/[0.03]">{t}</span>
+          ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="flex justify-center gap-3"
+        >
+          <button
+            onClick={() => demoRef.current?.scrollIntoView({ behavior: "smooth" })}
+            className={`${styles.button} text-sm font-medium text-white`}
+          >
+            Launch ICC Demo
+          </button>
+          <a href="#proposal-logic" className={`${styles.button} inverted text-sm font-medium`}>
+            View Proposal Logic
+          </a>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ICCIntentClient() {
@@ -337,32 +423,8 @@ export default function ICCIntentClient() {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-foreground/5">
-        <div className="max-w-5xl mx-auto px-5 py-16 md:py-24 text-center">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-accent font-semibold mb-3">Atom IntentIQ</p>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4">
-            ICC AI FAQs, Code Search<br className="hidden sm:block" /> &amp; Research Reports
-          </h2>
-          <p className="text-sm md:text-base text-foreground/60 max-w-2xl mx-auto leading-relaxed mb-8">
-            A citation-backed AI workspace for proposal guidance, code search, and structured research across ICC codebooks and lifecycle documents.
-          </p>
+      <HeroSection demoRef={demoRef} />
 
-          <div className="flex flex-wrap justify-center gap-2 text-xs text-foreground/50 mb-8">
-            {["RAG over FAQs & codebooks", "Proposal lifecycle guidance", "Citation-backed code search", "Research report generation"].map((t) => (
-              <span key={t} className="px-3 py-1.5 rounded-full border border-foreground/10 bg-foreground/[0.03]">{t}</span>
-            ))}
-          </div>
-
-          <div className="flex justify-center gap-3">
-            <button onClick={() => demoRef.current?.scrollIntoView({ behavior: "smooth" })} className="px-5 py-2.5 text-sm font-medium bg-accent text-black rounded-full hover:bg-secondary transition-colors">
-              Launch ICC Demo
-            </button>
-            <a href="#proposal-logic" className="px-5 py-2.5 text-sm font-medium border border-foreground/15 text-foreground/70 rounded-full hover:text-foreground hover:border-foreground/30 transition-colors">
-              View Proposal Logic
-            </a>
-          </div>
-        </div>
-      </section>
 
       {/* ── Interactive Demo Shell ────────────────────────────────────────── */}
       <section ref={demoRef} className="border-b border-foreground/5">
@@ -525,10 +587,10 @@ export default function ICCIntentClient() {
             From proposal lifecycle guidance to citation-backed code discovery and structured research reports — built on ICC&rsquo;s own materials, deployed in weeks.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <a href="mailto:contact@antimatterai.com?subject=ICC%20Working%20Prototype%20Request" className="px-6 py-3 text-sm font-medium bg-accent text-black rounded-full hover:bg-secondary transition-colors">
+            <a href="mailto:contact@antimatterai.com?subject=ICC%20Working%20Prototype%20Request" className={`${styles.button} text-sm font-medium text-white`}>
               Request Working Prototype
             </a>
-            <button onClick={() => demoRef.current?.scrollIntoView({ behavior: "smooth" })} className="px-6 py-3 text-sm font-medium border border-foreground/15 text-foreground/70 rounded-full hover:text-foreground hover:border-foreground/30 transition-colors">
+            <button onClick={() => demoRef.current?.scrollIntoView({ behavior: "smooth" })} className={`${styles.button} ${styles.inverted} text-sm font-medium`}>
               Review ICC Solution Scope
             </button>
           </div>
