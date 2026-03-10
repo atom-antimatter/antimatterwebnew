@@ -1,5 +1,5 @@
 /**
- * iccProposalDemo.ts — Seeded content for the ICC proposal page at /atom-intentiq/icc-proposal.
+ * iccProposalDemo.ts — Seeded content for the ICC proposal page.
  * All data is typed and swappable for production content.
  */
 
@@ -19,25 +19,78 @@ export const PROBLEM_CARDS: ProblemCard[] = [
   { title: "Missed Behavior Insight", description: "ICC has limited visibility into what users are searching for, where they get stuck, and which content drives engagement.", icon: "chart" },
 ];
 
+// ─── Architecture ─────────────────────────────────────────────────────────────
+
 export type ArchBlock = { label: string; description: string };
 export const ARCHITECTURE_BLOCKS: ArchBlock[] = [
   { label: "ICC Website / Existing UX", description: "The assistant lives within ICC's current digital experience as an embedded component." },
   { label: "Embedded AI Assistant UI", description: "A compact search and chat surface accessible from key pages." },
-  { label: "Query Understanding Layer", description: "Interprets user intent, topic, and likely code domains from natural language." },
-  { label: "Retrieval / Vector Search", description: "Semantic search over chunked and indexed ICC content with metadata filtering." },
-  { label: "ICC Content Index", description: "Codebooks, chapters, sections, FAQs, and lifecycle documents — chunked and embedded." },
-  { label: "Response Generation", description: "LLM generates concise answers with inline citations mapped to source content." },
-  { label: "Citation / Source Mapping", description: "Every answer references the specific codebook, chapter, and section it draws from." },
-  { label: "Analytics & Dashboarding", description: "Tracks searches, topics, engagement, low-confidence queries, and content demand." },
+  { label: "Query Understanding", description: "Interprets user intent, topic, and likely code domains from natural language." },
+  { label: "Retrieval + Relevance Scoring", description: "Semantic search over indexed ICC content with metadata filtering and re-ranking." },
+  { label: "ICC Content Index", description: "Codebooks, chapters, sections, FAQs, and lifecycle documents — chunked, embedded, and governed." },
+  { label: "Grounded Generation", description: "LLM produces answers constrained to retrieved evidence with inline citation mapping." },
+  { label: "Confidence Check + Guardrails", description: "Low-confidence detection triggers clarification instead of speculation. Read-only MVP constraints." },
+  { label: "Citation Mapping", description: "Every answer references the specific codebook, chapter, and section it draws from." },
+  { label: "Content Governance Layer", description: "Approved source control, freshness rules, and content scope boundaries for retrieval." },
+  { label: "Analytics + Quality Monitoring", description: "Tracks searches, citations, confidence levels, weak-result patterns, and engagement." },
 ];
 
 export type ArchDetailSection = { title: string; items: string[] };
 export const ARCHITECTURE_DETAILS: ArchDetailSection[] = [
-  { title: "Content Sources", items: ["Code books (IBC, IRC, IECC, IFC, IMC, IPC, IEBC, ISPSC)", "Structured content (tables, diagrams, references)", "Lifecycle / FAQ / proposal documentation", "Future: additional proprietary content"] },
-  { title: "Retrieval Layer", items: ["Chunking and embedding of source documents", "Semantic vector retrieval", "Metadata filters (code cycle, code family, topic)", "Re-ranking and relevance scoring", "Citation mapping to source passages"] },
-  { title: "Response Layer", items: ["Concise answer generation with citations", "Ambiguity detection with clarification prompts", "Low-confidence handling: asks, does not guess", "Read-only MVP guardrails"] },
-  { title: "Analytics Layer", items: ["Popular search topics and queries", "No-result / weak-result tracking", "Code family demand distribution", "Engagement by topic cluster", "Prompt-to-citation click behavior", "Report generation trends"] },
+  {
+    title: "Content Sources",
+    items: [
+      "Code books (IBC, IRC, IECC, IFC, IMC, IPC, IEBC, ISPSC)",
+      "Structured content (tables, diagrams, references)",
+      "Lifecycle / FAQ / proposal documentation",
+      "Future: additional proprietary content",
+      "Governed source registry with freshness metadata",
+    ],
+  },
+  {
+    title: "Retrieval & Governance",
+    items: [
+      "Chunking and embedding of approved source documents",
+      "Semantic vector retrieval with metadata filters (cycle, family, topic)",
+      "Re-ranking and relevance scoring before generation",
+      "Citation mapping to source passages with provenance tracking",
+      "Content governance layer: approved sources, scope boundaries, freshness rules",
+    ],
+  },
+  {
+    title: "Response & Quality Controls",
+    items: [
+      "Grounded generation constrained to retrieved evidence",
+      "Citation-backed answer output with source attribution",
+      "Confidence-aware behavior: clarification before speculation",
+      "Ambiguity detection with clarifying prompts",
+      "Read-only MVP guardrails — non-authoritative answer framing",
+      "Answer quality observability for review and tuning",
+    ],
+  },
+  {
+    title: "Analytics & Data Quality",
+    items: [
+      "Popular search topics and query patterns",
+      "No-result / weak-result tracking and alerting",
+      "Citation coverage rate and grounded answer rate",
+      "Low-confidence query monitoring",
+      "Code family demand and content gap identification",
+      "Retrieval quality trends over time",
+    ],
+  },
 ];
+
+export const GOVERNANCE_CONTROLS = [
+  "Approved content source control — only indexed ICC-controlled materials are retrievable",
+  "Read-only MVP guardrails — the assistant provides guidance, not authoritative interpretation",
+  "Citation requirement — every answer must reference its source passage",
+  "Low-confidence fallback — the system asks clarifying questions instead of guessing",
+  "Quality instrumentation — retrieval accuracy, citation coverage, and user feedback are tracked",
+  "Content freshness governance — source metadata tracks indexing recency and cycle alignment",
+];
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export type DashboardMetric = { label: string; value: string; change?: string; trend?: "up" | "down" | "flat" };
 export const DASHBOARD_METRICS: DashboardMetric[] = [
@@ -45,6 +98,13 @@ export const DASHBOARD_METRICS: DashboardMetric[] = [
   { label: "Unique Users", value: "3,241", change: "+9%", trend: "up" },
   { label: "Avg. Citations/Query", value: "2.4", trend: "flat" },
   { label: "Low-Confidence Rate", value: "6.2%", change: "-2.1%", trend: "down" },
+];
+
+export const QUALITY_METRICS: DashboardMetric[] = [
+  { label: "Citation Coverage", value: "94.8%", change: "+1.2%", trend: "up" },
+  { label: "Grounded Answer Rate", value: "91.3%", change: "+0.8%", trend: "up" },
+  { label: "No-Result Rate", value: "3.1%", change: "-0.4%", trend: "down" },
+  { label: "Clarification Prompt Rate", value: "8.7%", trend: "flat" },
 ];
 
 export type DashboardBar = { label: string; value: number };
@@ -68,39 +128,65 @@ export const TOP_SEARCH_TOPICS: DashboardBar[] = [
   { label: "Existing buildings", value: 7 },
 ];
 
+export const WEAK_RESULT_TOPICS: DashboardBar[] = [
+  { label: "Cross-code references", value: 22 },
+  { label: "Jurisdiction amendments", value: 18 },
+  { label: "Historical code changes", value: 14 },
+  { label: "Diagram interpretation", value: 11 },
+  { label: "Multi-family exceptions", value: 9 },
+];
+
+// ─── Scope ────────────────────────────────────────────────────────────────────
+
 export type ScopeItem = { label: string; included: boolean };
 export const MVP_SCOPE: ScopeItem[] = [
-  { label: "Embedded AI assistant UI", included: true },
+  { label: "Embedded AI assistant UI within ICC's current site experience", included: true },
   { label: "Natural-language search across indexed ICC content", included: true },
-  { label: "Citation-backed answers", included: true },
+  { label: "Citation-backed answer generation with source attribution", included: true },
+  { label: "Governed retrieval over approved ICC content sources", included: true },
+  { label: "Confidence-aware response behavior with clarification prompts", included: true },
   { label: "Metadata-aware retrieval filters (cycle, family, topic)", included: true },
-  { label: "Basic proposal-supporting research summaries", included: true },
-  { label: "Analytics dashboard for user / search behavior", included: true },
-  { label: "Read-only experience", included: true },
-  { label: "Admin-ready event tracking foundation", included: true },
+  { label: "Analytics dashboard for usage, search behavior, and answer quality", included: true },
+  { label: "Answer/source observability foundation for quality review", included: true },
+  { label: "Read-only trust-first MVP design — non-authoritative guardrails", included: true },
 ];
 
 export const FUTURE_SCOPE: ScopeItem[] = [
-  { label: "Proposal drafting assistance", included: false },
-  { label: "Authenticated personalization", included: false },
-  { label: "Saved research sessions", included: false },
-  { label: "Exportable reports", included: false },
-  { label: "Workflow integrations", included: false },
-  { label: "Role-based recommendations", included: false },
-  { label: "Expanded content ingestion", included: false },
+  { label: "Answer quality review workflows and evaluator dashboards", included: false },
+  { label: "Content approval and source governance admin tooling", included: false },
+  { label: "Human-in-the-loop tuning and retrieval quality optimization", included: false },
+  { label: "Authenticated personalization and saved research sessions", included: false },
+  { label: "Exportable research reports and proposal drafting assistance", included: false },
+  { label: "Role-based trust policies and access controls", included: false },
+  { label: "Content freshness monitoring and re-indexing automation", included: false },
+  { label: "Expanded proprietary content ingestion", included: false },
 ];
+
+// ─── Use cases ────────────────────────────────────────────────────────────────
 
 export type UseCaseCard = { title: string; description: string };
 export const USE_CASES: UseCaseCard[] = [
   { title: "Code Discovery", description: "Help users identify the right books, sections, and related content when they are unsure where to begin." },
   { title: "Proposal Research Support", description: "Help users gather relevant code references and contextual guidance before drafting or updating proposals." },
-  { title: "Product Insight for ICC", description: "Give ICC an analytics view into search demand, intent clusters, and content gaps across the member base." },
+  { title: "Product Insight for ICC", description: "Give ICC an analytics view into search demand, retrieval quality, intent clusters, and content gaps across the member base." },
 ];
+
+// ─── Pricing ──────────────────────────────────────────────────────────────────
 
 export const PRICING = {
   solution: "ICC Custom AI Assistant MVP",
-  includes: "Embedded assistant, retrieval architecture, citation experience, analytics dashboard, seeded content model, proposal-ready demo layer",
+  includes: "Embedded assistant, governed retrieval architecture, citation experience, analytics + quality dashboard, seeded content model, proposal-ready demo layer",
   investment: "$32,000",
   timeline: "4–6 weeks",
   note: "Final implementation details and production deployment assumptions can be refined based on ICC's preferred content access model, hosting constraints, and available integration pathways.",
 };
+
+// ─── Executive summary badges ─────────────────────────────────────────────────
+
+export const SUMMARY_BADGES = [
+  "Citation-backed",
+  "Governed retrieval",
+  "Read-only MVP",
+  "Analytics included",
+  "Confidence-aware",
+];
