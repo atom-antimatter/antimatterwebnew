@@ -8,7 +8,7 @@ const PageTransition = () => {
   return (
     <motion.div>
       <motion.div
-        initial={{ y: "0" }}
+        initial={{ y: "-100%" }}
         animate={{
           y: isTransition ? "0" : "-100%",
           transition: { duration: 0.75, ease: [0.76, 0, 0.24, 1] },
