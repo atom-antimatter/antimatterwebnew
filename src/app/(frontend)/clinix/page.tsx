@@ -17,7 +17,7 @@ export const metadata: Metadata = createMetadata({
 
 export default function ClinixPage(): ReactNode {
   return (
-    <main className="flex-1 min-h-screen bg-[#0b0b0c]">
+    <main className="flex-1 min-h-screen w-full max-w-none bg-[#0b0b0c]">
       {/* Apple-style scroll-scrub: pinned full-screen animation + overlay copy */}
       <ClinixScrollSequence />
       {/* Supporting sections below the scroll sequence */}

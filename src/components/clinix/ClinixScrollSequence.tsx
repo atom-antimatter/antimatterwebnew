@@ -14,14 +14,17 @@ const EXPECTED_FOLDER = "/public/clinix-frames/";
 const EXPECTED_FIRST_FRAME = "/clinix-frames/frame_0001.png";
 const EXTRACTION_CMD =
   "ffmpeg -y -i public/Website_Scroll_Video_Generation.gif -vsync 0 public/clinix-frames/frame_%04d.png";
+const MP4_SRC = "/Website_Scroll_Video_Generation.mp4";
 
 export default function ClinixScrollSequence() {
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
   const [frameImages, setFrameImages] = useState<HTMLImageElement[] | null>(null);
   const [totalFrames, setTotalFrames] = useState(0);
+  const [useVideo, setUseVideo] = useState(false);
   const [fallback, setFallback] = useState(false);
   const [loadError, setLoadError] = useState<LoadFramesError | null>(null);
   const rafRef = useRef<number>(0);
@@ -81,7 +84,8 @@ export default function ClinixScrollSequence() {
     ctx.clearRect(0, 0, cw, ch);
     ctx.save();
     ctx.scale(dpr, dpr);
-    const scale = Math.min(displayW / img.naturalWidth, displayH / img.naturalHeight);
+    // Cover: fill viewport, crop if needed (full width)
+    const scale = Math.max(displayW / img.naturalWidth, displayH / img.naturalHeight);
     const drawW = img.naturalWidth * scale;
     const drawH = img.naturalHeight * scale;
     const x = (displayW - drawW) / 2;
@@ -91,7 +95,7 @@ export default function ClinixScrollSequence() {
     lastFrameIndexRef.current = idx;
   }, []);
 
-  // Scroll-driven update: compute progress -> frameIndex, only redraw when frameIndex changes
+  // Scroll-driven update: progress drives video currentTime or canvas frame
   const updateFrame = useCallback(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -104,6 +108,12 @@ export default function ClinixScrollSequence() {
     const prog = getScrollProgress(sectionTop, sectionHeight, viewportHeight, scrollY);
     setProgress(prog);
 
+    const video = videoRef.current;
+    if (useVideo && video && video.readyState >= 2 && video.duration > 0) {
+      video.currentTime = prog * video.duration;
+      return;
+    }
+
     const imgs = imagesRef.current;
     const total = imgs?.length ?? 0;
     if (total === 0) return;
@@ -112,7 +122,7 @@ export default function ClinixScrollSequence() {
     if (frameIndex === lastFrameIndexRef.current) return;
 
     drawFrame(frameIndex);
-  }, [drawFrame]);
+  }, [drawFrame, useVideo]);
 
   // Scroll listener only — no autoplay, no rAF animation loop
   useEffect(() => {
@@ -134,7 +144,7 @@ export default function ClinixScrollSequence() {
       window.removeEventListener("scroll", onScroll);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [updateFrame, frameImages]);
+  }, [updateFrame, frameImages, useVideo]);
 
   // Resize canvas to sticky container; after resize, redraw current frame
   useEffect(() => {
@@ -175,14 +185,15 @@ export default function ClinixScrollSequence() {
     return () => ro.disconnect();
   }, [frameImages, drawFrame]);
 
-  // First frame on load: draw frame 0 as soon as we have images and canvas has size
+  // First frame on load (canvas path); video path sets time in updateFrame
   useEffect(() => {
+    if (useVideo) return;
     const imgs = imagesRef.current;
     const canvas = canvasRef.current;
     if (!imgs?.length || !canvas || canvas.width <= 0 || canvas.height <= 0) return;
     if (lastFrameIndexRef.current >= 0) return;
     drawFrame(0);
-  }, [frameImages, drawFrame]);
+  }, [frameImages, drawFrame, useVideo]);
 
   // Fallback: no autoplay media — instructions only
   if (fallback) {
@@ -220,28 +231,48 @@ export default function ClinixScrollSequence() {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-[#0b0b0c]"
+      className="relative w-full min-w-full bg-[#0b0b0c]"
       style={{ height: `${SECTION_HEIGHT_VH}vh` }}
     >
       <div
         ref={stickyRef}
         data-sticky-inner
-        className="sticky top-0 left-0 w-full h-screen flex items-center justify-center overflow-hidden bg-[#0b0b0c]"
+        className="sticky top-0 left-0 w-full min-w-full h-screen flex items-center justify-center overflow-hidden bg-[#0b0b0c]"
       >
-        {/* Scroll-driven frame sequence only — no GIF, no video, no autoplay */}
-        {frameImages && frameImages.length >= 1 && (
+        {/* MP4 scroll-scrubbed when present (higher res); else canvas frame sequence */}
+        <video
+          ref={videoRef}
+          src={MP4_SRC}
+          muted
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 w-full h-full z-[1] object-cover"
+          style={{ display: useVideo ? "block" : "none", background: "#0b0b0c" }}
+          onCanPlay={() => setUseVideo(true)}
+          onError={() => setUseVideo(false)}
+        />
+        {frameImages && frameImages.length >= 1 && !useVideo && (
           <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full z-[1]"
-            style={{ background: "#0b0b0c", display: "block" }}
+            style={{ background: "#0b0b0c", display: "block", objectFit: "cover" }}
           />
         )}
+        {/* Top gradient for text readability */}
         <div
           className="absolute inset-0 pointer-events-none z-[2]"
           aria-hidden
           style={{
             background:
               "linear-gradient(to top, rgba(11,11,12,0.92) 0%, rgba(11,11,12,0.4) 40%, transparent 70%)",
+          }}
+        />
+        {/* Bottom fade into next section — smooth transition, no harsh cut-off */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[35vh] pointer-events-none z-[3]"
+          aria-hidden
+          style={{
+            background: "linear-gradient(to top, #0b0b0c 0%, rgba(11,11,12,0.6) 40%, transparent 100%)",
           }}
         />
         <ClinixOverlayCopy progress={progress} />
