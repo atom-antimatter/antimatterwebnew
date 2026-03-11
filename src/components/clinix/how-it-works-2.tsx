@@ -1,155 +1,159 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 
-const CARDS = [
+const cards = [
   {
     number: 1,
-    title: "Capture Clinical Documentation",
-    link: "AI documentation layer",
-    items: [
-      "AI-assisted clinical notes",
-      "Structured encounter data",
-      "Provider workflow support",
-    ],
-    image: "/images/clinix/doc-layer.jpg",
+    title: "Connect Your Stack",
+    link: "View integrations",
+    items: ["API configuration", "OAuth setup", "Webhook events"],
+    image:
+      "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=800&auto=format&fit=crop",
   },
   {
     number: 2,
-    title: "Prepare Billing Upstream",
-    link: "Coding & claim readiness",
+    title: "Deploy Infrastructure",
+    link: "Explore architecture",
     items: [
-      "Coding support",
-      "Claim preparation",
-      "Submission quality checks",
-      "Denial prevention",
+      "Auto-scaling clusters",
+      "Edge networks",
+      "Database replication",
+      "Load balancing",
     ],
-    image: "/images/clinix/billing-layer.jpg",
+    image:
+      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop",
   },
   {
     number: 3,
-    title: "Optimize Revenue Cycle",
-    link: "RCM intelligence",
-    items: [
-      "Denial pattern detection",
-      "Revenue leakage insights",
-      "Billing workflow automation",
-      "Operational analytics",
-    ],
-    image: "/images/clinix/rcm-layer.jpg",
+    title: "Ship with Confidence",
+    link: "Security overview",
+    items: ["Zero-trust security", "Real-time monitoring"],
+    image:
+      "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop",
   },
-] as const;
+];
 
 export function HowItWorks2() {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
   return (
     <section
       id="how-it-works"
-      className="relative bg-[#0b0b0c] py-32 px-6"
+      className="w-full py-12 px-4 sm:px-6 lg:px-8 bg-[#0b0b0c]"
+      aria-label="How it works"
     >
-      <div className="max-w-7xl mx-auto">
-        <motion.header
-          className="text-center mb-16"
+      <div className="max-w-[1400px] mx-auto w-full">
+        <motion.h2
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium tracking-tight text-white mb-10 sm:mb-12 lg:mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white tracking-tight">
-            How Clinix Works
-          </h2>
-          <p className="mt-4 text-lg text-white/70 max-w-2xl mx-auto leading-relaxed">
-            Clinix connects documentation, billing preparation, and revenue cycle intelligence into a unified operational platform for modern practices.
-          </p>
-        </motion.header>
+          How It Works
+        </motion.h2>
 
-        {/* Desktop: 1 large card left, 2 stacked cards right. Mobile: stack all */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-2 gap-6 lg:gap-8">
-          {/* Card 1 — large, with image background */}
-          <motion.article
-            className="relative rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden hover:border-white/20 hover:bg-white/[0.04] transition-colors duration-300 lg:row-span-2 lg:min-h-0 flex flex-col"
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            whileHover={{ y: -4 }}
-          >
-            <div className="relative h-48 sm:h-56 lg:h-64 xl:h-72 bg-[#141416]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={CARDS[0].image}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0c] via-[#0b0b0c]/60 to-transparent" />
-            </div>
-            <div className="relative p-6 lg:p-8 flex flex-col flex-1">
-              <span
-                className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white/10 text-white text-sm font-semibold tabular-nums mb-4"
-                aria-hidden
-              >
-                {CARDS[0].number}
-              </span>
-              <h3 className="text-xl sm:text-2xl font-semibold text-white mb-2">
-                {CARDS[0].title}
-              </h3>
-              <a
-                href="#architecture"
-                className="inline-flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium mb-6 transition-colors"
-              >
-                {CARDS[0].link}
-                <ArrowRight className="w-4 h-4" />
-              </a>
-              <ul className="space-y-2 text-white/60 text-sm">
-                {CARDS[0].items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          </motion.article>
-
-          {/* Cards 2 and 3 — stacked on the right */}
-          {CARDS.slice(1).map((card, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-10 sm:mb-12 lg:mb-16">
+          {cards.map((card, idx) => (
             <motion.article
               key={card.number}
-              className="relative rounded-2xl border border-white/10 bg-white/[0.02] p-6 lg:p-8 overflow-hidden hover:border-white/20 hover:bg-white/[0.04] transition-colors duration-300"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{
-                duration: 0.5,
-                delay: (index + 1) * 0.08,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              whileHover={{ y: -4 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              className="relative overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-900 min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] flex flex-col cursor-pointer"
+              onMouseEnter={() => setHoveredCard(card.number)}
+              onMouseLeave={() => setHoveredCard(null)}
+              aria-label={`Step ${card.number}: ${card.title}`}
             >
-              <span
-                className="inline-flex w-9 h-9 items-center justify-center rounded-full bg-white/10 text-white text-sm font-semibold tabular-nums mb-4"
-                aria-hidden
-              >
-                {card.number}
-              </span>
-              <h3 className="text-xl sm:text-2xl font-semibold text-white mb-2">
-                {card.title}
-              </h3>
-              <a
-                href="#architecture"
-                className="inline-flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium mb-6 transition-colors"
-              >
-                {card.link}
-                <ArrowRight className="w-4 h-4" />
-              </a>
-              <ul className="space-y-2 text-white/60 text-sm">
-                {card.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+              <motion.div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${card.image})` }}
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{
+                  opacity: hoveredCard === card.number ? 1 : 0,
+                  scale: hoveredCard === card.number ? 1 : 1.1,
+                }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+              <motion.div
+                className="absolute inset-0 bg-black/60"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: hoveredCard === card.number ? 1 : 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              />
+
+              <div className="relative z-10 flex flex-col h-full pt-6 sm:pt-8 px-6 sm:px-8">
+                <div className="flex-1">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-4 transition-colors duration-300 ${
+                      hoveredCard === card.number
+                        ? "bg-white text-neutral-900"
+                        : "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
+                    }`}
+                  >
+                    {card.number}
+                  </div>
+
+                  <h3
+                    className={`text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight leading-tight mb-2 transition-colors duration-300 ${
+                      hoveredCard === card.number
+                        ? "text-white"
+                        : "text-neutral-900 dark:text-white"
+                    }`}
+                  >
+                    {card.title}
+                  </h3>
+
+                  <a
+                    href="#"
+                    className={`inline-flex items-center gap-2 text-sm font-medium transition-colors duration-300 group ${
+                      hoveredCard === card.number
+                        ? "text-white/90 hover:text-white"
+                        : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+                    }`}
+                  >
+                    {card.link}
+                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+                  </a>
+                </div>
+
+                <div className="mt-auto -mx-6 sm:-mx-8">
+                  {card.items.map((item, itemIdx) => (
+                    <div
+                      key={itemIdx}
+                      className={`py-3 px-6 border-t transition-colors duration-300 ${
+                        hoveredCard === card.number
+                          ? "border-white/20 text-white/90"
+                          : "border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300"
+                      }`}
+                    >
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </motion.article>
           ))}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="text-center"
+        >
+          <a
+            href="#"
+            className="inline-flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors duration-200 group"
+          >
+            <span className="text-sm sm:text-base">
+              Start building today. Get your API keys and deploy in under 5 minutes.
+            </span>
+            <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+          </a>
+        </motion.div>
       </div>
     </section>
   );
