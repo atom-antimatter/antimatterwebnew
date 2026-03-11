@@ -2,34 +2,35 @@
 
 /**
  * Story beats for the scroll-scrub section. Ranges are [start, end) progress.
+ * Text transitions by scroll progress (0.0 – 0.2, 0.2 – 0.4, …).
  */
 export const CLINIX_STORY_BEATS = [
   {
     start: 0,
-    end: 0.18,
+    end: 0.2,
     headline: "AI infrastructure for modern medical practices.",
     body: "Clinix unifies documentation, billing, and revenue cycle workflows into one intelligent operational layer.",
   },
   {
-    start: 0.18,
-    end: 0.38,
+    start: 0.2,
+    end: 0.4,
     headline: "Documentation, structured.",
     body: "Capture cleaner clinical information with AI-assisted documentation and scribing workflows.",
   },
   {
-    start: 0.38,
-    end: 0.58,
+    start: 0.4,
+    end: 0.6,
     headline: "Billing, prepared upstream.",
     body: "Support coding, claim readiness, and submission quality before revenue is lost downstream.",
   },
   {
-    start: 0.58,
-    end: 0.78,
-    headline: "RCM, made visible.",
+    start: 0.6,
+    end: 0.8,
+    headline: "Revenue cycle intelligence.",
     body: "Surface denials, workflow bottlenecks, and leakage points across the revenue cycle.",
   },
   {
-    start: 0.78,
+    start: 0.8,
     end: 1.01,
     headline: "Operations that scale.",
     body: "Help practices reduce administrative burden, improve collections, and operate with better financial visibility.",

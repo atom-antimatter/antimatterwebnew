@@ -8,7 +8,11 @@
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-GIF="$ROOT/public/clinix-exploded.gif"
+# Use the scroll-video GIF (rotating device); no autoplay — frames driven by scroll only
+GIF="${1:-$ROOT/public/Website_Scroll_Video_Generation.gif}"
+if [ ! -f "$GIF" ]; then
+  GIF="$ROOT/public/clinix-exploded.gif"
+fi
 OUT_DIR="$ROOT/public/clinix-frames"
 
 if [ ! -f "$GIF" ]; then
