@@ -38,7 +38,7 @@ const CARDS = [
       "Operational analytics",
     ],
     image: "/images/clinix/rcm-layer.jpg",
-  ],
+  },
 ] as const;
 
 export function HowItWorks2() {
