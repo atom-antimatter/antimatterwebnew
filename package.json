@@ -18,7 +18,8 @@
     "ingest:egrid": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/ingest-egrid.ts",
     "ingest:queue:miso": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/ingest-miso-queue.ts",
     "import:power-states": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/import/importPowerStates.ts",
-    "import:power-facilities": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/import/importPowerFacilities.ts"
+    "import:power-facilities": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/import/importPowerFacilities.ts",
+    "extract:clinix-frames": "bash scripts/extract-clinix-frames.sh"
   },
   "dependencies": {
     "@crayonai/react-core": "^0.7.6",
