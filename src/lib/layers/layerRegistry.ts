@@ -120,6 +120,22 @@ export const LAYER_REGISTRY: LayerRegistryItem[] = [
     confidenceNote: "Approximation of pressure, not actual grid headroom.",
   },
   {
+    id: "powerMarketStates",
+    section: "power",
+    title: "Power market states",
+    source: "Atlas power market dataset",
+    description: "State-level power feasibility scores, rates, capacity, and composite rankings for all 50 US states.",
+    literal: true,
+  },
+  {
+    id: "powerMarketFacilities",
+    section: "power",
+    title: "Power market facilities",
+    source: "Atlas power market dataset",
+    description: "Facility-level markers showing provider, PUE, renewable %, rates, and power feasibility scores.",
+    literal: true,
+  },
+  {
     id: "linodeRegions",
     section: "providers",
     title: "Akamai / Linode regions",

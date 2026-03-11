@@ -1,0 +1,2591 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-03-09T03:31:00Z",
+  "api_endpoints": {
+    "states": "/api/v1/states",
+    "facilities": "/api/v1/facilities",
+    "search": "/api/v1/search",
+    "calculate": "/api/v1/calculate"
+  },
+  "search_filters": {
+    "power_feasibility_score": {
+      "min": 0,
+      "max": 100,
+      "type": "range"
+    },
+    "commercial_rate_kwh": {
+      "min": 4.68,
+      "max": 38.79,
+      "type": "range"
+    },
+    "industrial_rate_kwh": {
+      "min": 4.68,
+      "max": 22.63,
+      "type": "range"
+    },
+    "tier_rating": {
+      "options": [
+        "Tier I",
+        "Tier II",
+        "Tier III",
+        "Tier IV"
+      ],
+      "type": "select"
+    },
+    "renewable_energy_pct": {
+      "min": 0,
+      "max": 100,
+      "type": "range"
+    },
+    "pue": {
+      "min": 1.0,
+      "max": 2.0,
+      "type": "range"
+    },
+    "state": {
+      "options": [
+        "Washington",
+        "Texas",
+        "Idaho",
+        "Oklahoma",
+        "Oregon",
+        "Nevada",
+        "Arizona",
+        "Virginia",
+        "Iowa",
+        "Illinois",
+        "Georgia",
+        "Ohio",
+        "Indiana",
+        "Tennessee",
+        "Kentucky",
+        "Arkansas",
+        "North Carolina",
+        "South Carolina",
+        "Kansas",
+        "Missouri",
+        "Minnesota",
+        "Colorado",
+        "Utah",
+        "Alabama",
+        "Louisiana",
+        "Wisconsin",
+        "Nebraska",
+        "New Mexico",
+        "Michigan",
+        "Florida",
+        "Pennsylvania",
+        "Maryland",
+        "Wyoming",
+        "West Virginia",
+        "Mississippi",
+        "Montana",
+        "South Dakota",
+        "North Dakota",
+        "Delaware",
+        "Maine",
+        "Vermont",
+        "New Hampshire",
+        "New Jersey",
+        "New York",
+        "Massachusetts",
+        "Connecticut",
+        "Rhode Island",
+        "California",
+        "Alaska",
+        "Hawaii"
+      ],
+      "type": "multiselect"
+    },
+    "provider": {
+      "options": [
+        "Switch",
+        "Equinix",
+        "Digital Realty",
+        "CyrusOne",
+        "QTS Realty",
+        "Vantage",
+        "CoreSite",
+        "NTT",
+        "Aligned",
+        "Iron Mountain",
+        "Flexential",
+        "Sabey",
+        "H5 Data Centers",
+        "DataBank"
+      ],
+      "type": "multiselect"
+    }
+  },
+  "data": {
+    "states": [
+      {
+        "id": "state_0",
+        "state": "Washington",
+        "rates": {
+          "commercial_kwh": 11.05,
+          "industrial_kwh": 4.68
+        },
+        "scores": {
+          "power_feasibility": 95,
+          "tier": "Tier 1"
+        },
+        "capacity": {
+          "current_mw": 2500,
+          "annual_consumption_twh": 8.5
+        },
+        "markets": "Quincy, East Wenatchee",
+        "costs": {
+          "monthly_100kw": 7956.000000000001,
+          "annual_1mw": 967980.0
+        },
+        "notes": "Hydroelectric power, sub $0.04/kWh available"
+      },
+      {
+        "id": "state_1",
+        "state": "Texas",
+        "rates": {
+          "commercial_kwh": 9.12,
+          "industrial_kwh": 5.7
+        },
+        "scores": {
+          "power_feasibility": 94,
+          "tier": "Tier 1"
+        },
+        "capacity": {
+          "current_mw": 17000,
+          "annual_consumption_twh": 17.0
+        },
+        "markets": "Dallas-Fort Worth, Austin, San Antonio",
+        "costs": {
+          "monthly_100kw": 6566.4,
+          "annual_1mw": 798911.9999999999
+        },
+        "notes": "Major hub, 4,396 MW future capacity in DFW"
+      },
+      {
+        "id": "state_2",
+        "state": "Idaho",
+        "rates": {
+          "commercial_kwh": 8.19,
+          "industrial_kwh": 7.36
+        },
+        "scores": {
+          "power_feasibility": 92,
+          "tier": "Tier 1"
+        },
+        "capacity": {
+          "current_mw": 450,
+          "annual_consumption_twh": 1.2
+        },
+        "markets": "Boise metro",
+        "costs": {
+          "monthly_100kw": 5896.799999999999,
+          "annual_1mw": 717444.0
+        },
+        "notes": "Low-cost hydroelectric power"
+      },
+      {
+        "id": "state_3",
+        "state": "Oklahoma",
+        "rates": {
+          "commercial_kwh": 10.04,
+          "industrial_kwh": 5.58
+        },
+        "scores": {
+          "power_feasibility": 91,
+          "tier": "Tier 1"
+        },
+        "capacity": {
+          "current_mw": 800,
+          "annual_consumption_twh": 2.1
+        },
+        "markets": "Oklahoma City, Tulsa",
+        "costs": {
+          "monthly_100kw": 7228.799999999999,
+          "annual_1mw": 879503.9999999999
+        },
+        "notes": "Natural gas generation, competitive rates"
+      },
+      {
+        "id": "state_4",
+        "state": "Oregon",
+        "rates": {
+          "commercial_kwh": 10.31,
+          "industrial_kwh": 6.44
+        },
+        "scores": {
+          "power_feasibility": 90,
+          "tier": "Tier 1"
+        },
+        "capacity": {
+          "current_mw": 1800,
+          "annual_consumption_twh": 4.2
+        },
+        "markets": "Hillsboro (Portland metro)",
+        "costs": {
+          "monthly_100kw": 7423.200000000001,
+          "annual_1mw": 903156.0000000001
+        },
+        "notes": "Renewable energy, major tech hub"
+      },
+      {
+        "id": "state_5",
+        "state": "Nevada",
+        "rates": {
+          "commercial_kwh": 11.47,
+          "industrial_kwh": 7.59
+        },
+        "scores": {
+          "power_feasibility": 88,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 3812,
+          "annual_consumption_twh": 6.8
+        },
+        "markets": "Las Vegas, Reno",
+        "costs": {
+          "monthly_100kw": 8258.4,
+          "annual_1mw": 1004772.0000000001
+        },
+        "notes": "Massive growth, 3,812 MW future capacity"
+      },
+      {
+        "id": "state_6",
+        "state": "Arizona",
+        "rates": {
+          "commercial_kwh": 11.87,
+          "industrial_kwh": 7.43
+        },
+        "scores": {
+          "power_feasibility": 86,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 5340,
+          "annual_consumption_twh": 9.2
+        },
+        "markets": "Phoenix metro",
+        "costs": {
+          "monthly_100kw": 8546.4,
+          "annual_1mw": 1039811.9999999999
+        },
+        "notes": "Solar + natural gas, surpassed Silicon Valley, 5,340 MW future"
+      },
+      {
+        "id": "state_7",
+        "state": "Virginia",
+        "rates": {
+          "commercial_kwh": 10.21,
+          "industrial_kwh": 6.78
+        },
+        "scores": {
+          "power_feasibility": 85,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 11077,
+          "annual_consumption_twh": 24.0
+        },
+        "markets": "Northern Virginia (Ashburn, Loudoun County)",
+        "costs": {
+          "monthly_100kw": 7351.200000000001,
+          "annual_1mw": 894396.0000000001
+        },
+        "notes": "Largest US hub, 11,077 MW future capacity, \"Data Center Alley\""
+      },
+      {
+        "id": "state_8",
+        "state": "Iowa",
+        "rates": {
+          "commercial_kwh": 10.26,
+          "industrial_kwh": 8.4
+        },
+        "scores": {
+          "power_feasibility": 84,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 2200,
+          "annual_consumption_twh": 5.1
+        },
+        "markets": "Des Moines, Council Bluffs",
+        "costs": {
+          "monthly_100kw": 7387.2,
+          "annual_1mw": 898776.0
+        },
+        "notes": "Wind energy, hyperscale facilities (Google, Facebook, Microsoft)"
+      },
+      {
+        "id": "state_9",
+        "state": "Illinois",
+        "rates": {
+          "commercial_kwh": 12.42,
+          "industrial_kwh": 6.29
+        },
+        "scores": {
+          "power_feasibility": 82,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 12000,
+          "annual_consumption_twh": 12.0
+        },
+        "markets": "Chicago metro",
+        "costs": {
+          "monthly_100kw": 8942.4,
+          "annual_1mw": 1087992.0
+        },
+        "notes": "Major colocation hub, diverse energy mix"
+      },
+      {
+        "id": "state_10",
+        "state": "Georgia",
+        "rates": {
+          "commercial_kwh": 11.44,
+          "industrial_kwh": 6.68
+        },
+        "scores": {
+          "power_feasibility": 81,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 3125,
+          "annual_consumption_twh": 7.8
+        },
+        "markets": "Metro Atlanta",
+        "costs": {
+          "monthly_100kw": 8236.8,
+          "annual_1mw": 1002144.0
+        },
+        "notes": "3,125 MW future capacity, $1.8B Microsoft investment"
+      },
+      {
+        "id": "state_11",
+        "state": "Ohio",
+        "rates": {
+          "commercial_kwh": 12.68,
+          "industrial_kwh": 6.56
+        },
+        "scores": {
+          "power_feasibility": 80,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 3500,
+          "annual_consumption_twh": 8.2
+        },
+        "markets": "Columbus, Cincinnati",
+        "costs": {
+          "monthly_100kw": 9129.6,
+          "annual_1mw": 1110768.0
+        },
+        "notes": "Traditional hub, stable infrastructure"
+      },
+      {
+        "id": "state_12",
+        "state": "Indiana",
+        "rates": {
+          "commercial_kwh": 13.64,
+          "industrial_kwh": 7.43
+        },
+        "scores": {
+          "power_feasibility": 78,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 1900,
+          "annual_consumption_twh": 4.5
+        },
+        "markets": "Indianapolis",
+        "costs": {
+          "monthly_100kw": 9820.8,
+          "annual_1mw": 1194864.0
+        },
+        "notes": "Growing market, Amazon project saving locals $1B"
+      },
+      {
+        "id": "state_13",
+        "state": "Tennessee",
+        "rates": {
+          "commercial_kwh": 13.02,
+          "industrial_kwh": 6.31
+        },
+        "scores": {
+          "power_feasibility": 77,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 1600,
+          "annual_consumption_twh": 3.8
+        },
+        "markets": "Nashville, Memphis",
+        "costs": {
+          "monthly_100kw": 9374.399999999998,
+          "annual_1mw": 1140552.0
+        },
+        "notes": "TVA power authority, competitive rates"
+      },
+      {
+        "id": "state_14",
+        "state": "Kentucky",
+        "rates": {
+          "commercial_kwh": 11.75,
+          "industrial_kwh": 5.73
+        },
+        "scores": {
+          "power_feasibility": 76,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 950,
+          "annual_consumption_twh": 2.4
+        },
+        "markets": "Louisville",
+        "costs": {
+          "monthly_100kw": 8460.0,
+          "annual_1mw": 1029300.0
+        },
+        "notes": "Coal-based generation, low industrial rates"
+      },
+      {
+        "id": "state_15",
+        "state": "Arkansas",
+        "rates": {
+          "commercial_kwh": 10.72,
+          "industrial_kwh": 6.55
+        },
+        "scores": {
+          "power_feasibility": 75,
+          "tier": "Tier 2"
+        },
+        "capacity": {
+          "current_mw": 700,
+          "annual_consumption_twh": 1.8
+        },
+        "markets": "Little Rock",
+        "costs": {
+          "monthly_100kw": 7718.400000000001,
+          "annual_1mw": 939072.0
+        },
+        "notes": "Low commercial rates, growing market"
+      },
+      {
+        "id": "state_16",
+        "state": "North Carolina",
+        "rates": {
+          "commercial_kwh": 11.32,
+          "industrial_kwh": 6.9
+        },
+        "scores": {
+          "power_feasibility": 74,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 2800,
+          "annual_consumption_twh": 6.5
+        },
+        "markets": "Charlotte, Research Triangle",
+        "costs": {
+          "monthly_100kw": 8150.400000000001,
+          "annual_1mw": 991632.0
+        },
+        "notes": "Tech corridor expansion, fiber infrastructure"
+      },
+      {
+        "id": "state_17",
+        "state": "South Carolina",
+        "rates": {
+          "commercial_kwh": 11.53,
+          "industrial_kwh": 6.5
+        },
+        "scores": {
+          "power_feasibility": 73,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 1200,
+          "annual_consumption_twh": 2.9
+        },
+        "markets": "Columbia, Charleston",
+        "costs": {
+          "monthly_100kw": 8301.6,
+          "annual_1mw": 1010028.0
+        },
+        "notes": "Nuclear + coal generation"
+      },
+      {
+        "id": "state_18",
+        "state": "Kansas",
+        "rates": {
+          "commercial_kwh": 10.93,
+          "industrial_kwh": 7.81
+        },
+        "scores": {
+          "power_feasibility": 72,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 650,
+          "annual_consumption_twh": 1.6
+        },
+        "markets": "Kansas City metro",
+        "costs": {
+          "monthly_100kw": 7869.599999999999,
+          "annual_1mw": 957468.0
+        },
+        "notes": "Wind energy growth"
+      },
+      {
+        "id": "state_19",
+        "state": "Missouri",
+        "rates": {
+          "commercial_kwh": 12.43,
+          "industrial_kwh": 8.3
+        },
+        "scores": {
+          "power_feasibility": 70,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 1100,
+          "annual_consumption_twh": 2.7
+        },
+        "markets": "Kansas City, St. Louis",
+        "costs": {
+          "monthly_100kw": 8949.6,
+          "annual_1mw": 1088868.0
+        },
+        "notes": "Regional colocation hubs"
+      },
+      {
+        "id": "state_20",
+        "state": "Minnesota",
+        "rates": {
+          "commercial_kwh": 11.81,
+          "industrial_kwh": 8.11
+        },
+        "scores": {
+          "power_feasibility": 69,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 1400,
+          "annual_consumption_twh": 3.3
+        },
+        "markets": "Minneapolis-St. Paul",
+        "costs": {
+          "monthly_100kw": 8503.2,
+          "annual_1mw": 1034556.0000000001
+        },
+        "notes": "Cold climate advantage for cooling"
+      },
+      {
+        "id": "state_21",
+        "state": "Colorado",
+        "rates": {
+          "commercial_kwh": 12.21,
+          "industrial_kwh": 7.66
+        },
+        "scores": {
+          "power_feasibility": 68,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 1800,
+          "annual_consumption_twh": 4.1
+        },
+        "markets": "Denver metro",
+        "costs": {
+          "monthly_100kw": 8791.2,
+          "annual_1mw": 1069596.0
+        },
+        "notes": "Growing tech sector, renewable energy"
+      },
+      {
+        "id": "state_22",
+        "state": "Utah",
+        "rates": {
+          "commercial_kwh": 10.87,
+          "industrial_kwh": 7.03
+        },
+        "scores": {
+          "power_feasibility": 67,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 900,
+          "annual_consumption_twh": 2.2
+        },
+        "markets": "Salt Lake City",
+        "costs": {
+          "monthly_100kw": 7826.4,
+          "annual_1mw": 952211.9999999999
+        },
+        "notes": "Silicon Slopes tech hub"
+      },
+      {
+        "id": "state_23",
+        "state": "Alabama",
+        "rates": {
+          "commercial_kwh": 14.95,
+          "industrial_kwh": 6.6
+        },
+        "scores": {
+          "power_feasibility": 66,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 850,
+          "annual_consumption_twh": 2.0
+        },
+        "markets": "Birmingham, Huntsville",
+        "costs": {
+          "monthly_100kw": 10764.0,
+          "annual_1mw": 1309620.0
+        },
+        "notes": "TVA power, aerospace/defense presence"
+      },
+      {
+        "id": "state_24",
+        "state": "Louisiana",
+        "rates": {
+          "commercial_kwh": 11.6,
+          "industrial_kwh": 6.12
+        },
+        "scores": {
+          "power_feasibility": 65,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 750,
+          "annual_consumption_twh": 1.8
+        },
+        "markets": "New Orleans, Baton Rouge",
+        "costs": {
+          "monthly_100kw": 8352.0,
+          "annual_1mw": 1016159.9999999999
+        },
+        "notes": "Natural gas infrastructure"
+      },
+      {
+        "id": "state_25",
+        "state": "Wisconsin",
+        "rates": {
+          "commercial_kwh": 13.89,
+          "industrial_kwh": 8.19
+        },
+        "scores": {
+          "power_feasibility": 63,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 950,
+          "annual_consumption_twh": 2.3
+        },
+        "markets": "Milwaukee",
+        "costs": {
+          "monthly_100kw": 10000.8,
+          "annual_1mw": 1216764.0
+        },
+        "notes": "Cold climate cooling advantage"
+      },
+      {
+        "id": "state_26",
+        "state": "Nebraska",
+        "rates": {
+          "commercial_kwh": 11.47,
+          "industrial_kwh": 8.25
+        },
+        "scores": {
+          "power_feasibility": 62,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 550,
+          "annual_consumption_twh": 1.3
+        },
+        "markets": "Omaha",
+        "costs": {
+          "monthly_100kw": 8258.4,
+          "annual_1mw": 1004772.0000000001
+        },
+        "notes": "Public power utilities, stable rates"
+      },
+      {
+        "id": "state_27",
+        "state": "New Mexico",
+        "rates": {
+          "commercial_kwh": 12.66,
+          "industrial_kwh": 6.29
+        },
+        "scores": {
+          "power_feasibility": 61,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 680,
+          "annual_consumption_twh": 1.6
+        },
+        "markets": "Albuquerque",
+        "costs": {
+          "monthly_100kw": 9115.199999999999,
+          "annual_1mw": 1109016.0
+        },
+        "notes": "Facebook facility, renewable energy growth"
+      },
+      {
+        "id": "state_28",
+        "state": "Michigan",
+        "rates": {
+          "commercial_kwh": 15.42,
+          "industrial_kwh": 7.38
+        },
+        "scores": {
+          "power_feasibility": 60,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 1300,
+          "annual_consumption_twh": 3.1
+        },
+        "markets": "Detroit metro",
+        "costs": {
+          "monthly_100kw": 11102.4,
+          "annual_1mw": 1350792.0000000002
+        },
+        "notes": "Manufacturing legacy infrastructure"
+      },
+      {
+        "id": "state_29",
+        "state": "Florida",
+        "rates": {
+          "commercial_kwh": 11.55,
+          "industrial_kwh": 8.05
+        },
+        "scores": {
+          "power_feasibility": 58,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 2400,
+          "annual_consumption_twh": 5.6
+        },
+        "markets": "Miami, Tampa, Jacksonville",
+        "costs": {
+          "monthly_100kw": 8316.0,
+          "annual_1mw": 1011780.0
+        },
+        "notes": "Hurricane risk, natural gas generation"
+      },
+      {
+        "id": "state_30",
+        "state": "Pennsylvania",
+        "rates": {
+          "commercial_kwh": 13.16,
+          "industrial_kwh": 6.65
+        },
+        "scores": {
+          "power_feasibility": 57,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 2200,
+          "annual_consumption_twh": 5.1
+        },
+        "markets": "Philadelphia, Pittsburgh",
+        "costs": {
+          "monthly_100kw": 9475.2,
+          "annual_1mw": 1152816.0
+        },
+        "notes": "Expanding fiber corridor"
+      },
+      {
+        "id": "state_31",
+        "state": "Maryland",
+        "rates": {
+          "commercial_kwh": 15.86,
+          "industrial_kwh": 8.08
+        },
+        "scores": {
+          "power_feasibility": 55,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 1600,
+          "annual_consumption_twh": 3.7
+        },
+        "markets": "Baltimore, proximity to DC",
+        "costs": {
+          "monthly_100kw": 11419.199999999999,
+          "annual_1mw": 1389336.0
+        },
+        "notes": "Federal government proximity"
+      },
+      {
+        "id": "state_32",
+        "state": "Wyoming",
+        "rates": {
+          "commercial_kwh": 10.94,
+          "industrial_kwh": 6.81
+        },
+        "scores": {
+          "power_feasibility": 54,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 420,
+          "annual_consumption_twh": 1.0
+        },
+        "markets": "Cheyenne",
+        "costs": {
+          "monthly_100kw": 7876.799999999999,
+          "annual_1mw": 958343.9999999999
+        },
+        "notes": "Coal generation, sparse population"
+      },
+      {
+        "id": "state_33",
+        "state": "West Virginia",
+        "rates": {
+          "commercial_kwh": 11.41,
+          "industrial_kwh": 6.6
+        },
+        "scores": {
+          "power_feasibility": 53,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 380,
+          "annual_consumption_twh": 0.9
+        },
+        "markets": "Charleston",
+        "costs": {
+          "monthly_100kw": 8215.2,
+          "annual_1mw": 999516.0000000001
+        },
+        "notes": "Coal infrastructure"
+      },
+      {
+        "id": "state_34",
+        "state": "Mississippi",
+        "rates": {
+          "commercial_kwh": 12.84,
+          "industrial_kwh": 6.32
+        },
+        "scores": {
+          "power_feasibility": 52,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 340,
+          "annual_consumption_twh": 0.8
+        },
+        "markets": "Jackson",
+        "costs": {
+          "monthly_100kw": 9244.8,
+          "annual_1mw": 1124783.9999999998
+        },
+        "notes": "Limited fiber infrastructure"
+      },
+      {
+        "id": "state_35",
+        "state": "Montana",
+        "rates": {
+          "commercial_kwh": 11.98,
+          "industrial_kwh": 5.52
+        },
+        "scores": {
+          "power_feasibility": 51,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 290,
+          "annual_consumption_twh": 0.7
+        },
+        "markets": "Missoula",
+        "costs": {
+          "monthly_100kw": 8625.6,
+          "annual_1mw": 1049448.0
+        },
+        "notes": "Hydroelectric potential, sparse population"
+      },
+      {
+        "id": "state_36",
+        "state": "South Dakota",
+        "rates": {
+          "commercial_kwh": 10.99,
+          "industrial_kwh": 7.99
+        },
+        "scores": {
+          "power_feasibility": 50,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 250,
+          "annual_consumption_twh": 0.6
+        },
+        "markets": "Sioux Falls",
+        "costs": {
+          "monthly_100kw": 7912.8,
+          "annual_1mw": 962723.9999999999
+        },
+        "notes": "Emerging market"
+      },
+      {
+        "id": "state_37",
+        "state": "North Dakota",
+        "rates": {
+          "commercial_kwh": 11.93,
+          "industrial_kwh": 8.66
+        },
+        "scores": {
+          "power_feasibility": 48,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 220,
+          "annual_consumption_twh": 0.5
+        },
+        "markets": "Fargo",
+        "costs": {
+          "monthly_100kw": 8589.6,
+          "annual_1mw": 1045068.0
+        },
+        "notes": "Cold climate, limited infrastructure"
+      },
+      {
+        "id": "state_38",
+        "state": "Delaware",
+        "rates": {
+          "commercial_kwh": 12.91,
+          "industrial_kwh": 7.42
+        },
+        "scores": {
+          "power_feasibility": 47,
+          "tier": "Tier 3"
+        },
+        "capacity": {
+          "current_mw": 480,
+          "annual_consumption_twh": 1.1
+        },
+        "markets": "Wilmington",
+        "costs": {
+          "monthly_100kw": 9295.2,
+          "annual_1mw": 1130916.0
+        },
+        "notes": "Small market, proximity to major hubs"
+      },
+      {
+        "id": "state_39",
+        "state": "Maine",
+        "rates": {
+          "commercial_kwh": 21.55,
+          "industrial_kwh": 8.95
+        },
+        "scores": {
+          "power_feasibility": 45,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 310,
+          "annual_consumption_twh": 0.7
+        },
+        "markets": "Portland",
+        "costs": {
+          "monthly_100kw": 15516.0,
+          "annual_1mw": 1887780.0
+        },
+        "notes": "High electricity costs"
+      },
+      {
+        "id": "state_40",
+        "state": "Vermont",
+        "rates": {
+          "commercial_kwh": 20.7,
+          "industrial_kwh": 10.18
+        },
+        "scores": {
+          "power_feasibility": 44,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 180,
+          "annual_consumption_twh": 0.4
+        },
+        "markets": "Burlington",
+        "costs": {
+          "monthly_100kw": 14904.0,
+          "annual_1mw": 1813320.0
+        },
+        "notes": "100% renewable energy, high cost"
+      },
+      {
+        "id": "state_41",
+        "state": "New Hampshire",
+        "rates": {
+          "commercial_kwh": 22.16,
+          "industrial_kwh": 12.19
+        },
+        "scores": {
+          "power_feasibility": 42,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 240,
+          "annual_consumption_twh": 0.6
+        },
+        "markets": "Manchester",
+        "costs": {
+          "monthly_100kw": 15955.2,
+          "annual_1mw": 1941216.0
+        },
+        "notes": "High electricity costs"
+      },
+      {
+        "id": "state_42",
+        "state": "New Jersey",
+        "rates": {
+          "commercial_kwh": 17.89,
+          "industrial_kwh": 10.91
+        },
+        "scores": {
+          "power_feasibility": 48,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 2600,
+          "annual_consumption_twh": 6.0
+        },
+        "markets": "Newark, Jersey City",
+        "costs": {
+          "monthly_100kw": 12880.800000000001,
+          "annual_1mw": 1567164.0
+        },
+        "notes": "Proximity to NYC, high land/power costs"
+      },
+      {
+        "id": "state_43",
+        "state": "New York",
+        "rates": {
+          "commercial_kwh": 19.42,
+          "industrial_kwh": 5.9
+        },
+        "scores": {
+          "power_feasibility": 55,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 3200,
+          "annual_consumption_twh": 7.4
+        },
+        "markets": "NYC metro, Buffalo",
+        "costs": {
+          "monthly_100kw": 13982.400000000001,
+          "annual_1mw": 1701192.0000000002
+        },
+        "notes": "Major market, high commercial rates, low industrial rates"
+      },
+      {
+        "id": "state_44",
+        "state": "Massachusetts",
+        "rates": {
+          "commercial_kwh": 23.88,
+          "industrial_kwh": 13.75
+        },
+        "scores": {
+          "power_feasibility": 40,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 1800,
+          "annual_consumption_twh": 4.2
+        },
+        "markets": "Boston metro",
+        "costs": {
+          "monthly_100kw": 17193.6,
+          "annual_1mw": 2091887.9999999998
+        },
+        "notes": "Very high costs, strong demand"
+      },
+      {
+        "id": "state_45",
+        "state": "Connecticut",
+        "rates": {
+          "commercial_kwh": 22.21,
+          "industrial_kwh": 13.76
+        },
+        "scores": {
+          "power_feasibility": 38,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 950,
+          "annual_consumption_twh": 2.2
+        },
+        "markets": "Hartford, Stamford",
+        "costs": {
+          "monthly_100kw": 15991.2,
+          "annual_1mw": 1945596.0000000002
+        },
+        "notes": "Highest electricity costs in continental US"
+      },
+      {
+        "id": "state_46",
+        "state": "Rhode Island",
+        "rates": {
+          "commercial_kwh": 25.69,
+          "industrial_kwh": 14.85
+        },
+        "scores": {
+          "power_feasibility": 35,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 320,
+          "annual_consumption_twh": 0.7
+        },
+        "markets": "Providence",
+        "costs": {
+          "monthly_100kw": 18496.8,
+          "annual_1mw": 2250444.0000000005
+        },
+        "notes": "Second highest electricity costs nationwide"
+      },
+      {
+        "id": "state_47",
+        "state": "California",
+        "rates": {
+          "commercial_kwh": 26.92,
+          "industrial_kwh": 14.47
+        },
+        "scores": {
+          "power_feasibility": 52,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 8500,
+          "annual_consumption_twh": 19.5
+        },
+        "markets": "Silicon Valley, LA, Sacramento",
+        "costs": {
+          "monthly_100kw": 19382.399999999998,
+          "annual_1mw": 2358192.0
+        },
+        "notes": "Highest costs, massive demand, Santa Clara has discount power"
+      },
+      {
+        "id": "state_48",
+        "state": "Alaska",
+        "rates": {
+          "commercial_kwh": 21.61,
+          "industrial_kwh": 16.94
+        },
+        "scores": {
+          "power_feasibility": 30,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 150,
+          "annual_consumption_twh": 0.3
+        },
+        "markets": "Anchorage",
+        "costs": {
+          "monthly_100kw": 15559.199999999999,
+          "annual_1mw": 1893036.0
+        },
+        "notes": "Extreme climate, isolated grid, highest industrial rates"
+      },
+      {
+        "id": "state_49",
+        "state": "Hawaii",
+        "rates": {
+          "commercial_kwh": 38.79,
+          "industrial_kwh": 22.63
+        },
+        "scores": {
+          "power_feasibility": 25,
+          "tier": "Tier 4"
+        },
+        "capacity": {
+          "current_mw": 180,
+          "annual_consumption_twh": 0.4
+        },
+        "markets": "Honolulu",
+        "costs": {
+          "monthly_100kw": 27928.8,
+          "annual_1mw": 3398004.0
+        },
+        "notes": "Highest electricity costs nationwide, isolated grid"
+      }
+    ],
+    "facilities": [
+      {
+        "id": "facility_0",
+        "provider": "Switch",
+        "name": "Switch LAS VEGAS",
+        "location": {
+          "city": "Las Vegas",
+          "state": "Nevada"
+        },
+        "scores": {
+          "power_feasibility": 38,
+          "utility_rate": 14,
+          "queue_pressure": 15,
+          "generation": 100,
+          "grid_carbon": 74
+        },
+        "rates": {
+          "kwh": 17.86
+        },
+        "sustainability": {
+          "renewable_energy_pct": 100,
+          "grid_carbon_lb_mwh": 520,
+          "pue": 1.18
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 1285.9199999999998,
+          "monthly_100kw": 12859.199999999999,
+          "annual_1mw": 1564536.0
+        },
+        "notes": "HYPERSCALE facility, 100% renewable, state CA 100 MW target"
+      },
+      {
+        "id": "facility_1",
+        "provider": "Equinix",
+        "name": "Equinix SV1 (Silicon Valley)",
+        "location": {
+          "city": "San Jose",
+          "state": "California"
+        },
+        "scores": {
+          "power_feasibility": 45,
+          "utility_rate": 85,
+          "queue_pressure": 45,
+          "generation": 65,
+          "grid_carbon": 35
+        },
+        "rates": {
+          "kwh": 26.92
+        },
+        "sustainability": {
+          "renewable_energy_pct": 95,
+          "grid_carbon_lb_mwh": 380,
+          "pue": 1.42
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 1938.2400000000002,
+          "monthly_100kw": 19382.399999999998,
+          "annual_1mw": 2358192.0
+        },
+        "notes": "IBX data center, premium colocation"
+      },
+      {
+        "id": "facility_2",
+        "provider": "Equinix",
+        "name": "Equinix DC2 (Ashburn)",
+        "location": {
+          "city": "Ashburn",
+          "state": "Virginia"
+        },
+        "scores": {
+          "power_feasibility": 72,
+          "utility_rate": 35,
+          "queue_pressure": 75,
+          "generation": 95,
+          "grid_carbon": 65
+        },
+        "rates": {
+          "kwh": 10.21
+        },
+        "sustainability": {
+          "renewable_energy_pct": 85,
+          "grid_carbon_lb_mwh": 580,
+          "pue": 1.38
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 735.1200000000001,
+          "monthly_100kw": 7351.200000000001,
+          "annual_1mw": 894396.0000000001
+        },
+        "notes": "Data Center Alley, major interconnection hub"
+      },
+      {
+        "id": "facility_3",
+        "provider": "Equinix",
+        "name": "Equinix CH1 (Chicago)",
+        "location": {
+          "city": "Chicago",
+          "state": "Illinois"
+        },
+        "scores": {
+          "power_feasibility": 68,
+          "utility_rate": 42,
+          "queue_pressure": 38,
+          "generation": 88,
+          "grid_carbon": 58
+        },
+        "rates": {
+          "kwh": 12.42
+        },
+        "sustainability": {
+          "renewable_energy_pct": 75,
+          "grid_carbon_lb_mwh": 520,
+          "pue": 1.36
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 894.24,
+          "monthly_100kw": 8942.4,
+          "annual_1mw": 1087992.0
+        },
+        "notes": "Major Midwest hub"
+      },
+      {
+        "id": "facility_4",
+        "provider": "Equinix",
+        "name": "Equinix DA1 (Dallas)",
+        "location": {
+          "city": "Dallas",
+          "state": "Texas"
+        },
+        "scores": {
+          "power_feasibility": 82,
+          "utility_rate": 25,
+          "queue_pressure": 52,
+          "generation": 98,
+          "grid_carbon": 72
+        },
+        "rates": {
+          "kwh": 9.12
+        },
+        "sustainability": {
+          "renewable_energy_pct": 65,
+          "grid_carbon_lb_mwh": 640,
+          "pue": 1.32
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 656.64,
+          "monthly_100kw": 6566.4,
+          "annual_1mw": 798911.9999999999
+        },
+        "notes": "DFW metro, carrier hotel"
+      },
+      {
+        "id": "facility_5",
+        "provider": "Digital Realty",
+        "name": "Digital Realty Ashburn Campus",
+        "location": {
+          "city": "Ashburn",
+          "state": "Virginia"
+        },
+        "scores": {
+          "power_feasibility": 75,
+          "utility_rate": 33,
+          "queue_pressure": 78,
+          "generation": 96,
+          "grid_carbon": 63
+        },
+        "rates": {
+          "kwh": 10.21
+        },
+        "sustainability": {
+          "renewable_energy_pct": 80,
+          "grid_carbon_lb_mwh": 580,
+          "pue": 1.35
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 735.1200000000001,
+          "monthly_100kw": 7351.200000000001,
+          "annual_1mw": 894396.0000000001
+        },
+        "notes": "Multiple buildings, hyperscale capacity"
+      },
+      {
+        "id": "facility_6",
+        "provider": "Digital Realty",
+        "name": "Digital Realty PDX1 (Portland)",
+        "location": {
+          "city": "Hillsboro",
+          "state": "Oregon"
+        },
+        "scores": {
+          "power_feasibility": 88,
+          "utility_rate": 28,
+          "queue_pressure": 32,
+          "generation": 92,
+          "grid_carbon": 22
+        },
+        "rates": {
+          "kwh": 10.31
+        },
+        "sustainability": {
+          "renewable_energy_pct": 100,
+          "grid_carbon_lb_mwh": 280,
+          "pue": 1.29
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 742.32,
+          "monthly_100kw": 7423.200000000001,
+          "annual_1mw": 903156.0000000001
+        },
+        "notes": "Hydroelectric power, tech corridor"
+      },
+      {
+        "id": "facility_7",
+        "provider": "Digital Realty",
+        "name": "Digital Realty DFW",
+        "location": {
+          "city": "Dallas",
+          "state": "Texas"
+        },
+        "scores": {
+          "power_feasibility": 85,
+          "utility_rate": 24,
+          "queue_pressure": 48,
+          "generation": 100,
+          "grid_carbon": 70
+        },
+        "rates": {
+          "kwh": 9.12
+        },
+        "sustainability": {
+          "renewable_energy_pct": 70,
+          "grid_carbon_lb_mwh": 630,
+          "pue": 1.33
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 656.64,
+          "monthly_100kw": 6566.4,
+          "annual_1mw": 798911.9999999999
+        },
+        "notes": "Richardson campus, fiber-rich"
+      },
+      {
+        "id": "facility_8",
+        "provider": "CyrusOne",
+        "name": "CyrusOne Houston West",
+        "location": {
+          "city": "Houston",
+          "state": "Texas"
+        },
+        "scores": {
+          "power_feasibility": 87,
+          "utility_rate": 23,
+          "queue_pressure": 42,
+          "generation": 98,
+          "grid_carbon": 68
+        },
+        "rates": {
+          "kwh": 9.12
+        },
+        "sustainability": {
+          "renewable_energy_pct": 72,
+          "grid_carbon_lb_mwh": 620,
+          "pue": 1.31
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 656.64,
+          "monthly_100kw": 6566.4,
+          "annual_1mw": 798911.9999999999
+        },
+        "notes": "Energy corridor location"
+      },
+      {
+        "id": "facility_9",
+        "provider": "CyrusOne",
+        "name": "CyrusOne Phoenix",
+        "location": {
+          "city": "Phoenix",
+          "state": "Arizona"
+        },
+        "scores": {
+          "power_feasibility": 84,
+          "utility_rate": 31,
+          "queue_pressure": 58,
+          "generation": 94,
+          "grid_carbon": 48
+        },
+        "rates": {
+          "kwh": 11.87
+        },
+        "sustainability": {
+          "renewable_energy_pct": 85,
+          "grid_carbon_lb_mwh": 450,
+          "pue": 1.34
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 854.6399999999999,
+          "monthly_100kw": 8546.4,
+          "annual_1mw": 1039811.9999999999
+        },
+        "notes": "Solar power advantage"
+      },
+      {
+        "id": "facility_10",
+        "provider": "CyrusOne",
+        "name": "CyrusOne Quincy",
+        "location": {
+          "city": "Quincy",
+          "state": "Washington"
+        },
+        "scores": {
+          "power_feasibility": 96,
+          "utility_rate": 12,
+          "queue_pressure": 28,
+          "generation": 98,
+          "grid_carbon": 15
+        },
+        "rates": {
+          "kwh": 4.68
+        },
+        "sustainability": {
+          "renewable_energy_pct": 100,
+          "grid_carbon_lb_mwh": 180,
+          "pue": 1.22
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 336.96,
+          "monthly_100kw": 3369.6,
+          "annual_1mw": 409968.0
+        },
+        "notes": "Hydroelectric, sub $0.04/kWh, hyperscale"
+      },
+      {
+        "id": "facility_11",
+        "provider": "QTS Realty",
+        "name": "QTS Atlanta Metro",
+        "location": {
+          "city": "Atlanta",
+          "state": "Georgia"
+        },
+        "scores": {
+          "power_feasibility": 78,
+          "utility_rate": 38,
+          "queue_pressure": 55,
+          "generation": 90,
+          "grid_carbon": 62
+        },
+        "rates": {
+          "kwh": 11.44
+        },
+        "sustainability": {
+          "renewable_energy_pct": 68,
+          "grid_carbon_lb_mwh": 560,
+          "pue": 1.36
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 823.6800000000001,
+          "monthly_100kw": 8236.8,
+          "annual_1mw": 1002144.0
+        },
+        "notes": "Metro Atlanta campus"
+      },
+      {
+        "id": "facility_12",
+        "provider": "QTS Realty",
+        "name": "QTS Chicago",
+        "location": {
+          "city": "Chicago",
+          "state": "Illinois"
+        },
+        "scores": {
+          "power_feasibility": 70,
+          "utility_rate": 40,
+          "queue_pressure": 36,
+          "generation": 89,
+          "grid_carbon": 56
+        },
+        "rates": {
+          "kwh": 12.42
+        },
+        "sustainability": {
+          "renewable_energy_pct": 72,
+          "grid_carbon_lb_mwh": 510,
+          "pue": 1.37
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 894.24,
+          "monthly_100kw": 8942.4,
+          "annual_1mw": 1087992.0
+        },
+        "notes": "Suburban Chicago facility"
+      },
+      {
+        "id": "facility_13",
+        "provider": "Vantage",
+        "name": "Vantage SDC Phoenix",
+        "location": {
+          "city": "Phoenix",
+          "state": "Arizona"
+        },
+        "scores": {
+          "power_feasibility": 86,
+          "utility_rate": 30,
+          "queue_pressure": 60,
+          "generation": 96,
+          "grid_carbon": 46
+        },
+        "rates": {
+          "kwh": 11.87
+        },
+        "sustainability": {
+          "renewable_energy_pct": 90,
+          "grid_carbon_lb_mwh": 440,
+          "pue": 1.28
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 854.6399999999999,
+          "monthly_100kw": 8546.4,
+          "annual_1mw": 1039811.9999999999
+        },
+        "notes": "Hyperscale campus, renewable focused"
+      },
+      {
+        "id": "facility_14",
+        "provider": "Vantage",
+        "name": "Vantage SDC Ashburn",
+        "location": {
+          "city": "Ashburn",
+          "state": "Virginia"
+        },
+        "scores": {
+          "power_feasibility": 74,
+          "utility_rate": 34,
+          "queue_pressure": 76,
+          "generation": 94,
+          "grid_carbon": 64
+        },
+        "rates": {
+          "kwh": 10.21
+        },
+        "sustainability": {
+          "renewable_energy_pct": 82,
+          "grid_carbon_lb_mwh": 585,
+          "pue": 1.31
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 735.1200000000001,
+          "monthly_100kw": 7351.200000000001,
+          "annual_1mw": 894396.0000000001
+        },
+        "notes": "Northern Virginia campus"
+      },
+      {
+        "id": "facility_15",
+        "provider": "CoreSite",
+        "name": "CoreSite LA1 (One Wilshire)",
+        "location": {
+          "city": "Los Angeles",
+          "state": "California"
+        },
+        "scores": {
+          "power_feasibility": 48,
+          "utility_rate": 82,
+          "queue_pressure": 42,
+          "generation": 68,
+          "grid_carbon": 38
+        },
+        "rates": {
+          "kwh": 26.92
+        },
+        "sustainability": {
+          "renewable_energy_pct": 92,
+          "grid_carbon_lb_mwh": 390,
+          "pue": 1.41
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 1938.2400000000002,
+          "monthly_100kw": 19382.399999999998,
+          "annual_1mw": 2358192.0
+        },
+        "notes": "Iconic carrier hotel, premium location"
+      },
+      {
+        "id": "facility_16",
+        "provider": "CoreSite",
+        "name": "CoreSite DE1 (Denver)",
+        "location": {
+          "city": "Denver",
+          "state": "Colorado"
+        },
+        "scores": {
+          "power_feasibility": 72,
+          "utility_rate": 36,
+          "queue_pressure": 44,
+          "generation": 86,
+          "grid_carbon": 52
+        },
+        "rates": {
+          "kwh": 12.21
+        },
+        "sustainability": {
+          "renewable_energy_pct": 76,
+          "grid_carbon_lb_mwh": 480,
+          "pue": 1.35
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 879.1200000000001,
+          "monthly_100kw": 8791.2,
+          "annual_1mw": 1069596.0
+        },
+        "notes": "Downtown Denver, carrier neutral"
+      },
+      {
+        "id": "facility_17",
+        "provider": "NTT",
+        "name": "NTT GDC Ashburn",
+        "location": {
+          "city": "Ashburn",
+          "state": "Virginia"
+        },
+        "scores": {
+          "power_feasibility": 76,
+          "utility_rate": 32,
+          "queue_pressure": 74,
+          "generation": 97,
+          "grid_carbon": 62
+        },
+        "rates": {
+          "kwh": 10.21
+        },
+        "sustainability": {
+          "renewable_energy_pct": 78,
+          "grid_carbon_lb_mwh": 575,
+          "pue": 1.33
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 735.1200000000001,
+          "monthly_100kw": 7351.200000000001,
+          "annual_1mw": 894396.0000000001
+        },
+        "notes": "Data Center Alley campus"
+      },
+      {
+        "id": "facility_18",
+        "provider": "NTT",
+        "name": "NTT GDC Santa Clara",
+        "location": {
+          "city": "Santa Clara",
+          "state": "California"
+        },
+        "scores": {
+          "power_feasibility": 58,
+          "utility_rate": 68,
+          "queue_pressure": 38,
+          "generation": 75,
+          "grid_carbon": 32
+        },
+        "rates": {
+          "kwh": 20.5
+        },
+        "sustainability": {
+          "renewable_energy_pct": 98,
+          "grid_carbon_lb_mwh": 360,
+          "pue": 1.39
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 1475.9999999999998,
+          "monthly_100kw": 14760.0,
+          "annual_1mw": 1795800.0
+        },
+        "notes": "Silicon Valley Power discounted rates"
+      },
+      {
+        "id": "facility_19",
+        "provider": "Aligned",
+        "name": "Aligned Dallas",
+        "location": {
+          "city": "Dallas",
+          "state": "Texas"
+        },
+        "scores": {
+          "power_feasibility": 86,
+          "utility_rate": 24,
+          "queue_pressure": 50,
+          "generation": 99,
+          "grid_carbon": 71
+        },
+        "rates": {
+          "kwh": 9.12
+        },
+        "sustainability": {
+          "renewable_energy_pct": 75,
+          "grid_carbon_lb_mwh": 635,
+          "pue": 1.15
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 656.64,
+          "monthly_100kw": 6566.4,
+          "annual_1mw": 798911.9999999999
+        },
+        "notes": "Patented Delta\u00b3 cooling, industry-leading PUE"
+      },
+      {
+        "id": "facility_20",
+        "provider": "Aligned",
+        "name": "Aligned Phoenix",
+        "location": {
+          "city": "Phoenix",
+          "state": "Arizona"
+        },
+        "scores": {
+          "power_feasibility": 87,
+          "utility_rate": 29,
+          "queue_pressure": 56,
+          "generation": 95,
+          "grid_carbon": 44
+        },
+        "rates": {
+          "kwh": 11.87
+        },
+        "sustainability": {
+          "renewable_energy_pct": 88,
+          "grid_carbon_lb_mwh": 430,
+          "pue": 1.12
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 854.6399999999999,
+          "monthly_100kw": 8546.4,
+          "annual_1mw": 1039811.9999999999
+        },
+        "notes": "Innovative cooling technology"
+      },
+      {
+        "id": "facility_21",
+        "provider": "Iron Mountain",
+        "name": "Iron Mountain PHX1",
+        "location": {
+          "city": "Phoenix",
+          "state": "Arizona"
+        },
+        "scores": {
+          "power_feasibility": 85,
+          "utility_rate": 30,
+          "queue_pressure": 57,
+          "generation": 93,
+          "grid_carbon": 47
+        },
+        "rates": {
+          "kwh": 11.87
+        },
+        "sustainability": {
+          "renewable_energy_pct": 86,
+          "grid_carbon_lb_mwh": 445,
+          "pue": 1.34
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 854.6399999999999,
+          "monthly_100kw": 8546.4,
+          "annual_1mw": 1039811.9999999999
+        },
+        "notes": "Hyperscale campus"
+      },
+      {
+        "id": "facility_22",
+        "provider": "Iron Mountain",
+        "name": "Iron Mountain NVA1",
+        "location": {
+          "city": "Manassas",
+          "state": "Virginia"
+        },
+        "scores": {
+          "power_feasibility": 73,
+          "utility_rate": 33,
+          "queue_pressure": 72,
+          "generation": 95,
+          "grid_carbon": 63
+        },
+        "rates": {
+          "kwh": 10.21
+        },
+        "sustainability": {
+          "renewable_energy_pct": 79,
+          "grid_carbon_lb_mwh": 580,
+          "pue": 1.36
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 735.1200000000001,
+          "monthly_100kw": 7351.200000000001,
+          "annual_1mw": 894396.0000000001
+        },
+        "notes": "Northern Virginia location"
+      },
+      {
+        "id": "facility_23",
+        "provider": "Flexential",
+        "name": "Flexential Portland",
+        "location": {
+          "city": "Portland",
+          "state": "Oregon"
+        },
+        "scores": {
+          "power_feasibility": 89,
+          "utility_rate": 27,
+          "queue_pressure": 30,
+          "generation": 93,
+          "grid_carbon": 20
+        },
+        "rates": {
+          "kwh": 10.31
+        },
+        "sustainability": {
+          "renewable_energy_pct": 100,
+          "grid_carbon_lb_mwh": 270,
+          "pue": 1.31
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 742.32,
+          "monthly_100kw": 7423.200000000001,
+          "annual_1mw": 903156.0000000001
+        },
+        "notes": "Hydroelectric power"
+      },
+      {
+        "id": "facility_24",
+        "provider": "Flexential",
+        "name": "Flexential Atlanta",
+        "location": {
+          "city": "Atlanta",
+          "state": "Georgia"
+        },
+        "scores": {
+          "power_feasibility": 77,
+          "utility_rate": 37,
+          "queue_pressure": 54,
+          "generation": 91,
+          "grid_carbon": 61
+        },
+        "rates": {
+          "kwh": 11.44
+        },
+        "sustainability": {
+          "renewable_energy_pct": 70,
+          "grid_carbon_lb_mwh": 555,
+          "pue": 1.38
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 823.6800000000001,
+          "monthly_100kw": 8236.8,
+          "annual_1mw": 1002144.0
+        },
+        "notes": "Metro Atlanta facility"
+      },
+      {
+        "id": "facility_25",
+        "provider": "Sabey",
+        "name": "Sabey Intergate Quincy",
+        "location": {
+          "city": "Quincy",
+          "state": "Washington"
+        },
+        "scores": {
+          "power_feasibility": 97,
+          "utility_rate": 11,
+          "queue_pressure": 26,
+          "generation": 99,
+          "grid_carbon": 12
+        },
+        "rates": {
+          "kwh": 4.68
+        },
+        "sustainability": {
+          "renewable_energy_pct": 100,
+          "grid_carbon_lb_mwh": 165,
+          "pue": 1.2
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 336.96,
+          "monthly_100kw": 3369.6,
+          "annual_1mw": 409968.0
+        },
+        "notes": "Hydroelectric, Microsoft presence, sub $0.04/kWh"
+      },
+      {
+        "id": "facility_26",
+        "provider": "Sabey",
+        "name": "Sabey Intergate Wenatchee",
+        "location": {
+          "city": "East Wenatchee",
+          "state": "Washington"
+        },
+        "scores": {
+          "power_feasibility": 96,
+          "utility_rate": 12,
+          "queue_pressure": 24,
+          "generation": 98,
+          "grid_carbon": 14
+        },
+        "rates": {
+          "kwh": 4.68
+        },
+        "sustainability": {
+          "renewable_energy_pct": 100,
+          "grid_carbon_lb_mwh": 170,
+          "pue": 1.21
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 336.96,
+          "monthly_100kw": 3369.6,
+          "annual_1mw": 409968.0
+        },
+        "notes": "Hydroelectric, Dell, Yahoo facilities"
+      },
+      {
+        "id": "facility_27",
+        "provider": "H5 Data Centers",
+        "name": "H5 Indianapolis",
+        "location": {
+          "city": "Indianapolis",
+          "state": "Indiana"
+        },
+        "scores": {
+          "power_feasibility": 80,
+          "utility_rate": 35,
+          "queue_pressure": 46,
+          "generation": 88,
+          "grid_carbon": 58
+        },
+        "rates": {
+          "kwh": 13.64
+        },
+        "sustainability": {
+          "renewable_energy_pct": 65,
+          "grid_carbon_lb_mwh": 530,
+          "pue": 1.34
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 982.0799999999999,
+          "monthly_100kw": 9820.8,
+          "annual_1mw": 1194864.0
+        },
+        "notes": "Emerging market, Amazon investment"
+      },
+      {
+        "id": "facility_28",
+        "provider": "H5 Data Centers",
+        "name": "H5 Pasco",
+        "location": {
+          "city": "Pasco",
+          "state": "Washington"
+        },
+        "scores": {
+          "power_feasibility": 95,
+          "utility_rate": 13,
+          "queue_pressure": 29,
+          "generation": 97,
+          "grid_carbon": 16
+        },
+        "rates": {
+          "kwh": 4.68
+        },
+        "sustainability": {
+          "renewable_energy_pct": 100,
+          "grid_carbon_lb_mwh": 185,
+          "pue": 1.23
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 336.96,
+          "monthly_100kw": 3369.6,
+          "annual_1mw": 409968.0
+        },
+        "notes": "Hydroelectric power"
+      },
+      {
+        "id": "facility_29",
+        "provider": "DataBank",
+        "name": "DataBank SLC1",
+        "location": {
+          "city": "Salt Lake City",
+          "state": "Utah"
+        },
+        "scores": {
+          "power_feasibility": 71,
+          "utility_rate": 39,
+          "queue_pressure": 40,
+          "generation": 85,
+          "grid_carbon": 54
+        },
+        "rates": {
+          "kwh": 10.87
+        },
+        "sustainability": {
+          "renewable_energy_pct": 68,
+          "grid_carbon_lb_mwh": 495,
+          "pue": 1.36
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 782.64,
+          "monthly_100kw": 7826.4,
+          "annual_1mw": 952211.9999999999
+        },
+        "notes": "Silicon Slopes tech hub"
+      },
+      {
+        "id": "facility_30",
+        "provider": "DataBank",
+        "name": "DataBank MCI1 (Kansas City)",
+        "location": {
+          "city": "Kansas City",
+          "state": "Missouri"
+        },
+        "scores": {
+          "power_feasibility": 69,
+          "utility_rate": 41,
+          "queue_pressure": 38,
+          "generation": 84,
+          "grid_carbon": 57
+        },
+        "rates": {
+          "kwh": 12.43
+        },
+        "sustainability": {
+          "renewable_energy_pct": 62,
+          "grid_carbon_lb_mwh": 520,
+          "pue": 1.38
+        },
+        "tier_rating": "Tier III",
+        "costs": {
+          "monthly_10kw": 894.9599999999999,
+          "monthly_100kw": 8949.6,
+          "annual_1mw": 1088868.0
+        },
+        "notes": "Regional hub, fiber crossroads"
+      }
+    ]
+  },
+  "cost_calculator": {
+    "formula": {
+      "monthly": "(rate_cents_per_kwh / 100) * kw * 720_hours",
+      "annual": "(rate_cents_per_kwh / 100) * kw * 8760_hours"
+    },
+    "presets": {
+      "small_deployment": {
+        "kw": 10,
+        "description": "Small server deployment"
+      },
+      "medium_deployment": {
+        "kw": 100,
+        "description": "Medium enterprise rack"
+      },
+      "large_deployment": {
+        "kw": 1000,
+        "description": "Large colocation (1MW)"
+      },
+      "hyperscale": {
+        "kw": 10000,
+        "description": "Hyperscale deployment (10MW)"
+      }
+    }
+  },
+  "market_rankings": {
+    "best_overall": [
+      {
+        "provider": "Sabey",
+        "facility_name": "Sabey Intergate Quincy",
+        "state": "Washington",
+        "power_feasibility_score": 97,
+        "est_rate_kwh": 4.68
+      },
+      {
+        "provider": "CyrusOne",
+        "facility_name": "CyrusOne Quincy",
+        "state": "Washington",
+        "power_feasibility_score": 96,
+        "est_rate_kwh": 4.68
+      },
+      {
+        "provider": "Sabey",
+        "facility_name": "Sabey Intergate Wenatchee",
+        "state": "Washington",
+        "power_feasibility_score": 96,
+        "est_rate_kwh": 4.68
+      },
+      {
+        "provider": "H5 Data Centers",
+        "facility_name": "H5 Pasco",
+        "state": "Washington",
+        "power_feasibility_score": 95,
+        "est_rate_kwh": 4.68
+      },
+      {
+        "provider": "Flexential",
+        "facility_name": "Flexential Portland",
+        "state": "Oregon",
+        "power_feasibility_score": 89,
+        "est_rate_kwh": 10.31
+      },
+      {
+        "provider": "Digital Realty",
+        "facility_name": "Digital Realty PDX1 (Portland)",
+        "state": "Oregon",
+        "power_feasibility_score": 88,
+        "est_rate_kwh": 10.31
+      },
+      {
+        "provider": "CyrusOne",
+        "facility_name": "CyrusOne Houston West",
+        "state": "Texas",
+        "power_feasibility_score": 87,
+        "est_rate_kwh": 9.12
+      },
+      {
+        "provider": "Aligned",
+        "facility_name": "Aligned Phoenix",
+        "state": "Arizona",
+        "power_feasibility_score": 87,
+        "est_rate_kwh": 11.87
+      },
+      {
+        "provider": "Vantage",
+        "facility_name": "Vantage SDC Phoenix",
+        "state": "Arizona",
+        "power_feasibility_score": 86,
+        "est_rate_kwh": 11.87
+      },
+      {
+        "provider": "Aligned",
+        "facility_name": "Aligned Dallas",
+        "state": "Texas",
+        "power_feasibility_score": 86,
+        "est_rate_kwh": 9.12
+      }
+    ],
+    "lowest_cost": [
+      {
+        "provider": "CyrusOne",
+        "facility_name": "CyrusOne Quincy",
+        "state": "Washington",
+        "est_rate_kwh": 4.68,
+        "power_feasibility_score": 96
+      },
+      {
+        "provider": "Sabey",
+        "facility_name": "Sabey Intergate Quincy",
+        "state": "Washington",
+        "est_rate_kwh": 4.68,
+        "power_feasibility_score": 97
+      },
+      {
+        "provider": "Sabey",
+        "facility_name": "Sabey Intergate Wenatchee",
+        "state": "Washington",
+        "est_rate_kwh": 4.68,
+        "power_feasibility_score": 96
+      },
+      {
+        "provider": "H5 Data Centers",
+        "facility_name": "H5 Pasco",
+        "state": "Washington",
+        "est_rate_kwh": 4.68,
+        "power_feasibility_score": 95
+      },
+      {
+        "provider": "Equinix",
+        "facility_name": "Equinix DA1 (Dallas)",
+        "state": "Texas",
+        "est_rate_kwh": 9.12,
+        "power_feasibility_score": 82
+      },
+      {
+        "provider": "Digital Realty",
+        "facility_name": "Digital Realty DFW",
+        "state": "Texas",
+        "est_rate_kwh": 9.12,
+        "power_feasibility_score": 85
+      },
+      {
+        "provider": "CyrusOne",
+        "facility_name": "CyrusOne Houston West",
+        "state": "Texas",
+        "est_rate_kwh": 9.12,
+        "power_feasibility_score": 87
+      },
+      {
+        "provider": "Aligned",
+        "facility_name": "Aligned Dallas",
+        "state": "Texas",
+        "est_rate_kwh": 9.12,
+        "power_feasibility_score": 86
+      },
+      {
+        "provider": "Equinix",
+        "facility_name": "Equinix DC2 (Ashburn)",
+        "state": "Virginia",
+        "est_rate_kwh": 10.21,
+        "power_feasibility_score": 72
+      },
+      {
+        "provider": "Digital Realty",
+        "facility_name": "Digital Realty Ashburn Campus",
+        "state": "Virginia",
+        "est_rate_kwh": 10.21,
+        "power_feasibility_score": 75
+      }
+    ],
+    "best_pue": [
+      {
+        "provider": "Aligned",
+        "facility_name": "Aligned Phoenix",
+        "state": "Arizona",
+        "pue": 1.12,
+        "power_feasibility_score": 87
+      },
+      {
+        "provider": "Aligned",
+        "facility_name": "Aligned Dallas",
+        "state": "Texas",
+        "pue": 1.15,
+        "power_feasibility_score": 86
+      },
+      {
+        "provider": "Switch",
+        "facility_name": "Switch LAS VEGAS",
+        "state": "Nevada",
+        "pue": 1.18,
+        "power_feasibility_score": 38
+      },
+      {
+        "provider": "Sabey",
+        "facility_name": "Sabey Intergate Quincy",
+        "state": "Washington",
+        "pue": 1.2,
+        "power_feasibility_score": 97
+      },
+      {
+        "provider": "Sabey",
+        "facility_name": "Sabey Intergate Wenatchee",
+        "state": "Washington",
+        "pue": 1.21,
+        "power_feasibility_score": 96
+      },
+      {
+        "provider": "CyrusOne",
+        "facility_name": "CyrusOne Quincy",
+        "state": "Washington",
+        "pue": 1.22,
+        "power_feasibility_score": 96
+      },
+      {
+        "provider": "H5 Data Centers",
+        "facility_name": "H5 Pasco",
+        "state": "Washington",
+        "pue": 1.23,
+        "power_feasibility_score": 95
+      },
+      {
+        "provider": "Vantage",
+        "facility_name": "Vantage SDC Phoenix",
+        "state": "Arizona",
+        "pue": 1.28,
+        "power_feasibility_score": 86
+      },
+      {
+        "provider": "Digital Realty",
+        "facility_name": "Digital Realty PDX1 (Portland)",
+        "state": "Oregon",
+        "pue": 1.29,
+        "power_feasibility_score": 88
+      },
+      {
+        "provider": "CyrusOne",
+        "facility_name": "CyrusOne Houston West",
+        "state": "Texas",
+        "pue": 1.31,
+        "power_feasibility_score": 87
+      }
+    ],
+    "highest_renewable": [
+      {
+        "provider": "Switch",
+        "facility_name": "Switch LAS VEGAS",
+        "state": "Nevada",
+        "renewable_energy_pct": 100,
+        "est_rate_kwh": 17.86
+      },
+      {
+        "provider": "Digital Realty",
+        "facility_name": "Digital Realty PDX1 (Portland)",
+        "state": "Oregon",
+        "renewable_energy_pct": 100,
+        "est_rate_kwh": 10.31
+      },
+      {
+        "provider": "CyrusOne",
+        "facility_name": "CyrusOne Quincy",
+        "state": "Washington",
+        "renewable_energy_pct": 100,
+        "est_rate_kwh": 4.68
+      },
+      {
+        "provider": "Flexential",
+        "facility_name": "Flexential Portland",
+        "state": "Oregon",
+        "renewable_energy_pct": 100,
+        "est_rate_kwh": 10.31
+      },
+      {
+        "provider": "Sabey",
+        "facility_name": "Sabey Intergate Quincy",
+        "state": "Washington",
+        "renewable_energy_pct": 100,
+        "est_rate_kwh": 4.68
+      },
+      {
+        "provider": "Sabey",
+        "facility_name": "Sabey Intergate Wenatchee",
+        "state": "Washington",
+        "renewable_energy_pct": 100,
+        "est_rate_kwh": 4.68
+      },
+      {
+        "provider": "H5 Data Centers",
+        "facility_name": "H5 Pasco",
+        "state": "Washington",
+        "renewable_energy_pct": 100,
+        "est_rate_kwh": 4.68
+      },
+      {
+        "provider": "NTT",
+        "facility_name": "NTT GDC Santa Clara",
+        "state": "California",
+        "renewable_energy_pct": 98,
+        "est_rate_kwh": 20.5
+      },
+      {
+        "provider": "Equinix",
+        "facility_name": "Equinix SV1 (Silicon Valley)",
+        "state": "California",
+        "renewable_energy_pct": 95,
+        "est_rate_kwh": 26.92
+      },
+      {
+        "provider": "CoreSite",
+        "facility_name": "CoreSite LA1 (One Wilshire)",
+        "state": "California",
+        "renewable_energy_pct": 92,
+        "est_rate_kwh": 26.92
+      }
+    ],
+    "best_states": [
+      {
+        "state": "Washington",
+        "power_feasibility_score": 95,
+        "commercial_rate_kwh": 11.05,
+        "key_markets": "Quincy, East Wenatchee"
+      },
+      {
+        "state": "Texas",
+        "power_feasibility_score": 94,
+        "commercial_rate_kwh": 9.12,
+        "key_markets": "Dallas-Fort Worth, Austin, San Antonio"
+      },
+      {
+        "state": "Idaho",
+        "power_feasibility_score": 92,
+        "commercial_rate_kwh": 8.19,
+        "key_markets": "Boise metro"
+      },
+      {
+        "state": "Oklahoma",
+        "power_feasibility_score": 91,
+        "commercial_rate_kwh": 10.04,
+        "key_markets": "Oklahoma City, Tulsa"
+      },
+      {
+        "state": "Oregon",
+        "power_feasibility_score": 90,
+        "commercial_rate_kwh": 10.31,
+        "key_markets": "Hillsboro (Portland metro)"
+      },
+      {
+        "state": "Nevada",
+        "power_feasibility_score": 88,
+        "commercial_rate_kwh": 11.47,
+        "key_markets": "Las Vegas, Reno"
+      },
+      {
+        "state": "Arizona",
+        "power_feasibility_score": 86,
+        "commercial_rate_kwh": 11.87,
+        "key_markets": "Phoenix metro"
+      },
+      {
+        "state": "Virginia",
+        "power_feasibility_score": 85,
+        "commercial_rate_kwh": 10.21,
+        "key_markets": "Northern Virginia (Ashburn, Loudoun County)"
+      },
+      {
+        "state": "Iowa",
+        "power_feasibility_score": 84,
+        "commercial_rate_kwh": 10.26,
+        "key_markets": "Des Moines, Council Bluffs"
+      },
+      {
+        "state": "Illinois",
+        "power_feasibility_score": 82,
+        "commercial_rate_kwh": 12.42,
+        "key_markets": "Chicago metro"
+      }
+    ]
+  },
+  "comparison_tool": {
+    "example_comparison": {
+      "scenario": "100kW deployment across 3 markets",
+      "markets": [
+        {
+          "location": "Quincy, WA",
+          "rate_kwh": 4.68,
+          "monthly_cost": 3370,
+          "annual_cost": 40997,
+          "savings_vs_avg": "60% below average"
+        },
+        {
+          "location": "Dallas, TX",
+          "rate_kwh": 9.12,
+          "monthly_cost": 6566,
+          "annual_cost": 79891,
+          "savings_vs_avg": "23% below average"
+        },
+        {
+          "location": "San Jose, CA",
+          "rate_kwh": 26.92,
+          "monthly_cost": 19382,
+          "annual_cost": 235819,
+          "savings_vs_avg": "130% above average"
+        }
+      ]
+    }
+  }
+}
