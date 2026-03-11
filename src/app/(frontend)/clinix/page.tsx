@@ -1,5 +1,5 @@
 import ClinixScrollSequence from "@/components/clinix/ClinixScrollSequence";
-import ClinixArchitecture from "@/components/clinix/ClinixArchitecture";
+import { HowItWorks2 } from "@/components/clinix/how-it-works-2";
 import ClinixCapabilities from "@/components/clinix/ClinixCapabilities";
 import ClinixWorkflow from "@/components/clinix/ClinixWorkflow";
 import ClinixOutcomes from "@/components/clinix/ClinixOutcomes";
@@ -20,8 +20,8 @@ export default function ClinixPage(): ReactNode {
     <main className="flex-1 min-h-screen w-full max-w-none bg-[#0b0b0c]">
       {/* Apple-style scroll-scrub: pinned full-screen animation + overlay copy */}
       <ClinixScrollSequence />
-      {/* Supporting sections below the scroll sequence */}
-      <ClinixArchitecture />
+      {/* How It Works — ReactBits-style block */}
+      <HowItWorks2 />
       <ClinixCapabilities />
       <ClinixWorkflow />
       <ClinixOutcomes />
