@@ -5,7 +5,7 @@ import TransitionLink from "./ui/TransitionLink";
 
 const Footer = () => {
   return (
-    <div className="w-full relative overflow-hidden">
+    <div className="w-full relative overflow-hidden bg-background">
       <div className="w-main mx-auto pb-5 md:pb-10 relative z-20">
         <div className="flex flex-col md:flex-row gap-20 md:gap-5 justify-between">
           <div className="flex flex-col font-light text-lg">
@@ -107,7 +107,15 @@ const Footer = () => {
           </p>
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 w-full h-full bg-primary blur-3xl scale-150">
+      {/* Soft gradient so bottom fades into footer background — no harsh color break */}
+      <div
+        className="absolute bottom-0 left-0 w-full h-32 sm:h-40 md:h-48 pointer-events-none z-10"
+        style={{
+          background: "linear-gradient(to top, var(--background) 0%, var(--background) 20%, transparent 100%)",
+        }}
+        aria-hidden
+      />
+      <div className="absolute bottom-0 left-0 w-full h-full bg-primary blur-3xl scale-150 opacity-60">
         <div className="absolute left-0 bottom-20 w-full h-full scale-y-200 origin-bottom rounded-[100%] bg-background"></div>
       </div>
     </div>
