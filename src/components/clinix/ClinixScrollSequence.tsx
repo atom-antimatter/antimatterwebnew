@@ -14,6 +14,8 @@ const EXPECTED_FOLDER = "/public/clinix-frames/";
 const EXPECTED_FIRST_FRAME = "/clinix-frames/frame_0001.png";
 const EXTRACTION_CMD =
   "ffmpeg -y -i public/clinix-exploded.gif -vsync 0 public/clinix-frames/frame_%04d.png";
+const BACKGROUND_GIF = "/Website_Scroll_Video_Generation.gif";
+const BACKGROUND_FALLBACK = "/clinix-device-background.jpg";
 
 export default function ClinixScrollSequence() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -78,12 +80,10 @@ export default function ClinixScrollSequence() {
     };
   }, []);
 
-  // Draw current frame into canvas (scroll progress -> frame index -> draw)
+  // Update scroll progress (always) and draw current frame to canvas when we have a frame sequence
   const updateProgressAndFrame = useCallback(() => {
     const section = sectionRef.current;
-    const canvas = canvasRef.current;
-    const imgs = imagesRef.current;
-    if (!section || !canvas || !imgs?.length) return;
+    if (!section) return;
 
     const rect = section.getBoundingClientRect();
     const sectionTop = rect.top + window.scrollY;
@@ -92,6 +92,10 @@ export default function ClinixScrollSequence() {
     const scrollY = window.scrollY;
     const prog = getScrollProgress(sectionTop, sectionHeight, viewportHeight, scrollY);
     setProgress(prog);
+
+    const imgs = imagesRef.current;
+    const canvas = canvasRef.current;
+    if (!canvas || !imgs?.length || imgs.length <= 1) return;
 
     const frameIndex = getFrameIndex(prog, imgs.length);
     const img = imgs[frameIndex];
@@ -199,9 +203,25 @@ export default function ClinixScrollSequence() {
     return (
       <section
         ref={sectionRef}
-        className="relative bg-[#0b0b0c] flex flex-col items-center justify-center min-h-[100vh] px-6 py-10"
+        className="relative bg-[#0b0b0c] flex flex-col items-center justify-center min-h-[100vh] px-6 py-10 overflow-hidden"
       >
-        <div className="max-w-lg mx-auto text-center space-y-6">
+        {/* GIF or fallback image as full-screen background */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={BACKGROUND_GIF}
+            alt=""
+            className="absolute inset-0 w-full h-full object-contain object-center"
+            style={{ display: "block", minHeight: "100%", minWidth: "100%" }}
+            fetchPriority="high"
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (el.src.includes("Website_Scroll_Video_Generation.gif")) {
+                el.src = BACKGROUND_FALLBACK;
+              }
+            }}
+          />
+        </div>
+        <div className="relative z-10 max-w-lg mx-auto text-center space-y-6">
           <p className="font-semibold text-amber-200">
             Frame sequence missing in {EXPECTED_FOLDER}
           </p>
@@ -252,19 +272,39 @@ export default function ClinixScrollSequence() {
       <div
         ref={stickyRef}
         data-sticky-inner
-        className="sticky top-0 left-0 w-full h-screen flex items-center justify-center overflow-hidden"
+        className="sticky top-0 left-0 w-full h-screen flex items-center justify-center overflow-hidden bg-[#0b0b0c]"
       >
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
-          style={{ background: "#0b0b0c", display: "block" }}
-        />
+        {/* Video/GIF as full-screen background — always visible */}
+        <div className="absolute inset-0 z-0" aria-hidden>
+          <img
+            src={BACKGROUND_GIF}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ display: "block", width: "100%", height: "100%" }}
+            fetchPriority="high"
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (el.src.includes("Website_Scroll_Video_Generation.gif")) {
+                el.src = BACKGROUND_FALLBACK;
+              }
+            }}
+          />
+        </div>
+        {/* Canvas only when we have a multi-frame sequence for scroll-scrub; otherwise GIF shows through */}
+        {frameImages && frameImages.length > 1 && (
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full z-[1]"
+            style={{ background: "transparent", display: "block" }}
+          />
+        )}
+        {/* Gradient so text stays readable over video throughout */}
         <div
-          className="absolute inset-0 pointer-events-none z-[1]"
+          className="absolute inset-0 pointer-events-none z-[2]"
           aria-hidden
           style={{
             background:
-              "linear-gradient(to top, rgba(11,11,12,0.85) 0%, transparent 50%, transparent 100%)",
+              "linear-gradient(to top, rgba(11,11,12,0.92) 0%, rgba(11,11,12,0.4) 40%, transparent 70%)",
           }}
         />
         <ClinixOverlayCopy progress={progress} />

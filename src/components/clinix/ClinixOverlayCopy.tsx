@@ -64,18 +64,18 @@ export default function ClinixOverlayCopy({ progress }: ClinixOverlayCopyProps) 
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-end px-6 pb-20 sm:pb-24 lg:pb-28 pt-20"
+      className="pointer-events-none absolute inset-0 z-[20] flex flex-col items-center justify-end px-6 pb-20 sm:pb-24 lg:pb-28 pt-20"
       aria-live="polite"
     >
       <div className="w-full max-w-2xl mx-auto text-center">
         <h2
-          className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-semibold tracking-tight text-white leading-[1.1] transition-opacity duration-300"
+          className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-semibold tracking-tight text-white leading-[1.1] transition-opacity duration-300 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
           style={{ opacity: Math.max(0.15, currentBlend) }}
         >
           {current.headline}
         </h2>
         <p
-          className="mt-4 text-base sm:text-lg text-white/70 leading-relaxed max-w-xl mx-auto transition-opacity duration-300"
+          className="mt-4 text-base sm:text-lg text-white/90 leading-relaxed max-w-xl mx-auto transition-opacity duration-300 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]"
           style={{ opacity: Math.max(0.15, currentBlend) }}
         >
           {current.body}
